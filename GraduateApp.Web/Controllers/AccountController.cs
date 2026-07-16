@@ -4,7 +4,9 @@ using GraduateApp.Web.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System;
-
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 namespace GraduateApp.Web.Controllers
 {
     public class AccountController : Controller
@@ -59,28 +61,49 @@ namespace GraduateApp.Web.Controllers
             return View();
         }
 
-        // 4. Aday giriş yap butonuna bastığında (POST)
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task Login(LoginViewModel model)
         {
-            // Arayüzdeki formu JSON formatına çevir
             var jsonContent = new StringContent(JsonSerializer.Serialize(model), System.Text.Encoding.UTF8, "application/json");
-
-            // API'deki "login" uç noktasına veriyi gönder
             HttpResponseMessage response = await _httpClient.PostAsync("api/students/login", jsonContent);
 
             if (response.IsSuccessStatusCode)
             {
-                // Şifre doğruysa giriş başarılı! 
-                // İleride buraya Cookie/Session kodlarını ekleyeceğiz.
+                // 1. API'den dönen öğrenci bilgisini oku
+                string data = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var studentData = JsonSerializer.Deserialize(data, options);
+
+                // 2. Çerez içine koyacağımız "Kimlik Kartı"nı (Claims) oluştur
+                var claims = new List
+        {
+            new Claim(ClaimTypes.NameIdentifier, studentData.TC), // Benzersiz kimlik
+            new Claim(ClaimTypes.Name, $"{studentData.StudentName} {studentData.StudentSurname}"), // İsim Soyisim
+            new Claim("TC", studentData.TC) // İleride başvuru yaparken bu TC'yi kullanacağız
+        };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // 3. Oturumu başlat! Tarayıcıya çerezi yerleştiriyoruz.
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    new AuthenticationProperties { IsPersistent = true }); // Tarayıcı kapansa da hatırla
+
                 return RedirectToAction("Index", "Home");
             }
 
-            // API'den hata dönerse (TC veya şifre yanlışsa) ekranda göster
             string errorMsg = await response.Content.ReadAsStringAsync();
             ModelState.AddModelError(string.Empty, errorMsg);
 
             return View(model);
+        }
+
+        // Çıkış Yapma Metodu
+        public async Task Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
         }
     }
 }
