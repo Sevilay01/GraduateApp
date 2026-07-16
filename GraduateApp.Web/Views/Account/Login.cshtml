@@ -1,0 +1,40 @@
+@using GraduateApp.Web.Models
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Giriş Yap";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Aday Girişi</h4>
+            </div>
+            <div class="card-body">
+                
+                <div asp-validation-summary="All" class="text-danger fw-bold mb-3"></div>
+
+                <form asp-action="Login" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">TC Kimlik No</label>
+                        <input asp-for="TC" class="form-control" maxlength="11" required />
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Şifre</label>
+                        <input asp-for="Password" type="password" class="form-control" required />
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 mb-3">Giriş Yap</button>
+                    
+                    <div class="text-center">
+                        <span class="text-muted">Hesabınız yok mu?</span>
+                        <a asp-action="Register" class="text-decoration-none fw-bold">Hemen Kayıt Olun</a>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>

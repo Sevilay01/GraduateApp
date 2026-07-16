@@ -1,0 +1,38 @@
+@using GraduateApp.Web.Models
+@model StudentViewModel
+
+@{
+    ViewData["Title"] = "Yeni Öğrenci Ekle";
+}
+
+<h2>Yeni Öğrenci Ekle</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+
+        <!-- API'den gelen hataların kırmızı yazıyla çıkacağı alan -->
+        <div asp-validation-summary="All" class="text-danger fw-bold mb-3"></div>
+
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label class="form-label">TC Kimlik No</label>
+                <input asp-for="TC" class="form-control" maxlength="11" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Ad</label>
+                <input asp-for="StudentName" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Soyad</label>
+                <input asp-for="StudentSurname" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">E-Posta</label>
+                <input asp-for="Email" type="email" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+            <a asp-action="Index" class="btn btn-secondary">İptal</a>
+        </form>
+    </div>
+</div>

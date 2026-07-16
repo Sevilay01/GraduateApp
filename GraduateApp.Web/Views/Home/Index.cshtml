@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4 text-primary fw-bold">Lisansüstü Başvuru Sistemi</h1>
+    <p class="lead mt-3">Enstitü başvuru süreçlerini, öğrenci kayıtlarını ve değerlendirmeleri tek bir ekrandan yönetin.</p>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="card-title">Öğrenci Yönetimi</h5>
+                <p class="card-text">Sisteme kayıtlı adayların listesini görüntüleyin ve detaylarına ulaşın.</p>
+                <a asp-controller="Students" asp-action="Index" class="btn btn-outline-primary">Öğrencilere Git</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="card-title">Başvuru İşlemleri</h5>
+                <p class="card-text">Adayların yüksek lisans ve doktora programlarına yaptıkları başvuruları inceleyin.</p>
+                <!-- Henüz Applications sayfamız olmadığı için butonu pasif (disabled) yapıyoruz -->
+                <button class="btn btn-outline-secondary" disabled>Çok Yakında</button>
+            </div>
+        </div>
+    </div>
+</div>

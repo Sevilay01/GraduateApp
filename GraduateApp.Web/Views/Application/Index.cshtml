@@ -1,0 +1,64 @@
+@using GraduateApp.Web.Models
+@model List<ApplicationViewModel>
+
+    @{
+        ViewData["Title"] = "Başvurular";
+    }
+
+    <h2>Lisansüstü Başvuruları</h2>
+    <hr />
+
+    <table class="table table-hover table-striped border shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>No</th>
+                <th>Aday Adı Soyadı</th>
+                <th>Başvurulan Program</th>
+                <th>Başvuru Tarihi</th>
+                <th style="width: 250px;">Durum İşlemleri</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var app in Model)
+                {
+                    <tr>
+                        <td class="align-middle">@app.ApplicationID</td>
+                        <td class="align-middle"><strong>@app.StudentFullName</strong></td>
+                        <td class="align-middle">@app.ProgramName</td>
+                        <td class="align-middle">@app.ApplicationDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>
+                            <!-- Mevcut Durumu Gösteren Rozet -->
+                            <div class="mb-2">
+                                <span class="badge bg-info text-dark">@app.CurrentStatus</span>
+                            </div>
+
+                            <!-- Durum Güncelleme Formu -->
+                            <form asp-action="UpdateStatus" method="post" class="d-flex align-items-center">
+                                <!-- Hangi başvurunun güncelleneceğini gizli bir input ile gönderiyoruz -->
+                                <input type="hidden" name="applicationId" value="@app.ApplicationID" />
+
+                                <select name="newStatus" class="form-select form-select-sm me-2" required>
+                                    <option value="">İşlem Seç...</option>
+                                    <option value="Değerlendirmede">Değerlendirmede</option>
+                                    <option value="Mülakata Çağrıldı">Mülakata Çağrıldı</option>
+                                    <option value="Onaylandı">Onaylandı</option>
+                                    <option value="Reddedildi">Reddedildi</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Uygula</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        Henüz sisteme düşen bir başvuru bulunmuyor.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>

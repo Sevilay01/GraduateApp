@@ -1,0 +1,52 @@
+@using GraduateApp.Web.Models
+@model RegisterViewModel
+
+@{
+    ViewData["Title"] = "Aday Kayıt";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Aday Kayıt Sistemi</h4>
+            </div>
+            <div class="card-body">
+                
+                <!-- Hata mesajlarının gösterileceği alan -->
+                <div asp-validation-summary="All" class="text-danger fw-bold mb-3"></div>
+
+                <form asp-action="Register" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">TC Kimlik No</label>
+                        <input asp-for="TC" class="form-control" maxlength="11" required />
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Ad</label>
+                            <input asp-for="StudentName" class="form-control" required />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Soyad</label>
+                            <input asp-for="StudentSurname" class="form-control" required />
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">E-Posta</label>
+                        <input asp-for="Email" type="email" class="form-control" required />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Şifre Belirleyin</label>
+                        <input asp-for="Password" type="password" class="form-control" required />
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Kayıt Ol</button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
