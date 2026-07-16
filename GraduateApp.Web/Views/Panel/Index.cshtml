@@ -1,0 +1,95 @@
+@{
+    ViewData["Title"] = "Öğrenci Paneli";
+    var programs = ViewBag.Programs as List<GraduateApp.Web.Models.ProgramViewModel>;
+    var applications = ViewBag.Applications as List<GraduateApp.Web.Models.PanelApplicationViewModel>;}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Öğrenci Paneli</h2>
+
+    <!-- Uyarı Mesajları -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success fw-bold">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger fw-bold">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="row">
+        <!-- Sol Sütun: Açık Programlar -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Açık Programlar</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Program Adı</th>
+                                <th>Derece</th>
+                                <th class="text-end">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in programs!)
+                            {
+                                <tr>
+                                    <td class="align-middle fw-bold">@p.ProgramName</td>
+                                    <td class="align-middle">@p.DegreeType</td>
+                                    <td class="text-end">
+                                        <form asp-controller="Panel" asp-action="Apply" method="post">
+                                            <input type="hidden" name="programId" value="@p.ProgramId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Başvur</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                            @if(!programs.Any())
+                            {
+                                <tr><td colspan="3" class="text-center py-3">Şu an başvuruya açık program bulunmamaktadır.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Sütun: Başvurularım -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Başvurularım</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Program</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in applications!)
+                            {
+                                <tr>
+                                    <td class="align-middle">@(a.ApplicationDate?.ToString("dd.MM.yyyy"))</td>
+                                    <td class="align-middle fw-bold">@a.ProgramName</td>
+                                    <td class="align-middle">
+                                        <span class="badge bg-warning text-dark">@a.CurrentStatus</span>
+                                    </td>
+                                </tr>
+                            }
+                            @if(!applications.Any())
+                            {
+                                <tr><td colspan="3" class="text-center py-3">Henüz bir programa başvurmadınız.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

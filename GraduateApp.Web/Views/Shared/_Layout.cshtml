@@ -35,6 +35,12 @@
                             <li class="nav-item d-flex align-items-center">
                                 <span class="text-success me-3 fw-bold">Hoş geldin, @User.Identity.Name</span>
                             </li>
+
+                            <!-- İŞTE BURASI: Öğrenci Paneli Linki -->
+                            <li class="nav-item">
+                                <a class="nav-link text-primary fw-bold px-3" asp-controller="Panel" asp-action="Index">Öğrenci Panelim</a>
+                            </li>
+
                             <li class="nav-item">
                                 <a class="nav-link btn btn-outline-danger text-danger px-3" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
                             </li>
