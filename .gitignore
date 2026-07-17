@@ -1,7 +1,49 @@
-# .gitignore dosyası
-bin/
-obj/
+# Build output
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+.artifacts/
+
+# Visual Studio / Rider / VS Code
 .vs/
-*.user
+.idea/
+.vscode/
 *.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Test and coverage output
+[Tt]est[Rr]esult*/
+coverage/
+coverage.*
+*.trx
+
+# Logs, diagnostics and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.pid
+logs/
+
+# Local configuration and secrets
 appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+secrets.json
+*.pfx
+*.p12
+*.pem
+*.key
+.env
+.env.*
+
+# Development-only password reset outbox
+.dev-emails/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

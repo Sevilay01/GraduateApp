@@ -1,52 +1,54 @@
-@using GraduateApp.Web.Models
 @model RegisterViewModel
-
 @{
-    ViewData["Title"] = "Aday Kayıt";
+    ViewData["Title"] = "Öğrenci kaydı";
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Aday Kayıt Sistemi</h4>
-            </div>
-            <div class="card-body">
-                
-                <!-- Hata mesajlarının gösterileceği alan -->
-                <div asp-validation-summary="All" class="text-danger fw-bold mb-3"></div>
-
-                <form asp-action="Register" method="post">
-                    <div class="mb-3">
-                        <label class="form-label">TC Kimlik No</label>
-                        <input asp-for="TC" class="form-control" maxlength="11" required />
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="form-label">Ad</label>
-                            <input asp-for="StudentName" class="form-control" required />
+            <div class="card-body p-4">
+                <h1 class="h3 mb-3">Öğrenci kayıt paneli</h1>
+                <form asp-action="Register" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Tc" class="form-label"></label>
+                            <input asp-for="Tc" class="form-control" inputmode="numeric" autocomplete="off" maxlength="11" />
+                            <span asp-validation-for="Tc" class="text-danger"></span>
                         </div>
-                        <div class="col">
-                            <label class="form-label">Soyad</label>
-                            <input asp-for="StudentSurname" class="form-control" required />
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" autocomplete="email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">E-Posta</label>
-                        <input asp-for="Email" type="email" class="form-control" required />
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Şifre Belirleyin</label>
-                        <input asp-for="Password" type="password" class="form-control" required />
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">Kayıt Ol</button>
+                    <p class="form-text mt-3">Parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermelidir.</p>
+                    <button type="submit" class="btn btn-primary mt-2">Kayıt oluştur</button>
+                    <a asp-action="Login" class="btn btn-link mt-2">Girişe dön</a>
                 </form>
-                
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

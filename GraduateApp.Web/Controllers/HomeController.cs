@@ -1,24 +1,39 @@
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using GraduateApp.Web.Models;
+using GraduateApp.Web.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GraduateApp.Web.Controllers;
 
-public class HomeController : Controller
+public sealed class HomeController(GraduateApiClient apiClient) : Controller
 {
-    public IActionResult Index()
+    [HttpGet]
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        return View();
+        var result = await apiClient.GetOpenProgramsAsync(cancellationToken);
+        return View(new HomeViewModel
+        {
+            OpenPrograms = result.Value ?? [],
+            ErrorMessage = result.IsSuccess ? null : result.Error
+        });
     }
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+    [HttpGet]
+    public IActionResult Privacy() => View();
 
+    [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    public IActionResult Error() => View(new ErrorViewModel
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+    });
+
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult HttpStatus(int code)
+    {
+        Response.StatusCode = code;
+        ViewData["StatusCode"] = code;
+        return View("StatusCode");
     }
 }

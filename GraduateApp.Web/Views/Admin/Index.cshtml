@@ -1,76 +1,77 @@
-@model System.Collections.Generic.IEnumerable<GraduateApp.Web.Models.AdminApplicationViewModel>
+@model AdminApplicationListViewModel
 @{
-    ViewData["Title"] = "Yönetim Paneli";
+    ViewData["Title"] = "Başvuru yönetimi";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Yönetim Paneli - Tüm Başvurular</h2>
-
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success fw-bold">@TempData["SuccessMessage"]</div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger fw-bold">@TempData["ErrorMessage"]</div>
-    }
-
-    <div class="card shadow-sm border-dark">
-        <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">Başvuru Listesi</h5>
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Öğrenci (TC)</th>
-                        <th>Program</th>
-                        <th>Tarih</th>
-                        <th>Durum</th>
-                        <th class="text-end">İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td class="align-middle">
-                                <div class="fw-bold">@item.StudentFullName</div>
-                                <div class="text-muted small">@item.Tc</div>
-                            </td>
-                            <td class="align-middle fw-bold">@item.ProgramName</td>
-                            <td class="align-middle">@(item.ApplicationDate?.ToString("dd.MM.yyyy"))</td>
-                            <td class="align-middle">
-                                @if(item.CurrentStatus == "Kabul Edildi") {
-                                    <span class="badge bg-success">@item.CurrentStatus</span>
-                                } else if (item.CurrentStatus == "Reddedildi") {
-                                    <span class="badge bg-danger">@item.CurrentStatus</span>
-                                } else {
-                                    <span class="badge bg-warning text-dark">@item.CurrentStatus</span>
-                                }
-                            </td>
-                            <td class="text-end align-middle">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <form asp-controller="Admin" asp-action="UpdateStatus" method="post">
-                                        <input type="hidden" name="id" value="@item.ApplicationId" />
-                                        <input type="hidden" name="status" value="Kabul Edildi" />
-                                        <button type="submit" class="btn btn-sm btn-success">Kabul Et</button>
-                                    </form>
-                                    <form asp-controller="Admin" asp-action="UpdateStatus" method="post">
-                                        <input type="hidden" name="id" value="@item.ApplicationId" />
-                                        <input type="hidden" name="status" value="Reddedildi" />
-                                        <button type="submit" class="btn btn-sm btn-danger">Reddet</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                    @if(!Model.Any())
-                    {
-                        <tr><td colspan="5" class="text-center py-3">Henüz yapılmış bir başvuru bulunmamaktadır.</td></tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h2 mb-1">Başvuru yönetimi</h1>
+        <p class="text-muted mb-0">Arama, durum filtresi ve sayfalama ile başvuruları inceleyin.</p>
     </div>
 </div>
+
+<form method="get" class="card card-body mb-4" role="search">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-6">
+            <label for="search" class="form-label">Ad, e-posta veya program</label>
+            <input id="search" name="search" value="@Model.Search" class="form-control" maxlength="100" />
+        </div>
+        <div class="col-12 col-md-3">
+            <label asp-for="Status" class="form-label">Durum</label>
+            <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<ApplicationStatus>()">
+                <option value="">Tümü</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Filtrele</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Temizle</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+}
+else if (Model.Result.Items.Count == 0)
+{
+    <p class="text-muted">Filtrelere uygun başvuru bulunamadı.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr><th>Öğrenci</th><th>TC</th><th>Program</th><th>Tarih</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var application in Model.Result.Items)
+                {
+                    <tr>
+                        <td>@application.StudentFullName</td>
+                        <td>@application.MaskedTc</td>
+                        <td>@application.ProgramName</td>
+                        <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@application.ApplicationDateUtc.ToString("dd.MM.yyyy HH:mm") UTC</time></td>
+                        <td>@application.CurrentStatus.DisplayName()</td>
+                        <td><a asp-action="Detail" asp-route-id="@application.ApplicationId" class="btn btn-sm btn-outline-primary">Detay</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Result.TotalPages > 1)
+    {
+        <nav aria-label="Başvuru sayfaları">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)">
+                    <a class="page-link" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status">Önceki</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
+                <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)">
+                    <a class="page-link" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status">Sonraki</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}

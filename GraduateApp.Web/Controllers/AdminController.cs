@@ -1,60 +1,62 @@
-using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Text;
-using System;
-
-using Microsoft.AspNetCore.Authorization;
-using System.Collections.Generic;
 using GraduateApp.Web.Models;
+using GraduateApp.Web.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace GraduateApp.Web.Controllers
+namespace GraduateApp.Web.Controllers;
+
+[Authorize(Roles = "Admin")]
+public sealed class AdminController(GraduateApiClient apiClient) : Controller
 {
-    [Authorize]
-    public class AdminController : Controller
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        string? search,
+        ApplicationStatus? status,
+        int page = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-
-        private readonly HttpClient _httpClient;
-
-        public AdminController()
+        var result = await apiClient.GetAdminApplicationsAsync(search, status, page, pageSize, cancellationToken);
+        return View(new AdminApplicationListViewModel
         {
-            _httpClient = new HttpClient();
-            // Kendi API portunuzun doğru olduğuna emin olunuz
-            _httpClient.BaseAddress = new Uri("http://localhost:5158/");
+            Result = result.Value ?? new PagedResultViewModel<AdminApplicationListItemViewModel>
+            {
+                Page = Math.Max(page, 1),
+                PageSize = Math.Clamp(pageSize, 10, 100)
+            },
+            Search = search,
+            Status = status,
+            ErrorMessage = result.IsSuccess ? null : result.Error
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Detail(int id, CancellationToken cancellationToken)
+    {
+        var result = await apiClient.GetAdminApplicationDetailAsync(id, cancellationToken);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Başvuru bulunamadı.";
+            return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Index()
+        return View(result.Value);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateStatus(UpdateApplicationStatusViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
         {
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-            // API'den tüm başvuruları çek
-            var res = await _httpClient.GetAsync("api/applications");
-            var data = await res.Content.ReadAsStringAsync();
-
-            
-            var applications = JsonSerializer.Deserialize<List<AdminApplicationViewModel>>(data, options)
-                               ?? new List<AdminApplicationViewModel>();
-
-            return View(applications);
+            TempData["ErrorMessage"] = "Durum güncelleme bilgileri geçersiz.";
+            return RedirectToAction(nameof(Detail), new { id = model.ApplicationId });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> UpdateStatus(int id, string status)
-        {
-            var updateData = new { newStatus = status };
-            var jsonContent = new StringContent(JsonSerializer.Serialize(updateData), Encoding.UTF8, "application/json");
-
-            // API'ye yeni durumu gönder (PUT)
-            var res = await _httpClient.PutAsync($"api/applications/{id}/status", jsonContent);
-
-            if (res.IsSuccessStatusCode)
-                TempData["SuccessMessage"] = "Başvuru durumu başarıyla güncellendi.";
-            else
-                TempData["ErrorMessage"] = "Durum güncellenirken bir hata oluştu.";
-
-            return RedirectToAction("Index");
-        }
+        var result = await apiClient.UpdateApplicationStatusAsync(model, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Başvuru durumu güncellendi."
+            : result.Error ?? "Başvuru durumu güncellenemedi.";
+        return RedirectToAction(nameof(Detail), new { id = model.ApplicationId });
     }
 }

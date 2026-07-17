@@ -1,78 +1,74 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Lisansüstü Başvuru Sistemi</title>
+    <title>@ViewData["Title"] - GraduateApp</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">GraduateApp</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Menüyü Aç/Kapat">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm" aria-label="Ana menü">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">GraduateApp</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-controls="mainNav" aria-expanded="false" aria-label="Menüyü aç veya kapat">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-
-                    <!-- Sol Taraftaki Standart Menü Linkleri -->
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Admin" asp-action="Index">Yönetim Paneli</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Students" asp-action="Index">Öğrenciler</a>
-                        </li>
-                    </ul>
-
-                    <!-- Sağ Taraftaki Dinamik Giriş/Çıkış Menüsü -->
-                    <ul class="navbar-nav ms-auto">
-                        @if (User.Identity!.IsAuthenticated)
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Ana sayfa</a></li>
+                        @if (User.IsInRole("Student"))
                         {
-                            <li class="nav-item d-flex align-items-center">
-                                <span class="text-success me-3 fw-bold">Hoş geldin, @User.Identity.Name</span>
-                            </li>
-
-                            <!-- İŞTE BURASI: Öğrenci Paneli Linki -->
-                            <li class="nav-item">
-                                <a class="nav-link text-primary fw-bold px-3" asp-controller="Panel" asp-action="Index">Öğrenci Panelim</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link btn btn-outline-danger text-danger px-3" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="Index">Başvurularım</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="Profile">Profilim</a></li>
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Yönetim paneli</a></li>
+                        }
+                    </ul>
+                    <div class="d-flex align-items-center gap-2">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <span class="small text-muted" aria-label="Oturum sahibi">@User.Identity.Name</span>
+                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="ChangePassword">Parola değiştir</a>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Güvenli çıkış</button>
+                            </form>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="nav-link btn btn-outline-primary text-primary me-2 px-3" asp-controller="Account" asp-action="Login">Giriş Yap</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link btn btn-primary text-white px-3" asp-controller="Account" asp-action="Register">Kayıt Ol</a>
-                            </li>
+                            <a class="btn btn-sm btn-outline-primary" asp-controller="Account" asp-action="Login">Giriş yap</a>
+                            <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Register">Kayıt ol</a>
                         }
-                    </ul>
-
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <main class="container flex-grow-1 py-4" id="main-content">
+        @if (TempData["SuccessMessage"] is string successMessage)
+        {
+            <div class="alert alert-success" role="status">@successMessage</div>
+        }
+        @if (TempData["WarningMessage"] is string warningMessage)
+        {
+            <div class="alert alert-warning" role="alert">@warningMessage</div>
+        }
+        @if (TempData["ErrorMessage"] is string errorMessage)
+        {
+            <div class="alert alert-danger" role="alert">@errorMessage</div>
+        }
+        @RenderBody()
+    </main>
 
-    <footer class="border-top footer text-muted mt-5 py-3">
-        <div class="container text-center">
-            &copy; 2026 - GraduateApp Lisansüstü Başvuru Sistemi
+    <footer class="border-top bg-light py-3 mt-auto">
+        <div class="container small text-muted">
+            &copy; @DateTime.UtcNow.Year GraduateApp ·
+            <a asp-controller="Home" asp-action="Privacy">Gizlilik</a>
         </div>
     </footer>
 

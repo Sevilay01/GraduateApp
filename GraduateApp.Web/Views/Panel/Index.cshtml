@@ -1,95 +1,80 @@
+@model PanelDashboardViewModel
 @{
-    ViewData["Title"] = "Öğrenci Paneli";
-    var programs = ViewBag.Programs as List<GraduateApp.Web.Models.ProgramViewModel>;
-    var applications = ViewBag.Applications as List<GraduateApp.Web.Models.PanelApplicationViewModel>;}
+    ViewData["Title"] = "Öğrenci paneli";
+}
 
-<div class="container mt-4">
-    <h2 class="mb-4">Öğrenci Paneli</h2>
-
-    <!-- Uyarı Mesajları -->
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success fw-bold">@TempData["SuccessMessage"]</div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger fw-bold">@TempData["ErrorMessage"]</div>
-    }
-
-    <div class="row">
-        <!-- Sol Sütun: Açık Programlar -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Açık Programlar</h5>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Program Adı</th>
-                                <th>Derece</th>
-                                <th class="text-end">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in programs!)
-                            {
-                                <tr>
-                                    <td class="align-middle fw-bold">@p.ProgramName</td>
-                                    <td class="align-middle">@p.DegreeType</td>
-                                    <td class="text-end">
-                                        <form asp-controller="Panel" asp-action="Apply" method="post">
-                                            <input type="hidden" name="programId" value="@p.ProgramId" />
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">Başvur</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                            @if(!programs.Any())
-                            {
-                                <tr><td colspan="3" class="text-center py-3">Şu an başvuruya açık program bulunmamaktadır.</td></tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sağ Sütun: Başvurularım -->
-        <div class="col-md-6">
-            <div class="card shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Başvurularım</h5>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Tarih</th>
-                                <th>Program</th>
-                                <th>Durum</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var a in applications!)
-                            {
-                                <tr>
-                                    <td class="align-middle">@(a.ApplicationDate?.ToString("dd.MM.yyyy"))</td>
-                                    <td class="align-middle fw-bold">@a.ProgramName</td>
-                                    <td class="align-middle">
-                                        <span class="badge bg-warning text-dark">@a.CurrentStatus</span>
-                                    </td>
-                                </tr>
-                            }
-                            @if(!applications.Any())
-                            {
-                                <tr><td colspan="3" class="text-center py-3">Henüz bir programa başvurmadınız.</td></tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+    <div>
+        <h1 class="h2 mb-1">Öğrenci paneli</h1>
+        <p class="text-muted mb-0">Açık programları ve başvuru durumlarınızı görüntüleyin.</p>
     </div>
+    <a asp-action="Profile" class="btn btn-outline-primary">Profil ve eğitim bilgilerim</a>
 </div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+}
+
+<section class="mb-5" aria-labelledby="programs-heading">
+    <h2 id="programs-heading" class="h4">Başvuruya açık programlar</h2>
+    @if (Model.OpenPrograms.Count == 0)
+    {
+        <p class="text-muted">Şu anda başvuruya açık program yok.</p>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var program in Model.OpenPrograms)
+            {
+                var alreadyApplied = Model.Applications.Any(item => item.ProgramId == program.ProgramId);
+                <div class="col-12 col-lg-6">
+                    <article class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h3 class="h5">@program.ProgramName</h3>
+                            <p class="text-muted">@program.InstituteName · @program.DegreeType</p>
+                            @if (program.ApplicationDeadlineUtc.HasValue)
+                            {
+                                <p class="small">Son başvuru: @program.ApplicationDeadlineUtc.Value.ToString("dd.MM.yyyy") UTC</p>
+                            }
+                            <form asp-action="Apply" method="post" class="mt-auto">
+                                <input type="hidden" name="programId" value="@program.ProgramId" />
+                                <button type="submit" class="btn btn-primary" disabled="@alreadyApplied">
+                                    @(alreadyApplied ? "Başvuru yapıldı" : "Başvuru oluştur")
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<section aria-labelledby="applications-heading">
+    <h2 id="applications-heading" class="h4">Başvurularım</h2>
+    @if (Model.Applications.Count == 0)
+    {
+        <p class="text-muted">Henüz bir başvurunuz bulunmuyor.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>Program</th><th>Başvuru tarihi</th><th>Durum</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var application in Model.Applications)
+                    {
+                        <tr>
+                            <td>@application.ProgramName</td>
+                            <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@application.ApplicationDateUtc.ToString("dd.MM.yyyy HH:mm") UTC</time></td>
+                            <td><span class="badge text-bg-secondary">@application.CurrentStatus.DisplayName()</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

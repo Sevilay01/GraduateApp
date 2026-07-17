@@ -1,43 +1,67 @@
+using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// BÖLÜM 1: Tüm kimlik doðrulama ayarlarýný tek bir blokta topluyoruz
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login";               // Giriþ yapmayanlarý buraya yönlendir
-        options.LogoutPath = "/Account/Logout";             // Çýkýþ yapýldýðýnda yönlendirilecek sayfa
-        options.AccessDeniedPath = "/Account/AccessDenied"; // Yetkisi yetmeyenleri (Örn: Admin olmayanlar) yönlendir
-        options.Cookie.Name = "GraduateApp.Auth";           // Çerezin tarayýcýdaki ismi
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.Cookie.Name = "GraduateApp.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.IsEssential = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.SlidingExpiration = false;
     });
 
-
 builder.Services.AddAuthorization();
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<ApiAccessTokenHandler>();
+builder.Services.AddHttpClient<GraduateApiClient>((services, client) =>
+    {
+        var configuration = services.GetRequiredService<IConfiguration>();
+        var baseAddress = configuration["GraduateApi:BaseAddress"];
+        if (!Uri.TryCreate(baseAddress, UriKind.Absolute, out var apiUri)
+            || (apiUri.Scheme != Uri.UriSchemeHttps && apiUri.Scheme != Uri.UriSchemeHttp))
+        {
+            throw new InvalidOperationException(
+                "GraduateApi:BaseAddress appsettings veya environment variable ile saÄŸlanmalÄ±dÄ±r.");
+        }
+
+        client.BaseAddress = apiUri;
+        client.Timeout = TimeSpan.FromSeconds(15);
+    })
+    .AddHttpMessageHandler<ApiAccessTokenHandler>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+}
 
+app.UseStatusCodePagesWithReExecute("/Home/HttpStatus", "?code={0}");
 app.UseHttpsRedirection();
 app.UseRouting();
-
-// BÖLÜM 2: Middleware sýralamasý
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapStaticAssets();
-
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 app.Run();
+
+public partial class Program;

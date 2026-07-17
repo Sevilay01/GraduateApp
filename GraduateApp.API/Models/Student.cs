@@ -1,33 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace GraduateApp.API.Models;
 
-public partial class Student
+public sealed class Student
 {
-    public string Tc { get; set; } = null!;
-
-    public string StudentName { get; set; } = null!;
-
-    public string StudentSurname { get; set; } = null!;
-
+    public string Tc { get; set; } = string.Empty;
+    public string StudentName { get; set; } = string.Empty;
+    public string StudentSurname { get; set; } = string.Empty;
     public string? FatherName { get; set; }
-
     public DateOnly? BirthDate { get; set; }
-
-    public string Email { get; set; } = null!;
-
+    public string Email { get; set; } = string.Empty;
+    public string NormalizedEmail { get; set; } = string.Empty;
     public string? Telephone { get; set; }
+    public string PasswordHash { get; set; } = string.Empty;
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
+    public int AccessFailedCount { get; set; }
+    public DateTimeOffset? LockoutEndUtc { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
 
-    public string PasswordHash { get; set; } = null!;
-
-    public virtual ICollection<Application> Applications { get; set; } = new List<Application>();
-
-    public virtual ICollection<EducationInfo> EducationInfos { get; set; } = new List<EducationInfo>();
-
-    public virtual ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
-
-    public virtual ICollection<StudentExamScore> StudentExamScores { get; set; } = new List<StudentExamScore>();
-
-    public virtual ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
+    public ICollection<Application> Applications { get; set; } = new List<Application>();
+    public ICollection<EducationInfo> EducationInfos { get; set; } = new List<EducationInfo>();
+    public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
+    public ICollection<StudentExamScore> StudentExamScores { get; set; } = new List<StudentExamScore>();
+    public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
 }

@@ -1,6 +1,11 @@
-@GraduateApp.API_HostAddress = http://localhost:5158
+@GraduateAppApi = https://localhost:7037
+@AccessToken = replace-with-a-development-access-token
 
-GET {{GraduateApp.API_HostAddress}}/weatherforecast/
+GET {{GraduateAppApi}}/api/programs/open
 Accept: application/json
 
 ###
+
+GET {{GraduateAppApi}}/api/applications/mine
+Authorization: Bearer {{AccessToken}}
+Accept: application/json

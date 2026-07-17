@@ -1,30 +1,53 @@
-﻿@{
-    ViewData["Title"] = "Ana Sayfa";
+@model HomeViewModel
+@{
+    ViewData["Title"] = "Ana sayfa";
 }
 
-<div class="text-center mt-5">
-    <h1 class="display-4 text-primary fw-bold">Lisansüstü Başvuru Sistemi</h1>
-    <p class="lead mt-3">Enstitü başvuru süreçlerini, öğrenci kayıtlarını ve değerlendirmeleri tek bir ekrandan yönetin.</p>
-</div>
+<section class="p-4 p-md-5 mb-4 rounded-3 bg-light border">
+    <div class="container-fluid py-3">
+        <h1 class="display-6 fw-bold">Yüksek lisans başvurunuzu güvenle yönetin</h1>
+        <p class="col-lg-8 fs-5 text-muted">Açık programları inceleyin, başvurunuzu oluşturun ve değerlendirme durumunu tek panelden takip edin.</p>
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg me-2">Öğrenci kaydı</a>
+            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">Giriş yap</a>
+        }
+        else if (User.IsInRole("Student"))
+        {
+            <a asp-controller="Panel" asp-action="Index" class="btn btn-primary btn-lg">Öğrenci paneline git</a>
+        }
+    </div>
+</section>
 
-<div class="row mt-5">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title">Öğrenci Yönetimi</h5>
-                <p class="card-text">Sisteme kayıtlı adayların listesini görüntüleyin ve detaylarına ulaşın.</p>
-                <a asp-controller="Students" asp-action="Index" class="btn btn-outline-primary">Öğrencilere Git</a>
-            </div>
+<section aria-labelledby="open-programs-title">
+    <h2 id="open-programs-title" class="h3 mb-3">Açık yüksek lisans programları</h2>
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    }
+    else if (Model.OpenPrograms.Count == 0)
+    {
+        <p class="text-muted">Şu anda başvuruya açık program bulunmuyor.</p>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var program in Model.OpenPrograms)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <article class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h3 class="h5">@program.ProgramName</h3>
+                            <p class="mb-1">@program.InstituteName</p>
+                            <p class="text-muted">@program.DegreeType</p>
+                            @if (program.ApplicationDeadlineUtc.HasValue)
+                            {
+                                <p class="small mb-0">Son başvuru: <time datetime="@program.ApplicationDeadlineUtc.Value.ToString("O")">@program.ApplicationDeadlineUtc.Value.ToString("dd.MM.yyyy") UTC</time></p>
+                            }
+                        </div>
+                    </article>
+                </div>
+            }
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title">Başvuru İşlemleri</h5>
-                <p class="card-text">Adayların yüksek lisans ve doktora programlarına yaptıkları başvuruları inceleyin.</p>
-                <!-- Henüz Applications sayfamız olmadığı için butonu pasif (disabled) yapıyoruz -->
-                <button class="btn btn-outline-secondary" disabled>Çok Yakında</button>
-            </div>
-        </div>
-    </div>
-</div>
+    }
+</section>

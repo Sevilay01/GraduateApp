@@ -1,99 +1,81 @@
+using System.Security.Claims;
+using GraduateApp.API.Domain;
+using GraduateApp.API.DTOs;
+using GraduateApp.API.Security;
+using GraduateApp.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using GraduateApp.API.Models;
 
-namespace GraduateApp.API.Controllers
+namespace GraduateApp.API.Controllers;
+
+[ApiController]
+[Route("api/applications")]
+public sealed class ApplicationsController(IApplicationService applicationService) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ApplicationsController : ControllerBase
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
+    public async Task<IActionResult> Create(ApplicationCreateDto request, CancellationToken cancellationToken)
     {
-        private readonly GraduateAppDbContext _context;
-
-        public ApplicationsController(GraduateAppDbContext context)
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
         {
-            _context = context;
+            return Unauthorized();
         }
 
-        // 1. ÖĞRENCİ İÇİN: Yeni Başvuru Yap
-        [HttpPost]
-        public async Task<IActionResult> CreateApplication([FromBody] ApplicationCreateDto dto)
+        var result = await applicationService.CreateAsync(studentTc, request.ProgramId, cancellationToken);
+        return result.IsSuccess
+            ? StatusCode(result.StatusCode, result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpGet("mine")]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
+    public async Task<IActionResult> GetMine(CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
         {
-            var existingApp = await _context.Applications
-                .FirstOrDefaultAsync(a => a.Tc == dto.Tc && a.ProgramId == dto.ProgramId);
-
-            if (existingApp != null)
-                return BadRequest("Bu programa zaten bir başvurunuz bulunmaktadır.");
-
-            var newApplication = new Application
-            {
-                Tc = dto.Tc,
-                ProgramId = dto.ProgramId,
-                ApplicationDate = DateTime.Now,
-                CurrentStatus = "Onay Bekliyor"
-            };
-
-            _context.Applications.Add(newApplication);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Başvurunuz başarıyla alındı!" });
+            return Unauthorized();
         }
 
-        // 2. ÖĞRENCİ İÇİN: Kendi Başvurularını Getir
-        [HttpGet("student/{tc}")]
-        public async Task<IActionResult> GetStudentApplications(string tc)
-        {
-            var applications = await _context.Applications
-                .Include(a => a.Program)
-                .Where(a => a.Tc == tc)
-                .Select(a => new {
-                    a.ApplicationId,
-                    a.ProgramId,
-                    ProgramName = a.Program.ProgramName,
-                    a.ApplicationDate,
-                    a.CurrentStatus
-                })
-                .ToListAsync();
+        return Ok(await applicationService.GetForStudentAsync(studentTc, cancellationToken));
+    }
 
-            return Ok(applications);
+    [HttpGet("admin")]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.AdminRole)]
+    public async Task<IActionResult> GetForAdmin(
+        [FromQuery] string? search,
+        [FromQuery] ApplicationStatus? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default) =>
+        Ok(await applicationService.GetForAdminAsync(search, status, page, pageSize, cancellationToken));
+
+    [HttpGet("admin/{id:int}")]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.AdminRole)]
+    public async Task<IActionResult> GetDetail(int id, CancellationToken cancellationToken)
+    {
+        var application = await applicationService.GetDetailForAdminAsync(id, cancellationToken);
+        return application is null
+            ? Problem(statusCode: StatusCodes.Status404NotFound, detail: "Başvuru bulunamadı.")
+            : Ok(application);
+    }
+
+    [HttpPut("admin/{id:int}/status")]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.AdminRole)]
+    public async Task<IActionResult> UpdateStatus(
+        int id,
+        ApplicationStatusUpdateDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var adminId))
+        {
+            return Unauthorized();
         }
 
-        // 3. ADMIN İÇİN: Tüm Başvuruları Getir
-        [HttpGet]
-        public async Task<IActionResult> GetAllApplications()
-        {
-            // Öğrenci (TcNavigation) ve Program bilgilerini birlikte çekiyoruz
-            var applications = await _context.Applications
-                .Include(a => a.Program)
-                .Include(a => a.TcNavigation)
-                .Select(a => new {
-                    a.ApplicationId,
-                    a.Tc,
-                    StudentFullName = a.TcNavigation.StudentName + " " + a.TcNavigation.StudentSurname,
-                    a.ProgramId,
-                    ProgramName = a.Program.ProgramName,
-                    a.ApplicationDate,
-                    a.CurrentStatus
-                })
-                .ToListAsync();
-
-            return Ok(applications);
-        }
-
-        // 4. ADMIN İÇİN: Başvuru Durumunu Güncelle
-        [HttpPut("{id}/status")]
-        public async Task<IActionResult> UpdateApplicationStatus(int id, [FromBody] ApplicationStatusUpdateDto dto)
-        {
-            var application = await _context.Applications.FindAsync(id);
-
-            if (application == null)
-                return NotFound("Başvuru bulunamadı.");
-
-            // Durumu güncelliyoruz
-            application.CurrentStatus = dto.NewStatus;
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Başvuru durumu başarıyla güncellendi." });
-        }
+        var result = await applicationService.UpdateStatusAsync(id, adminId, request, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
     }
 }
