@@ -15,11 +15,10 @@ namespace GraduateApp.API.Controllers
             _context = context;
         }
 
-        // POST: api/applications (Yeni Başvuru Yap)
+        // 1. ÖĞRENCİ İÇİN: Yeni Başvuru Yap
         [HttpPost]
         public async Task<IActionResult> CreateApplication([FromBody] ApplicationCreateDto dto)
         {
-            // Aynı programa daha önce başvurmuş mu kontrolü
             var existingApp = await _context.Applications
                 .FirstOrDefaultAsync(a => a.Tc == dto.Tc && a.ProgramId == dto.ProgramId);
 
@@ -31,7 +30,7 @@ namespace GraduateApp.API.Controllers
                 Tc = dto.Tc,
                 ProgramId = dto.ProgramId,
                 ApplicationDate = DateTime.Now,
-                CurrentStatus = "Onay Bekliyor" // Senin orijinal property adın
+                CurrentStatus = "Onay Bekliyor"
             };
 
             _context.Applications.Add(newApplication);
@@ -40,12 +39,12 @@ namespace GraduateApp.API.Controllers
             return Ok(new { message = "Başvurunuz başarıyla alındı!" });
         }
 
-        // GET: api/applications/student/{tc} (Öğrencinin Başvurularını Getir)
+        // 2. ÖĞRENCİ İÇİN: Kendi Başvurularını Getir
         [HttpGet("student/{tc}")]
         public async Task<IActionResult> GetStudentApplications(string tc)
         {
             var applications = await _context.Applications
-                .Include(a => a.Program) // Program adını da çekmek için dahil ediyoruz
+                .Include(a => a.Program)
                 .Where(a => a.Tc == tc)
                 .Select(a => new {
                     a.ApplicationId,
@@ -57,6 +56,44 @@ namespace GraduateApp.API.Controllers
                 .ToListAsync();
 
             return Ok(applications);
+        }
+
+        // 3. ADMIN İÇİN: Tüm Başvuruları Getir
+        [HttpGet]
+        public async Task<IActionResult> GetAllApplications()
+        {
+            // Öğrenci (TcNavigation) ve Program bilgilerini birlikte çekiyoruz
+            var applications = await _context.Applications
+                .Include(a => a.Program)
+                .Include(a => a.TcNavigation)
+                .Select(a => new {
+                    a.ApplicationId,
+                    a.Tc,
+                    StudentFullName = a.TcNavigation.StudentName + " " + a.TcNavigation.StudentSurname,
+                    a.ProgramId,
+                    ProgramName = a.Program.ProgramName,
+                    a.ApplicationDate,
+                    a.CurrentStatus
+                })
+                .ToListAsync();
+
+            return Ok(applications);
+        }
+
+        // 4. ADMIN İÇİN: Başvuru Durumunu Güncelle
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateApplicationStatus(int id, [FromBody] ApplicationStatusUpdateDto dto)
+        {
+            var application = await _context.Applications.FindAsync(id);
+
+            if (application == null)
+                return NotFound("Başvuru bulunamadı.");
+
+            // Durumu güncelliyoruz
+            application.CurrentStatus = dto.NewStatus;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Başvuru durumu başarıyla güncellendi." });
         }
     }
 }

@@ -1,0 +1,76 @@
+@model System.Collections.Generic.IEnumerable<GraduateApp.Web.Models.AdminApplicationViewModel>
+@{
+    ViewData["Title"] = "Yönetim Paneli";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Yönetim Paneli - Tüm Başvurular</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success fw-bold">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger fw-bold">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="card shadow-sm border-dark">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Başvuru Listesi</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Öğrenci (TC)</th>
+                        <th>Program</th>
+                        <th>Tarih</th>
+                        <th>Durum</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="align-middle">
+                                <div class="fw-bold">@item.StudentFullName</div>
+                                <div class="text-muted small">@item.Tc</div>
+                            </td>
+                            <td class="align-middle fw-bold">@item.ProgramName</td>
+                            <td class="align-middle">@(item.ApplicationDate?.ToString("dd.MM.yyyy"))</td>
+                            <td class="align-middle">
+                                @if(item.CurrentStatus == "Kabul Edildi") {
+                                    <span class="badge bg-success">@item.CurrentStatus</span>
+                                } else if (item.CurrentStatus == "Reddedildi") {
+                                    <span class="badge bg-danger">@item.CurrentStatus</span>
+                                } else {
+                                    <span class="badge bg-warning text-dark">@item.CurrentStatus</span>
+                                }
+                            </td>
+                            <td class="text-end align-middle">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <form asp-controller="Admin" asp-action="UpdateStatus" method="post">
+                                        <input type="hidden" name="id" value="@item.ApplicationId" />
+                                        <input type="hidden" name="status" value="Kabul Edildi" />
+                                        <button type="submit" class="btn btn-sm btn-success">Kabul Et</button>
+                                    </form>
+                                    <form asp-controller="Admin" asp-action="UpdateStatus" method="post">
+                                        <input type="hidden" name="id" value="@item.ApplicationId" />
+                                        <input type="hidden" name="status" value="Reddedildi" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Reddet</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if(!Model.Any())
+                    {
+                        <tr><td colspan="5" class="text-center py-3">Henüz yapılmış bir başvuru bulunmamaktadır.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
