@@ -3,16 +3,36 @@ using GraduateApp.API.Domain;
 namespace GraduateApp.API.DTOs;
 
 public sealed record OpenProgramDto(
+    int ProgramOfferingId,
     int ProgramId,
     string ProgramName,
     string? DegreeType,
     string InstituteName,
-    DateTime? ApplicationDeadlineUtc);
+    int AcademicYearStart,
+    string AcademicYear,
+    AcademicTerm Term,
+    string TermName,
+    DateTime ApplicationStartUtc,
+    DateTime ApplicationDeadlineUtc,
+    int Quota,
+    IReadOnlyList<ExamRequirementDto> ExamRequirements);
+
+public sealed record ExamRequirementDto(
+    int ExamId,
+    string ExamName,
+    decimal MinimumScore,
+    DateOnly? MinimumValidityDate,
+    bool IsRequired);
 
 public sealed record StudentApplicationDto(
     int ApplicationId,
+    int ProgramOfferingId,
     int ProgramId,
     string ProgramName,
+    int AcademicYearStart,
+    string AcademicYear,
+    AcademicTerm Term,
+    string TermName,
     DateTime ApplicationDateUtc,
     ApplicationStatus CurrentStatus,
     string RowVersion);
@@ -22,6 +42,10 @@ public sealed record AdminApplicationListItemDto(
     string StudentFullName,
     string MaskedTc,
     string ProgramName,
+    int AcademicYearStart,
+    string AcademicYear,
+    AcademicTerm Term,
+    string TermName,
     DateTime ApplicationDateUtc,
     ApplicationStatus CurrentStatus,
     string RowVersion);
@@ -39,10 +63,22 @@ public sealed record AdminApplicationDetailDto(
     string Email,
     string ProgramName,
     string InstituteName,
+    int AcademicYearStart,
+    string AcademicYear,
+    AcademicTerm Term,
+    string TermName,
     DateTime ApplicationDateUtc,
     ApplicationStatus CurrentStatus,
     string RowVersion,
-    IReadOnlyList<ApplicationStatusHistoryDto> History);
+    IReadOnlyList<ApplicationStatusHistoryDto> History,
+    IReadOnlyList<ApplicationScoreSnapshotDto> ScoreSnapshots);
+
+public sealed record ApplicationScoreSnapshotDto(
+    int ExamId,
+    string ExamName,
+    decimal Score,
+    DateOnly? ExamDate,
+    DateTime CapturedAtUtc);
 
 public sealed record PagedResult<T>(
     IReadOnlyList<T> Items,

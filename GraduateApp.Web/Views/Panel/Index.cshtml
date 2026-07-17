@@ -27,18 +27,26 @@
         <div class="row g-3">
             @foreach (var program in Model.OpenPrograms)
             {
-                var alreadyApplied = Model.Applications.Any(item => item.ProgramId == program.ProgramId);
+                var alreadyApplied = Model.Applications.Any(item => item.ProgramOfferingId == program.ProgramOfferingId);
                 <div class="col-12 col-lg-6">
                     <article class="card h-100">
                         <div class="card-body d-flex flex-column">
                             <h3 class="h5">@program.ProgramName</h3>
                             <p class="text-muted">@program.InstituteName · @program.DegreeType</p>
-                            @if (program.ApplicationDeadlineUtc.HasValue)
+                            <p class="mb-2"><strong>@program.AcademicYear · @program.TermName</strong></p>
+                            <p class="small">Kontenjan: @program.Quota</p>
+                            <p class="small">Son başvuru: <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">@IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd.MM.yyyy HH:mm")</time> (İstanbul)</p>
+                            @if (program.ExamRequirements.Count > 0)
                             {
-                                <p class="small">Son başvuru: @program.ApplicationDeadlineUtc.Value.ToString("dd.MM.yyyy") UTC</p>
+                                <ul class="small">
+                                    @foreach (var requirement in program.ExamRequirements)
+                                    {
+                                        <li>@requirement.ExamName: en az @requirement.MinimumScore @(requirement.IsRequired ? "(zorunlu)" : "(isteğe bağlı)")</li>
+                                    }
+                                </ul>
                             }
                             <form asp-action="Apply" method="post" class="mt-auto">
-                                <input type="hidden" name="programId" value="@program.ProgramId" />
+                                <input type="hidden" name="programOfferingId" value="@program.ProgramOfferingId" />
                                 <button type="submit" class="btn btn-primary" disabled="@alreadyApplied">
                                     @(alreadyApplied ? "Başvuru yapıldı" : "Başvuru oluştur")
                                 </button>
@@ -62,14 +70,15 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead>
-                    <tr><th>Program</th><th>Başvuru tarihi</th><th>Durum</th></tr>
+                    <tr><th>Program</th><th>Akademik dönem</th><th>Başvuru tarihi</th><th>Durum</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var application in Model.Applications)
                     {
                         <tr>
                             <td>@application.ProgramName</td>
-                            <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@application.ApplicationDateUtc.ToString("dd.MM.yyyy HH:mm") UTC</time></td>
+                            <td>@application.AcademicYear · @application.TermName</td>
+                            <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")</time> (İstanbul)</td>
                             <td><span class="badge text-bg-secondary">@application.CurrentStatus.DisplayName()</span></td>
                         </tr>
                     }

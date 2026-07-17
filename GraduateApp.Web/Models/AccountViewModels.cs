@@ -35,9 +35,23 @@ public sealed class RegisterViewModel
     [Display(Name = "Soyad")]
     public string LastName { get; set; } = string.Empty;
 
+    [Required, StringLength(50, MinimumLength = 2)]
+    [Display(Name = "Baba adı")]
+    public string FatherName { get; set; } = string.Empty;
+
+    [Required]
+    [DataType(DataType.Date)]
+    [Display(Name = "Doğum tarihi")]
+    public DateOnly? BirthDate { get; set; }
+
     [Required, EmailAddress, StringLength(254)]
     [Display(Name = "E-posta")]
     public string Email { get; set; } = string.Empty;
+
+    [Required, StringLength(30)]
+    [DataType(DataType.PhoneNumber)]
+    [Display(Name = "Cep telefonu")]
+    public string Telephone { get; set; } = string.Empty;
 
     [Required, StringLength(128, MinimumLength = 12)]
     [DataType(DataType.Password)]

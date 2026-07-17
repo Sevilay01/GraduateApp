@@ -6,9 +6,8 @@ public sealed class Program
     public int InstituteId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
     public string? DegreeType { get; set; }
-    public bool IsOpen { get; set; }
-    public DateTime? ApplicationDeadlineUtc { get; set; }
+    public bool IsActive { get; set; } = true;
 
-    public ICollection<Application> Applications { get; set; } = new List<Application>();
+    public ICollection<ProgramOffering> Offerings { get; set; } = new List<ProgramOffering>();
     public Institute Institute { get; set; } = null!;
 }

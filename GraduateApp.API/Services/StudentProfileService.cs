@@ -45,9 +45,20 @@ public sealed class StudentProfileService(
             return ServiceResult<StudentProfileDto>.Failure("E-posta adresi başka bir hesap tarafından kullanılıyor.", StatusCodes.Status409Conflict);
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Telephone)
+        string? normalizedTelephone = null;
+        if (!string.IsNullOrWhiteSpace(request.Telephone))
+        {
+            if (!TurkishMobilePhoneNormalizer.TryNormalize(request.Telephone, out normalizedTelephone))
+            {
+                return ServiceResult<StudentProfileDto>.Failure(
+                    "Geçerli bir Türkiye cep telefonu numarası giriniz.",
+                    StatusCodes.Status400BadRequest);
+            }
+        }
+
+        if (normalizedTelephone is not null
             && await dbContext.Students.AnyAsync(
-                item => item.Tc != studentTc && item.Telephone == request.Telephone.Trim(),
+                item => item.Tc != studentTc && item.Telephone == normalizedTelephone,
                 cancellationToken))
         {
             return ServiceResult<StudentProfileDto>.Failure("Telefon numarası başka bir hesap tarafından kullanılıyor.", StatusCodes.Status409Conflict);
@@ -57,7 +68,7 @@ public sealed class StudentProfileService(
         student.StudentSurname = request.LastName.Trim();
         student.Email = request.Email.Trim();
         student.NormalizedEmail = normalizedEmail;
-        student.Telephone = string.IsNullOrWhiteSpace(request.Telephone) ? null : request.Telephone.Trim();
+        student.Telephone = normalizedTelephone;
         student.FatherName = string.IsNullOrWhiteSpace(request.FatherName) ? null : request.FatherName.Trim();
         student.BirthDate = request.BirthDate;
         student.UpdatedAtUtc = timeProvider.GetUtcNow().UtcDateTime;

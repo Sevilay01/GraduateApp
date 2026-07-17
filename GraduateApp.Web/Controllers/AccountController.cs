@@ -90,6 +90,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     {
         if (!ModelState.IsValid)
         {
+            ClearRegistrationPasswords(model);
             return View(model);
         }
 
@@ -97,6 +98,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         if (!result.IsSuccess)
         {
             ModelState.AddModelError(string.Empty, result.Error ?? "Kayıt oluşturulamadı.");
+            ClearRegistrationPasswords(model);
             return View(model);
         }
 
@@ -203,4 +205,12 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
 
     private string? NormalizeReturnUrl(string? returnUrl) =>
         !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
+    private void ClearRegistrationPasswords(RegisterViewModel model)
+    {
+        model.Password = string.Empty;
+        model.ConfirmPassword = string.Empty;
+        ModelState.Remove(nameof(model.Password));
+        ModelState.Remove(nameof(model.ConfirmPassword));
+    }
 }

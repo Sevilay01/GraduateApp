@@ -20,9 +20,34 @@
                     <dt class="col-sm-4">E-posta</dt><dd class="col-sm-8">@Model.Email</dd>
                     <dt class="col-sm-4">Enstitü</dt><dd class="col-sm-8">@Model.InstituteName</dd>
                     <dt class="col-sm-4">Program</dt><dd class="col-sm-8">@Model.ProgramName</dd>
-                    <dt class="col-sm-4">Başvuru tarihi</dt><dd class="col-sm-8">@Model.ApplicationDateUtc.ToString("dd.MM.yyyy HH:mm") UTC</dd>
+                    <dt class="col-sm-4">Akademik dönem</dt><dd class="col-sm-8">@Model.AcademicYear · @Model.TermName</dd>
+                    <dt class="col-sm-4">Başvuru tarihi</dt><dd class="col-sm-8">@IstanbulTime.FromUtc(Model.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm") (İstanbul)</dd>
                     <dt class="col-sm-4">Durum</dt><dd class="col-sm-8"><strong>@Model.CurrentStatus.DisplayName()</strong></dd>
                 </dl>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mt-4" aria-labelledby="scores-heading">
+            <div class="card-body">
+                <h2 id="scores-heading" class="h4">Başvuru puan snapshot’ı</h2>
+                @if (Model.ScoreSnapshots.Count == 0)
+                {
+                    <p class="text-muted mb-0">Bu başvuru için puan snapshot’ı bulunmuyor.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead><tr><th>Sınav</th><th>Puan</th><th>Sınav tarihi</th></tr></thead>
+                            <tbody>
+                                @foreach (var score in Model.ScoreSnapshots)
+                                {
+                                    <tr><td>@score.ExamName</td><td>@score.Score</td><td>@score.ExamDate?.ToString("dd.MM.yyyy")</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </section>
 

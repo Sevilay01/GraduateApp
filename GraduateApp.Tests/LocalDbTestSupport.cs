@@ -1,6 +1,9 @@
 using GraduateApp.API.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using System.Text.RegularExpressions;
 
 namespace GraduateApp.Tests;
 
@@ -152,13 +155,14 @@ internal sealed class LocalDbTestDatabase(string databaseName, string? databaseC
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task MigrateAsync()
+    public async Task MigrateAsync(string? targetMigration = null)
     {
         var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
             .UseSqlServer(ConnectionString)
             .Options;
         await using var dbContext = new GraduateAppDbContext(options);
-        await dbContext.Database.MigrateAsync();
+        var migrator = dbContext.GetService<IMigrator>();
+        await migrator.MigrateAsync(targetMigration);
     }
 
     public async Task<int> ExecuteAsync(string sql)
@@ -168,6 +172,26 @@ internal sealed class LocalDbTestDatabase(string databaseName, string? databaseC
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         return await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task ExecuteSqlServerScriptAsync(string sql)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        foreach (var batch in Regex.Split(
+            sql,
+            @"^\s*GO\s*(?:--.*)?$",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline))
+        {
+            if (string.IsNullOrWhiteSpace(batch))
+            {
+                continue;
+            }
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = batch;
+            await command.ExecuteNonQueryAsync();
+        }
     }
 
     public async Task<T> ScalarAsync<T>(string sql)

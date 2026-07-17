@@ -22,7 +22,7 @@ public sealed class ApplicationsController(IApplicationService applicationServic
             return Unauthorized();
         }
 
-        var result = await applicationService.CreateAsync(studentTc, request.ProgramId, cancellationToken);
+        var result = await applicationService.CreateAsync(studentTc, request.ProgramOfferingId, cancellationToken);
         return result.IsSuccess
             ? StatusCode(result.StatusCode, result.Value)
             : Problem(statusCode: result.StatusCode, detail: result.Error);
@@ -46,10 +46,19 @@ public sealed class ApplicationsController(IApplicationService applicationServic
     public async Task<IActionResult> GetForAdmin(
         [FromQuery] string? search,
         [FromQuery] ApplicationStatus? status,
+        [FromQuery] int? academicYearStart,
+        [FromQuery] AcademicTerm? term,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) =>
-        Ok(await applicationService.GetForAdminAsync(search, status, page, pageSize, cancellationToken));
+        Ok(await applicationService.GetForAdminAsync(
+            search,
+            status,
+            academicYearStart,
+            term,
+            page,
+            pageSize,
+            cancellationToken));
 
     [HttpGet("admin/{id:int}")]
     [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.AdminRole)]

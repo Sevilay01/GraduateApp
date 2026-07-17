@@ -20,7 +20,10 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             model.Tc,
             model.FirstName,
             model.LastName,
+            model.FatherName,
+            model.BirthDate,
             model.Email,
+            model.Telephone,
             model.Password,
             model.ConfirmPassword
         }, cancellationToken);
@@ -53,12 +56,14 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult<IReadOnlyList<PanelApplicationViewModel>>> GetMyApplicationsAsync(CancellationToken cancellationToken) =>
         GetAsync<IReadOnlyList<PanelApplicationViewModel>>("api/applications/mine", cancellationToken);
 
-    public Task<ApiResult> CreateApplicationAsync(int programId, CancellationToken cancellationToken) =>
-        PostAsync("api/applications", new { programId }, cancellationToken);
+    public Task<ApiResult> CreateApplicationAsync(int programOfferingId, CancellationToken cancellationToken) =>
+        PostAsync("api/applications", new { programOfferingId }, cancellationToken);
 
     public Task<ApiResult<PagedResultViewModel<AdminApplicationListItemViewModel>>> GetAdminApplicationsAsync(
         string? search,
         ApplicationStatus? status,
+        int? academicYearStart,
+        AcademicTerm? term,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
@@ -78,10 +83,58 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             query.Add($"status={status.Value}");
         }
 
+        if (academicYearStart.HasValue)
+        {
+            query.Add($"academicYearStart={academicYearStart.Value}");
+        }
+
+        if (term.HasValue)
+        {
+            query.Add($"term={term.Value}");
+        }
+
         return GetAsync<PagedResultViewModel<AdminApplicationListItemViewModel>>(
             $"api/applications/admin?{string.Join('&', query)}",
             cancellationToken);
     }
+
+    public Task<ApiResult<IReadOnlyList<ProgramOfferingAdminViewModel>>> GetProgramOfferingsAsync(
+        int? academicYearStart,
+        AcademicTerm? term,
+        bool includeArchived,
+        CancellationToken cancellationToken)
+    {
+        var query = new List<string> { $"includeArchived={includeArchived.ToString().ToLowerInvariant()}" };
+        if (academicYearStart.HasValue)
+        {
+            query.Add($"academicYearStart={academicYearStart.Value}");
+        }
+
+        if (term.HasValue)
+        {
+            query.Add($"term={term.Value}");
+        }
+
+        return GetAsync<IReadOnlyList<ProgramOfferingAdminViewModel>>(
+            $"api/program-offerings?{string.Join('&', query)}",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<ProgramOfferingCatalogViewModel>> GetProgramOfferingCatalogAsync(CancellationToken cancellationToken) =>
+        GetAsync<ProgramOfferingCatalogViewModel>("api/program-offerings/catalog", cancellationToken);
+
+    public Task<ApiResult<ProgramOfferingAdminViewModel>> CreateProgramOfferingAsync(
+        ProgramOfferingFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<ProgramOfferingAdminViewModel>("api/program-offerings", MapOfferingRequest(model, includeConcurrency: false), cancellationToken);
+
+    public Task<ApiResult<ProgramOfferingAdminViewModel>> UpdateProgramOfferingAsync(
+        ProgramOfferingFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PutAsync<ProgramOfferingAdminViewModel>(
+            $"api/program-offerings/{model.ProgramOfferingId}",
+            MapOfferingRequest(model, includeConcurrency: true),
+            cancellationToken);
 
     public Task<ApiResult<AdminApplicationDetailViewModel>> GetAdminApplicationDetailAsync(
         int applicationId,
@@ -262,4 +315,26 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
     }
+
+    private static object MapOfferingRequest(ProgramOfferingFormViewModel model, bool includeConcurrency) => new
+    {
+        model.ProgramId,
+        model.AcademicYearStart,
+        model.Term,
+        ApplicationStartUtc = IstanbulTime.ToUtc(model.ApplicationStartLocal),
+        ApplicationDeadlineUtc = IstanbulTime.ToUtc(model.ApplicationDeadlineLocal),
+        model.Quota,
+        model.IsOpen,
+        model.IsArchived,
+        RowVersion = includeConcurrency ? model.RowVersion : null,
+        ExamRequirements = model.ExamRequirements
+            .Where(requirement => requirement.IsConfigured)
+            .Select(requirement => new
+            {
+                requirement.ExamId,
+                requirement.MinimumScore,
+                requirement.MinimumValidityDate,
+                requirement.IsRequired
+            })
+    };
 }

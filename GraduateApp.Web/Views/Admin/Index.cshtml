@@ -8,6 +8,7 @@
         <h1 class="h2 mb-1">Başvuru yönetimi</h1>
         <p class="text-muted mb-0">Arama, durum filtresi ve sayfalama ile başvuruları inceleyin.</p>
     </div>
+    <a asp-action="Offerings" class="btn btn-outline-primary">Dönemsel ilanlar</a>
 </div>
 
 <form method="get" class="card card-body mb-4" role="search">
@@ -19,6 +20,16 @@
         <div class="col-12 col-md-3">
             <label asp-for="Status" class="form-label">Durum</label>
             <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<ApplicationStatus>()">
+                <option value="">Tümü</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-2">
+            <label asp-for="AcademicYearStart" class="form-label">Akademik yıl</label>
+            <input asp-for="AcademicYearStart" class="form-control" min="2000" max="2200" placeholder="2026" />
+        </div>
+        <div class="col-12 col-md-2">
+            <label asp-for="Term" class="form-label">Dönem</label>
+            <select asp-for="Term" class="form-select" asp-items="Html.GetEnumSelectList<AcademicTerm>()">
                 <option value="">Tümü</option>
             </select>
         </div>
@@ -42,7 +53,7 @@ else
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead>
-                <tr><th>Öğrenci</th><th>TC</th><th>Program</th><th>Tarih</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
+                <tr><th>Öğrenci</th><th>TC</th><th>Program</th><th>Dönem</th><th>Tarih</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
             </thead>
             <tbody>
                 @foreach (var application in Model.Result.Items)
@@ -51,7 +62,8 @@ else
                         <td>@application.StudentFullName</td>
                         <td>@application.MaskedTc</td>
                         <td>@application.ProgramName</td>
-                        <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@application.ApplicationDateUtc.ToString("dd.MM.yyyy HH:mm") UTC</time></td>
+                        <td>@application.AcademicYear · @application.TermName</td>
+                        <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")</time></td>
                         <td>@application.CurrentStatus.DisplayName()</td>
                         <td><a asp-action="Detail" asp-route-id="@application.ApplicationId" class="btn btn-sm btn-outline-primary">Detay</a></td>
                     </tr>
@@ -65,11 +77,11 @@ else
         <nav aria-label="Başvuru sayfaları">
             <ul class="pagination justify-content-center">
                 <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)">
-                    <a class="page-link" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status">Önceki</a>
+                    <a class="page-link" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Önceki</a>
                 </li>
                 <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
                 <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)">
-                    <a class="page-link" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status">Sonraki</a>
+                    <a class="page-link" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Sonraki</a>
                 </li>
             </ul>
         </nav>

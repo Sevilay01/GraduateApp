@@ -13,7 +13,7 @@ public sealed class UpdateStudentProfileDto
     [EmailAddress, StringLength(254)]
     public string Email { get; init; } = string.Empty;
 
-    [Phone, StringLength(15)]
+    [Phone, StringLength(30)]
     public string? Telephone { get; init; }
 
     [StringLength(50)]

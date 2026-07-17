@@ -22,8 +22,17 @@ public sealed class RegisterStudentDto
     [Required, StringLength(50, MinimumLength = 2)]
     public string LastName { get; init; } = string.Empty;
 
+    [Required, StringLength(50, MinimumLength = 2)]
+    public string FatherName { get; init; } = string.Empty;
+
+    [Required]
+    public DateOnly BirthDate { get; init; }
+
     [Required, EmailAddress, StringLength(254)]
     public string Email { get; init; } = string.Empty;
+
+    [Required, StringLength(30)]
+    public string Telephone { get; init; } = string.Empty;
 
     [Required, StringLength(128, MinimumLength = 12)]
     public string Password { get; init; } = string.Empty;

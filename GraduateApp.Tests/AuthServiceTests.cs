@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace GraduateApp.Tests;
 
@@ -124,7 +125,7 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
-    public async Task RegisterStudent_AllowsTwoStudentsWithoutTelephone_AndHashesPasswords()
+    public async Task RegisterStudent_AllowsStudentsWithRequiredFields_AndHashesPasswords()
     {
         await using var db = TestDb.Create();
         var hasher = new PasswordHasher<Student>();
@@ -147,12 +148,42 @@ public sealed class AuthServiceTests
         Assert.Equal(StatusCodes.Status201Created, second.StatusCode);
         var students = db.Students.OrderBy(student => student.Tc).ToArray();
         Assert.Equal(2, students.Length);
-        Assert.All(students, student => Assert.Null(student.Telephone));
+        Assert.All(students, student => Assert.StartsWith("+905", student.Telephone, StringComparison.Ordinal));
+        var storedFirst = students.Single(student => student.Tc == firstRequest.Tc);
+        Assert.Equal("Test Baba", storedFirst.FatherName);
+        Assert.Equal(new DateOnly(2000, 1, 1), storedFirst.BirthDate);
+        Assert.Equal(firstRequest.Email.ToUpperInvariant(), storedFirst.NormalizedEmail);
         Assert.DoesNotContain(students, student => student.PasswordHash == firstRequest.Password);
         Assert.DoesNotContain(students, student => student.PasswordHash == secondRequest.Password);
         Assert.Equal(
             PasswordVerificationResult.Success,
             hasher.VerifyHashedPassword(students.Single(student => student.Tc == firstRequest.Tc), students.Single(student => student.Tc == firstRequest.Tc).PasswordHash, firstRequest.Password));
+    }
+
+    [Fact]
+    public async Task RegisterStudent_rejects_same_canonical_telephone_in_another_format()
+    {
+        await using var db = TestDb.Create();
+        var service = CreateService(db);
+        var first = CreateRegistrationRequest(
+            "10000000078",
+            "first@example.test",
+            "First-Student-Password-1!",
+            "0 (532) 123-45-67");
+        var second = CreateRegistrationRequest(
+            "10000000214",
+            "second@example.test",
+            "Second-Student-Password-1!",
+            "+905321234567");
+
+        var created = await service.RegisterStudentAsync(first, CancellationToken.None);
+        var duplicate = await service.RegisterStudentAsync(second, CancellationToken.None);
+
+        Assert.True(created.IsSuccess);
+        Assert.False(duplicate.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, duplicate.StatusCode);
+        Assert.Equal("+905321234567", db.Students.Single().Telephone);
+        Assert.DoesNotContain(second.Telephone, duplicate.Error, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -216,7 +247,8 @@ public sealed class AuthServiceTests
             "private.student@example.test",
             "Private-Student-Password-1!");
         var interceptor = new ThrowingSaveChangesInterceptor(
-            () => new DbUpdateException($"TC={request.Tc}; Email={request.Email}; Telephone={telephone}"));
+            () => new DbUpdateException(
+                $"TC={request.Tc}; Email={request.Email}; Telephone={telephone}; Father={request.FatherName}; BirthDate={request.BirthDate}"));
         await using var db = TestDb.Create(interceptor);
         var logger = new CapturingLogger<AuthService>();
         var service = CreateService(db, logger: logger);
@@ -232,6 +264,8 @@ public sealed class AuthServiceTests
         Assert.DoesNotContain(request.Tc, output, StringComparison.Ordinal);
         Assert.DoesNotContain(request.Email, output, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(telephone, output, StringComparison.Ordinal);
+        Assert.DoesNotContain(request.FatherName, output, StringComparison.Ordinal);
+        Assert.DoesNotContain(request.BirthDate.ToString("O"), output, StringComparison.Ordinal);
     }
 
     private static AuthService CreateService(
@@ -248,6 +282,7 @@ public sealed class AuthServiceTests
                 ["Web:BaseUrl"] = "https://localhost:7272"
             })
             .Build();
+        var clock = timeProvider ?? new TestTimeProvider(DateTimeOffset.UtcNow);
         return new AuthService(
             db,
             studentHasher ?? new PasswordHasher<Student>(),
@@ -255,19 +290,27 @@ public sealed class AuthServiceTests
             new StubAccessTokenService(),
             emailSender ?? new CapturingEmailSender(),
             configuration,
-            timeProvider ?? new TestTimeProvider(DateTimeOffset.UtcNow),
-            logger ?? NullLogger<AuthService>.Instance);
+            clock,
+            logger ?? NullLogger<AuthService>.Instance,
+            new StudentRegistrationValidator(clock, Options.Create(new RegistrationOptions())));
     }
 
-    private static RegisterStudentDto CreateRegistrationRequest(string tc, string email, string password) => new()
-    {
-        Tc = tc,
-        FirstName = "Test",
-        LastName = "Öğrenci",
-        Email = email,
-        Password = password,
-        ConfirmPassword = password
-    };
+    private static RegisterStudentDto CreateRegistrationRequest(
+        string tc,
+        string email,
+        string password,
+        string? telephone = null) => new()
+        {
+            Tc = tc,
+            FirstName = "Test",
+            LastName = "Öğrenci",
+            FatherName = "Test Baba",
+            BirthDate = new DateOnly(2000, 1, 1),
+            Email = email,
+            Telephone = telephone ?? $"05{tc[^9..]}",
+            Password = password,
+            ConfirmPassword = password
+        };
 
     private static Student CreateStudent() => new()
     {
