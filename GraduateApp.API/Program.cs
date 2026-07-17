@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,11 +30,18 @@ builder.Services.AddAuthentication(ApiAuthenticationDefaults.Scheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddOptions<RegistrationOptions>()
+    .Bind(builder.Configuration.GetSection(RegistrationOptions.SectionName))
+    .Validate(options => options.MinimumAge is >= 16 and <= 30, "Registration:MinimumAge geçersiz.")
+    .Validate(options => options.MaximumAge is >= 60 and <= 120, "Registration:MaximumAge geçersiz.")
+    .ValidateOnStart();
+builder.Services.AddScoped<StudentRegistrationValidator>();
 builder.Services.AddScoped<IPasswordHasher<Student>, PasswordHasher<Student>>();
 builder.Services.AddScoped<IPasswordHasher<Admin>, PasswordHasher<Admin>>();
 builder.Services.AddScoped<IAccessTokenService, AccessTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<IProgramOfferingService, ProgramOfferingService>();
 builder.Services.AddScoped<IStudentProfileService, StudentProfileService>();
 builder.Services.AddHostedService<AdminBootstrapHostedService>();
 

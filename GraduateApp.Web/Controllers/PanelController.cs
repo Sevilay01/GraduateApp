@@ -29,15 +29,15 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Apply(int programId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Apply(int programOfferingId, CancellationToken cancellationToken)
     {
-        if (programId <= 0)
+        if (programOfferingId <= 0)
         {
-            TempData["ErrorMessage"] = "Geçerli bir program seçiniz.";
+            TempData["ErrorMessage"] = "Geçerli bir dönemsel ilan seçiniz.";
             return RedirectToAction(nameof(Index));
         }
 
-        var result = await apiClient.CreateApplicationAsync(programId, cancellationToken);
+        var result = await apiClient.CreateApplicationAsync(programOfferingId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Başvurunuz başarıyla alındı."
             : result.Error ?? "Başvuru oluşturulamadı.";

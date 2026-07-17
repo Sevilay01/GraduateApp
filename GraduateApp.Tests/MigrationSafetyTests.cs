@@ -202,6 +202,40 @@ public sealed class MigrationSafetyTests
         Assert.DoesNotContain("TRUNCATE TABLE", script, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void AddAcademicPeriodOfferings_preserves_legacy_applications_and_orders_fk_transition_safely()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppMigrationScriptTest;Integrated Security=true")
+            .Options;
+
+        using var dbContext = new GraduateAppDbContext(options);
+        var script = dbContext.GetService<IMigrator>().GenerateScript(
+            fromMigration: "20260717110647_FixNullableStudentTelephoneUniqueness",
+            toMigration: "20260717123013_AddAcademicPeriodOfferings");
+
+        AssertOrdered(script, "CREATE TABLE [ProgramOfferings]", "INSERT INTO [dbo].[ProgramOfferings]");
+        AssertOrdered(script, "ADD [ProgramOfferingID] int NULL", "SET [ProgramOfferingID] = po.[ProgramOfferingID]");
+        AssertOrdered(script, "SET [ProgramOfferingID] = po.[ProgramOfferingID]", "DROP COLUMN [ProgramID]");
+        AssertOrdered(script, "DROP COLUMN [ProgramID]", "ALTER COLUMN [ProgramOfferingID] int NOT NULL");
+        AssertOrdered(script, "ALTER COLUMN [ProgramOfferingID] int NOT NULL", "FK_Applications_ProgramOfferings_ProgramOfferingID");
+
+        Assert.Contains("@legacyApplicationCount", script, StringComparison.Ordinal);
+        Assert.Contains("@mappedApplicationCount", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51202", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51204", script, StringComparison.Ordinal);
+        Assert.Contains("EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Applications] ALTER COLUMN [ProgramOfferingID]", script, StringComparison.Ordinal);
+        Assert.Contains("EXEC sys.sp_executesql N'CREATE UNIQUE INDEX [IX_Applications_TC_ProgramOfferingID]", script, StringComparison.Ordinal);
+        Assert.Contains("[AcademicYearStart], [Term]", script, StringComparison.Ordinal);
+        Assert.Contains("SELECT p.[ProgramID], 0, 0, NULL", script, StringComparison.Ordinal);
+        Assert.Contains("CAST(1 AS bit)", script, StringComparison.Ordinal);
+        Assert.Contains("IX_Applications_TC_ProgramOfferingID", script, StringComparison.Ordinal);
+        Assert.Contains("IX_ApplicationScoreSnapshots_ApplicationID_ExamID", script, StringComparison.Ordinal);
+        Assert.Contains("IX_ProgramOfferingExamRequirements_ProgramOfferingID_ExamID", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("DELETE FROM", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("TRUNCATE TABLE", script, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void AssertCanonicalDefaultOrder(
         string script,
         int alterExecution,

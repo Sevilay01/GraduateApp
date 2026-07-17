@@ -4,6 +4,8 @@ namespace GraduateApp.Tests;
 
 public sealed class StudentTelephoneMigrationIntegrationTests
 {
+    private const string TelephoneMigration = "20260717110647_FixNullableStudentTelephoneUniqueness";
+
     private const string BasicStudentsTable =
         """
         CREATE TABLE [dbo].[Students]
@@ -31,7 +33,7 @@ public sealed class StudentTelephoneMigrationIntegrationTests
             """);
         Assert.StartsWith("UQ__Students__", legacyConstraintName, StringComparison.Ordinal);
 
-        await database.MigrateAsync();
+        await database.MigrateAsync(TelephoneMigration);
 
         Assert.Equal(
             0,
@@ -86,7 +88,7 @@ public sealed class StudentTelephoneMigrationIntegrationTests
             """));
         Assert.Equal(2627, legacyNullViolation.Number);
 
-        await database.MigrateAsync();
+        await database.MigrateAsync(TelephoneMigration);
 
         await AssertCanonicalIndexAsync(database);
         Assert.Equal(
@@ -134,7 +136,7 @@ public sealed class StudentTelephoneMigrationIntegrationTests
             BasicStudentsTable
             + "ALTER TABLE [dbo].[Students] ADD CONSTRAINT [UQ_Students_Telephone_Email_Test] UNIQUE ([Telephone], [Email]);");
 
-        var exception = await Assert.ThrowsAsync<SqlException>(() => database.MigrateAsync());
+        var exception = await Assert.ThrowsAsync<SqlException>(() => database.MigrateAsync(TelephoneMigration));
 
         Assert.Equal(51123, exception.Number);
         Assert.Equal(
@@ -162,7 +164,7 @@ public sealed class StudentTelephoneMigrationIntegrationTests
             );
             """);
 
-        var exception = await Assert.ThrowsAsync<SqlException>(() => database.MigrateAsync());
+        var exception = await Assert.ThrowsAsync<SqlException>(() => database.MigrateAsync(TelephoneMigration));
 
         Assert.Equal(51123, exception.Number);
         Assert.Equal(
@@ -189,7 +191,7 @@ public sealed class StudentTelephoneMigrationIntegrationTests
                 ('10000000002', '555000000000001');
             """);
 
-        var exception = await Assert.ThrowsAsync<SqlException>(() => database.MigrateAsync());
+        var exception = await Assert.ThrowsAsync<SqlException>(() => database.MigrateAsync(TelephoneMigration));
 
         Assert.Equal(51122, exception.Number);
         Assert.Equal(2, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[Students];"));
@@ -217,8 +219,8 @@ public sealed class StudentTelephoneMigrationIntegrationTests
             """);
         var originalIndexId = await CanonicalIndexIdAsync(database);
 
-        await database.MigrateAsync();
-        await database.MigrateAsync();
+        await database.MigrateAsync(TelephoneMigration);
+        await database.MigrateAsync(TelephoneMigration);
 
         Assert.Equal(originalIndexId, await CanonicalIndexIdAsync(database));
         Assert.Equal(1, await CurrentMigrationHistoryCountAsync(database));
@@ -243,7 +245,7 @@ public sealed class StudentTelephoneMigrationIntegrationTests
               AND [name] = N'UX_Students_Telephone_Legacy';
             """);
 
-        await database.MigrateAsync();
+        await database.MigrateAsync(TelephoneMigration);
 
         Assert.Equal(originalIndexId, await CanonicalIndexIdAsync(database));
         Assert.Equal(
@@ -268,7 +270,7 @@ public sealed class StudentTelephoneMigrationIntegrationTests
             ON [dbo].[Students] ([Telephone]);
             """);
 
-        await database.MigrateAsync();
+        await database.MigrateAsync(TelephoneMigration);
 
         Assert.Equal(
             0,

@@ -26,10 +26,26 @@
                             <input asp-for="LastName" class="form-control" autocomplete="family-name" />
                             <span asp-validation-for="LastName" class="text-danger"></span>
                         </div>
+                        <div class="col-md-6">
+                            <label asp-for="FatherName" class="form-label"></label>
+                            <input asp-for="FatherName" class="form-control" autocomplete="additional-name" />
+                            <span asp-validation-for="FatherName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="BirthDate" class="form-label"></label>
+                            <input asp-for="BirthDate" class="form-control" type="date" autocomplete="bday" />
+                            <span asp-validation-for="BirthDate" class="text-danger"></span>
+                        </div>
                         <div class="col-12">
                             <label asp-for="Email" class="form-label"></label>
                             <input asp-for="Email" class="form-control" autocomplete="email" />
                             <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Telephone" class="form-label"></label>
+                            <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
+                            <span asp-validation-for="Telephone" class="text-danger"></span>
+                            <div class="form-text">Örnek: 05XX XXX XX XX</div>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="Password" class="form-label"></label>
@@ -43,6 +59,7 @@
                         </div>
                     </div>
                     <p class="form-text mt-3">Parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermelidir.</p>
+                    <p class="small text-muted">Kişisel verilerin işlenmesine ilişkin bilgi için <a asp-controller="Home" asp-action="Privacy">aydınlatma metnini</a> inceleyebilirsiniz.</p>
                     <button type="submit" class="btn btn-primary mt-2">Kayıt oluştur</button>
                     <a asp-action="Login" class="btn btn-link mt-2">Girişe dön</a>
                 </form>

@@ -40,10 +40,8 @@
                             <h3 class="h5">@program.ProgramName</h3>
                             <p class="mb-1">@program.InstituteName</p>
                             <p class="text-muted">@program.DegreeType</p>
-                            @if (program.ApplicationDeadlineUtc.HasValue)
-                            {
-                                <p class="small mb-0">Son başvuru: <time datetime="@program.ApplicationDeadlineUtc.Value.ToString("O")">@program.ApplicationDeadlineUtc.Value.ToString("dd.MM.yyyy") UTC</time></p>
-                            }
+                            <p class="mb-1"><strong>@program.AcademicYear · @program.TermName</strong></p>
+                            <p class="small mb-0">Son başvuru: <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">@IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd.MM.yyyy HH:mm")</time> (İstanbul)</p>
                         </div>
                     </article>
                 </div>

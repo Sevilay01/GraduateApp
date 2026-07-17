@@ -28,7 +28,7 @@
             </div>
             <div class="col-md-6">
                 <label asp-for="Telephone" class="form-label"></label>
-                <input asp-for="Telephone" class="form-control" autocomplete="tel" />
+                <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
                 <span asp-validation-for="Telephone" class="text-danger"></span>
             </div>
             <div class="col-md-6">

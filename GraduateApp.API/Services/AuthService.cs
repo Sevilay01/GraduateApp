@@ -27,7 +27,8 @@ public sealed class AuthService(
     IPasswordResetEmailSender emailSender,
     IConfiguration configuration,
     TimeProvider timeProvider,
-    ILogger<AuthService> logger) : IAuthService
+    ILogger<AuthService> logger,
+    StudentRegistrationValidator registrationValidator) : IAuthService
 {
     private const int MaximumFailedAttempts = 5;
     private static readonly EventId StudentRegistrationDatabaseFailure = new(1001, nameof(StudentRegistrationDatabaseFailure));
@@ -48,11 +49,21 @@ public sealed class AuthService(
             return ServiceResult.Failure(PasswordPolicy.ValidationMessage, StatusCodes.Status400BadRequest);
         }
 
-        var normalizedEmail = NormalizeEmail(request.Email);
+        var registration = registrationValidator.Validate(request);
+        if (!registration.IsValid || registration.Value is null)
+        {
+            return ServiceResult.Failure(
+                registration.Error ?? "Kayıt bilgileri doğrulanamadı.",
+                StatusCodes.Status400BadRequest);
+        }
+
+        var normalized = registration.Value;
+        var normalizedEmail = NormalizeEmail(normalized.Email);
         var exists = await dbContext.Students.AnyAsync(
             student => student.Tc == request.Tc
                 || student.NormalizedEmail == normalizedEmail
-                || student.Email.ToUpper() == normalizedEmail,
+                || student.Email.ToUpper() == normalizedEmail
+                || student.Telephone == normalized.Telephone,
             cancellationToken);
 
         if (exists)
@@ -64,10 +75,13 @@ public sealed class AuthService(
         var student = new Student
         {
             Tc = request.Tc,
-            StudentName = request.FirstName.Trim(),
-            StudentSurname = request.LastName.Trim(),
-            Email = request.Email.Trim(),
+            StudentName = normalized.FirstName,
+            StudentSurname = normalized.LastName,
+            FatherName = normalized.FatherName,
+            BirthDate = normalized.BirthDate,
+            Email = normalized.Email,
             NormalizedEmail = normalizedEmail,
+            Telephone = normalized.Telephone,
             SecurityStamp = NewSecurityStamp(),
             CreatedAtUtc = now,
             UpdatedAtUtc = now

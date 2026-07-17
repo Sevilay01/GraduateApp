@@ -35,4 +35,13 @@ public sealed class AuthorizationTests
         Assert.NotNull(authorize);
         Assert.Equal("Student", authorize!.Roles);
     }
+
+    [Fact]
+    public void ApiProgramOfferingManagement_RequiresAdminRole()
+    {
+        var authorize = typeof(ProgramOfferingsController).GetCustomAttribute<AuthorizeAttribute>();
+
+        Assert.NotNull(authorize);
+        Assert.Equal("Admin", authorize!.Roles);
+    }
 }

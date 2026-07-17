@@ -18,7 +18,7 @@ public sealed class StudentProfileViewModel
     [Display(Name = "E-posta")]
     public string Email { get; set; } = string.Empty;
 
-    [Phone, StringLength(15)]
+    [Phone, StringLength(30)]
     [Display(Name = "Telefon")]
     public string? Telephone { get; set; }
 
