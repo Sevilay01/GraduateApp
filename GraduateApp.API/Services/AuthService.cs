@@ -4,6 +4,7 @@ using GraduateApp.API.Models;
 using GraduateApp.API.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace GraduateApp.API.Services;
@@ -29,6 +30,7 @@ public sealed class AuthService(
     ILogger<AuthService> logger) : IAuthService
 {
     private const int MaximumFailedAttempts = 5;
+    private static readonly EventId StudentRegistrationDatabaseFailure = new(1001, nameof(StudentRegistrationDatabaseFailure));
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan ResetTokenLifetime = TimeSpan.FromMinutes(30);
 
@@ -78,10 +80,33 @@ public sealed class AuthService(
             await dbContext.SaveChangesAsync(cancellationToken);
             return ServiceResult.Success(StatusCodes.Status201Created);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
         {
             return ServiceResult.Failure("Bu bilgilerle kayıt oluşturulamıyor.", StatusCodes.Status409Conflict);
         }
+        catch (DbUpdateException)
+        {
+            logger.LogError(
+                StudentRegistrationDatabaseFailure,
+                "Student registration failed because the database operation could not be completed.");
+            return ServiceResult.Failure(
+                "Kayıt şu anda oluşturulamıyor. Lütfen daha sonra tekrar deneyin.",
+                StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is SqlException sqlException
+                && sqlException.Errors.Cast<SqlError>().Any(error => error.Number is 2601 or 2627))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginDto request, CancellationToken cancellationToken)

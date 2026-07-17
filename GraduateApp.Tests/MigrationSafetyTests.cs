@@ -159,6 +159,35 @@ public sealed class MigrationSafetyTests
         Assert.Contains("N'İnceleniyor'", script, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void FixNullableStudentTelephoneUniqueness_is_metadata_driven_and_does_not_delete_data()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppMigrationScriptTest;Integrated Security=true")
+            .Options;
+
+        using var dbContext = new GraduateAppDbContext(options);
+        var script = dbContext.GetService<IMigrator>().GenerateScript(
+            fromMigration: "20260717065942_HardenExistingSchema",
+            toMigration: "20260717110647_FixNullableStudentTelephoneUniqueness");
+
+        Assert.Contains("sys.key_constraints", script, StringComparison.Ordinal);
+        Assert.Contains("sys.indexes", script, StringComparison.Ordinal);
+        Assert.Contains("sys.index_columns", script, StringComparison.Ordinal);
+        Assert.Contains("sys.columns", script, StringComparison.Ordinal);
+        Assert.Contains("sys.tables", script, StringComparison.Ordinal);
+        Assert.Contains("sys.schemas", script, StringComparison.Ordinal);
+        Assert.Contains("QUOTENAME(@legacyConstraintName)", script, StringComparison.Ordinal);
+        Assert.Contains("DROP CONSTRAINT", script, StringComparison.Ordinal);
+        Assert.Contains("CREATE UNIQUE NONCLUSTERED INDEX [IX_Students_Telephone]", script, StringComparison.Ordinal);
+        Assert.Contains("WHERE [Telephone] IS NOT NULL", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51122", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51123", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("UQ__Students__D9FEB744290C1415", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("DELETE FROM", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("TRUNCATE TABLE", script, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void AssertCanonicalDefaultOrder(
         string script,
         int alterExecution,

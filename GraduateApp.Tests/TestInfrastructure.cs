@@ -3,17 +3,57 @@ using GraduateApp.API.Models;
 using GraduateApp.API.Security;
 using GraduateApp.API.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace GraduateApp.Tests;
 
 internal static class TestDb
 {
-    public static GraduateAppDbContext Create()
+    public static GraduateAppDbContext Create(params IInterceptor[] interceptors)
     {
-        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
-            .Options;
+        var optionsBuilder = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"));
+        if (interceptors.Length > 0)
+        {
+            optionsBuilder.AddInterceptors(interceptors);
+        }
+
+        var options = optionsBuilder.Options;
         return new GraduateAppDbContext(options);
+    }
+}
+
+internal sealed class ThrowingSaveChangesInterceptor(Func<Exception> exceptionFactory) : SaveChangesInterceptor
+{
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromException<InterceptionResult<int>>(exceptionFactory());
+}
+
+internal sealed class CapturingLogger<T> : ILogger<T>
+{
+    public List<string> Entries { get; } = [];
+
+    public IDisposable? BeginScope<TState>(TState state)
+        where TState : notnull => null;
+
+    public bool IsEnabled(LogLevel logLevel) => true;
+
+    public void Log<TState>(
+        LogLevel logLevel,
+        EventId eventId,
+        TState state,
+        Exception? exception,
+        Func<TState, Exception?, string> formatter)
+    {
+        Entries.Add(formatter(state, exception));
+        if (exception is not null)
+        {
+            Entries.Add(exception.ToString());
+        }
     }
 }
 
