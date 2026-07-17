@@ -18,28 +18,65 @@ public sealed class MigrationSafetyTests
         var script = dbContext.GetService<IMigrator>().GenerateScript(
             options: MigrationsSqlGenerationOptions.Idempotent);
 
+        var targetInspection = Find(script, "UPDATE target");
         var dependencyDrop = Find(script, "DECLARE harden_default_drop_cursor");
+        var alterExecution = Find(script, "DECLARE harden_alter_column_cursor");
 
-        AssertCanonicalDefaultOrder(
-            script,
-            dependencyDrop,
-            "ALTER TABLE [dbo].[Applications] ALTER COLUMN [ApplicationDate] datetime2 NOT NULL",
-            "DF_Applications_ApplicationDate");
-        AssertCanonicalDefaultOrder(
-            script,
-            dependencyDrop,
-            "ALTER TABLE [dbo].[Applications] ALTER COLUMN [CurrentStatus] nvarchar(50) NOT NULL",
-            "DF_Applications_CurrentStatus");
-        AssertCanonicalDefaultOrder(
-            script,
-            dependencyDrop,
-            "ALTER TABLE [dbo].[ApplicationStatusHistory] ALTER COLUMN [ChangeDate] datetime2 NOT NULL",
-            "DF_ApplicationStatusHistory_ChangeDate");
-        AssertCanonicalDefaultOrder(
-            script,
-            dependencyDrop,
-            "ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [IsUsed] bit NOT NULL",
-            "DF_PasswordResetTokens_IsUsed");
+        Assert.True(targetInspection < dependencyDrop, "Expected target schema inspection before dependency teardown.");
+        Assert.True(dependencyDrop < alterExecution, "Expected dependency teardown before conditional ALTER execution.");
+
+        AssertCanonicalDefaultOrder(script, alterExecution, "DF_Applications_ApplicationDate");
+        AssertCanonicalDefaultOrder(script, alterExecution, "DF_Applications_CurrentStatus");
+        AssertCanonicalDefaultOrder(script, alterExecution, "DF_ApplicationStatusHistory_ChangeDate");
+        AssertCanonicalDefaultOrder(script, alterExecution, "DF_PasswordResetTokens_IsUsed");
+    }
+
+    [Fact]
+    public void HardenExistingSchema_captures_and_restores_supported_index_metadata_around_conditional_alters()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppMigrationScriptTest;Integrated Security=true")
+            .Options;
+
+        using var dbContext = new GraduateAppDbContext(options);
+        var script = dbContext.GetService<IMigrator>().GenerateScript(
+            options: MigrationsSqlGenerationOptions.Idempotent);
+
+        AssertOrdered(script, "CREATE TABLE #HardenIndexes", "DECLARE harden_index_drop_cursor");
+        AssertOrdered(script, "DECLARE harden_index_drop_cursor", "DECLARE harden_alter_column_cursor");
+        AssertOrdered(script, "DECLARE harden_alter_column_cursor", "DECLARE harden_index_restore_cursor");
+        AssertOrdered(script, "DECLARE harden_index_restore_cursor", "DROP TABLE IF EXISTS #HardenIndexes");
+
+        Assert.Contains("[IndexTypeDescription]", script, StringComparison.Ordinal);
+        Assert.Contains("[IsUniqueConstraint]", script, StringComparison.Ordinal);
+        Assert.Contains("[IsDescending]", script, StringComparison.Ordinal);
+        Assert.Contains("[IsIncluded]", script, StringComparison.Ordinal);
+        Assert.Contains("[FilterDefinition]", script, StringComparison.Ordinal);
+        Assert.Contains("[IsDisabled]", script, StringComparison.Ordinal);
+        Assert.Contains("[FillFactor]", script, StringComparison.Ordinal);
+        Assert.Contains("[DataSpaceName]", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51007, @unsafeConstraintMessage", script, StringComparison.Ordinal);
+        Assert.Contains("QUOTENAME(@dropIndexName)", script, StringComparison.Ordinal);
+        Assert.Contains("STRING_AGG", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HardenExistingSchema_validates_migration_owned_index_signatures()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppMigrationScriptTest;Integrated Security=true")
+            .Options;
+
+        using var dbContext = new GraduateAppDbContext(options);
+        var script = dbContext.GetService<IMigrator>().GenerateScript(
+            options: MigrationsSqlGenerationOptions.Idempotent);
+
+        Assert.Contains("IX_Admins_NormalizedEmail", script, StringComparison.Ordinal);
+        Assert.Contains("IX_Students_NormalizedEmail", script, StringComparison.Ordinal);
+        Assert.Contains("IX_Applications_TC_ProgramID", script, StringComparison.Ordinal);
+        Assert.Contains("IX_PasswordResetTokens_AdminID", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51010, @invalidExpectedIndexMessage", script, StringComparison.Ordinal);
+        Assert.Contains("EXCEPT", script, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -76,16 +113,14 @@ public sealed class MigrationSafetyTests
 
     private static void AssertCanonicalDefaultOrder(
         string script,
-        int dependencyDrop,
-        string alterToken,
+        int alterExecution,
         string canonicalDefaultToken)
     {
-        var alter = Find(script, alterToken);
         var canonicalDefault = Find(script, canonicalDefaultToken);
 
         Assert.True(
-            dependencyDrop < alter && alter < canonicalDefault,
-            $"Expected dependency teardown before '{alterToken}' and '{canonicalDefaultToken}' after it.");
+            alterExecution < canonicalDefault,
+            $"Expected '{canonicalDefaultToken}' after conditional ALTER execution.");
     }
 
     private static void AssertOrdered(string script, string firstToken, string secondToken)

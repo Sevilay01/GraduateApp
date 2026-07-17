@@ -148,30 +148,196 @@ public partial class HardenExistingSchema : Migration
                 DROP TABLE #HardenDefaults;
             IF OBJECT_ID(N'tempdb..#HardenForeignKeys', N'U') IS NOT NULL
                 DROP TABLE #HardenForeignKeys;
+            IF OBJECT_ID(N'tempdb..#HardenIndexColumns', N'U') IS NOT NULL
+                DROP TABLE #HardenIndexColumns;
+            IF OBJECT_ID(N'tempdb..#HardenIndexes', N'U') IS NOT NULL
+                DROP TABLE #HardenIndexes;
+            IF OBJECT_ID(N'tempdb..#HardenExpectedIndexLocations', N'U') IS NOT NULL
+                DROP TABLE #HardenExpectedIndexLocations;
+            IF OBJECT_ID(N'tempdb..#HardenExpectedIndexColumns', N'U') IS NOT NULL
+                DROP TABLE #HardenExpectedIndexColumns;
+            IF OBJECT_ID(N'tempdb..#HardenExpectedIndexes', N'U') IS NOT NULL
+                DROP TABLE #HardenExpectedIndexes;
 
             CREATE TABLE #HardenAlterTargets
             (
                 [TableName] sysname NOT NULL,
                 [ColumnName] sysname NOT NULL,
                 [HasCanonicalDefault] bit NOT NULL,
-                CONSTRAINT [PK_HardenAlterTargets] PRIMARY KEY ([TableName], [ColumnName])
+                [TargetSystemTypeId] int NOT NULL,
+                [TargetMaxLength] smallint NOT NULL,
+                [TargetPrecision] tinyint NOT NULL,
+                [TargetScale] tinyint NOT NULL,
+                [TargetIsNullable] bit NOT NULL,
+                [AlterSql] nvarchar(500) NOT NULL,
+                [NeedsAlter] bit NOT NULL,
+                PRIMARY KEY ([TableName], [ColumnName])
             );
 
-            INSERT INTO #HardenAlterTargets ([TableName], [ColumnName], [HasCanonicalDefault])
+            INSERT INTO #HardenAlterTargets
+                ([TableName], [ColumnName], [HasCanonicalDefault], [TargetSystemTypeId], [TargetMaxLength],
+                 [TargetPrecision], [TargetScale], [TargetIsNullable], [AlterSql], [NeedsAlter])
             VALUES
-                (N'Admins', N'NormalizedEmail', 0),
-                (N'Admins', N'Email', 0),
-                (N'Admins', N'PasswordHash', 0),
-                (N'Students', N'NormalizedEmail', 0),
-                (N'Students', N'Email', 0),
-                (N'Students', N'PasswordHash', 0),
-                (N'Applications', N'ApplicationDate', 1),
-                (N'Applications', N'CurrentStatus', 1),
-                (N'ApplicationStatusHistory', N'ChangeDate', 1),
-                (N'ApplicationStatusHistory', N'Notes', 0),
-                (N'PasswordResetTokens', N'TC', 0),
-                (N'PasswordResetTokens', N'IsUsed', 1),
-                (N'PasswordResetTokens', N'ExpirationDate', 0);
+                (N'Admins', N'NormalizedEmail', 0, 231, 508, 0, 0, 0, N'ALTER TABLE [dbo].[Admins] ALTER COLUMN [NormalizedEmail] nvarchar(254) NOT NULL;', 1),
+                (N'Admins', N'Email', 0, 231, 508, 0, 0, 0, N'ALTER TABLE [dbo].[Admins] ALTER COLUMN [Email] nvarchar(254) NOT NULL;', 1),
+                (N'Admins', N'PasswordHash', 0, 167, 512, 0, 0, 0, N'ALTER TABLE [dbo].[Admins] ALTER COLUMN [PasswordHash] varchar(512) NOT NULL;', 1),
+                (N'Students', N'NormalizedEmail', 0, 231, 508, 0, 0, 0, N'ALTER TABLE [dbo].[Students] ALTER COLUMN [NormalizedEmail] nvarchar(254) NOT NULL;', 1),
+                (N'Students', N'Email', 0, 231, 508, 0, 0, 0, N'ALTER TABLE [dbo].[Students] ALTER COLUMN [Email] nvarchar(254) NOT NULL;', 1),
+                (N'Students', N'PasswordHash', 0, 167, 512, 0, 0, 0, N'ALTER TABLE [dbo].[Students] ALTER COLUMN [PasswordHash] varchar(512) NOT NULL;', 1),
+                (N'Applications', N'ApplicationDate', 1, 42, 8, 27, 7, 0, N'ALTER TABLE [dbo].[Applications] ALTER COLUMN [ApplicationDate] datetime2 NOT NULL;', 1),
+                (N'Applications', N'CurrentStatus', 1, 231, 100, 0, 0, 0, N'ALTER TABLE [dbo].[Applications] ALTER COLUMN [CurrentStatus] nvarchar(50) NOT NULL;', 1),
+                (N'ApplicationStatusHistory', N'ChangeDate', 1, 42, 8, 27, 7, 0, N'ALTER TABLE [dbo].[ApplicationStatusHistory] ALTER COLUMN [ChangeDate] datetime2 NOT NULL;', 1),
+                (N'ApplicationStatusHistory', N'Notes', 0, 231, 1000, 0, 0, 1, N'ALTER TABLE [dbo].[ApplicationStatusHistory] ALTER COLUMN [Notes] nvarchar(500) NULL;', 1),
+                (N'PasswordResetTokens', N'TC', 0, 175, 11, 0, 0, 1, N'ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [TC] char(11) NULL;', 1),
+                (N'PasswordResetTokens', N'IsUsed', 1, 104, 1, 1, 0, 0, N'ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [IsUsed] bit NOT NULL;', 1),
+                (N'PasswordResetTokens', N'ExpirationDate', 0, 42, 8, 27, 7, 0, N'ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [ExpirationDate] datetime2 NOT NULL;', 1);
+
+            UPDATE target
+            SET [NeedsAlter] = CASE
+                WHEN columnInfo.[object_id] IS NOT NULL
+                 AND columnInfo.[system_type_id] = target.[TargetSystemTypeId]
+                 AND columnInfo.[user_type_id] = columnInfo.[system_type_id]
+                 AND columnInfo.[max_length] = target.[TargetMaxLength]
+                 AND columnInfo.[precision] = target.[TargetPrecision]
+                 AND columnInfo.[scale] = target.[TargetScale]
+                 AND columnInfo.[is_nullable] = target.[TargetIsNullable]
+                THEN 0 ELSE 1 END
+            FROM #HardenAlterTargets AS target
+            LEFT JOIN sys.tables AS tableInfo
+                ON tableInfo.[schema_id] = SCHEMA_ID(N'dbo')
+               AND tableInfo.[name] = target.[TableName]
+            LEFT JOIN sys.columns AS columnInfo
+                ON columnInfo.[object_id] = tableInfo.[object_id]
+               AND columnInfo.[name] = target.[ColumnName];
+
+            CREATE TABLE #HardenExpectedIndexes
+            (
+                [SchemaName] sysname NOT NULL,
+                [TableName] sysname NOT NULL,
+                [IndexName] sysname NOT NULL,
+                [IsUnique] bit NOT NULL,
+                PRIMARY KEY ([SchemaName], [TableName], [IndexName])
+            );
+
+            INSERT INTO #HardenExpectedIndexes ([SchemaName], [TableName], [IndexName], [IsUnique])
+            VALUES
+                (N'dbo', N'Admins', N'IX_Admins_NormalizedEmail', 1),
+                (N'dbo', N'Students', N'IX_Students_NormalizedEmail', 1),
+                (N'dbo', N'Applications', N'IX_Applications_TC_ProgramID', 1),
+                (N'dbo', N'PasswordResetTokens', N'IX_PasswordResetTokens_AdminID', 0);
+
+            CREATE TABLE #HardenExpectedIndexColumns
+            (
+                [SchemaName] sysname NOT NULL,
+                [TableName] sysname NOT NULL,
+                [IndexName] sysname NOT NULL,
+                [ColumnName] sysname NOT NULL,
+                [KeyOrdinal] tinyint NOT NULL,
+                [IsDescending] bit NOT NULL,
+                [IsIncluded] bit NOT NULL,
+                PRIMARY KEY ([SchemaName], [TableName], [IndexName], [ColumnName])
+            );
+
+            INSERT INTO #HardenExpectedIndexColumns
+                ([SchemaName], [TableName], [IndexName], [ColumnName], [KeyOrdinal], [IsDescending], [IsIncluded])
+            VALUES
+                (N'dbo', N'Admins', N'IX_Admins_NormalizedEmail', N'NormalizedEmail', 1, 0, 0),
+                (N'dbo', N'Students', N'IX_Students_NormalizedEmail', N'NormalizedEmail', 1, 0, 0),
+                (N'dbo', N'Applications', N'IX_Applications_TC_ProgramID', N'TC', 1, 0, 0),
+                (N'dbo', N'Applications', N'IX_Applications_TC_ProgramID', N'ProgramID', 2, 0, 0),
+                (N'dbo', N'PasswordResetTokens', N'IX_PasswordResetTokens_AdminID', N'AdminID', 1, 0, 0);
+
+            CREATE TABLE #HardenExpectedIndexLocations
+            (
+                [SchemaName] sysname NOT NULL,
+                [TableName] sysname NOT NULL,
+                [IndexName] sysname NOT NULL,
+                [DataSpaceName] sysname NULL,
+                PRIMARY KEY ([SchemaName], [TableName], [IndexName])
+            );
+
+            DECLARE @invalidExpectedIndex nvarchar(776);
+            SELECT TOP (1)
+                @invalidExpectedIndex = QUOTENAME(expected.[SchemaName]) + N'.' + QUOTENAME(expected.[TableName]) + N'.' + QUOTENAME(expected.[IndexName])
+            FROM #HardenExpectedIndexes AS expected
+            INNER JOIN sys.schemas AS schemaInfo
+                ON schemaInfo.[name] = expected.[SchemaName]
+            INNER JOIN sys.tables AS tableInfo
+                ON tableInfo.[schema_id] = schemaInfo.[schema_id]
+               AND tableInfo.[name] = expected.[TableName]
+            INNER JOIN sys.indexes AS indexInfo
+                ON indexInfo.[object_id] = tableInfo.[object_id]
+               AND indexInfo.[name] = expected.[IndexName]
+            LEFT JOIN sys.data_spaces AS dataSpaceInfo
+                ON dataSpaceInfo.[data_space_id] = indexInfo.[data_space_id]
+            WHERE indexInfo.[type] <> 2
+               OR indexInfo.[is_unique] <> expected.[IsUnique]
+               OR indexInfo.[is_primary_key] <> 0
+               OR indexInfo.[is_unique_constraint] <> 0
+               OR indexInfo.[is_hypothetical] <> 0
+               OR indexInfo.[is_disabled] <> 0
+               OR indexInfo.[has_filter] <> 0
+               OR indexInfo.[filter_definition] IS NOT NULL
+               OR indexInfo.[fill_factor] <> 0
+               OR indexInfo.[is_padded] <> 0
+               OR indexInfo.[ignore_dup_key] <> 0
+               OR indexInfo.[allow_row_locks] <> 1
+               OR indexInfo.[allow_page_locks] <> 1
+               OR dataSpaceInfo.[type] IS NULL
+               OR dataSpaceInfo.[type] <> N'FG'
+               OR EXISTS
+               (
+                   SELECT columnInfo.[name], indexColumnInfo.[key_ordinal], indexColumnInfo.[is_descending_key], indexColumnInfo.[is_included_column]
+                   FROM sys.index_columns AS indexColumnInfo
+                   INNER JOIN sys.columns AS columnInfo
+                       ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+                      AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+                   WHERE indexColumnInfo.[object_id] = indexInfo.[object_id]
+                     AND indexColumnInfo.[index_id] = indexInfo.[index_id]
+                   EXCEPT
+                   SELECT [ColumnName], [KeyOrdinal], [IsDescending], [IsIncluded]
+                   FROM #HardenExpectedIndexColumns AS expectedColumn
+                   WHERE expectedColumn.[SchemaName] = expected.[SchemaName]
+                     AND expectedColumn.[TableName] = expected.[TableName]
+                     AND expectedColumn.[IndexName] = expected.[IndexName]
+               )
+               OR EXISTS
+               (
+                   SELECT [ColumnName], [KeyOrdinal], [IsDescending], [IsIncluded]
+                   FROM #HardenExpectedIndexColumns AS expectedColumn
+                   WHERE expectedColumn.[SchemaName] = expected.[SchemaName]
+                     AND expectedColumn.[TableName] = expected.[TableName]
+                     AND expectedColumn.[IndexName] = expected.[IndexName]
+                   EXCEPT
+                   SELECT columnInfo.[name], indexColumnInfo.[key_ordinal], indexColumnInfo.[is_descending_key], indexColumnInfo.[is_included_column]
+                   FROM sys.index_columns AS indexColumnInfo
+                   INNER JOIN sys.columns AS columnInfo
+                       ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+                      AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+                   WHERE indexColumnInfo.[object_id] = indexInfo.[object_id]
+                     AND indexColumnInfo.[index_id] = indexInfo.[index_id]
+               )
+            ORDER BY expected.[SchemaName], expected.[TableName], expected.[IndexName];
+
+            IF @invalidExpectedIndex IS NOT NULL
+            BEGIN
+                DECLARE @invalidExpectedIndexMessage nvarchar(2048) = N'Migration tarafindan yonetilen index mevcut fakat beklenen imzayla uyusmuyor: ' + @invalidExpectedIndex + N'. Migration durduruldu.';
+                THROW 51010, @invalidExpectedIndexMessage, 1;
+            END;
+
+            INSERT INTO #HardenExpectedIndexLocations ([SchemaName], [TableName], [IndexName], [DataSpaceName])
+            SELECT expected.[SchemaName], expected.[TableName], expected.[IndexName], dataSpaceInfo.[name]
+            FROM #HardenExpectedIndexes AS expected
+            INNER JOIN sys.schemas AS schemaInfo
+                ON schemaInfo.[name] = expected.[SchemaName]
+            INNER JOIN sys.tables AS tableInfo
+                ON tableInfo.[schema_id] = schemaInfo.[schema_id]
+               AND tableInfo.[name] = expected.[TableName]
+            INNER JOIN sys.indexes AS indexInfo
+                ON indexInfo.[object_id] = tableInfo.[object_id]
+               AND indexInfo.[name] = expected.[IndexName]
+            INNER JOIN sys.data_spaces AS dataSpaceInfo
+                ON dataSpaceInfo.[data_space_id] = indexInfo.[data_space_id];
 
             CREATE TABLE #HardenDefaults
             (
@@ -204,7 +370,8 @@ public partial class HardenExistingSchema : Migration
             INNER JOIN #HardenAlterTargets AS target
                 ON target.[TableName] = tableInfo.[name]
                AND target.[ColumnName] = columnInfo.[name]
-            WHERE schemaInfo.[name] = N'dbo';
+            WHERE schemaInfo.[name] = N'dbo'
+              AND (target.[NeedsAlter] = 1 OR target.[HasCanonicalDefault] = 1);
 
             CREATE TABLE #HardenForeignKeys
             (
@@ -222,7 +389,8 @@ public partial class HardenExistingSchema : Migration
                 [IsNotTrusted] bit NOT NULL
             );
 
-            IF EXISTS
+            IF EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'PasswordResetTokens' AND [ColumnName] = N'TC' AND [NeedsAlter] = 1)
+               AND EXISTS
             (
                 SELECT foreignKeyInfo.[object_id]
                 FROM sys.foreign_keys AS foreignKeyInfo
@@ -276,40 +444,181 @@ public partial class HardenExistingSchema : Migration
                 ON referencedColumn.[object_id] = foreignKeyColumn.[referenced_object_id]
                AND referencedColumn.[column_id] = foreignKeyColumn.[referenced_column_id]
             WHERE foreignKeyColumn.[parent_object_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]')
-              AND parentColumn.[name] = N'TC';
+              AND parentColumn.[name] = N'TC'
+              AND EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'PasswordResetTokens' AND [ColumnName] = N'TC' AND [NeedsAlter] = 1);
 
-            IF EXISTS
+            CREATE TABLE #HardenIndexes
             (
-                SELECT 1
-                FROM sys.indexes AS indexInfo
-                INNER JOIN sys.index_columns AS indexColumnInfo
-                    ON indexColumnInfo.[object_id] = indexInfo.[object_id]
-                   AND indexColumnInfo.[index_id] = indexInfo.[index_id]
-                INNER JOIN sys.columns AS indexedColumn
-                    ON indexedColumn.[object_id] = indexColumnInfo.[object_id]
-                   AND indexedColumn.[column_id] = indexColumnInfo.[column_id]
-                INNER JOIN sys.tables AS indexedTable
-                    ON indexedTable.[object_id] = indexInfo.[object_id]
-                INNER JOIN sys.schemas AS indexedSchema
-                    ON indexedSchema.[schema_id] = indexedTable.[schema_id]
-                INNER JOIN #HardenAlterTargets AS target
-                    ON target.[TableName] = indexedTable.[name]
-                   AND target.[ColumnName] = indexedColumn.[name]
-                WHERE indexedSchema.[name] = N'dbo'
-                  AND indexInfo.[index_id] > 0
-                  AND indexInfo.[is_hypothetical] = 0
-                  AND NOT
+                [SchemaName] sysname NOT NULL,
+                [TableName] sysname NOT NULL,
+                [IndexName] sysname NOT NULL,
+                [IndexType] tinyint NOT NULL,
+                [IndexTypeDescription] nvarchar(60) NOT NULL,
+                [IsUnique] bit NOT NULL,
+                [IsPrimaryKey] bit NOT NULL,
+                [IsUniqueConstraint] bit NOT NULL,
+                [IsDisabled] bit NOT NULL,
+                [FillFactor] tinyint NOT NULL,
+                [IsPadded] bit NOT NULL,
+                [IgnoreDuplicateKey] bit NOT NULL,
+                [AllowRowLocks] bit NOT NULL,
+                [AllowPageLocks] bit NOT NULL,
+                [HasFilter] bit NOT NULL,
+                [FilterDefinition] nvarchar(max) NULL,
+                [DataSpaceName] sysname NULL,
+                [DataSpaceType] nvarchar(2) NULL,
+                PRIMARY KEY ([SchemaName], [TableName], [IndexName])
+            );
+
+            INSERT INTO #HardenIndexes
+                ([SchemaName], [TableName], [IndexName], [IndexType], [IndexTypeDescription], [IsUnique],
+                 [IsPrimaryKey], [IsUniqueConstraint], [IsDisabled], [FillFactor], [IsPadded], [IgnoreDuplicateKey],
+                 [AllowRowLocks], [AllowPageLocks], [HasFilter], [FilterDefinition], [DataSpaceName], [DataSpaceType])
+            SELECT
+                indexedSchema.[name],
+                indexedTable.[name],
+                indexInfo.[name],
+                indexInfo.[type],
+                indexInfo.[type_desc],
+                indexInfo.[is_unique],
+                indexInfo.[is_primary_key],
+                indexInfo.[is_unique_constraint],
+                indexInfo.[is_disabled],
+                indexInfo.[fill_factor],
+                indexInfo.[is_padded],
+                indexInfo.[ignore_dup_key],
+                indexInfo.[allow_row_locks],
+                indexInfo.[allow_page_locks],
+                indexInfo.[has_filter],
+                indexInfo.[filter_definition],
+                dataSpaceInfo.[name],
+                dataSpaceInfo.[type]
+            FROM sys.indexes AS indexInfo
+            INNER JOIN sys.tables AS indexedTable
+                ON indexedTable.[object_id] = indexInfo.[object_id]
+            INNER JOIN sys.schemas AS indexedSchema
+                ON indexedSchema.[schema_id] = indexedTable.[schema_id]
+            LEFT JOIN sys.data_spaces AS dataSpaceInfo
+                ON dataSpaceInfo.[data_space_id] = indexInfo.[data_space_id]
+            WHERE indexedSchema.[name] = N'dbo'
+              AND indexInfo.[index_id] > 0
+              AND indexInfo.[is_hypothetical] = 0
+              AND NOT EXISTS
+              (
+                  SELECT 1
+                  FROM #HardenExpectedIndexes AS expected
+                  WHERE expected.[SchemaName] = indexedSchema.[name]
+                    AND expected.[TableName] = indexedTable.[name]
+                    AND expected.[IndexName] = indexInfo.[name]
+              )
+              AND
+              (
+                  EXISTS
                   (
-                      indexInfo.[is_primary_key] = 0
-                      AND indexInfo.[is_unique_constraint] = 0
-                      AND
+                      SELECT 1
+                      FROM sys.index_columns AS dependencyColumnInfo
+                      INNER JOIN sys.columns AS dependencyColumn
+                          ON dependencyColumn.[object_id] = dependencyColumnInfo.[object_id]
+                         AND dependencyColumn.[column_id] = dependencyColumnInfo.[column_id]
+                      INNER JOIN #HardenAlterTargets AS target
+                          ON target.[TableName] = indexedTable.[name]
+                         AND target.[ColumnName] = dependencyColumn.[name]
+                         AND target.[NeedsAlter] = 1
+                      WHERE dependencyColumnInfo.[object_id] = indexInfo.[object_id]
+                        AND dependencyColumnInfo.[index_id] = indexInfo.[index_id]
+                  )
+                  OR
+                  (
+                      indexInfo.[has_filter] = 1
+                      AND EXISTS
                       (
-                          (indexedTable.[name] = N'Admins' AND indexInfo.[name] = N'IX_Admins_NormalizedEmail')
-                          OR (indexedTable.[name] = N'Students' AND indexInfo.[name] = N'IX_Students_NormalizedEmail')
+                          SELECT 1
+                          FROM #HardenAlterTargets AS filteredTableTarget
+                          WHERE filteredTableTarget.[TableName] = indexedTable.[name]
+                            AND filteredTableTarget.[NeedsAlter] = 1
                       )
                   )
-            )
-                THROW 51007, 'ALTER COLUMN hedeflerinden birinde güvenle yeniden üretilemeyen index bağımlılığı bulundu. Migration durduruldu.', 1;
+              );
+
+            DECLARE @unsafeConstraint nvarchar(776);
+            SELECT TOP (1)
+                @unsafeConstraint = QUOTENAME([SchemaName]) + N'.' + QUOTENAME([TableName]) + N'.' + QUOTENAME([IndexName])
+            FROM #HardenIndexes
+            WHERE [IsPrimaryKey] = 1 OR [IsUniqueConstraint] = 1
+            ORDER BY [SchemaName], [TableName], [IndexName];
+
+            IF @unsafeConstraint IS NOT NULL
+            BEGIN
+                DECLARE @unsafeConstraintMessage nvarchar(2048) = N'ALTER COLUMN hedefinde primary key veya unique constraint bagimliligi bulundu: ' + @unsafeConstraint + N'. Constraint semantigi korunamadigi icin migration durduruldu.';
+                THROW 51007, @unsafeConstraintMessage, 1;
+            END;
+
+            DECLARE @unsupportedIndex nvarchar(776);
+            DECLARE @unsupportedIndexType nvarchar(60);
+            SELECT TOP (1)
+                @unsupportedIndex = QUOTENAME([SchemaName]) + N'.' + QUOTENAME([TableName]) + N'.' + QUOTENAME([IndexName]),
+                @unsupportedIndexType = [IndexTypeDescription]
+            FROM #HardenIndexes
+            WHERE [IndexType] <> 2
+            ORDER BY [SchemaName], [TableName], [IndexName];
+
+            IF @unsupportedIndex IS NOT NULL
+            BEGIN
+                DECLARE @unsupportedIndexMessage nvarchar(2048) = N'ALTER COLUMN hedefinde desteklenmeyen index turu bulundu: ' + @unsupportedIndex + N' (' + @unsupportedIndexType + N'). Migration durduruldu.';
+                THROW 51011, @unsupportedIndexMessage, 1;
+            END;
+
+            DECLARE @unsupportedDataSpaceIndex nvarchar(776);
+            SELECT TOP (1)
+                @unsupportedDataSpaceIndex = QUOTENAME([SchemaName]) + N'.' + QUOTENAME([TableName]) + N'.' + QUOTENAME([IndexName])
+            FROM #HardenIndexes
+            WHERE [DataSpaceName] IS NULL OR [DataSpaceType] <> N'FG'
+            ORDER BY [SchemaName], [TableName], [IndexName];
+
+            IF @unsupportedDataSpaceIndex IS NOT NULL
+            BEGIN
+                DECLARE @unsupportedDataSpaceMessage nvarchar(2048) = N'ALTER COLUMN hedefindeki index guvenle yeniden olusturulamayan bir data space kullaniyor: ' + @unsupportedDataSpaceIndex + N'. Migration durduruldu.';
+                THROW 51012, @unsupportedDataSpaceMessage, 1;
+            END;
+
+            CREATE TABLE #HardenIndexColumns
+            (
+                [SchemaName] sysname NOT NULL,
+                [TableName] sysname NOT NULL,
+                [IndexName] sysname NOT NULL,
+                [ColumnName] sysname NOT NULL,
+                [KeyOrdinal] tinyint NOT NULL,
+                [IsDescending] bit NOT NULL,
+                [IsIncluded] bit NOT NULL,
+                [IndexColumnId] int NOT NULL
+            );
+
+            INSERT INTO #HardenIndexColumns
+                ([SchemaName], [TableName], [IndexName], [ColumnName], [KeyOrdinal], [IsDescending], [IsIncluded], [IndexColumnId])
+            SELECT
+                captured.[SchemaName],
+                captured.[TableName],
+                captured.[IndexName],
+                columnInfo.[name],
+                indexColumnInfo.[key_ordinal],
+                indexColumnInfo.[is_descending_key],
+                indexColumnInfo.[is_included_column],
+                indexColumnInfo.[index_column_id]
+            FROM #HardenIndexes AS captured
+            INNER JOIN sys.schemas AS schemaInfo
+                ON schemaInfo.[name] = captured.[SchemaName]
+            INNER JOIN sys.tables AS tableInfo
+                ON tableInfo.[schema_id] = schemaInfo.[schema_id]
+               AND tableInfo.[name] = captured.[TableName]
+            INNER JOIN sys.indexes AS indexInfo
+                ON indexInfo.[object_id] = tableInfo.[object_id]
+               AND indexInfo.[name] = captured.[IndexName]
+            INNER JOIN sys.index_columns AS indexColumnInfo
+                ON indexColumnInfo.[object_id] = indexInfo.[object_id]
+               AND indexColumnInfo.[index_id] = indexInfo.[index_id]
+            INNER JOIN sys.columns AS columnInfo
+                ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+               AND columnInfo.[column_id] = indexColumnInfo.[column_id];
 
             IF EXISTS
             (
@@ -321,6 +630,7 @@ public partial class HardenExistingSchema : Migration
                     ON checkedSchema.[schema_id] = checkedTable.[schema_id]
                 INNER JOIN #HardenAlterTargets AS target
                     ON target.[TableName] = checkedTable.[name]
+                   AND target.[NeedsAlter] = 1
                 INNER JOIN sys.columns AS checkedColumn
                     ON checkedColumn.[object_id] = checkedTable.[object_id]
                    AND checkedColumn.[name] = target.[ColumnName]
@@ -358,8 +668,24 @@ public partial class HardenExistingSchema : Migration
                    AND referencedColumn.[column_id] = foreignKeyColumn.[referenced_column_id]
                 WHERE
                 (
-                    EXISTS (SELECT 1 FROM #HardenAlterTargets AS parentTarget WHERE parentTarget.[TableName] = parentTable.[name] AND parentTarget.[ColumnName] = parentColumn.[name])
-                    OR EXISTS (SELECT 1 FROM #HardenAlterTargets AS referencedTarget WHERE referencedTarget.[TableName] = referencedTable.[name] AND referencedTarget.[ColumnName] = referencedColumn.[name])
+                    EXISTS
+                    (
+                        SELECT 1
+                        FROM #HardenAlterTargets AS parentTarget
+                        WHERE parentTable.[schema_id] = SCHEMA_ID(N'dbo')
+                          AND parentTarget.[TableName] = parentTable.[name]
+                          AND parentTarget.[ColumnName] = parentColumn.[name]
+                          AND parentTarget.[NeedsAlter] = 1
+                    )
+                    OR EXISTS
+                    (
+                        SELECT 1
+                        FROM #HardenAlterTargets AS referencedTarget
+                        WHERE referencedTable.[schema_id] = SCHEMA_ID(N'dbo')
+                          AND referencedTarget.[TableName] = referencedTable.[name]
+                          AND referencedTarget.[ColumnName] = referencedColumn.[name]
+                          AND referencedTarget.[NeedsAlter] = 1
+                    )
                 )
                   AND NOT (foreignKeyColumn.[parent_object_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND parentColumn.[name] = N'TC')
             )
@@ -426,11 +752,34 @@ public partial class HardenExistingSchema : Migration
             IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE [parent_object_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND [name] = N'CK_PasswordResetTokens_Subject')
                 EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] DROP CONSTRAINT [CK_PasswordResetTokens_Subject];';
 
-            IF EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Admins]') AND [name] = N'IX_Admins_NormalizedEmail' AND [is_primary_key] = 0 AND [is_unique_constraint] = 0)
+            IF EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'Admins' AND [ColumnName] = N'NormalizedEmail' AND [NeedsAlter] = 1)
+               AND EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Admins]') AND [name] = N'IX_Admins_NormalizedEmail')
                 EXEC sys.sp_executesql N'DROP INDEX [IX_Admins_NormalizedEmail] ON [dbo].[Admins];';
 
-            IF EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Students]') AND [name] = N'IX_Students_NormalizedEmail' AND [is_primary_key] = 0 AND [is_unique_constraint] = 0)
+            IF EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'Students' AND [ColumnName] = N'NormalizedEmail' AND [NeedsAlter] = 1)
+               AND EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Students]') AND [name] = N'IX_Students_NormalizedEmail')
                 EXEC sys.sp_executesql N'DROP INDEX [IX_Students_NormalizedEmail] ON [dbo].[Students];';
+
+            DECLARE @dropIndexSchema sysname;
+            DECLARE @dropIndexTable sysname;
+            DECLARE @dropIndexName sysname;
+            DECLARE @dropIndexSql nvarchar(max);
+            DECLARE harden_index_drop_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [SchemaName], [TableName], [IndexName]
+                FROM #HardenIndexes
+                ORDER BY [SchemaName], [TableName], [IndexName];
+
+            OPEN harden_index_drop_cursor;
+            FETCH NEXT FROM harden_index_drop_cursor INTO @dropIndexSchema, @dropIndexTable, @dropIndexName;
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @dropIndexSql = N'DROP INDEX ' + QUOTENAME(@dropIndexName) + N' ON '
+                    + QUOTENAME(@dropIndexSchema) + N'.' + QUOTENAME(@dropIndexTable) + N';';
+                EXEC sys.sp_executesql @dropIndexSql;
+                FETCH NEXT FROM harden_index_drop_cursor INTO @dropIndexSchema, @dropIndexTable, @dropIndexName;
+            END;
+            CLOSE harden_index_drop_cursor;
+            DEALLOCATE harden_index_drop_cursor;
 
             DECLARE @dropForeignKeySchema sysname;
             DECLARE @dropForeignKeyTable sysname;
@@ -456,23 +805,22 @@ public partial class HardenExistingSchema : Migration
 
         migrationBuilder.Sql(
             """
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Admins] ALTER COLUMN [NormalizedEmail] nvarchar(254) NOT NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Admins] ALTER COLUMN [Email] nvarchar(254) NOT NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Admins] ALTER COLUMN [PasswordHash] varchar(512) NOT NULL;';
+            DECLARE @alterSql nvarchar(500);
+            DECLARE harden_alter_column_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [AlterSql]
+                FROM #HardenAlterTargets
+                WHERE [NeedsAlter] = 1
+                ORDER BY [TableName], [ColumnName];
 
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Students] ALTER COLUMN [NormalizedEmail] nvarchar(254) NOT NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Students] ALTER COLUMN [Email] nvarchar(254) NOT NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Students] ALTER COLUMN [PasswordHash] varchar(512) NOT NULL;';
-
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Applications] ALTER COLUMN [ApplicationDate] datetime2 NOT NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[Applications] ALTER COLUMN [CurrentStatus] nvarchar(50) NOT NULL;';
-
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[ApplicationStatusHistory] ALTER COLUMN [ChangeDate] datetime2 NOT NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[ApplicationStatusHistory] ALTER COLUMN [Notes] nvarchar(500) NULL;';
-
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [TC] char(11) NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [IsUsed] bit NOT NULL;';
-            EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [ExpirationDate] datetime2 NOT NULL;';
+            OPEN harden_alter_column_cursor;
+            FETCH NEXT FROM harden_alter_column_cursor INTO @alterSql;
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                EXEC sys.sp_executesql @alterSql;
+                FETCH NEXT FROM harden_alter_column_cursor INTO @alterSql;
+            END;
+            CLOSE harden_alter_column_cursor;
+            DEALLOCATE harden_alter_column_cursor;
             """);
 
         migrationBuilder.Sql(
@@ -617,11 +965,126 @@ public partial class HardenExistingSchema : Migration
 
         migrationBuilder.Sql(
             """
-            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[Admins]') AND name = N'IX_Admins_NormalizedEmail')
-                EXEC sys.sp_executesql N'CREATE UNIQUE INDEX [IX_Admins_NormalizedEmail] ON [dbo].[Admins] ([NormalizedEmail]);';
+            DECLARE @restoreIndexSchema sysname;
+            DECLARE @restoreIndexTable sysname;
+            DECLARE @restoreIndexName sysname;
+            DECLARE @restoreIndexIsUnique bit;
+            DECLARE @restoreIndexIsDisabled bit;
+            DECLARE @restoreIndexFillFactor tinyint;
+            DECLARE @restoreIndexIsPadded bit;
+            DECLARE @restoreIndexIgnoreDuplicateKey bit;
+            DECLARE @restoreIndexAllowRowLocks bit;
+            DECLARE @restoreIndexAllowPageLocks bit;
+            DECLARE @restoreIndexFilterDefinition nvarchar(max);
+            DECLARE @restoreIndexDataSpace sysname;
+            DECLARE @restoreIndexKeyColumns nvarchar(max);
+            DECLARE @restoreIndexIncludedColumns nvarchar(max);
+            DECLARE @restoreIndexSql nvarchar(max);
+            DECLARE @restoreIndexStateSql nvarchar(max);
 
+            DECLARE harden_index_restore_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [SchemaName], [TableName], [IndexName], [IsUnique], [IsDisabled], [FillFactor], [IsPadded],
+                       [IgnoreDuplicateKey], [AllowRowLocks], [AllowPageLocks], [FilterDefinition], [DataSpaceName]
+                FROM #HardenIndexes
+                ORDER BY [SchemaName], [TableName], [IndexName];
+
+            OPEN harden_index_restore_cursor;
+            FETCH NEXT FROM harden_index_restore_cursor INTO
+                @restoreIndexSchema, @restoreIndexTable, @restoreIndexName, @restoreIndexIsUnique, @restoreIndexIsDisabled,
+                @restoreIndexFillFactor, @restoreIndexIsPadded, @restoreIndexIgnoreDuplicateKey,
+                @restoreIndexAllowRowLocks, @restoreIndexAllowPageLocks, @restoreIndexFilterDefinition, @restoreIndexDataSpace;
+
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @restoreIndexKeyColumns = NULL;
+                SET @restoreIndexIncludedColumns = NULL;
+
+                SELECT @restoreIndexKeyColumns = STRING_AGG(
+                    CAST(QUOTENAME([ColumnName]) + CASE WHEN [IsDescending] = 1 THEN N' DESC' ELSE N' ASC' END AS nvarchar(max)),
+                    N', ') WITHIN GROUP (ORDER BY [KeyOrdinal])
+                FROM #HardenIndexColumns
+                WHERE [SchemaName] = @restoreIndexSchema
+                  AND [TableName] = @restoreIndexTable
+                  AND [IndexName] = @restoreIndexName
+                  AND [IsIncluded] = 0
+                  AND [KeyOrdinal] > 0;
+
+                SELECT @restoreIndexIncludedColumns = STRING_AGG(
+                    CAST(QUOTENAME([ColumnName]) AS nvarchar(max)),
+                    N', ') WITHIN GROUP (ORDER BY [IndexColumnId])
+                FROM #HardenIndexColumns
+                WHERE [SchemaName] = @restoreIndexSchema
+                  AND [TableName] = @restoreIndexTable
+                  AND [IndexName] = @restoreIndexName
+                  AND [IsIncluded] = 1;
+
+                IF @restoreIndexKeyColumns IS NULL
+                BEGIN
+                    DECLARE @missingIndexKeyMessage nvarchar(2048) = N'Yakalanan index icin key kolonu metadata bilgisi bulunamadi: '
+                        + QUOTENAME(@restoreIndexSchema) + N'.' + QUOTENAME(@restoreIndexTable) + N'.' + QUOTENAME(@restoreIndexName) + N'. Migration durduruldu.';
+                    THROW 51013, @missingIndexKeyMessage, 1;
+                END;
+
+                SET @restoreIndexSql = N'CREATE '
+                    + CASE WHEN @restoreIndexIsUnique = 1 THEN N'UNIQUE ' ELSE N'' END
+                    + N'NONCLUSTERED INDEX ' + QUOTENAME(@restoreIndexName)
+                    + N' ON ' + QUOTENAME(@restoreIndexSchema) + N'.' + QUOTENAME(@restoreIndexTable)
+                    + N' (' + @restoreIndexKeyColumns + N')'
+                    + CASE WHEN @restoreIndexIncludedColumns IS NOT NULL THEN N' INCLUDE (' + @restoreIndexIncludedColumns + N')' ELSE N'' END
+                    + CASE WHEN @restoreIndexFilterDefinition IS NOT NULL THEN N' WHERE ' + @restoreIndexFilterDefinition ELSE N'' END
+                    + N' WITH (PAD_INDEX = ' + CASE WHEN @restoreIndexIsPadded = 1 THEN N'ON' ELSE N'OFF' END
+                    + CASE WHEN @restoreIndexFillFactor > 0 THEN N', FILLFACTOR = ' + CONVERT(nvarchar(3), @restoreIndexFillFactor) ELSE N'' END
+                    + N', IGNORE_DUP_KEY = ' + CASE WHEN @restoreIndexIgnoreDuplicateKey = 1 THEN N'ON' ELSE N'OFF' END
+                    + N', ALLOW_ROW_LOCKS = ' + CASE WHEN @restoreIndexAllowRowLocks = 1 THEN N'ON' ELSE N'OFF' END
+                    + N', ALLOW_PAGE_LOCKS = ' + CASE WHEN @restoreIndexAllowPageLocks = 1 THEN N'ON' ELSE N'OFF' END
+                    + N') ON ' + QUOTENAME(@restoreIndexDataSpace) + N';';
+                EXEC sys.sp_executesql @restoreIndexSql;
+
+                IF @restoreIndexIsDisabled = 1
+                BEGIN
+                    SET @restoreIndexStateSql = N'ALTER INDEX ' + QUOTENAME(@restoreIndexName)
+                        + N' ON ' + QUOTENAME(@restoreIndexSchema) + N'.' + QUOTENAME(@restoreIndexTable) + N' DISABLE;';
+                    EXEC sys.sp_executesql @restoreIndexStateSql;
+                END;
+
+                FETCH NEXT FROM harden_index_restore_cursor INTO
+                    @restoreIndexSchema, @restoreIndexTable, @restoreIndexName, @restoreIndexIsUnique, @restoreIndexIsDisabled,
+                    @restoreIndexFillFactor, @restoreIndexIsPadded, @restoreIndexIgnoreDuplicateKey,
+                    @restoreIndexAllowRowLocks, @restoreIndexAllowPageLocks, @restoreIndexFilterDefinition, @restoreIndexDataSpace;
+            END;
+            CLOSE harden_index_restore_cursor;
+            DEALLOCATE harden_index_restore_cursor;
+            """);
+
+        migrationBuilder.Sql(
+            """
+            DECLARE @expectedAdminIndexDataSpace sysname =
+            (
+                SELECT [DataSpaceName]
+                FROM #HardenExpectedIndexLocations
+                WHERE [SchemaName] = N'dbo' AND [TableName] = N'Admins' AND [IndexName] = N'IX_Admins_NormalizedEmail'
+            );
+            DECLARE @expectedAdminIndexSql nvarchar(max);
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[Admins]') AND name = N'IX_Admins_NormalizedEmail')
+            BEGIN
+                SET @expectedAdminIndexSql = N'CREATE UNIQUE INDEX [IX_Admins_NormalizedEmail] ON [dbo].[Admins] ([NormalizedEmail])'
+                    + CASE WHEN @expectedAdminIndexDataSpace IS NOT NULL THEN N' ON ' + QUOTENAME(@expectedAdminIndexDataSpace) ELSE N'' END + N';';
+                EXEC sys.sp_executesql @expectedAdminIndexSql;
+            END;
+
+            DECLARE @expectedStudentIndexDataSpace sysname =
+            (
+                SELECT [DataSpaceName]
+                FROM #HardenExpectedIndexLocations
+                WHERE [SchemaName] = N'dbo' AND [TableName] = N'Students' AND [IndexName] = N'IX_Students_NormalizedEmail'
+            );
+            DECLARE @expectedStudentIndexSql nvarchar(max);
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[Students]') AND name = N'IX_Students_NormalizedEmail')
-                EXEC sys.sp_executesql N'CREATE UNIQUE INDEX [IX_Students_NormalizedEmail] ON [dbo].[Students] ([NormalizedEmail]);';
+            BEGIN
+                SET @expectedStudentIndexSql = N'CREATE UNIQUE INDEX [IX_Students_NormalizedEmail] ON [dbo].[Students] ([NormalizedEmail])'
+                    + CASE WHEN @expectedStudentIndexDataSpace IS NOT NULL THEN N' ON ' + QUOTENAME(@expectedStudentIndexDataSpace) ELSE N'' END + N';';
+                EXEC sys.sp_executesql @expectedStudentIndexSql;
+            END;
 
             IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(N'[dbo].[Applications]') AND name = N'CK_Applications_CurrentStatus')
                 ALTER TABLE [dbo].[Applications] ADD CONSTRAINT [CK_Applications_CurrentStatus] CHECK ([CurrentStatus] IN (N'Pending',N'UnderReview',N'Approved',N'Rejected',N'Withdrawn'));
@@ -669,6 +1132,11 @@ public partial class HardenExistingSchema : Migration
 
         migrationBuilder.Sql(
             """
+            DROP TABLE IF EXISTS #HardenIndexColumns;
+            DROP TABLE IF EXISTS #HardenIndexes;
+            DROP TABLE IF EXISTS #HardenExpectedIndexLocations;
+            DROP TABLE IF EXISTS #HardenExpectedIndexColumns;
+            DROP TABLE IF EXISTS #HardenExpectedIndexes;
             DROP TABLE IF EXISTS #HardenForeignKeys;
             DROP TABLE IF EXISTS #HardenDefaults;
             DROP TABLE IF EXISTS #HardenAlterTargets;

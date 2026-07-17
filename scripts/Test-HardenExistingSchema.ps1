@@ -125,7 +125,8 @@ $SeedSql
 function Invoke-EfDatabaseUpdate {
     param(
         [Parameter(Mandatory)][string]$Database,
-        [Parameter(Mandatory)][bool]$ExpectSuccess
+        [Parameter(Mandatory)][bool]$ExpectSuccess,
+        [string]$ExpectedErrorContains = ''
     )
 
     [Environment]::SetEnvironmentVariable(
@@ -135,7 +136,7 @@ function Invoke-EfDatabaseUpdate {
 
     Push-Location $repositoryRoot
     try {
-        $output = & dotnet ef database update --project GraduateApp.API --startup-project GraduateApp.API --no-build 2>&1
+        $output = & dotnet ef database update --project GraduateApp.API --startup-project GraduateApp.API --configuration Release --no-build 2>&1
         $exitCode = $LASTEXITCODE
     }
     finally {
@@ -149,12 +150,25 @@ function Invoke-EfDatabaseUpdate {
     if (-not $ExpectSuccess -and $exitCode -eq 0) {
         throw "EF migration unexpectedly succeeded for negative scenario '$Database'."
     }
+
+    if (-not $ExpectSuccess -and $ExpectedErrorContains -and
+        (($output -join [Environment]::NewLine).IndexOf($ExpectedErrorContains, [StringComparison]::Ordinal) -lt 0)) {
+        throw "EF migration failed for '$Database', but the expected safe-stop identifier was not reported."
+    }
 }
 
 function Assert-SuccessScenario {
     param([Parameter(Mandatory)][string]$Database)
 
     $assertions = @"
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+
 IF NOT EXISTS (SELECT 1 FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'20260717065942_HardenExistingSchema')
     THROW 52000, 'Migration history row is missing.', 1;
 
@@ -268,6 +282,154 @@ INSERT INTO [dbo].[PasswordResetTokens] ([TC], [TokenHash], [ExpirationDate])
 VALUES ('00000000000', 'new-token', DATEADD(hour, 1, SYSUTCDATETIME()));
 IF NOT EXISTS (SELECT 1 FROM [dbo].[PasswordResetTokens] WHERE [TokenHash] = 'new-token' AND [IsUsed] = 0)
     THROW 52013, 'Canonical IsUsed default does not work for new rows.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE [object_id] = OBJECT_ID(N'[dbo].[Admins]')
+      AND [name] = N'IX_Legacy_Admins_Email'
+      AND [type] = 2
+      AND [is_unique] = 0
+      AND [is_disabled] = 0
+      AND [fill_factor] = 80
+      AND [is_padded] = 1
+      AND [ignore_dup_key] = 0
+      AND [allow_row_locks] = 0
+      AND [allow_page_locks] = 1
+)
+    THROW 52014, 'Single-column index options were not preserved.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE [object_id] = OBJECT_ID(N'[dbo].[Students]')
+      AND [name] = N'UX_Legacy_Students_Email'
+      AND [type] = 2
+      AND [is_unique] = 1
+      AND [ignore_dup_key] = 1
+      AND [fill_factor] = 75
+)
+    THROW 52015, 'Unique index properties were not preserved.', 1;
+
+DECLARE @applicationCompositeIndexId int =
+(
+    SELECT [index_id]
+    FROM sys.indexes
+    WHERE [object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND [name] = N'IX_Legacy_Applications_StatusDate'
+      AND [type] = 2
+      AND [is_unique] = 0
+      AND [has_filter] = 1
+      AND [filter_definition] LIKE N'%ApplicationDate%'
+      AND [fill_factor] = 70
+      AND [is_padded] = 1
+      AND [allow_row_locks] = 1
+      AND [allow_page_locks] = 0
+);
+
+IF @applicationCompositeIndexId IS NULL
+    THROW 52016, 'Filtered composite index properties were not preserved.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.index_columns AS indexColumnInfo
+    INNER JOIN sys.columns AS columnInfo
+        ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+       AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+    WHERE indexColumnInfo.[object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND indexColumnInfo.[index_id] = @applicationCompositeIndexId
+      AND columnInfo.[name] = N'CurrentStatus'
+      AND indexColumnInfo.[key_ordinal] = 1
+      AND indexColumnInfo.[is_descending_key] = 1
+      AND indexColumnInfo.[is_included_column] = 0
+)
+OR NOT EXISTS
+(
+    SELECT 1
+    FROM sys.index_columns AS indexColumnInfo
+    INNER JOIN sys.columns AS columnInfo
+        ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+       AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+    WHERE indexColumnInfo.[object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND indexColumnInfo.[index_id] = @applicationCompositeIndexId
+      AND columnInfo.[name] = N'ApplicationDate'
+      AND indexColumnInfo.[key_ordinal] = 2
+      AND indexColumnInfo.[is_descending_key] = 0
+      AND indexColumnInfo.[is_included_column] = 0
+)
+    THROW 52017, 'Composite index key order or ASC/DESC direction was not preserved.', 1;
+
+IF (SELECT COUNT_BIG(*)
+    FROM sys.index_columns AS indexColumnInfo
+    INNER JOIN sys.columns AS columnInfo
+        ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+       AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+    WHERE indexColumnInfo.[object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND indexColumnInfo.[index_id] = @applicationCompositeIndexId
+      AND indexColumnInfo.[is_included_column] = 1
+      AND columnInfo.[name] IN (N'TC', N'ProgramID')) <> 2
+    THROW 52018, 'Composite index INCLUDE columns were not preserved.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE [object_id] = OBJECT_ID(N'[dbo].[ApplicationStatusHistory]')
+      AND [name] = N'IX_Legacy_History_ChangeDate_Disabled'
+      AND [is_disabled] = 1
+)
+    THROW 52019, 'Disabled index state was not restored.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes AS indexInfo
+    INNER JOIN sys.data_spaces AS dataSpaceInfo
+        ON dataSpaceInfo.[data_space_id] = indexInfo.[data_space_id]
+    WHERE indexInfo.[object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND indexInfo.[name] = N'IX_Legacy_Applications_StatusDate'
+      AND dataSpaceInfo.[name] = N'PRIMARY'
+      AND dataSpaceInfo.[type] = N'FG'
+)
+    THROW 52020, 'Index filegroup/data space was not preserved.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE [object_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]')
+      AND [name] = N'IX_Legacy_PasswordResetTokens_TC_AlreadyTarget'
+      AND [fill_factor] = 77
+)
+OR NOT EXISTS
+(
+    SELECT 1
+    FROM sys.extended_properties
+    WHERE [class] = 7
+      AND [major_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]')
+      AND [name] = N'MigrationTestMarker'
+      AND CONVERT(nvarchar(100), [value]) = N'index-was-not-recreated'
+)
+    THROW 52021, 'Index on an already-target-typed column was unnecessarily recreated.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes AS indexInfo
+    INNER JOIN sys.extended_properties AS propertyInfo
+        ON propertyInfo.[class] = 7
+       AND propertyInfo.[major_id] = indexInfo.[object_id]
+       AND propertyInfo.[minor_id] = indexInfo.[index_id]
+    WHERE indexInfo.[object_id] = OBJECT_ID(N'[dbo].[Admins]')
+      AND indexInfo.[name] = N'IX_Admins_NormalizedEmail'
+      AND indexInfo.[is_unique] = 1
+      AND propertyInfo.[name] = N'MigrationExpectedIndexMarker'
+      AND CONVERT(nvarchar(100), propertyInfo.[value]) = N'validated-and-not-recreated'
+)
+    THROW 52022, 'A compatible migration-owned index was not accepted and preserved.', 1;
 "@
 
     Invoke-Sql -Database $Database -Query $assertions
@@ -288,6 +450,41 @@ IF COL_LENGTH(N'dbo.Admins', N'NormalizedEmail') IS NOT NULL
     Invoke-Sql -Database $Database -Query $assertions
 }
 
+function Assert-RejectedMigrationNotRecorded {
+    param([Parameter(Mandatory)][string]$Database)
+
+    $assertions = @"
+IF OBJECT_ID(N'[dbo].[__EFMigrationsHistory]', N'U') IS NOT NULL
+   AND EXISTS (SELECT 1 FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'20260717065942_HardenExistingSchema')
+    THROW 52102, 'Rejected migration was recorded in migration history.', 1;
+"@
+
+    Invoke-Sql -Database $Database -Query $assertions
+}
+
+function Assert-KeyConstraintPreserved {
+    param(
+        [Parameter(Mandatory)][string]$Database,
+        [Parameter(Mandatory)][ValidateSet('PK', 'UQ')][string]$ConstraintType,
+        [Parameter(Mandatory)][string]$ConstraintName
+    )
+
+    $constraintNameLiteral = $ConstraintName.Replace("'", "''")
+    $assertions = @"
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.key_constraints
+    WHERE [parent_object_id] = OBJECT_ID(N'[dbo].[Admins]')
+      AND [name] = N'$constraintNameLiteral'
+      AND [type] = N'$ConstraintType'
+)
+    THROW 52103, 'Rejected migration did not preserve the blocking key constraint.', 1;
+"@
+
+    Invoke-Sql -Database $Database -Query $assertions
+}
+
 try {
     $successDatabase = New-TestDatabase -Scenario 'Success'
     Initialize-LegacySchema -Database $successDatabase -SeedSql @"
@@ -297,6 +494,53 @@ INSERT INTO [dbo].[Programs] ([ProgramName]) VALUES (N'Program 1');
 INSERT INTO [dbo].[Applications] ([TC], [ProgramID], [ApplicationDate], [CurrentStatus]) VALUES ('00000000000', 1, NULL, N'Pending');
 INSERT INTO [dbo].[ApplicationStatusHistory] ([ApplicationID], [StatusName], [ChangeDate], [Notes]) VALUES (1, N'Pending', NULL, N'legacy');
 INSERT INTO [dbo].[PasswordResetTokens] ([TC], [TokenHash], [ExpirationDate], [IsUsed]) VALUES ('00000000000', 'legacy-token', DATEADD(hour, 1, GETDATE()), NULL);
+
+ALTER TABLE [dbo].[Admins] ADD [NormalizedEmail] nvarchar(254) NULL;
+UPDATE [dbo].[Admins] SET [NormalizedEmail] = UPPER([Email]);
+ALTER TABLE [dbo].[Admins] ALTER COLUMN [NormalizedEmail] nvarchar(254) NOT NULL;
+CREATE UNIQUE INDEX [IX_Admins_NormalizedEmail] ON [dbo].[Admins] ([NormalizedEmail]);
+EXEC sys.sp_addextendedproperty
+    @name = N'MigrationExpectedIndexMarker',
+    @value = N'validated-and-not-recreated',
+    @level0type = N'SCHEMA', @level0name = N'dbo',
+    @level1type = N'TABLE', @level1name = N'Admins',
+    @level2type = N'INDEX', @level2name = N'IX_Admins_NormalizedEmail';
+
+CREATE INDEX [IX_Legacy_Admins_Email]
+ON [dbo].[Admins] ([Email] ASC)
+WITH (PAD_INDEX = ON, FILLFACTOR = 80, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = OFF, ALLOW_PAGE_LOCKS = ON);
+
+CREATE UNIQUE INDEX [UX_Legacy_Students_Email]
+ON [dbo].[Students] ([Email] DESC)
+WITH (PAD_INDEX = OFF, FILLFACTOR = 75, IGNORE_DUP_KEY = ON, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON);
+
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+CREATE INDEX [IX_Legacy_Applications_StatusDate]
+ON [dbo].[Applications] ([CurrentStatus] DESC, [ApplicationDate] ASC)
+INCLUDE ([TC], [ProgramID])
+WHERE [ApplicationDate] IS NOT NULL
+WITH (PAD_INDEX = ON, FILLFACTOR = 70, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF);
+
+CREATE INDEX [IX_Legacy_History_ChangeDate_Disabled]
+ON [dbo].[ApplicationStatusHistory] ([ChangeDate] ASC);
+ALTER INDEX [IX_Legacy_History_ChangeDate_Disabled] ON [dbo].[ApplicationStatusHistory] DISABLE;
+
+ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [TC] char(11) NULL;
+CREATE INDEX [IX_Legacy_PasswordResetTokens_TC_AlreadyTarget]
+ON [dbo].[PasswordResetTokens] ([TC] ASC)
+WITH (FILLFACTOR = 77);
+EXEC sys.sp_addextendedproperty
+    @name = N'MigrationTestMarker',
+    @value = N'index-was-not-recreated',
+    @level0type = N'SCHEMA', @level0name = N'dbo',
+    @level1type = N'TABLE', @level1name = N'PasswordResetTokens',
+    @level2type = N'INDEX', @level2name = N'IX_Legacy_PasswordResetTokens_TC_AlreadyTarget';
 "@
     Invoke-EfDatabaseUpdate -Database $successDatabase -ExpectSuccess $true
     Assert-SuccessScenario -Database $successDatabase
@@ -329,6 +573,36 @@ INSERT INTO [dbo].[Applications] ([TC], [ProgramID], [CurrentStatus]) VALUES ('0
 "@
     Invoke-EfDatabaseUpdate -Database $invalidStatusDatabase -ExpectSuccess $false
     Assert-PreflightRollback -Database $invalidStatusDatabase
+
+    $primaryKeyDatabase = New-TestDatabase -Scenario 'PrimaryKeyDependency'
+    Initialize-LegacySchema -Database $primaryKeyDatabase -SeedSql @"
+INSERT INTO [dbo].[Admins] ([Email], [PasswordHash]) VALUES (N'admin@example.test', 'legacy-hash');
+ALTER TABLE [dbo].[Admins] DROP CONSTRAINT [PK_Admins];
+ALTER TABLE [dbo].[Admins] ADD CONSTRAINT [PK_Legacy_Admins_Email] PRIMARY KEY NONCLUSTERED ([Email]);
+"@
+    Invoke-EfDatabaseUpdate -Database $primaryKeyDatabase -ExpectSuccess $false -ExpectedErrorContains 'PK_Legacy_Admins_Email'
+    Assert-PreflightRollback -Database $primaryKeyDatabase
+    Assert-KeyConstraintPreserved -Database $primaryKeyDatabase -ConstraintType 'PK' -ConstraintName 'PK_Legacy_Admins_Email'
+
+    $uniqueConstraintDatabase = New-TestDatabase -Scenario 'UniqueConstraintDependency'
+    Initialize-LegacySchema -Database $uniqueConstraintDatabase -SeedSql @"
+INSERT INTO [dbo].[Admins] ([Email], [PasswordHash]) VALUES (N'admin@example.test', 'legacy-hash');
+ALTER TABLE [dbo].[Admins] ADD CONSTRAINT [UQ_Legacy_Admins_Email] UNIQUE NONCLUSTERED ([Email]);
+"@
+    Invoke-EfDatabaseUpdate -Database $uniqueConstraintDatabase -ExpectSuccess $false -ExpectedErrorContains 'UQ_Legacy_Admins_Email'
+    Assert-PreflightRollback -Database $uniqueConstraintDatabase
+    Assert-KeyConstraintPreserved -Database $uniqueConstraintDatabase -ConstraintType 'UQ' -ConstraintName 'UQ_Legacy_Admins_Email'
+
+    $managedIndexMismatchDatabase = New-TestDatabase -Scenario 'ManagedIndexMismatch'
+    Initialize-LegacySchema -Database $managedIndexMismatchDatabase -SeedSql @"
+INSERT INTO [dbo].[Admins] ([Email], [PasswordHash]) VALUES (N'admin@example.test', 'legacy-hash');
+ALTER TABLE [dbo].[Admins] ADD [NormalizedEmail] nvarchar(254) NULL;
+UPDATE [dbo].[Admins] SET [NormalizedEmail] = UPPER([Email]);
+ALTER TABLE [dbo].[Admins] ALTER COLUMN [NormalizedEmail] nvarchar(254) NOT NULL;
+CREATE INDEX [IX_Admins_NormalizedEmail] ON [dbo].[Admins] ([NormalizedEmail]);
+"@
+    Invoke-EfDatabaseUpdate -Database $managedIndexMismatchDatabase -ExpectSuccess $false -ExpectedErrorContains 'IX_Admins_NormalizedEmail'
+    Assert-RejectedMigrationNotRecorded -Database $managedIndexMismatchDatabase
 
     Write-Output 'HardenExistingSchema LocalDB integration validation passed.'
 }
