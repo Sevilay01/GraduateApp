@@ -1,0 +1,85 @@
+@model StudentProfileViewModel
+@{
+    ViewData["Title"] = "Profil ve eğitim bilgileri";
+}
+
+<h1 class="h2">Profil ve eğitim bilgileri</h1>
+<p class="text-muted">Kimlik numarası: @Model.TcMasked</p>
+
+<form asp-action="Profile" method="post" class="card card-body shadow-sm" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    <fieldset class="mb-4">
+        <legend class="h4">Profil</legend>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Telephone" class="form-label"></label>
+                <input asp-for="Telephone" class="form-control" autocomplete="tel" />
+                <span asp-validation-for="Telephone" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="FatherName" class="form-label"></label>
+                <input asp-for="FatherName" class="form-control" />
+                <span asp-validation-for="FatherName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="BirthDate" class="form-label"></label>
+                <input asp-for="BirthDate" class="form-control" />
+                <span asp-validation-for="BirthDate" class="text-danger"></span>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-4">
+        <legend class="h4">Eğitim</legend>
+        <div class="row g-3">
+            <div class="col-12">
+                <label asp-for="UniversityId" class="form-label"></label>
+                <select asp-for="UniversityId" class="form-select">
+                    <option value="">Üniversite seçiniz</option>
+                    @foreach (var university in Model.Universities)
+                    {
+                        <option value="@university.UniversityId">@university.UniversityName</option>
+                    }
+                </select>
+                <span asp-validation-for="UniversityId" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Faculty" class="form-label"></label>
+                <input asp-for="Faculty" class="form-control" />
+                <span asp-validation-for="Faculty" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="GraduatedProgram" class="form-label"></label>
+                <input asp-for="GraduatedProgram" class="form-control" />
+                <span asp-validation-for="GraduatedProgram" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Gno" class="form-label"></label>
+                <input asp-for="Gno" class="form-control" inputmode="decimal" />
+                <span asp-validation-for="Gno" class="text-danger"></span>
+            </div>
+        </div>
+    </fieldset>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Bilgileri kaydet</button>
+        <a asp-action="Index" class="btn btn-link">Panele dön</a>
+    </div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

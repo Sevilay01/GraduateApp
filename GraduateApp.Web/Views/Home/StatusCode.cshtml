@@ -1,0 +1,17 @@
+@{
+    var statusCode = ViewData["StatusCode"] as int? ?? 500;
+    ViewData["Title"] = "İstek tamamlanamadı";
+    var message = statusCode switch
+    {
+        404 => "Aradığınız sayfa bulunamadı.",
+        401 => "Bu sayfayı görüntülemek için giriş yapmalısınız.",
+        403 => "Bu sayfaya erişim yetkiniz yok.",
+        _ => "İstek tamamlanamadı."
+    };
+}
+
+<div class="text-center py-5">
+    <div class="display-1 fw-bold text-secondary">@statusCode</div>
+    <h1 class="h2">@message</h1>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2">Ana sayfaya dön</a>
+</div>

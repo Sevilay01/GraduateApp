@@ -1,0 +1,90 @@
+@model AdminApplicationDetailViewModel
+@{
+    ViewData["Title"] = "Başvuru detayı";
+    var transitions = Model.CurrentStatus.AllowedAdminTransitions();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h2 mb-0">Başvuru #@Model.ApplicationId</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">Listeye dön</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-7">
+        <section class="card shadow-sm" aria-labelledby="application-info-heading">
+            <div class="card-body">
+                <h2 id="application-info-heading" class="h4">Başvuru bilgileri</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Öğrenci</dt><dd class="col-sm-8">@Model.StudentFullName</dd>
+                    <dt class="col-sm-4">TC kimlik numarası</dt><dd class="col-sm-8">@Model.Tc</dd>
+                    <dt class="col-sm-4">E-posta</dt><dd class="col-sm-8">@Model.Email</dd>
+                    <dt class="col-sm-4">Enstitü</dt><dd class="col-sm-8">@Model.InstituteName</dd>
+                    <dt class="col-sm-4">Program</dt><dd class="col-sm-8">@Model.ProgramName</dd>
+                    <dt class="col-sm-4">Başvuru tarihi</dt><dd class="col-sm-8">@Model.ApplicationDateUtc.ToString("dd.MM.yyyy HH:mm") UTC</dd>
+                    <dt class="col-sm-4">Durum</dt><dd class="col-sm-8"><strong>@Model.CurrentStatus.DisplayName()</strong></dd>
+                </dl>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mt-4" aria-labelledby="history-heading">
+            <div class="card-body">
+                <h2 id="history-heading" class="h4">Durum geçmişi</h2>
+                @if (Model.History.Count == 0)
+                {
+                    <p class="text-muted mb-0">Henüz durum geçmişi bulunmuyor.</p>
+                }
+                else
+                {
+                    <ol class="list-group list-group-numbered">
+                        @foreach (var history in Model.History)
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between gap-3">
+                                    <strong>@history.CurrentStatus.DisplayName()</strong>
+                                    <time class="small text-muted" datetime="@history.ChangedAtUtc.ToString("O")">@history.ChangedAtUtc.ToString("dd.MM.yyyy HH:mm") UTC</time>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(history.Notes))
+                                {
+                                    <p class="mb-0 mt-1">@history.Notes</p>
+                                }
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <section class="card shadow-sm" aria-labelledby="update-heading">
+            <div class="card-body">
+                <h2 id="update-heading" class="h4">Durumu güncelle</h2>
+                @if (transitions.Count == 0)
+                {
+                    <p class="text-muted mb-0">Bu durumdan izin verilen başka bir geçiş yok.</p>
+                }
+                else
+                {
+                    <form asp-action="UpdateStatus" method="post" novalidate>
+                        <input type="hidden" name="ApplicationId" value="@Model.ApplicationId" />
+                        <input type="hidden" name="RowVersion" value="@Model.RowVersion" />
+                        <div class="mb-3">
+                            <label for="NewStatus" class="form-label">Yeni durum</label>
+                            <select id="NewStatus" name="NewStatus" class="form-select" required>
+                                @foreach (var status in transitions)
+                                {
+                                    <option value="@status">@status.DisplayName()</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="Notes" class="form-label">Not</label>
+                            <textarea id="Notes" name="Notes" class="form-control" rows="4" maxlength="500"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Durumu güncelle</button>
+                    </form>
+                }
+            </div>
+        </section>
+    </div>
+</div>

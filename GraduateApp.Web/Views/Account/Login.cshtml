@@ -1,45 +1,40 @@
-@model GraduateApp.Web.Models.LoginViewModel
-
+@model LoginViewModel
 @{
-    ViewData["Title"] = "Giriş Yap";
+    ViewData["Title"] = "Giriş";
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-4">
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h3 class="card-title text-center mb-4">Yönetici Girişi</h3>
-
-                <!-- Tag Helper'lar ile formu doğrudan Controller'daki Login(POST) metoduna bağlıyoruz -->
-                <form asp-controller="Account" asp-action="Login" method="post">
-
-                    <!-- Genel hata mesajları (Örn: "Kullanıcı adı veya şifre hatalı") burada çıkacak -->
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                    <div class="form-group mb-3">
-                        <label asp-for="Username" class="control-label fw-bold">Kullanıcı Adı</label>
-                        <input asp-for="Username" class="form-control" placeholder="Kullanıcı adınızı girin (Örn: admin)" />
-                        <!-- Modelde belirlediğimiz Required hata mesajı burada görünecek -->
+                <h1 class="h3 mb-3">Öğrenci / Admin girişi</h1>
+                <p class="text-muted">Öğrenciler TC kimlik numarası veya e-posta, yöneticiler e-posta ile giriş yapar.</p>
+                <form asp-action="Login" method="post" novalidate>
+                    <input asp-for="ReturnUrl" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Username" class="form-label"></label>
+                        <input asp-for="Username" class="form-control" autocomplete="username" autofocus />
                         <span asp-validation-for="Username" class="text-danger"></span>
                     </div>
-
-                    <div class="form-group mb-4">
-                        <label asp-for="Password" class="control-label fw-bold">Şifre</label>
-                        <input asp-for="Password" class="form-control" type="password" placeholder="Şifrenizi girin (Örn: 123456)" />
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" />
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">Sisteme Giriş Yap</button>
+                    <div class="form-check mb-3">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
                     </div>
+                    <button type="submit" class="btn btn-primary w-100">Giriş yap</button>
                 </form>
-
+                <div class="d-flex justify-content-between mt-3 small">
+                    <a asp-action="ForgotPassword">Parolamı unuttum</a>
+                    <a asp-action="Register">Öğrenci kaydı</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- İstemci tarafında (sayfa yenilenmeden) validasyon yapabilmek için gerekli scriptler -->
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

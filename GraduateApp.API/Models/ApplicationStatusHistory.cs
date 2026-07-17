@@ -1,23 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace GraduateApp.API.Models;
 
-public partial class ApplicationStatusHistory
+public sealed class ApplicationStatusHistory
 {
     public int HistoryId { get; set; }
-
     public int ApplicationId { get; set; }
-
-    public string StatusName { get; set; } = null!;
-
+    public string? PreviousStatus { get; set; }
+    public string StatusName { get; set; } = string.Empty;
     public int? ChangedByAdminId { get; set; }
-
-    public DateTime? ChangeDate { get; set; }
-
+    public DateTime ChangeDate { get; set; }
     public string? Notes { get; set; }
 
-    public virtual Application Application { get; set; } = null!;
-
-    public virtual Admin? ChangedByAdmin { get; set; }
+    public Application Application { get; set; } = null!;
+    public Admin? ChangedByAdmin { get; set; }
 }

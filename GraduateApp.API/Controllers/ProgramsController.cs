@@ -1,34 +1,30 @@
+using GraduateApp.API.DTOs;
+using GraduateApp.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using GraduateApp.API.Models; // Kendi DB model namespace'ini kullan
 
-namespace GraduateApp.API.Controllers
+namespace GraduateApp.API.Controllers;
+
+[ApiController]
+[Route("api/programs")]
+public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvider timeProvider) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProgramsController : ControllerBase
+    [HttpGet("open")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<OpenProgramDto>>> GetOpen(CancellationToken cancellationToken)
     {
-        private readonly GraduateAppDbContext _context;
-
-        public ProgramsController(GraduateAppDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET: api/programs
-        [HttpGet]
-        public async Task<IActionResult> GetPrograms()
-        {
-            // Sadece başvuru için gereken temel bilgileri arayüze dönüyoruz
-            var programs = await _context.Programs
-                .Select(p => new { 
-                    p.ProgramId, 
-                    p.ProgramName, 
-                    p.DegreeType 
-                })
-                .ToListAsync();
-
-            return Ok(programs);
-        }
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        return Ok(await dbContext.Programs.AsNoTracking()
+            .Where(item => item.IsOpen
+                && (!item.ApplicationDeadlineUtc.HasValue || item.ApplicationDeadlineUtc.Value >= now))
+            .OrderBy(item => item.ProgramName)
+            .Select(item => new OpenProgramDto(
+                item.ProgramId,
+                item.ProgramName,
+                item.DegreeType,
+                item.Institute.InstituteName,
+                item.ApplicationDeadlineUtc))
+            .ToListAsync(cancellationToken));
     }
 }
