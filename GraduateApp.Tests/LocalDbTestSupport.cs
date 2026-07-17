@@ -33,9 +33,13 @@ internal static class LocalDbTestSupport
     public static bool IsAvailable => Availability.Value.IsAvailable;
     public static string UnavailableReason => Availability.Value.Reason ?? "SQL Server LocalDB kullanılamıyor.";
 
-    public static async Task<LocalDbTestDatabase> CreateDatabaseAsync(string studentsSchemaSql)
+    public static async Task<LocalDbTestDatabase> CreateDatabaseAsync(
+        string studentsSchemaSql,
+        string? databaseCollation = null)
     {
-        var database = new LocalDbTestDatabase($"GraduateAppTelephone_{Guid.NewGuid():N}");
+        var database = new LocalDbTestDatabase(
+            $"GraduateAppTelephone_{Guid.NewGuid():N}",
+            databaseCollation);
         await database.CreateAsync();
         try
         {
@@ -111,6 +115,15 @@ internal static class LocalDbTestSupport
     internal static string QuoteIdentifier(string identifier) =>
         $"[{identifier.Replace("]", "]]", StringComparison.Ordinal)}]";
 
+    internal static string GetDatabaseCollationClause(string? databaseCollation) => databaseCollation switch
+    {
+        null => string.Empty,
+        "Turkish_100_CI_AS" => " COLLATE Turkish_100_CI_AS",
+        _ => throw new ArgumentOutOfRangeException(
+            nameof(databaseCollation),
+            "Test veritabanı için izin verilmeyen collation istendi.")
+    };
+
     private static (bool IsAvailable, string? Reason) ProbeAvailability()
     {
         try
@@ -126,7 +139,7 @@ internal static class LocalDbTestSupport
     }
 }
 
-internal sealed class LocalDbTestDatabase(string databaseName) : IAsyncDisposable
+internal sealed class LocalDbTestDatabase(string databaseName, string? databaseCollation) : IAsyncDisposable
 {
     public string ConnectionString => LocalDbTestSupport.CreateConnectionString(databaseName);
 
@@ -135,7 +148,7 @@ internal sealed class LocalDbTestDatabase(string databaseName) : IAsyncDisposabl
         await using var connection = new SqlConnection(LocalDbTestSupport.CreateConnectionString("master"));
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE DATABASE {LocalDbTestSupport.QuoteIdentifier(databaseName)};";
+        command.CommandText = $"CREATE DATABASE {LocalDbTestSupport.QuoteIdentifier(databaseName)}{LocalDbTestSupport.GetDatabaseCollationClause(databaseCollation)};";
         await command.ExecuteNonQueryAsync();
     }
 

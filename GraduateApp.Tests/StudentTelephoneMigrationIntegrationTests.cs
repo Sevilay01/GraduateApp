@@ -63,6 +63,71 @@ public sealed class StudentTelephoneMigrationIntegrationTests
     }
 
     [LocalDbFact]
+    public async Task Migration_succeeds_and_preserves_filtered_uniqueness_under_turkish_collation()
+    {
+        await using var database = await LocalDbTestSupport.CreateDatabaseAsync(
+            BasicStudentsTable
+            + "ALTER TABLE [dbo].[Students] ADD UNIQUE NONCLUSTERED ([Telephone]);",
+            databaseCollation: "Turkish_100_CI_AS");
+        Assert.Equal(
+            "Turkish_100_CI_AS",
+            await database.ScalarAsync<string>(
+                "SELECT CONVERT(nvarchar(128), DATABASEPROPERTYEX(DB_NAME(), 'Collation'));"));
+
+        await database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[Students] ([TC], [Email], [Telephone])
+            VALUES ('10000000001', 'first@example.test', NULL);
+            """);
+        var legacyNullViolation = await Assert.ThrowsAsync<SqlException>(() => database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[Students] ([TC], [Email], [Telephone])
+            VALUES ('10000000002', 'second@example.test', NULL);
+            """));
+        Assert.Equal(2627, legacyNullViolation.Number);
+
+        await database.MigrateAsync();
+
+        await AssertCanonicalIndexAsync(database);
+        Assert.Equal(
+            1,
+            await database.ScalarAsync<int>(
+                """
+                SELECT CASE
+                    WHEN REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        i.[filter_definition],
+                        N' ', N''),
+                        N'(', N''),
+                        N')', N''),
+                        N'[', N''),
+                        N']', N''),
+                        NCHAR(9), N''),
+                        NCHAR(10), N''),
+                        NCHAR(13), N'') COLLATE Latin1_General_100_CI_AS
+                        = N'TelephoneISNOTNULL' COLLATE Latin1_General_100_CI_AS
+                    THEN 1
+                    ELSE 0
+                END
+                FROM sys.indexes AS i
+                WHERE i.[object_id] = OBJECT_ID(N'[dbo].[Students]')
+                  AND i.[name] = N'IX_Students_Telephone';
+                """));
+        await database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[Students] ([TC], [Email], [Telephone]) VALUES
+                ('10000000002', 'second@example.test', NULL),
+                ('10000000003', 'third@example.test', '555000000000001');
+            """);
+        var duplicateTelephone = await Assert.ThrowsAsync<SqlException>(() => database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[Students] ([TC], [Email], [Telephone])
+            VALUES ('10000000004', 'fourth@example.test', '555000000000001');
+            """));
+        Assert.Contains(duplicateTelephone.Number, new[] { 2601, 2627 });
+        Assert.Equal(3, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[Students];"));
+    }
+
+    [LocalDbFact]
     public async Task Migration_stops_without_modifying_composite_unique_constraint()
     {
         await using var database = await LocalDbTestSupport.CreateDatabaseAsync(
@@ -266,14 +331,14 @@ public sealed class StudentTelephoneMigrationIntegrationTests
             WHERE [object_id] = OBJECT_ID(N'[dbo].[Students]')
               AND [name] = N'IX_Students_Telephone';
             """);
-        Assert.Equal(
-            "telephoneisnotnull",
-            filter.Replace(" ", string.Empty, StringComparison.Ordinal)
-                .Replace("(", string.Empty, StringComparison.Ordinal)
-                .Replace(")", string.Empty, StringComparison.Ordinal)
-                .Replace("[", string.Empty, StringComparison.Ordinal)
-                .Replace("]", string.Empty, StringComparison.Ordinal)
-                .ToLowerInvariant());
+        var normalizedFilter = filter.Replace(" ", string.Empty, StringComparison.Ordinal)
+            .Replace("(", string.Empty, StringComparison.Ordinal)
+            .Replace(")", string.Empty, StringComparison.Ordinal)
+            .Replace("[", string.Empty, StringComparison.Ordinal)
+            .Replace("]", string.Empty, StringComparison.Ordinal);
+        Assert.True(
+            string.Equals("TelephoneISNOTNULL", normalizedFilter, StringComparison.OrdinalIgnoreCase),
+            $"Unexpected filtered index definition: {filter}");
 
         Assert.Equal(
             1,

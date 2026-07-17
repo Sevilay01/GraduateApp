@@ -131,7 +131,7 @@ namespace GraduateApp.API.Migrations
                     [IndexType] tinyint NOT NULL,
                     [IsDisabled] bit NOT NULL,
                     [HasFilter] bit NOT NULL,
-                    [NormalizedFilter] nvarchar(4000) NULL,
+                    [NormalizedFilter] nvarchar(4000) COLLATE Latin1_General_100_CI_AS NULL,
                     [KeyColumnCount] int NOT NULL,
                     [TelephoneKeyCount] int NOT NULL,
                     [IncludedColumnCount] int NOT NULL
@@ -155,17 +155,16 @@ namespace GraduateApp.API.Migrations
                     i.[type],
                     i.[is_disabled],
                     i.[has_filter],
-                    LOWER(
-                        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-                            i.[filter_definition],
-                            N' ', N''),
-                            N'(', N''),
-                            N')', N''),
-                            N'[', N''),
-                            N']', N''),
-                            NCHAR(9), N''),
-                            NCHAR(10), N''),
-                            NCHAR(13), N'')),
+                    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        i.[filter_definition],
+                        N' ', N''),
+                        N'(', N''),
+                        N')', N''),
+                        N'[', N''),
+                        N']', N''),
+                        NCHAR(9), N''),
+                        NCHAR(10), N''),
+                        NCHAR(13), N'') COLLATE Latin1_General_100_CI_AS,
                     SUM(CASE WHEN ic.[key_ordinal] > 0 THEN 1 ELSE 0 END),
                     SUM(CASE WHEN ic.[key_ordinal] > 0 AND ic.[column_id] = @telephoneColumnId THEN 1 ELSE 0 END),
                     SUM(CASE WHEN ic.[is_included_column] = 1 THEN 1 ELSE 0 END)
@@ -227,7 +226,7 @@ namespace GraduateApp.API.Migrations
                          AND [IndexType] = 2
                          AND [IsDisabled] = 0
                          AND [HasFilter] = 1
-                         AND [NormalizedFilter] = N'telephoneisnotnull'
+                         AND [NormalizedFilter] = N'TelephoneISNOTNULL' COLLATE Latin1_General_100_CI_AS
                          AND [KeyColumnCount] = 1
                          AND [TelephoneKeyCount] = 1
                          AND [IncludedColumnCount] = 0
@@ -251,7 +250,8 @@ namespace GraduateApp.API.Migrations
                           OR
                           (
                               [HasFilter] = 1
-                              AND ISNULL([NormalizedFilter], N'') <> N'telephoneisnotnull'
+                              AND ISNULL([NormalizedFilter], N'') COLLATE Latin1_General_100_CI_AS
+                                  <> N'TelephoneISNOTNULL' COLLATE Latin1_General_100_CI_AS
                           )
                       )
                 )
@@ -265,7 +265,7 @@ namespace GraduateApp.API.Migrations
                     FROM #TelephoneNormalUniqueIndexes
                     WHERE [IndexName] <> @canonicalIndexName
                       AND [HasFilter] = 1
-                      AND [NormalizedFilter] = N'telephoneisnotnull'
+                      AND [NormalizedFilter] = N'TelephoneISNOTNULL' COLLATE Latin1_General_100_CI_AS
                 ) > 1
                 OR
                 (
@@ -285,7 +285,7 @@ namespace GraduateApp.API.Migrations
                        FROM #TelephoneNormalUniqueIndexes
                        WHERE [IndexName] <> @canonicalIndexName
                          AND [HasFilter] = 1
-                         AND [NormalizedFilter] = N'telephoneisnotnull'
+                         AND [NormalizedFilter] = N'TelephoneISNOTNULL' COLLATE Latin1_General_100_CI_AS
                    )
                 BEGIN
                     THROW 51128, N'Güvenlik kontrolü: canonical ve eşdeğer isimli iki filtered Telephone indexi bulundu. Indexler değiştirilmedi.', 1;
@@ -330,7 +330,7 @@ namespace GraduateApp.API.Migrations
                     FROM #TelephoneNormalUniqueIndexes
                     WHERE [IndexName] <> @canonicalIndexName
                       AND [HasFilter] = 1
-                      AND [NormalizedFilter] = N'telephoneisnotnull'
+                      AND [NormalizedFilter] = N'TelephoneISNOTNULL' COLLATE Latin1_General_100_CI_AS
                 );
 
                 IF @canonicalIndexId IS NULL AND @equivalentFilteredIndexName IS NOT NULL
@@ -358,58 +358,99 @@ namespace GraduateApp.API.Migrations
                           WHERE [Telephone] IS NOT NULL;';
                 END;
 
-                IF NOT EXISTS
-                (
-                    SELECT 1
-                    FROM sys.indexes AS i
-                    WHERE i.[object_id] = @studentsObjectId
-                      AND i.[name] = @canonicalIndexName
-                      AND i.[type] = 2
-                      AND i.[is_unique] = 1
-                      AND i.[is_primary_key] = 0
-                      AND i.[is_unique_constraint] = 0
-                      AND i.[is_disabled] = 0
-                      AND i.[has_filter] = 1
-                      AND LOWER(
-                          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-                              i.[filter_definition],
-                              N' ', N''),
-                              N'(', N''),
-                              N')', N''),
-                              N'[', N''),
-                              N']', N''),
-                              NCHAR(9), N''),
-                              NCHAR(10), N''),
-                              NCHAR(13), N'')) = N'telephoneisnotnull'
-                      AND
-                      (
-                          SELECT COUNT_BIG(*)
-                          FROM sys.index_columns AS ic
-                          WHERE ic.[object_id] = i.[object_id]
-                            AND ic.[index_id] = i.[index_id]
-                            AND ic.[key_ordinal] > 0
-                      ) = 1
-                      AND EXISTS
-                      (
-                          SELECT 1
-                          FROM sys.index_columns AS ic
-                          WHERE ic.[object_id] = i.[object_id]
-                            AND ic.[index_id] = i.[index_id]
-                            AND ic.[key_ordinal] = 1
-                            AND ic.[column_id] = @telephoneColumnId
-                            AND ic.[is_included_column] = 0
-                      )
-                      AND NOT EXISTS
-                      (
-                          SELECT 1
-                          FROM sys.index_columns AS ic
-                          WHERE ic.[object_id] = i.[object_id]
-                            AND ic.[index_id] = i.[index_id]
-                            AND ic.[is_included_column] = 1
-                      )
-                )
+                DECLARE @verificationIndexFound bit = 0;
+                DECLARE @verificationIndexType tinyint = NULL;
+                DECLARE @verificationIsUnique bit = NULL;
+                DECLARE @verificationIsPrimaryKey bit = NULL;
+                DECLARE @verificationIsUniqueConstraint bit = NULL;
+                DECLARE @verificationIsDisabled bit = NULL;
+                DECLARE @verificationHasFilter bit = NULL;
+                DECLARE @verificationFilterMatches bit = 0;
+                DECLARE @verificationKeyColumnCount bigint = NULL;
+                DECLARE @verificationTelephoneOrdinalOneCount bigint = NULL;
+                DECLARE @verificationIncludedColumnCount bigint = NULL;
+
+                SELECT
+                    @verificationIndexFound = 1,
+                    @verificationIndexType = i.[type],
+                    @verificationIsUnique = i.[is_unique],
+                    @verificationIsPrimaryKey = i.[is_primary_key],
+                    @verificationIsUniqueConstraint = i.[is_unique_constraint],
+                    @verificationIsDisabled = i.[is_disabled],
+                    @verificationHasFilter = i.[has_filter],
+                    @verificationFilterMatches =
+                        CASE
+                            WHEN REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                                i.[filter_definition],
+                                N' ', N''),
+                                N'(', N''),
+                                N')', N''),
+                                N'[', N''),
+                                N']', N''),
+                                NCHAR(9), N''),
+                                NCHAR(10), N''),
+                                NCHAR(13), N'') COLLATE Latin1_General_100_CI_AS
+                                = N'TelephoneISNOTNULL' COLLATE Latin1_General_100_CI_AS
+                            THEN 1
+                            ELSE 0
+                        END,
+                    @verificationKeyColumnCount =
+                    (
+                        SELECT COUNT_BIG(*)
+                        FROM sys.index_columns AS ic
+                        WHERE ic.[object_id] = i.[object_id]
+                          AND ic.[index_id] = i.[index_id]
+                          AND ic.[key_ordinal] > 0
+                    ),
+                    @verificationTelephoneOrdinalOneCount =
+                    (
+                        SELECT COUNT_BIG(*)
+                        FROM sys.index_columns AS ic
+                        WHERE ic.[object_id] = i.[object_id]
+                          AND ic.[index_id] = i.[index_id]
+                          AND ic.[key_ordinal] = 1
+                          AND ic.[column_id] = @telephoneColumnId
+                          AND ic.[is_included_column] = 0
+                    ),
+                    @verificationIncludedColumnCount =
+                    (
+                        SELECT COUNT_BIG(*)
+                        FROM sys.index_columns AS ic
+                        WHERE ic.[object_id] = i.[object_id]
+                          AND ic.[index_id] = i.[index_id]
+                          AND ic.[is_included_column] = 1
+                    )
+                FROM sys.indexes AS i
+                WHERE i.[object_id] = @studentsObjectId
+                  AND i.[name] = @canonicalIndexName;
+
+                IF @verificationIndexFound <> 1
+                   OR ISNULL(@verificationIndexType, 0) <> 2
+                   OR ISNULL(@verificationIsUnique, 0) <> 1
+                   OR ISNULL(@verificationIsPrimaryKey, 1) <> 0
+                   OR ISNULL(@verificationIsUniqueConstraint, 1) <> 0
+                   OR ISNULL(@verificationIsDisabled, 1) <> 0
+                   OR ISNULL(@verificationHasFilter, 0) <> 1
+                   OR ISNULL(@verificationFilterMatches, 0) <> 1
+                   OR ISNULL(@verificationKeyColumnCount, 0) <> 1
+                   OR ISNULL(@verificationTelephoneOrdinalOneCount, 0) <> 1
+                   OR ISNULL(@verificationIncludedColumnCount, 0) <> 0
                 BEGIN
-                    THROW 51129, N'Güvenlik kontrolü: canonical filtered Telephone indexi oluşturulamadı veya doğrulanamadı.', 1;
+                    DECLARE @verificationMessage nvarchar(2048) = CONCAT(
+                        N'Güvenlik kontrolü: canonical filtered Telephone indexi doğrulanamadı. ',
+                        N'index_found=', @verificationIndexFound,
+                        N'; type=', COALESCE(CONVERT(nvarchar(10), @verificationIndexType), N'NULL'),
+                        N'; is_unique=', COALESCE(CONVERT(nvarchar(1), @verificationIsUnique), N'NULL'),
+                        N'; is_primary_key=', COALESCE(CONVERT(nvarchar(1), @verificationIsPrimaryKey), N'NULL'),
+                        N'; is_unique_constraint=', COALESCE(CONVERT(nvarchar(1), @verificationIsUniqueConstraint), N'NULL'),
+                        N'; is_disabled=', COALESCE(CONVERT(nvarchar(1), @verificationIsDisabled), N'NULL'),
+                        N'; has_filter=', COALESCE(CONVERT(nvarchar(1), @verificationHasFilter), N'NULL'),
+                        N'; filter_match=', @verificationFilterMatches,
+                        N'; key_column_count=', COALESCE(CONVERT(nvarchar(20), @verificationKeyColumnCount), N'NULL'),
+                        N'; telephone_ordinal_1_count=', COALESCE(CONVERT(nvarchar(20), @verificationTelephoneOrdinalOneCount), N'NULL'),
+                        N'; include_count=', COALESCE(CONVERT(nvarchar(20), @verificationIncludedColumnCount), N'NULL'),
+                        N'.');
+                    THROW 51129, @verificationMessage, 1;
                 END;
 
                 DROP TABLE #TelephoneNormalUniqueIndexes;
