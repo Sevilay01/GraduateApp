@@ -48,6 +48,7 @@ secrets.json
 /migration-fixed.sql
 /migration-validation.sql
 /migration-validation-*.sql
+/migration-registration-fix.sql
 
 # Publish and package output
 [Pp]ublish/

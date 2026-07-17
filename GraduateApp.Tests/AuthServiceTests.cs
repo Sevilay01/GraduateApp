@@ -4,7 +4,9 @@ using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GraduateApp.Tests;
@@ -121,12 +123,124 @@ public sealed class AuthServiceTests
         Assert.NotEqual(previousStamp, student.SecurityStamp);
     }
 
+    [Fact]
+    public async Task RegisterStudent_AllowsTwoStudentsWithoutTelephone_AndHashesPasswords()
+    {
+        await using var db = TestDb.Create();
+        var hasher = new PasswordHasher<Student>();
+        var service = CreateService(db, studentHasher: hasher);
+        var firstRequest = CreateRegistrationRequest(
+            "10000000078",
+            "first.student@example.test",
+            "First-Student-Password-1!");
+        var secondRequest = CreateRegistrationRequest(
+            "10000000214",
+            "second.student@example.test",
+            "Second-Student-Password-1!");
+
+        var first = await service.RegisterStudentAsync(firstRequest, CancellationToken.None);
+        var second = await service.RegisterStudentAsync(secondRequest, CancellationToken.None);
+
+        Assert.True(first.IsSuccess);
+        Assert.Equal(StatusCodes.Status201Created, first.StatusCode);
+        Assert.True(second.IsSuccess);
+        Assert.Equal(StatusCodes.Status201Created, second.StatusCode);
+        var students = db.Students.OrderBy(student => student.Tc).ToArray();
+        Assert.Equal(2, students.Length);
+        Assert.All(students, student => Assert.Null(student.Telephone));
+        Assert.DoesNotContain(students, student => student.PasswordHash == firstRequest.Password);
+        Assert.DoesNotContain(students, student => student.PasswordHash == secondRequest.Password);
+        Assert.Equal(
+            PasswordVerificationResult.Success,
+            hasher.VerifyHashedPassword(students.Single(student => student.Tc == firstRequest.Tc), students.Single(student => student.Tc == firstRequest.Tc).PasswordHash, firstRequest.Password));
+    }
+
+    [Fact]
+    public async Task RegisterStudent_ReturnsSafeConflictForDuplicateTcOrEmail()
+    {
+        await using var db = TestDb.Create();
+        var service = CreateService(db);
+        var original = CreateRegistrationRequest("10000000078", "student@example.test", "Original-Password-1!");
+        var created = await service.RegisterStudentAsync(original, CancellationToken.None);
+
+        var duplicateTc = await service.RegisterStudentAsync(
+            CreateRegistrationRequest(original.Tc, "different@example.test", "Different-Password-1!"),
+            CancellationToken.None);
+        var duplicateEmail = await service.RegisterStudentAsync(
+            CreateRegistrationRequest("10000000214", "STUDENT@example.test", "Another-Password-1!"),
+            CancellationToken.None);
+
+        Assert.True(created.IsSuccess);
+        Assert.False(duplicateTc.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, duplicateTc.StatusCode);
+        Assert.Equal("Bu bilgilerle kayıt oluşturulamıyor.", duplicateTc.Error);
+        Assert.False(duplicateEmail.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, duplicateEmail.StatusCode);
+        Assert.Equal("Bu bilgilerle kayıt oluşturulamıyor.", duplicateEmail.Error);
+        Assert.DoesNotContain(original.Tc, duplicateTc.Error, StringComparison.Ordinal);
+        Assert.DoesNotContain(original.Email, duplicateEmail.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [LocalDbTheory]
+    [InlineData(2601)]
+    [InlineData(2627)]
+    public async Task RegisterStudent_MapsOnlySqlServerUniqueViolationsToSafeConflict(int errorNumber)
+    {
+        var sqlException = await LocalDbTestSupport.CreateUniqueViolationExceptionAsync(errorNumber);
+        var interceptor = new ThrowingSaveChangesInterceptor(
+            () => new DbUpdateException("Database persistence failed.", sqlException));
+        await using var db = TestDb.Create(interceptor);
+        var logger = new CapturingLogger<AuthService>();
+        var service = CreateService(db, logger: logger);
+        var request = CreateRegistrationRequest(
+            "10000000078",
+            "private.student@example.test",
+            "Private-Student-Password-1!");
+
+        var result = await service.RegisterStudentAsync(request, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal("Bu bilgilerle kayıt oluşturulamıyor.", result.Error);
+        Assert.Empty(logger.Entries);
+        Assert.DoesNotContain(request.Tc, result.Error, StringComparison.Ordinal);
+        Assert.DoesNotContain(request.Email, result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RegisterStudent_ReturnsControlledErrorAndPiiFreeLogForUnexpectedDatabaseFailure()
+    {
+        const string telephone = "555000000000001";
+        var request = CreateRegistrationRequest(
+            "10000000078",
+            "private.student@example.test",
+            "Private-Student-Password-1!");
+        var interceptor = new ThrowingSaveChangesInterceptor(
+            () => new DbUpdateException($"TC={request.Tc}; Email={request.Email}; Telephone={telephone}"));
+        await using var db = TestDb.Create(interceptor);
+        var logger = new CapturingLogger<AuthService>();
+        var service = CreateService(db, logger: logger);
+
+        var result = await service.RegisterStudentAsync(request, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status500InternalServerError, result.StatusCode);
+        Assert.Equal("Kayıt şu anda oluşturulamıyor. Lütfen daha sonra tekrar deneyin.", result.Error);
+        Assert.Single(logger.Entries);
+        Assert.Contains("database operation could not be completed", logger.Entries[0], StringComparison.Ordinal);
+        var output = string.Join(Environment.NewLine, logger.Entries.Append(result.Error));
+        Assert.DoesNotContain(request.Tc, output, StringComparison.Ordinal);
+        Assert.DoesNotContain(request.Email, output, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(telephone, output, StringComparison.Ordinal);
+    }
+
     private static AuthService CreateService(
         GraduateAppDbContext db,
         TestTimeProvider? timeProvider = null,
         CapturingEmailSender? emailSender = null,
         PasswordHasher<Student>? studentHasher = null,
-        PasswordHasher<Admin>? adminHasher = null)
+        PasswordHasher<Admin>? adminHasher = null,
+        ILogger<AuthService>? logger = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -142,8 +256,18 @@ public sealed class AuthServiceTests
             emailSender ?? new CapturingEmailSender(),
             configuration,
             timeProvider ?? new TestTimeProvider(DateTimeOffset.UtcNow),
-            NullLogger<AuthService>.Instance);
+            logger ?? NullLogger<AuthService>.Instance);
     }
+
+    private static RegisterStudentDto CreateRegistrationRequest(string tc, string email, string password) => new()
+    {
+        Tc = tc,
+        FirstName = "Test",
+        LastName = "Öğrenci",
+        Email = email,
+        Password = password,
+        ConfirmPassword = password
+    };
 
     private static Student CreateStudent() => new()
     {
