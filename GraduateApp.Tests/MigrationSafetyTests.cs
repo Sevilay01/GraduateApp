@@ -55,9 +55,57 @@ public sealed class MigrationSafetyTests
         Assert.Contains("[IsDisabled]", script, StringComparison.Ordinal);
         Assert.Contains("[FillFactor]", script, StringComparison.Ordinal);
         Assert.Contains("[DataSpaceName]", script, StringComparison.Ordinal);
-        Assert.Contains("THROW 51007, @unsafeConstraintMessage", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51007, @unsafePrimaryKeyMessage", script, StringComparison.Ordinal);
         Assert.Contains("QUOTENAME(@dropIndexName)", script, StringComparison.Ordinal);
         Assert.Contains("STRING_AGG", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HardenExistingSchema_preserves_supported_unique_constraints_as_key_constraints()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppMigrationScriptTest;Integrated Security=true")
+            .Options;
+
+        using var dbContext = new GraduateAppDbContext(options);
+        var script = dbContext.GetService<IMigrator>().GenerateScript(
+            options: MigrationsSqlGenerationOptions.Idempotent);
+
+        AssertOrdered(script, "DECLARE harden_index_drop_cursor", "DECLARE harden_unique_constraint_drop_cursor");
+        AssertOrdered(script, "DECLARE harden_unique_constraint_drop_cursor", "DECLARE harden_default_drop_cursor");
+        AssertOrdered(script, "DECLARE harden_default_drop_cursor", "DECLARE harden_alter_column_cursor");
+        AssertOrdered(script, "DECLARE harden_alter_column_cursor", "DECLARE harden_unique_constraint_restore_cursor");
+        AssertOrdered(script, "DECLARE harden_unique_constraint_restore_cursor", "DECLARE harden_index_restore_cursor");
+        AssertOrdered(script, "DECLARE harden_index_restore_cursor", "DECLARE harden_foreign_key_restore_cursor");
+
+        Assert.Contains("CREATE TABLE #HardenKeyConstraints", script, StringComparison.Ordinal);
+        Assert.Contains("[ConstraintObjectId]", script, StringComparison.Ordinal);
+        Assert.Contains("[ConstraintType]", script, StringComparison.Ordinal);
+        Assert.Contains("[IsAlterTargetRelated]", script, StringComparison.Ordinal);
+        Assert.Contains("[InboundForeignKeyCount]", script, StringComparison.Ordinal);
+        Assert.Contains("WITHIN GROUP (ORDER BY [KeyOrdinal])", script, StringComparison.Ordinal);
+        Assert.Contains("N' ADD CONSTRAINT ' + QUOTENAME(@restoreUniqueConstraintName)", script, StringComparison.Ordinal);
+        Assert.Contains("N' UNIQUE ' + CASE WHEN @restoreUniqueConstraintIndexType = 1", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51007, @unsafePrimaryKeyMessage", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("CREATE UNIQUE INDEX ' + QUOTENAME(@restoreUniqueConstraintName)", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HardenExistingSchema_uses_narrow_surrogate_keys_for_temporary_metadata_tables()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppMigrationScriptTest;Integrated Security=true")
+            .Options;
+
+        using var dbContext = new GraduateAppDbContext(options);
+        var script = dbContext.GetService<IMigrator>().GenerateScript(
+            options: MigrationsSqlGenerationOptions.Idempotent);
+
+        Assert.Contains("[Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("PRIMARY KEY ([SchemaName]", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("PRIMARY KEY ([TableName]", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("PRIMARY KEY ([ConstraintName]", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("PRIMARY KEY ([SchemaName], [TableName]", script, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -147,12 +147,20 @@ function Invoke-EfDatabaseUpdate {
         throw "EF migration unexpectedly failed for '$Database': $($output -join [Environment]::NewLine)"
     }
 
+    $combinedOutput = $output -join [Environment]::NewLine
+    if ($ExpectSuccess -and
+        ($combinedOutput.IndexOf('maximum key length', [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+         $combinedOutput.IndexOf('900 bytes', [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+         $combinedOutput.IndexOf('1024 bytes', [StringComparison]::OrdinalIgnoreCase) -ge 0)) {
+        throw "EF migration produced a temporary-table key-length warning for '$Database'."
+    }
+
     if (-not $ExpectSuccess -and $exitCode -eq 0) {
         throw "EF migration unexpectedly succeeded for negative scenario '$Database'."
     }
 
     if (-not $ExpectSuccess -and $ExpectedErrorContains -and
-        (($output -join [Environment]::NewLine).IndexOf($ExpectedErrorContains, [StringComparison]::Ordinal) -lt 0)) {
+        ($combinedOutput.IndexOf($ExpectedErrorContains, [StringComparison]::Ordinal) -lt 0)) {
         throw "EF migration failed for '$Database', but the expected safe-stop identifier was not reported."
     }
 }
@@ -278,8 +286,8 @@ INSERT INTO [dbo].[ApplicationStatusHistory] ([ApplicationID], [StatusName]) VAL
 IF NOT EXISTS (SELECT 1 FROM [dbo].[ApplicationStatusHistory] WHERE [ApplicationID] = 2 AND [ChangeDate] IS NOT NULL)
     THROW 52012, 'Canonical ChangeDate default does not work for new rows.', 1;
 
-INSERT INTO [dbo].[PasswordResetTokens] ([TC], [TokenHash], [ExpirationDate])
-VALUES ('00000000000', 'new-token', DATEADD(hour, 1, SYSUTCDATETIME()));
+INSERT INTO [dbo].[PasswordResetTokens] ([AdminID], [TokenHash], [ExpirationDate])
+VALUES (1, 'new-token', DATEADD(hour, 1, SYSUTCDATETIME()));
 IF NOT EXISTS (SELECT 1 FROM [dbo].[PasswordResetTokens] WHERE [TokenHash] = 'new-token' AND [IsUsed] = 0)
     THROW 52013, 'Canonical IsUsed default does not work for new rows.', 1;
 
@@ -430,6 +438,115 @@ IF NOT EXISTS
       AND CONVERT(nvarchar(100), propertyInfo.[value]) = N'validated-and-not-recreated'
 )
     THROW 52022, 'A compatible migration-owned index was not accepted and preserved.', 1;
+
+DECLARE @expectedAdminEmailUniqueConstraint sysname =
+(
+    SELECT [PropertyValue]
+    FROM [dbo].[MigrationTestExpected]
+    WHERE [PropertyName] = N'AdminEmailUniqueConstraintName'
+);
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.key_constraints AS keyConstraint
+    INNER JOIN sys.indexes AS indexInfo
+        ON indexInfo.[object_id] = keyConstraint.[parent_object_id]
+       AND indexInfo.[index_id] = keyConstraint.[unique_index_id]
+    INNER JOIN sys.index_columns AS indexColumnInfo
+        ON indexColumnInfo.[object_id] = indexInfo.[object_id]
+       AND indexColumnInfo.[index_id] = indexInfo.[index_id]
+       AND indexColumnInfo.[key_ordinal] = 1
+    INNER JOIN sys.columns AS columnInfo
+        ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+       AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+    WHERE keyConstraint.[parent_object_id] = OBJECT_ID(N'[dbo].[Admins]')
+      AND keyConstraint.[name] = @expectedAdminEmailUniqueConstraint
+      AND keyConstraint.[type] = N'UQ'
+      AND indexInfo.[is_unique_constraint] = 1
+      AND indexInfo.[type] = 2
+      AND columnInfo.[name] = N'Email'
+      AND indexColumnInfo.[is_descending_key] = 0
+)
+    THROW 52023, 'Automatically named Admins.Email UNIQUE constraint was not preserved as a constraint.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.key_constraints AS keyConstraint
+    INNER JOIN sys.indexes AS indexInfo
+        ON indexInfo.[object_id] = keyConstraint.[parent_object_id]
+       AND indexInfo.[index_id] = keyConstraint.[unique_index_id]
+    WHERE keyConstraint.[parent_object_id] = OBJECT_ID(N'[dbo].[Students]')
+      AND keyConstraint.[name] = N'UQ_Legacy_Students_Email'
+      AND keyConstraint.[type] = N'UQ'
+      AND indexInfo.[is_unique_constraint] = 1
+      AND indexInfo.[type] = 2
+      AND indexInfo.[fill_factor] = 60
+      AND indexInfo.[is_padded] = 1
+      AND indexInfo.[allow_row_locks] = 0
+      AND indexInfo.[allow_page_locks] = 1
+)
+    THROW 52024, 'Students.Email UNIQUE constraint metadata was not preserved.', 1;
+
+DECLARE @applicationUniqueConstraintIndexId int =
+(
+    SELECT indexInfo.[index_id]
+    FROM sys.key_constraints AS keyConstraint
+    INNER JOIN sys.indexes AS indexInfo
+        ON indexInfo.[object_id] = keyConstraint.[parent_object_id]
+       AND indexInfo.[index_id] = keyConstraint.[unique_index_id]
+    WHERE keyConstraint.[parent_object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND keyConstraint.[name] = N'UQ_Legacy_Applications_StatusDate'
+      AND keyConstraint.[type] = N'UQ'
+      AND indexInfo.[is_unique_constraint] = 1
+      AND indexInfo.[type] = 2
+      AND indexInfo.[fill_factor] = 65
+      AND indexInfo.[ignore_dup_key] = 1
+);
+
+IF @applicationUniqueConstraintIndexId IS NULL
+    THROW 52025, 'Composite UNIQUE constraint metadata was not preserved.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.index_columns AS indexColumnInfo
+    INNER JOIN sys.columns AS columnInfo
+        ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+       AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+    WHERE indexColumnInfo.[object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND indexColumnInfo.[index_id] = @applicationUniqueConstraintIndexId
+      AND indexColumnInfo.[key_ordinal] = 1
+      AND indexColumnInfo.[is_descending_key] = 1
+      AND columnInfo.[name] = N'CurrentStatus'
+)
+OR NOT EXISTS
+(
+    SELECT 1
+    FROM sys.index_columns AS indexColumnInfo
+    INNER JOIN sys.columns AS columnInfo
+        ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+       AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+    WHERE indexColumnInfo.[object_id] = OBJECT_ID(N'[dbo].[Applications]')
+      AND indexColumnInfo.[index_id] = @applicationUniqueConstraintIndexId
+      AND indexColumnInfo.[key_ordinal] = 2
+      AND indexColumnInfo.[is_descending_key] = 0
+      AND columnInfo.[name] = N'ApplicationDate'
+)
+    THROW 52026, 'Composite UNIQUE constraint key order or ASC/DESC direction was not preserved.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.key_constraints
+    WHERE [parent_object_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]')
+      AND [name] = N'UQ_Legacy_PasswordResetTokens_TC_AlreadyTarget'
+      AND [type] = N'UQ'
+      AND CONVERT(nvarchar(20), [object_id]) =
+          (SELECT [PropertyValue] FROM [dbo].[MigrationTestExpected] WHERE [PropertyName] = N'AlreadyTargetUniqueConstraintObjectId')
+)
+    THROW 52027, 'UNIQUE constraint on an already-target-typed column was unnecessarily recreated.', 1;
 "@
 
     Invoke-Sql -Database $Database -Query $assertions
@@ -485,6 +602,57 @@ IF NOT EXISTS
     Invoke-Sql -Database $Database -Query $assertions
 }
 
+function Assert-ClusteredUniqueConstraintScenario {
+    param([Parameter(Mandatory)][string]$Database)
+
+    $assertions = @"
+IF NOT EXISTS (SELECT 1 FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'20260717065942_HardenExistingSchema')
+    THROW 52104, 'Clustered UNIQUE scenario migration history row is missing.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.key_constraints AS keyConstraint
+    INNER JOIN sys.indexes AS indexInfo
+        ON indexInfo.[object_id] = keyConstraint.[parent_object_id]
+       AND indexInfo.[index_id] = keyConstraint.[unique_index_id]
+    INNER JOIN sys.index_columns AS indexColumnInfo
+        ON indexColumnInfo.[object_id] = indexInfo.[object_id]
+       AND indexColumnInfo.[index_id] = indexInfo.[index_id]
+       AND indexColumnInfo.[key_ordinal] = 1
+    INNER JOIN sys.columns AS columnInfo
+        ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+       AND columnInfo.[column_id] = indexColumnInfo.[column_id]
+    WHERE keyConstraint.[parent_object_id] = OBJECT_ID(N'[dbo].[Admins]')
+      AND keyConstraint.[name] = N'UQ_Legacy_Admins_Email_Clustered'
+      AND keyConstraint.[type] = N'UQ'
+      AND indexInfo.[is_unique_constraint] = 1
+      AND indexInfo.[type] = 1
+      AND indexInfo.[fill_factor] = 55
+      AND indexInfo.[is_padded] = 1
+      AND columnInfo.[name] = N'Email'
+      AND indexColumnInfo.[is_descending_key] = 1
+)
+    THROW 52105, 'UNIQUE CLUSTERED constraint metadata was not preserved.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.key_constraints AS keyConstraint
+    INNER JOIN sys.indexes AS indexInfo
+        ON indexInfo.[object_id] = keyConstraint.[parent_object_id]
+       AND indexInfo.[index_id] = keyConstraint.[unique_index_id]
+    WHERE keyConstraint.[parent_object_id] = OBJECT_ID(N'[dbo].[Admins]')
+      AND keyConstraint.[name] = N'PK_Admins'
+      AND keyConstraint.[type] = N'PK'
+      AND indexInfo.[type] = 2
+)
+    THROW 52106, 'Unrelated NONCLUSTERED primary key was changed.', 1;
+"@
+
+    Invoke-Sql -Database $Database -Query $assertions
+}
+
 try {
     $successDatabase = New-TestDatabase -Scenario 'Success'
     Initialize-LegacySchema -Database $successDatabase -SeedSql @"
@@ -505,6 +673,21 @@ EXEC sys.sp_addextendedproperty
     @level0type = N'SCHEMA', @level0name = N'dbo',
     @level1type = N'TABLE', @level1name = N'Admins',
     @level2type = N'INDEX', @level2name = N'IX_Admins_NormalizedEmail';
+
+ALTER TABLE [dbo].[Admins] ADD UNIQUE NONCLUSTERED ([Email] ASC);
+INSERT INTO [dbo].[MigrationTestExpected] ([PropertyName], [PropertyValue])
+SELECT N'AdminEmailUniqueConstraintName', [name]
+FROM sys.key_constraints
+WHERE [parent_object_id] = OBJECT_ID(N'[dbo].[Admins]')
+  AND [type] = N'UQ';
+
+ALTER TABLE [dbo].[Students]
+ADD CONSTRAINT [UQ_Legacy_Students_Email] UNIQUE NONCLUSTERED ([Email] ASC)
+WITH (PAD_INDEX = ON, FILLFACTOR = 60, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = OFF, ALLOW_PAGE_LOCKS = ON);
+
+ALTER TABLE [dbo].[Applications]
+ADD CONSTRAINT [UQ_Legacy_Applications_StatusDate] UNIQUE NONCLUSTERED ([CurrentStatus] DESC, [ApplicationDate] ASC)
+WITH (PAD_INDEX = OFF, FILLFACTOR = 65, IGNORE_DUP_KEY = ON, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON);
 
 CREATE INDEX [IX_Legacy_Admins_Email]
 ON [dbo].[Admins] ([Email] ASC)
@@ -532,6 +715,13 @@ ON [dbo].[ApplicationStatusHistory] ([ChangeDate] ASC);
 ALTER INDEX [IX_Legacy_History_ChangeDate_Disabled] ON [dbo].[ApplicationStatusHistory] DISABLE;
 
 ALTER TABLE [dbo].[PasswordResetTokens] ALTER COLUMN [TC] char(11) NULL;
+ALTER TABLE [dbo].[PasswordResetTokens]
+ADD CONSTRAINT [UQ_Legacy_PasswordResetTokens_TC_AlreadyTarget] UNIQUE NONCLUSTERED ([TC] ASC);
+INSERT INTO [dbo].[MigrationTestExpected] ([PropertyName], [PropertyValue])
+SELECT N'AlreadyTargetUniqueConstraintObjectId', CONVERT(nvarchar(20), [object_id])
+FROM sys.key_constraints
+WHERE [parent_object_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]')
+  AND [name] = N'UQ_Legacy_PasswordResetTokens_TC_AlreadyTarget';
 CREATE INDEX [IX_Legacy_PasswordResetTokens_TC_AlreadyTarget]
 ON [dbo].[PasswordResetTokens] ([TC] ASC)
 WITH (FILLFACTOR = 77);
@@ -584,14 +774,17 @@ ALTER TABLE [dbo].[Admins] ADD CONSTRAINT [PK_Legacy_Admins_Email] PRIMARY KEY N
     Assert-PreflightRollback -Database $primaryKeyDatabase
     Assert-KeyConstraintPreserved -Database $primaryKeyDatabase -ConstraintType 'PK' -ConstraintName 'PK_Legacy_Admins_Email'
 
-    $uniqueConstraintDatabase = New-TestDatabase -Scenario 'UniqueConstraintDependency'
-    Initialize-LegacySchema -Database $uniqueConstraintDatabase -SeedSql @"
+    $clusteredUniqueConstraintDatabase = New-TestDatabase -Scenario 'ClusteredUniqueConstraint'
+    Initialize-LegacySchema -Database $clusteredUniqueConstraintDatabase -SeedSql @"
 INSERT INTO [dbo].[Admins] ([Email], [PasswordHash]) VALUES (N'admin@example.test', 'legacy-hash');
-ALTER TABLE [dbo].[Admins] ADD CONSTRAINT [UQ_Legacy_Admins_Email] UNIQUE NONCLUSTERED ([Email]);
+ALTER TABLE [dbo].[Admins] DROP CONSTRAINT [PK_Admins];
+ALTER TABLE [dbo].[Admins] ADD CONSTRAINT [PK_Admins] PRIMARY KEY NONCLUSTERED ([AdminID]);
+ALTER TABLE [dbo].[Admins]
+ADD CONSTRAINT [UQ_Legacy_Admins_Email_Clustered] UNIQUE CLUSTERED ([Email] DESC)
+WITH (PAD_INDEX = ON, FILLFACTOR = 55, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON);
 "@
-    Invoke-EfDatabaseUpdate -Database $uniqueConstraintDatabase -ExpectSuccess $false -ExpectedErrorContains 'UQ_Legacy_Admins_Email'
-    Assert-PreflightRollback -Database $uniqueConstraintDatabase
-    Assert-KeyConstraintPreserved -Database $uniqueConstraintDatabase -ConstraintType 'UQ' -ConstraintName 'UQ_Legacy_Admins_Email'
+    Invoke-EfDatabaseUpdate -Database $clusteredUniqueConstraintDatabase -ExpectSuccess $true
+    Assert-ClusteredUniqueConstraintScenario -Database $clusteredUniqueConstraintDatabase
 
     $managedIndexMismatchDatabase = New-TestDatabase -Scenario 'ManagedIndexMismatch'
     Initialize-LegacySchema -Database $managedIndexMismatchDatabase -SeedSql @"

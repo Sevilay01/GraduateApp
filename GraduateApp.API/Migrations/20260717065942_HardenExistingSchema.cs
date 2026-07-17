@@ -152,6 +152,10 @@ public partial class HardenExistingSchema : Migration
                 DROP TABLE #HardenIndexColumns;
             IF OBJECT_ID(N'tempdb..#HardenIndexes', N'U') IS NOT NULL
                 DROP TABLE #HardenIndexes;
+            IF OBJECT_ID(N'tempdb..#HardenKeyConstraintColumns', N'U') IS NOT NULL
+                DROP TABLE #HardenKeyConstraintColumns;
+            IF OBJECT_ID(N'tempdb..#HardenKeyConstraints', N'U') IS NOT NULL
+                DROP TABLE #HardenKeyConstraints;
             IF OBJECT_ID(N'tempdb..#HardenExpectedIndexLocations', N'U') IS NOT NULL
                 DROP TABLE #HardenExpectedIndexLocations;
             IF OBJECT_ID(N'tempdb..#HardenExpectedIndexColumns', N'U') IS NOT NULL
@@ -161,6 +165,7 @@ public partial class HardenExistingSchema : Migration
 
             CREATE TABLE #HardenAlterTargets
             (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
                 [TableName] sysname NOT NULL,
                 [ColumnName] sysname NOT NULL,
                 [HasCanonicalDefault] bit NOT NULL,
@@ -170,8 +175,7 @@ public partial class HardenExistingSchema : Migration
                 [TargetScale] tinyint NOT NULL,
                 [TargetIsNullable] bit NOT NULL,
                 [AlterSql] nvarchar(500) NOT NULL,
-                [NeedsAlter] bit NOT NULL,
-                PRIMARY KEY ([TableName], [ColumnName])
+                [NeedsAlter] bit NOT NULL
             );
 
             INSERT INTO #HardenAlterTargets
@@ -212,11 +216,11 @@ public partial class HardenExistingSchema : Migration
 
             CREATE TABLE #HardenExpectedIndexes
             (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
                 [SchemaName] sysname NOT NULL,
                 [TableName] sysname NOT NULL,
                 [IndexName] sysname NOT NULL,
-                [IsUnique] bit NOT NULL,
-                PRIMARY KEY ([SchemaName], [TableName], [IndexName])
+                [IsUnique] bit NOT NULL
             );
 
             INSERT INTO #HardenExpectedIndexes ([SchemaName], [TableName], [IndexName], [IsUnique])
@@ -228,14 +232,14 @@ public partial class HardenExistingSchema : Migration
 
             CREATE TABLE #HardenExpectedIndexColumns
             (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
                 [SchemaName] sysname NOT NULL,
                 [TableName] sysname NOT NULL,
                 [IndexName] sysname NOT NULL,
                 [ColumnName] sysname NOT NULL,
                 [KeyOrdinal] tinyint NOT NULL,
                 [IsDescending] bit NOT NULL,
-                [IsIncluded] bit NOT NULL,
-                PRIMARY KEY ([SchemaName], [TableName], [IndexName], [ColumnName])
+                [IsIncluded] bit NOT NULL
             );
 
             INSERT INTO #HardenExpectedIndexColumns
@@ -249,11 +253,11 @@ public partial class HardenExistingSchema : Migration
 
             CREATE TABLE #HardenExpectedIndexLocations
             (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
                 [SchemaName] sysname NOT NULL,
                 [TableName] sysname NOT NULL,
                 [IndexName] sysname NOT NULL,
-                [DataSpaceName] sysname NULL,
-                PRIMARY KEY ([SchemaName], [TableName], [IndexName])
+                [DataSpaceName] sysname NULL
             );
 
             DECLARE @invalidExpectedIndex nvarchar(776);
@@ -341,13 +345,13 @@ public partial class HardenExistingSchema : Migration
 
             CREATE TABLE #HardenDefaults
             (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
                 [SchemaName] sysname NOT NULL,
                 [TableName] sysname NOT NULL,
                 [ColumnName] sysname NOT NULL,
                 [ConstraintName] sysname NOT NULL,
                 [Definition] nvarchar(max) NOT NULL,
-                [HasCanonicalDefault] bit NOT NULL,
-                CONSTRAINT [PK_HardenDefaults] PRIMARY KEY ([SchemaName], [ConstraintName])
+                [HasCanonicalDefault] bit NOT NULL
             );
 
             INSERT INTO #HardenDefaults
@@ -375,7 +379,8 @@ public partial class HardenExistingSchema : Migration
 
             CREATE TABLE #HardenForeignKeys
             (
-                [ConstraintName] sysname NOT NULL PRIMARY KEY,
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                [ConstraintName] sysname NOT NULL,
                 [ParentSchema] sysname NOT NULL,
                 [ParentTable] sysname NOT NULL,
                 [ParentColumn] sysname NOT NULL,
@@ -447,8 +452,179 @@ public partial class HardenExistingSchema : Migration
               AND parentColumn.[name] = N'TC'
               AND EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'PasswordResetTokens' AND [ColumnName] = N'TC' AND [NeedsAlter] = 1);
 
+            CREATE TABLE #HardenKeyConstraints
+            (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                [ConstraintObjectId] int NOT NULL,
+                [ParentObjectId] int NOT NULL,
+                [ConstraintName] sysname NOT NULL,
+                [ConstraintType] char(2) NOT NULL,
+                [SchemaName] sysname NOT NULL,
+                [TableName] sysname NOT NULL,
+                [IndexType] tinyint NOT NULL,
+                [IndexTypeDescription] nvarchar(60) NOT NULL,
+                [FillFactor] tinyint NOT NULL,
+                [IsPadded] bit NOT NULL,
+                [IgnoreDuplicateKey] bit NOT NULL,
+                [AllowRowLocks] bit NOT NULL,
+                [AllowPageLocks] bit NOT NULL,
+                [IsDisabled] bit NOT NULL,
+                [HasFilter] bit NOT NULL,
+                [DataSpaceName] sysname NULL,
+                [DataSpaceType] nvarchar(2) NULL,
+                [InboundForeignKeyCount] bigint NOT NULL,
+                [IsAlterTargetRelated] bit NOT NULL
+            );
+
+            INSERT INTO #HardenKeyConstraints
+                ([ConstraintObjectId], [ParentObjectId], [ConstraintName], [ConstraintType], [SchemaName], [TableName],
+                 [IndexType], [IndexTypeDescription], [FillFactor], [IsPadded], [IgnoreDuplicateKey], [AllowRowLocks],
+                 [AllowPageLocks], [IsDisabled], [HasFilter], [DataSpaceName], [DataSpaceType], [InboundForeignKeyCount],
+                 [IsAlterTargetRelated])
+            SELECT
+                keyConstraint.[object_id],
+                keyConstraint.[parent_object_id],
+                keyConstraint.[name],
+                keyConstraint.[type],
+                schemaInfo.[name],
+                tableInfo.[name],
+                indexInfo.[type],
+                indexInfo.[type_desc],
+                indexInfo.[fill_factor],
+                indexInfo.[is_padded],
+                indexInfo.[ignore_dup_key],
+                indexInfo.[allow_row_locks],
+                indexInfo.[allow_page_locks],
+                indexInfo.[is_disabled],
+                indexInfo.[has_filter],
+                dataSpaceInfo.[name],
+                dataSpaceInfo.[type],
+                (
+                    SELECT COUNT_BIG(*)
+                    FROM sys.foreign_keys AS inboundForeignKey
+                    WHERE inboundForeignKey.[referenced_object_id] = keyConstraint.[parent_object_id]
+                      AND inboundForeignKey.[key_index_id] = keyConstraint.[unique_index_id]
+                ),
+                CASE WHEN EXISTS
+                (
+                    SELECT 1
+                    FROM sys.index_columns AS relatedIndexColumn
+                    INNER JOIN sys.columns AS relatedColumn
+                        ON relatedColumn.[object_id] = relatedIndexColumn.[object_id]
+                       AND relatedColumn.[column_id] = relatedIndexColumn.[column_id]
+                    INNER JOIN #HardenAlterTargets AS relatedTarget
+                        ON relatedTarget.[TableName] = tableInfo.[name]
+                       AND relatedTarget.[ColumnName] = relatedColumn.[name]
+                       AND relatedTarget.[NeedsAlter] = 1
+                    WHERE relatedIndexColumn.[object_id] = keyConstraint.[parent_object_id]
+                      AND relatedIndexColumn.[index_id] = keyConstraint.[unique_index_id]
+                      AND relatedIndexColumn.[key_ordinal] > 0
+                ) THEN 1 ELSE 0 END
+            FROM sys.key_constraints AS keyConstraint
+            INNER JOIN sys.tables AS tableInfo
+                ON tableInfo.[object_id] = keyConstraint.[parent_object_id]
+            INNER JOIN sys.schemas AS schemaInfo
+                ON schemaInfo.[schema_id] = tableInfo.[schema_id]
+            INNER JOIN sys.indexes AS indexInfo
+                ON indexInfo.[object_id] = keyConstraint.[parent_object_id]
+               AND indexInfo.[index_id] = keyConstraint.[unique_index_id]
+            LEFT JOIN sys.data_spaces AS dataSpaceInfo
+                ON dataSpaceInfo.[data_space_id] = indexInfo.[data_space_id]
+            WHERE schemaInfo.[name] = N'dbo'
+              AND EXISTS
+              (
+                  SELECT 1
+                  FROM #HardenAlterTargets AS tableTarget
+                  WHERE tableTarget.[TableName] = tableInfo.[name]
+              );
+
+            CREATE TABLE #HardenKeyConstraintColumns
+            (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                [KeyConstraintId] bigint NOT NULL,
+                [ColumnName] sysname NOT NULL,
+                [KeyOrdinal] tinyint NOT NULL,
+                [IsDescending] bit NOT NULL
+            );
+
+            INSERT INTO #HardenKeyConstraintColumns
+                ([KeyConstraintId], [ColumnName], [KeyOrdinal], [IsDescending])
+            SELECT
+                capturedConstraint.[Id],
+                columnInfo.[name],
+                indexColumnInfo.[key_ordinal],
+                indexColumnInfo.[is_descending_key]
+            FROM #HardenKeyConstraints AS capturedConstraint
+            INNER JOIN sys.key_constraints AS keyConstraint
+                ON keyConstraint.[object_id] = capturedConstraint.[ConstraintObjectId]
+            INNER JOIN sys.index_columns AS indexColumnInfo
+                ON indexColumnInfo.[object_id] = keyConstraint.[parent_object_id]
+               AND indexColumnInfo.[index_id] = keyConstraint.[unique_index_id]
+               AND indexColumnInfo.[key_ordinal] > 0
+            INNER JOIN sys.columns AS columnInfo
+                ON columnInfo.[object_id] = indexColumnInfo.[object_id]
+               AND columnInfo.[column_id] = indexColumnInfo.[column_id];
+
+            DECLARE @unsafePrimaryKey nvarchar(776);
+            DECLARE @unsafePrimaryKeyInboundForeignKeys bigint;
+            SELECT TOP (1)
+                @unsafePrimaryKey = QUOTENAME([SchemaName]) + N'.' + QUOTENAME([TableName]) + N'.' + QUOTENAME([ConstraintName]),
+                @unsafePrimaryKeyInboundForeignKeys = [InboundForeignKeyCount]
+            FROM #HardenKeyConstraints
+            WHERE [ConstraintType] = N'PK'
+              AND [IsAlterTargetRelated] = 1
+            ORDER BY [SchemaName], [TableName], [ConstraintName];
+
+            IF @unsafePrimaryKey IS NOT NULL
+            BEGIN
+                DECLARE @unsafePrimaryKeyMessage nvarchar(2048) = N'ALTER COLUMN hedefinde desteklenmeyen PRIMARY KEY bagimliligi bulundu: '
+                    + @unsafePrimaryKey + N'. Inbound foreign key sayisi: ' + CONVERT(nvarchar(20), @unsafePrimaryKeyInboundForeignKeys)
+                    + N'. PRIMARY KEY ve referans semantigi eksiksiz korunamadigi icin migration durduruldu.';
+                THROW 51007, @unsafePrimaryKeyMessage, 1;
+            END;
+
+            DECLARE @referencedUniqueConstraint nvarchar(776);
+            SELECT TOP (1)
+                @referencedUniqueConstraint = QUOTENAME([SchemaName]) + N'.' + QUOTENAME([TableName]) + N'.' + QUOTENAME([ConstraintName])
+            FROM #HardenKeyConstraints
+            WHERE [ConstraintType] = N'UQ'
+              AND [IsAlterTargetRelated] = 1
+              AND [InboundForeignKeyCount] > 0
+            ORDER BY [SchemaName], [TableName], [ConstraintName];
+
+            IF @referencedUniqueConstraint IS NOT NULL
+            BEGIN
+                DECLARE @referencedUniqueConstraintMessage nvarchar(2048) = N'ALTER COLUMN hedefindeki UNIQUE constraint inbound foreign key tarafindan kullaniliyor: '
+                    + @referencedUniqueConstraint + N'. Foreign key semantigi desteklenmedigi icin migration durduruldu.';
+                THROW 51014, @referencedUniqueConstraintMessage, 1;
+            END;
+
+            DECLARE @unsupportedUniqueConstraint nvarchar(776);
+            SELECT TOP (1)
+                @unsupportedUniqueConstraint = QUOTENAME([SchemaName]) + N'.' + QUOTENAME([TableName]) + N'.' + QUOTENAME([ConstraintName])
+            FROM #HardenKeyConstraints
+            WHERE [ConstraintType] = N'UQ'
+              AND [IsAlterTargetRelated] = 1
+              AND
+              (
+                  [IndexType] NOT IN (1, 2)
+                  OR [IsDisabled] = 1
+                  OR [HasFilter] = 1
+                  OR [DataSpaceName] IS NULL
+                  OR [DataSpaceType] <> N'FG'
+              )
+            ORDER BY [SchemaName], [TableName], [ConstraintName];
+
+            IF @unsupportedUniqueConstraint IS NOT NULL
+            BEGIN
+                DECLARE @unsupportedUniqueConstraintMessage nvarchar(2048) = N'ALTER COLUMN hedefindeki UNIQUE constraint guvenle yeniden olusturulamiyor: '
+                    + @unsupportedUniqueConstraint + N'. Migration durduruldu.';
+                THROW 51015, @unsupportedUniqueConstraintMessage, 1;
+            END;
+
             CREATE TABLE #HardenIndexes
             (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
                 [SchemaName] sysname NOT NULL,
                 [TableName] sysname NOT NULL,
                 [IndexName] sysname NOT NULL,
@@ -466,8 +642,7 @@ public partial class HardenExistingSchema : Migration
                 [HasFilter] bit NOT NULL,
                 [FilterDefinition] nvarchar(max) NULL,
                 [DataSpaceName] sysname NULL,
-                [DataSpaceType] nvarchar(2) NULL,
-                PRIMARY KEY ([SchemaName], [TableName], [IndexName])
+                [DataSpaceType] nvarchar(2) NULL
             );
 
             INSERT INTO #HardenIndexes
@@ -503,6 +678,8 @@ public partial class HardenExistingSchema : Migration
             WHERE indexedSchema.[name] = N'dbo'
               AND indexInfo.[index_id] > 0
               AND indexInfo.[is_hypothetical] = 0
+              AND indexInfo.[is_primary_key] = 0
+              AND indexInfo.[is_unique_constraint] = 0
               AND NOT EXISTS
               (
                   SELECT 1
@@ -540,19 +717,6 @@ public partial class HardenExistingSchema : Migration
                   )
               );
 
-            DECLARE @unsafeConstraint nvarchar(776);
-            SELECT TOP (1)
-                @unsafeConstraint = QUOTENAME([SchemaName]) + N'.' + QUOTENAME([TableName]) + N'.' + QUOTENAME([IndexName])
-            FROM #HardenIndexes
-            WHERE [IsPrimaryKey] = 1 OR [IsUniqueConstraint] = 1
-            ORDER BY [SchemaName], [TableName], [IndexName];
-
-            IF @unsafeConstraint IS NOT NULL
-            BEGIN
-                DECLARE @unsafeConstraintMessage nvarchar(2048) = N'ALTER COLUMN hedefinde primary key veya unique constraint bagimliligi bulundu: ' + @unsafeConstraint + N'. Constraint semantigi korunamadigi icin migration durduruldu.';
-                THROW 51007, @unsafeConstraintMessage, 1;
-            END;
-
             DECLARE @unsupportedIndex nvarchar(776);
             DECLARE @unsupportedIndexType nvarchar(60);
             SELECT TOP (1)
@@ -583,6 +747,7 @@ public partial class HardenExistingSchema : Migration
 
             CREATE TABLE #HardenIndexColumns
             (
+                [Id] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
                 [SchemaName] sysname NOT NULL,
                 [TableName] sysname NOT NULL,
                 [IndexName] sysname NOT NULL,
@@ -694,11 +859,86 @@ public partial class HardenExistingSchema : Migration
 
         migrationBuilder.Sql(
             """
+            IF EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'Admins' AND [ColumnName] = N'NormalizedEmail' AND [NeedsAlter] = 1)
+               AND EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Admins]') AND [name] = N'IX_Admins_NormalizedEmail')
+                EXEC sys.sp_executesql N'DROP INDEX [IX_Admins_NormalizedEmail] ON [dbo].[Admins];';
+
+            IF EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'Students' AND [ColumnName] = N'NormalizedEmail' AND [NeedsAlter] = 1)
+               AND EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Students]') AND [name] = N'IX_Students_NormalizedEmail')
+                EXEC sys.sp_executesql N'DROP INDEX [IX_Students_NormalizedEmail] ON [dbo].[Students];';
+
+            DECLARE @dropIndexSchema sysname;
+            DECLARE @dropIndexTable sysname;
+            DECLARE @dropIndexName sysname;
+            DECLARE @dropIndexSql nvarchar(max);
+            DECLARE harden_index_drop_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [SchemaName], [TableName], [IndexName]
+                FROM #HardenIndexes
+                ORDER BY [SchemaName], [TableName], [IndexName];
+
+            OPEN harden_index_drop_cursor;
+            FETCH NEXT FROM harden_index_drop_cursor INTO @dropIndexSchema, @dropIndexTable, @dropIndexName;
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @dropIndexSql = N'DROP INDEX ' + QUOTENAME(@dropIndexName) + N' ON '
+                    + QUOTENAME(@dropIndexSchema) + N'.' + QUOTENAME(@dropIndexTable) + N';';
+                EXEC sys.sp_executesql @dropIndexSql;
+                FETCH NEXT FROM harden_index_drop_cursor INTO @dropIndexSchema, @dropIndexTable, @dropIndexName;
+            END;
+            CLOSE harden_index_drop_cursor;
+            DEALLOCATE harden_index_drop_cursor;
+
+            DECLARE @dropUniqueConstraintSchema sysname;
+            DECLARE @dropUniqueConstraintTable sysname;
+            DECLARE @dropUniqueConstraintName sysname;
+            DECLARE @dropUniqueConstraintSql nvarchar(max);
+            DECLARE harden_unique_constraint_drop_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [SchemaName], [TableName], [ConstraintName]
+                FROM #HardenKeyConstraints
+                WHERE [ConstraintType] = N'UQ'
+                  AND [IsAlterTargetRelated] = 1
+                ORDER BY [SchemaName], [TableName], [ConstraintName];
+
+            OPEN harden_unique_constraint_drop_cursor;
+            FETCH NEXT FROM harden_unique_constraint_drop_cursor
+                INTO @dropUniqueConstraintSchema, @dropUniqueConstraintTable, @dropUniqueConstraintName;
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @dropUniqueConstraintSql = N'ALTER TABLE '
+                    + QUOTENAME(@dropUniqueConstraintSchema) + N'.' + QUOTENAME(@dropUniqueConstraintTable)
+                    + N' DROP CONSTRAINT ' + QUOTENAME(@dropUniqueConstraintName) + N';';
+                EXEC sys.sp_executesql @dropUniqueConstraintSql;
+                FETCH NEXT FROM harden_unique_constraint_drop_cursor
+                    INTO @dropUniqueConstraintSchema, @dropUniqueConstraintTable, @dropUniqueConstraintName;
+            END;
+            CLOSE harden_unique_constraint_drop_cursor;
+            DEALLOCATE harden_unique_constraint_drop_cursor;
+
+            DECLARE @dropForeignKeySchema sysname;
+            DECLARE @dropForeignKeyTable sysname;
+            DECLARE @dropForeignKeyConstraint sysname;
+            DECLARE @dropForeignKeySql nvarchar(max);
+            DECLARE harden_foreign_key_drop_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [ParentSchema], [ParentTable], [ConstraintName]
+                FROM #HardenForeignKeys;
+
+            OPEN harden_foreign_key_drop_cursor;
+            FETCH NEXT FROM harden_foreign_key_drop_cursor INTO @dropForeignKeySchema, @dropForeignKeyTable, @dropForeignKeyConstraint;
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @dropForeignKeySql = N'ALTER TABLE '
+                    + QUOTENAME(@dropForeignKeySchema) + N'.' + QUOTENAME(@dropForeignKeyTable)
+                    + N' DROP CONSTRAINT ' + QUOTENAME(@dropForeignKeyConstraint) + N';';
+                EXEC sys.sp_executesql @dropForeignKeySql;
+                FETCH NEXT FROM harden_foreign_key_drop_cursor INTO @dropForeignKeySchema, @dropForeignKeyTable, @dropForeignKeyConstraint;
+            END;
+            CLOSE harden_foreign_key_drop_cursor;
+            DEALLOCATE harden_foreign_key_drop_cursor;
+
             DECLARE @dropDefaultSchema sysname;
             DECLARE @dropDefaultTable sysname;
             DECLARE @dropDefaultConstraint sysname;
             DECLARE @dropDefaultSql nvarchar(max);
-
             DECLARE harden_default_drop_cursor CURSOR LOCAL FAST_FORWARD FOR
                 SELECT [SchemaName], [TableName], [ConstraintName]
                 FROM #HardenDefaults;
@@ -751,56 +991,6 @@ public partial class HardenExistingSchema : Migration
 
             IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE [parent_object_id] = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND [name] = N'CK_PasswordResetTokens_Subject')
                 EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] DROP CONSTRAINT [CK_PasswordResetTokens_Subject];';
-
-            IF EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'Admins' AND [ColumnName] = N'NormalizedEmail' AND [NeedsAlter] = 1)
-               AND EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Admins]') AND [name] = N'IX_Admins_NormalizedEmail')
-                EXEC sys.sp_executesql N'DROP INDEX [IX_Admins_NormalizedEmail] ON [dbo].[Admins];';
-
-            IF EXISTS (SELECT 1 FROM #HardenAlterTargets WHERE [TableName] = N'Students' AND [ColumnName] = N'NormalizedEmail' AND [NeedsAlter] = 1)
-               AND EXISTS (SELECT 1 FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Students]') AND [name] = N'IX_Students_NormalizedEmail')
-                EXEC sys.sp_executesql N'DROP INDEX [IX_Students_NormalizedEmail] ON [dbo].[Students];';
-
-            DECLARE @dropIndexSchema sysname;
-            DECLARE @dropIndexTable sysname;
-            DECLARE @dropIndexName sysname;
-            DECLARE @dropIndexSql nvarchar(max);
-            DECLARE harden_index_drop_cursor CURSOR LOCAL FAST_FORWARD FOR
-                SELECT [SchemaName], [TableName], [IndexName]
-                FROM #HardenIndexes
-                ORDER BY [SchemaName], [TableName], [IndexName];
-
-            OPEN harden_index_drop_cursor;
-            FETCH NEXT FROM harden_index_drop_cursor INTO @dropIndexSchema, @dropIndexTable, @dropIndexName;
-            WHILE @@FETCH_STATUS = 0
-            BEGIN
-                SET @dropIndexSql = N'DROP INDEX ' + QUOTENAME(@dropIndexName) + N' ON '
-                    + QUOTENAME(@dropIndexSchema) + N'.' + QUOTENAME(@dropIndexTable) + N';';
-                EXEC sys.sp_executesql @dropIndexSql;
-                FETCH NEXT FROM harden_index_drop_cursor INTO @dropIndexSchema, @dropIndexTable, @dropIndexName;
-            END;
-            CLOSE harden_index_drop_cursor;
-            DEALLOCATE harden_index_drop_cursor;
-
-            DECLARE @dropForeignKeySchema sysname;
-            DECLARE @dropForeignKeyTable sysname;
-            DECLARE @dropForeignKeyConstraint sysname;
-            DECLARE @dropForeignKeySql nvarchar(max);
-            DECLARE harden_foreign_key_drop_cursor CURSOR LOCAL FAST_FORWARD FOR
-                SELECT [ParentSchema], [ParentTable], [ConstraintName]
-                FROM #HardenForeignKeys;
-
-            OPEN harden_foreign_key_drop_cursor;
-            FETCH NEXT FROM harden_foreign_key_drop_cursor INTO @dropForeignKeySchema, @dropForeignKeyTable, @dropForeignKeyConstraint;
-            WHILE @@FETCH_STATUS = 0
-            BEGIN
-                SET @dropForeignKeySql = N'ALTER TABLE '
-                    + QUOTENAME(@dropForeignKeySchema) + N'.' + QUOTENAME(@dropForeignKeyTable)
-                    + N' DROP CONSTRAINT ' + QUOTENAME(@dropForeignKeyConstraint) + N';';
-                EXEC sys.sp_executesql @dropForeignKeySql;
-                FETCH NEXT FROM harden_foreign_key_drop_cursor INTO @dropForeignKeySchema, @dropForeignKeyTable, @dropForeignKeyConstraint;
-            END;
-            CLOSE harden_foreign_key_drop_cursor;
-            DEALLOCATE harden_foreign_key_drop_cursor;
             """);
 
         migrationBuilder.Sql(
@@ -904,63 +1094,73 @@ public partial class HardenExistingSchema : Migration
 
         migrationBuilder.Sql(
             """
-            DECLARE @restoreForeignKeyConstraint sysname;
-            DECLARE @restoreForeignKeyParentSchema sysname;
-            DECLARE @restoreForeignKeyParentTable sysname;
-            DECLARE @restoreForeignKeyParentColumn sysname;
-            DECLARE @restoreForeignKeyReferencedSchema sysname;
-            DECLARE @restoreForeignKeyReferencedTable sysname;
-            DECLARE @restoreForeignKeyReferencedColumn sysname;
-            DECLARE @restoreForeignKeyDeleteAction tinyint;
-            DECLARE @restoreForeignKeyUpdateAction tinyint;
-            DECLARE @restoreForeignKeyNotForReplication bit;
-            DECLARE @restoreForeignKeyIsDisabled bit;
-            DECLARE @restoreForeignKeyIsNotTrusted bit;
-            DECLARE @restoreForeignKeySql nvarchar(max);
-            DECLARE @restoreForeignKeyStateSql nvarchar(max);
-            DECLARE harden_foreign_key_restore_cursor CURSOR LOCAL FAST_FORWARD FOR
-                SELECT [ConstraintName], [ParentSchema], [ParentTable], [ParentColumn], [ReferencedSchema], [ReferencedTable], [ReferencedColumn],
-                       [DeleteAction], [UpdateAction], [IsNotForReplication], [IsDisabled], [IsNotTrusted]
-                FROM #HardenForeignKeys;
+            DECLARE @restoreUniqueConstraintId bigint;
+            DECLARE @restoreUniqueConstraintSchema sysname;
+            DECLARE @restoreUniqueConstraintTable sysname;
+            DECLARE @restoreUniqueConstraintName sysname;
+            DECLARE @restoreUniqueConstraintIndexType tinyint;
+            DECLARE @restoreUniqueConstraintFillFactor tinyint;
+            DECLARE @restoreUniqueConstraintIsPadded bit;
+            DECLARE @restoreUniqueConstraintIgnoreDuplicateKey bit;
+            DECLARE @restoreUniqueConstraintAllowRowLocks bit;
+            DECLARE @restoreUniqueConstraintAllowPageLocks bit;
+            DECLARE @restoreUniqueConstraintDataSpace sysname;
+            DECLARE @restoreUniqueConstraintColumns nvarchar(max);
+            DECLARE @restoreUniqueConstraintSql nvarchar(max);
 
-            OPEN harden_foreign_key_restore_cursor;
-            FETCH NEXT FROM harden_foreign_key_restore_cursor INTO
-                @restoreForeignKeyConstraint, @restoreForeignKeyParentSchema, @restoreForeignKeyParentTable, @restoreForeignKeyParentColumn,
-                @restoreForeignKeyReferencedSchema, @restoreForeignKeyReferencedTable, @restoreForeignKeyReferencedColumn,
-                @restoreForeignKeyDeleteAction, @restoreForeignKeyUpdateAction, @restoreForeignKeyNotForReplication,
-                @restoreForeignKeyIsDisabled, @restoreForeignKeyIsNotTrusted;
+            DECLARE harden_unique_constraint_restore_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [Id], [SchemaName], [TableName], [ConstraintName], [IndexType], [FillFactor], [IsPadded],
+                       [IgnoreDuplicateKey], [AllowRowLocks], [AllowPageLocks], [DataSpaceName]
+                FROM #HardenKeyConstraints
+                WHERE [ConstraintType] = N'UQ'
+                  AND [IsAlterTargetRelated] = 1
+                ORDER BY [SchemaName], [TableName], [ConstraintName];
+
+            OPEN harden_unique_constraint_restore_cursor;
+            FETCH NEXT FROM harden_unique_constraint_restore_cursor INTO
+                @restoreUniqueConstraintId, @restoreUniqueConstraintSchema, @restoreUniqueConstraintTable,
+                @restoreUniqueConstraintName, @restoreUniqueConstraintIndexType, @restoreUniqueConstraintFillFactor,
+                @restoreUniqueConstraintIsPadded, @restoreUniqueConstraintIgnoreDuplicateKey,
+                @restoreUniqueConstraintAllowRowLocks, @restoreUniqueConstraintAllowPageLocks, @restoreUniqueConstraintDataSpace;
 
             WHILE @@FETCH_STATUS = 0
             BEGIN
-                SET @restoreForeignKeySql = N'ALTER TABLE '
-                    + QUOTENAME(@restoreForeignKeyParentSchema) + N'.' + QUOTENAME(@restoreForeignKeyParentTable)
-                    + CASE WHEN @restoreForeignKeyIsNotTrusted = 1 OR @restoreForeignKeyIsDisabled = 1 THEN N' WITH NOCHECK' ELSE N' WITH CHECK' END
-                    + N' ADD CONSTRAINT ' + QUOTENAME(@restoreForeignKeyConstraint)
-                    + N' FOREIGN KEY (' + QUOTENAME(@restoreForeignKeyParentColumn) + N') REFERENCES '
-                    + QUOTENAME(@restoreForeignKeyReferencedSchema) + N'.' + QUOTENAME(@restoreForeignKeyReferencedTable)
-                    + N' (' + QUOTENAME(@restoreForeignKeyReferencedColumn) + N')'
-                    + CASE @restoreForeignKeyDeleteAction WHEN 1 THEN N' ON DELETE CASCADE' WHEN 2 THEN N' ON DELETE SET NULL' WHEN 3 THEN N' ON DELETE SET DEFAULT' ELSE N'' END
-                    + CASE @restoreForeignKeyUpdateAction WHEN 1 THEN N' ON UPDATE CASCADE' WHEN 2 THEN N' ON UPDATE SET NULL' WHEN 3 THEN N' ON UPDATE SET DEFAULT' ELSE N'' END
-                    + CASE WHEN @restoreForeignKeyNotForReplication = 1 THEN N' NOT FOR REPLICATION' ELSE N'' END
-                    + N';';
-                EXEC sys.sp_executesql @restoreForeignKeySql;
+                SET @restoreUniqueConstraintColumns = NULL;
+                SELECT @restoreUniqueConstraintColumns = STRING_AGG(
+                    CAST(QUOTENAME([ColumnName]) + CASE WHEN [IsDescending] = 1 THEN N' DESC' ELSE N' ASC' END AS nvarchar(max)),
+                    N', ') WITHIN GROUP (ORDER BY [KeyOrdinal])
+                FROM #HardenKeyConstraintColumns
+                WHERE [KeyConstraintId] = @restoreUniqueConstraintId;
 
-                IF @restoreForeignKeyIsDisabled = 1
+                IF @restoreUniqueConstraintColumns IS NULL
                 BEGIN
-                    SET @restoreForeignKeyStateSql = N'ALTER TABLE '
-                        + QUOTENAME(@restoreForeignKeyParentSchema) + N'.' + QUOTENAME(@restoreForeignKeyParentTable)
-                        + N' NOCHECK CONSTRAINT ' + QUOTENAME(@restoreForeignKeyConstraint) + N';';
-                    EXEC sys.sp_executesql @restoreForeignKeyStateSql;
+                    DECLARE @missingUniqueConstraintColumnsMessage nvarchar(2048) = N'UNIQUE constraint key kolonlari metadata tablosunda bulunamadi: '
+                        + QUOTENAME(@restoreUniqueConstraintSchema) + N'.' + QUOTENAME(@restoreUniqueConstraintTable) + N'.'
+                        + QUOTENAME(@restoreUniqueConstraintName) + N'. Migration durduruldu.';
+                    THROW 51016, @missingUniqueConstraintColumnsMessage, 1;
                 END;
 
-                FETCH NEXT FROM harden_foreign_key_restore_cursor INTO
-                    @restoreForeignKeyConstraint, @restoreForeignKeyParentSchema, @restoreForeignKeyParentTable, @restoreForeignKeyParentColumn,
-                    @restoreForeignKeyReferencedSchema, @restoreForeignKeyReferencedTable, @restoreForeignKeyReferencedColumn,
-                    @restoreForeignKeyDeleteAction, @restoreForeignKeyUpdateAction, @restoreForeignKeyNotForReplication,
-                    @restoreForeignKeyIsDisabled, @restoreForeignKeyIsNotTrusted;
+                SET @restoreUniqueConstraintSql = N'ALTER TABLE '
+                    + QUOTENAME(@restoreUniqueConstraintSchema) + N'.' + QUOTENAME(@restoreUniqueConstraintTable)
+                    + N' ADD CONSTRAINT ' + QUOTENAME(@restoreUniqueConstraintName)
+                    + N' UNIQUE ' + CASE WHEN @restoreUniqueConstraintIndexType = 1 THEN N'CLUSTERED' ELSE N'NONCLUSTERED' END
+                    + N' (' + @restoreUniqueConstraintColumns + N')'
+                    + N' WITH (PAD_INDEX = ' + CASE WHEN @restoreUniqueConstraintIsPadded = 1 THEN N'ON' ELSE N'OFF' END
+                    + CASE WHEN @restoreUniqueConstraintFillFactor > 0 THEN N', FILLFACTOR = ' + CONVERT(nvarchar(3), @restoreUniqueConstraintFillFactor) ELSE N'' END
+                    + N', IGNORE_DUP_KEY = ' + CASE WHEN @restoreUniqueConstraintIgnoreDuplicateKey = 1 THEN N'ON' ELSE N'OFF' END
+                    + N', ALLOW_ROW_LOCKS = ' + CASE WHEN @restoreUniqueConstraintAllowRowLocks = 1 THEN N'ON' ELSE N'OFF' END
+                    + N', ALLOW_PAGE_LOCKS = ' + CASE WHEN @restoreUniqueConstraintAllowPageLocks = 1 THEN N'ON' ELSE N'OFF' END
+                    + N') ON ' + QUOTENAME(@restoreUniqueConstraintDataSpace) + N';';
+                EXEC sys.sp_executesql @restoreUniqueConstraintSql;
+
+                FETCH NEXT FROM harden_unique_constraint_restore_cursor INTO
+                    @restoreUniqueConstraintId, @restoreUniqueConstraintSchema, @restoreUniqueConstraintTable,
+                    @restoreUniqueConstraintName, @restoreUniqueConstraintIndexType, @restoreUniqueConstraintFillFactor,
+                    @restoreUniqueConstraintIsPadded, @restoreUniqueConstraintIgnoreDuplicateKey,
+                    @restoreUniqueConstraintAllowRowLocks, @restoreUniqueConstraintAllowPageLocks, @restoreUniqueConstraintDataSpace;
             END;
-            CLOSE harden_foreign_key_restore_cursor;
-            DEALLOCATE harden_foreign_key_restore_cursor;
+            CLOSE harden_unique_constraint_restore_cursor;
+            DEALLOCATE harden_unique_constraint_restore_cursor;
             """);
 
         migrationBuilder.Sql(
@@ -1058,6 +1258,82 @@ public partial class HardenExistingSchema : Migration
 
         migrationBuilder.Sql(
             """
+            DECLARE @restoreForeignKeyConstraint sysname;
+            DECLARE @restoreForeignKeyParentSchema sysname;
+            DECLARE @restoreForeignKeyParentTable sysname;
+            DECLARE @restoreForeignKeyParentColumn sysname;
+            DECLARE @restoreForeignKeyReferencedSchema sysname;
+            DECLARE @restoreForeignKeyReferencedTable sysname;
+            DECLARE @restoreForeignKeyReferencedColumn sysname;
+            DECLARE @restoreForeignKeyDeleteAction tinyint;
+            DECLARE @restoreForeignKeyUpdateAction tinyint;
+            DECLARE @restoreForeignKeyNotForReplication bit;
+            DECLARE @restoreForeignKeyIsDisabled bit;
+            DECLARE @restoreForeignKeyIsNotTrusted bit;
+            DECLARE @restoreForeignKeySql nvarchar(max);
+            DECLARE @restoreForeignKeyStateSql nvarchar(max);
+            DECLARE harden_foreign_key_restore_cursor CURSOR LOCAL FAST_FORWARD FOR
+                SELECT [ConstraintName], [ParentSchema], [ParentTable], [ParentColumn], [ReferencedSchema], [ReferencedTable], [ReferencedColumn],
+                       [DeleteAction], [UpdateAction], [IsNotForReplication], [IsDisabled], [IsNotTrusted]
+                FROM #HardenForeignKeys;
+
+            OPEN harden_foreign_key_restore_cursor;
+            FETCH NEXT FROM harden_foreign_key_restore_cursor INTO
+                @restoreForeignKeyConstraint, @restoreForeignKeyParentSchema, @restoreForeignKeyParentTable, @restoreForeignKeyParentColumn,
+                @restoreForeignKeyReferencedSchema, @restoreForeignKeyReferencedTable, @restoreForeignKeyReferencedColumn,
+                @restoreForeignKeyDeleteAction, @restoreForeignKeyUpdateAction, @restoreForeignKeyNotForReplication,
+                @restoreForeignKeyIsDisabled, @restoreForeignKeyIsNotTrusted;
+
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @restoreForeignKeySql = N'ALTER TABLE '
+                    + QUOTENAME(@restoreForeignKeyParentSchema) + N'.' + QUOTENAME(@restoreForeignKeyParentTable)
+                    + CASE WHEN @restoreForeignKeyIsNotTrusted = 1 OR @restoreForeignKeyIsDisabled = 1 THEN N' WITH NOCHECK' ELSE N' WITH CHECK' END
+                    + N' ADD CONSTRAINT ' + QUOTENAME(@restoreForeignKeyConstraint)
+                    + N' FOREIGN KEY (' + QUOTENAME(@restoreForeignKeyParentColumn) + N') REFERENCES '
+                    + QUOTENAME(@restoreForeignKeyReferencedSchema) + N'.' + QUOTENAME(@restoreForeignKeyReferencedTable)
+                    + N' (' + QUOTENAME(@restoreForeignKeyReferencedColumn) + N')'
+                    + CASE @restoreForeignKeyDeleteAction WHEN 1 THEN N' ON DELETE CASCADE' WHEN 2 THEN N' ON DELETE SET NULL' WHEN 3 THEN N' ON DELETE SET DEFAULT' ELSE N'' END
+                    + CASE @restoreForeignKeyUpdateAction WHEN 1 THEN N' ON UPDATE CASCADE' WHEN 2 THEN N' ON UPDATE SET NULL' WHEN 3 THEN N' ON UPDATE SET DEFAULT' ELSE N'' END
+                    + CASE WHEN @restoreForeignKeyNotForReplication = 1 THEN N' NOT FOR REPLICATION' ELSE N'' END
+                    + N';';
+                EXEC sys.sp_executesql @restoreForeignKeySql;
+
+                IF @restoreForeignKeyIsDisabled = 1
+                BEGIN
+                    SET @restoreForeignKeyStateSql = N'ALTER TABLE '
+                        + QUOTENAME(@restoreForeignKeyParentSchema) + N'.' + QUOTENAME(@restoreForeignKeyParentTable)
+                        + N' NOCHECK CONSTRAINT ' + QUOTENAME(@restoreForeignKeyConstraint) + N';';
+                    EXEC sys.sp_executesql @restoreForeignKeyStateSql;
+                END;
+
+                FETCH NEXT FROM harden_foreign_key_restore_cursor INTO
+                    @restoreForeignKeyConstraint, @restoreForeignKeyParentSchema, @restoreForeignKeyParentTable, @restoreForeignKeyParentColumn,
+                    @restoreForeignKeyReferencedSchema, @restoreForeignKeyReferencedTable, @restoreForeignKeyReferencedColumn,
+                    @restoreForeignKeyDeleteAction, @restoreForeignKeyUpdateAction, @restoreForeignKeyNotForReplication,
+                    @restoreForeignKeyIsDisabled, @restoreForeignKeyIsNotTrusted;
+            END;
+            CLOSE harden_foreign_key_restore_cursor;
+            DEALLOCATE harden_foreign_key_restore_cursor;
+            """);
+
+        migrationBuilder.Sql(
+            """
+            IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(N'[dbo].[Applications]') AND name = N'CK_Applications_CurrentStatus')
+                ALTER TABLE [dbo].[Applications] ADD CONSTRAINT [CK_Applications_CurrentStatus] CHECK ([CurrentStatus] IN (N'Pending',N'UnderReview',N'Approved',N'Rejected',N'Withdrawn'));
+            """);
+
+        migrationBuilder.Sql(
+            """
+            IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND name = N'FK_PasswordResetTokens_Admins_AdminID')
+                EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] ADD CONSTRAINT [FK_PasswordResetTokens_Admins_AdminID] FOREIGN KEY ([AdminID]) REFERENCES [dbo].[Admins] ([AdminID]);';
+
+            IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND name = N'CK_PasswordResetTokens_Subject')
+                EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] ADD CONSTRAINT [CK_PasswordResetTokens_Subject] CHECK (([TC] IS NOT NULL AND [AdminID] IS NULL) OR ([TC] IS NULL AND [AdminID] IS NOT NULL));';
+            """);
+
+        migrationBuilder.Sql(
+            """
             DECLARE @expectedAdminIndexDataSpace sysname =
             (
                 SELECT [DataSpaceName]
@@ -1086,23 +1362,11 @@ public partial class HardenExistingSchema : Migration
                 EXEC sys.sp_executesql @expectedStudentIndexSql;
             END;
 
-            IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(N'[dbo].[Applications]') AND name = N'CK_Applications_CurrentStatus')
-                ALTER TABLE [dbo].[Applications] ADD CONSTRAINT [CK_Applications_CurrentStatus] CHECK ([CurrentStatus] IN (N'Pending',N'UnderReview',N'Approved',N'Rejected',N'Withdrawn'));
-
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[Applications]') AND name = N'IX_Applications_TC_ProgramID')
                 CREATE UNIQUE INDEX [IX_Applications_TC_ProgramID] ON [dbo].[Applications] ([TC], [ProgramID]);
-            """);
-
-        migrationBuilder.Sql(
-            """
-            IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND name = N'FK_PasswordResetTokens_Admins_AdminID')
-                EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] ADD CONSTRAINT [FK_PasswordResetTokens_Admins_AdminID] FOREIGN KEY ([AdminID]) REFERENCES [dbo].[Admins] ([AdminID]);';
 
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND name = N'IX_PasswordResetTokens_AdminID')
                 EXEC sys.sp_executesql N'CREATE INDEX [IX_PasswordResetTokens_AdminID] ON [dbo].[PasswordResetTokens] ([AdminID]);';
-
-            IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(N'[dbo].[PasswordResetTokens]') AND name = N'CK_PasswordResetTokens_Subject')
-                EXEC sys.sp_executesql N'ALTER TABLE [dbo].[PasswordResetTokens] ADD CONSTRAINT [CK_PasswordResetTokens_Subject] CHECK (([TC] IS NOT NULL AND [AdminID] IS NULL) OR ([TC] IS NULL AND [AdminID] IS NOT NULL));';
             """);
 
         migrationBuilder.Sql(
@@ -1134,6 +1398,8 @@ public partial class HardenExistingSchema : Migration
             """
             DROP TABLE IF EXISTS #HardenIndexColumns;
             DROP TABLE IF EXISTS #HardenIndexes;
+            DROP TABLE IF EXISTS #HardenKeyConstraintColumns;
+            DROP TABLE IF EXISTS #HardenKeyConstraints;
             DROP TABLE IF EXISTS #HardenExpectedIndexLocations;
             DROP TABLE IF EXISTS #HardenExpectedIndexColumns;
             DROP TABLE IF EXISTS #HardenExpectedIndexes;
