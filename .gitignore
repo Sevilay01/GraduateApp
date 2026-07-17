@@ -43,6 +43,21 @@ secrets.json
 # Development-only password reset outbox
 .dev-emails/
 
+# Generated migration scripts at repository root
+/migration.sql
+/migration-fixed.sql
+/migration-validation.sql
+/migration-*.sql
+
+# Publish and package output
+[Pp]ublish/
+*.nupkg
+*.snupkg
+
+# Crash diagnostics
+*.dmp
+*.dump
+
 # OS metadata
 .DS_Store
 Thumbs.db

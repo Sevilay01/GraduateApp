@@ -42,7 +42,7 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
             entity.HasIndex(e => new { e.Tc, e.ProgramId }).IsUnique();
             entity.ToTable("Applications", table => table.HasCheckConstraint(
                 "CK_Applications_CurrentStatus",
-                "[CurrentStatus] IN ('Pending','UnderReview','Approved','Rejected','Withdrawn')"));
+                "[CurrentStatus] IN (N'Pending',N'UnderReview',N'Approved',N'Rejected',N'Withdrawn')"));
             entity.Property(e => e.ApplicationId).HasColumnName("ApplicationID");
             entity.Property(e => e.ApplicationDate).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(e => e.CurrentStatus).HasMaxLength(50).HasDefaultValue("Pending").IsRequired();
@@ -119,6 +119,7 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
             entity.Property(e => e.AdminId).HasColumnName("AdminID");
             entity.Property(e => e.TokenHash).HasMaxLength(256).IsUnicode(false).IsRequired();
             entity.Property(e => e.ExpirationDate).HasColumnType("datetime2");
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(e => e.RowVersion).IsRowVersion();
             entity.HasOne(e => e.TcNavigation).WithMany(e => e.PasswordResetTokens)

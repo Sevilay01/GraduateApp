@@ -131,7 +131,7 @@ namespace GraduateApp.API.Migrations
 
                     b.ToTable("Applications", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Applications_CurrentStatus", "[CurrentStatus] IN ('Pending','UnderReview','Approved','Rejected','Withdrawn')");
+                            t.HasCheckConstraint("CK_Applications_CurrentStatus", "[CurrentStatus] IN (N'Pending',N'UnderReview',N'Approved',N'Rejected',N'Withdrawn')");
                         });
                 });
 
@@ -300,6 +300,7 @@ namespace GraduateApp.API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsUsed")
+                        .HasDefaultValue(false)
                         .HasColumnType("bit");
 
                     b.Property<byte[]>("RowVersion")
