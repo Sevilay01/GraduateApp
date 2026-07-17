@@ -1,40 +1,45 @@
-@using GraduateApp.Web.Models
-@model LoginViewModel
+@model GraduateApp.Web.Models.LoginViewModel
 
 @{
     ViewData["Title"] = "Giriş Yap";
 }
 
 <div class="row justify-content-center mt-5">
-    <div class="col-md-5">
+    <div class="col-md-4">
         <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Aday Girişi</h4>
-            </div>
-            <div class="card-body">
-                
-                <div asp-validation-summary="All" class="text-danger fw-bold mb-3"></div>
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">Yönetici Girişi</h3>
 
-                <form asp-action="Login" method="post">
-                    <div class="mb-3">
-                        <label class="form-label">TC Kimlik No</label>
-                        <input asp-for="TC" class="form-control" maxlength="11" required />
+                <!-- Tag Helper'lar ile formu doğrudan Controller'daki Login(POST) metoduna bağlıyoruz -->
+                <form asp-controller="Account" asp-action="Login" method="post">
+
+                    <!-- Genel hata mesajları (Örn: "Kullanıcı adı veya şifre hatalı") burada çıkacak -->
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Username" class="control-label fw-bold">Kullanıcı Adı</label>
+                        <input asp-for="Username" class="form-control" placeholder="Kullanıcı adınızı girin (Örn: admin)" />
+                        <!-- Modelde belirlediğimiz Required hata mesajı burada görünecek -->
+                        <span asp-validation-for="Username" class="text-danger"></span>
                     </div>
-                    
-                    <div class="mb-4">
-                        <label class="form-label">Şifre</label>
-                        <input asp-for="Password" type="password" class="form-control" required />
+
+                    <div class="form-group mb-4">
+                        <label asp-for="Password" class="control-label fw-bold">Şifre</label>
+                        <input asp-for="Password" class="form-control" type="password" placeholder="Şifrenizi girin (Örn: 123456)" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
-                    
-                    <button type="submit" class="btn btn-success w-100 mb-3">Giriş Yap</button>
-                    
-                    <div class="text-center">
-                        <span class="text-muted">Hesabınız yok mu?</span>
-                        <a asp-action="Register" class="text-decoration-none fw-bold">Hemen Kayıt Olun</a>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Sisteme Giriş Yap</button>
                     </div>
                 </form>
-                
+
             </div>
         </div>
     </div>
 </div>
+
+<!-- İstemci tarafında (sayfa yenilenmeden) validasyon yapabilmek için gerekli scriptler -->
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

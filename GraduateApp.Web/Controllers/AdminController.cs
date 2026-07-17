@@ -5,20 +5,22 @@ using System.Threading.Tasks;
 using System.Text;
 using System;
 
-// BU İKİ KÜTÜPHANEYİ EN ÜSTE EKLİYORUZ
+using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using GraduateApp.Web.Models;
 
 namespace GraduateApp.Web.Controllers
 {
+    [Authorize]
     public class AdminController : Controller
     {
+
         private readonly HttpClient _httpClient;
 
         public AdminController()
         {
             _httpClient = new HttpClient();
-            // Kendi API portunun doğru olduğuna emin ol
+            // Kendi API portunuzun doğru olduğuna emin olunuz
             _httpClient.BaseAddress = new Uri("http://localhost:5158/");
         }
 
@@ -31,7 +33,7 @@ namespace GraduateApp.Web.Controllers
             var res = await _httpClient.GetAsync("api/applications");
             var data = await res.Content.ReadAsStringAsync();
 
-            // KÜTÜPHANELERİ ÜSTE EKLEDİĞİMİZ İÇİN BURASI ARTIK TERTEMİZ:
+            
             var applications = JsonSerializer.Deserialize<List<AdminApplicationViewModel>>(data, options)
                                ?? new List<AdminApplicationViewModel>();
 

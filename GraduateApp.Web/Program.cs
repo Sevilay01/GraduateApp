@@ -1,17 +1,21 @@
-using Microsoft.AspNetCore.Authentication.Cookies; // BÖLÜM 1: Bunu en üste ekle
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
-
-// BÖLÜM 2: Cookie Authentication Servisini Ekle
+// BÖLÜM 1: Tüm kimlik doðrulama ayarlarýný tek bir blokta topluyoruz
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login"; // Giriþ yapmayanlarý buraya yönlendir
-        options.LogoutPath = "/Account/Logout";
-        options.Cookie.Name = "GraduateApp.Auth"; // Çerezin adý
+        options.LoginPath = "/Account/Login";               // Giriþ yapmayanlarý buraya yönlendir
+        options.LogoutPath = "/Account/Logout";             // Çýkýþ yapýldýðýnda yönlendirilecek sayfa
+        options.AccessDeniedPath = "/Account/AccessDenied"; // Yetkisi yetmeyenleri (Örn: Admin olmayanlar) yönlendir
+        options.Cookie.Name = "GraduateApp.Auth";           // Çerezin tarayýcýdaki ismi
     });
+
+
+builder.Services.AddAuthorization();
+builder.Services.AddControllersWithViews();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -24,7 +28,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseAuthentication(); // BÖLÜM 3: Authentication Middleware'i ekle
+
+// BÖLÜM 2: Middleware sýralamasý
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -33,6 +39,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

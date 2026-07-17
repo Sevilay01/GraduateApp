@@ -1,8 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GraduateApp.Web.Models
 {
     public class LoginViewModel
     {
-        public string TC { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kullanýcý adý veya e-posta zorunludur.")]
+        public string Username { get; set; }
+
+        [Required(ErrorMessage = "Þifre zorunludur.")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
     }
 }
