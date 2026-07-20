@@ -16,4 +16,5 @@ public sealed class Admin
     public ICollection<ApplicationStatusHistory> ApplicationStatusHistories { get; set; } = new List<ApplicationStatusHistory>();
     public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
     public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
+    public LoginIdentity? LoginIdentity { get; set; }
 }

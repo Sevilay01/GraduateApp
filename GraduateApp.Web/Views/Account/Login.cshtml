@@ -1,15 +1,33 @@
 @model LoginViewModel
 @{
-    ViewData["Title"] = "Giriş";
+    var isAdminLogin = Model.AccountType == LoginAccountType.Admin;
+    var loginAction = isAdminLogin ? "AdminLogin" : "Login";
+    ViewData["Title"] = isAdminLogin ? "Yönetici girişi" : "Öğrenci girişi";
 }
 
 <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-5">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h1 class="h3 mb-3">Öğrenci / Admin girişi</h1>
-                <p class="text-muted">Öğrenciler TC kimlik numarası veya e-posta, yöneticiler e-posta ile giriş yapar.</p>
-                <form asp-action="Login" method="post" novalidate>
+                <h1 class="h3 mb-3">@(isAdminLogin ? "Yönetici girişi" : "Öğrenci girişi")</h1>
+                <p class="text-muted">
+                    @(isAdminLogin
+                        ? "Yöneticiler e-posta adresiyle giriş yapar."
+                        : "Öğrenciler TC kimlik numarası veya e-posta adresiyle giriş yapar.")
+                </p>
+                @if (Model.HasExistingSession)
+                {
+                    <div class="alert alert-info" role="status">
+                        Şu anda <strong>@(Model.ExistingRoleDisplay ?? "başka bir")</strong> hesabıyla oturumunuz açık.
+                    </div>
+                    <form asp-action="SwitchAccount" method="post">
+                        <input type="hidden" name="accountType" value="@Model.AccountType" />
+                        <button type="submit" class="btn btn-outline-primary w-100">Farklı hesapla giriş yap</button>
+                    </form>
+                }
+                else
+                {
+                <form asp-action="@loginAction" method="post" novalidate>
                     <input asp-for="ReturnUrl" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                     <div class="mb-3">
@@ -28,10 +46,22 @@
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Giriş yap</button>
                 </form>
+                }
                 <div class="d-flex justify-content-between mt-3 small">
                     <a asp-action="ForgotPassword">Parolamı unuttum</a>
-                    <a asp-action="Register">Öğrenci kaydı</a>
+                    @if (isAdminLogin)
+                    {
+                        <a asp-action="Login">Öğrenci girişi</a>
+                    }
+                    else
+                    {
+                        <a asp-action="AdminLogin">Yönetici girişi</a>
+                    }
                 </div>
+                @if (!isAdminLogin)
+                {
+                    <div class="mt-2 text-end small"><a asp-action="Register">Öğrenci kaydı</a></div>
+                }
             </div>
         </div>
     </div>

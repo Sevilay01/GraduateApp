@@ -12,7 +12,10 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
 
     public Task<ApiResult<LoginApiResponse>> LoginAsync(LoginViewModel model, CancellationToken cancellationToken) =>
-        PostAsync<LoginApiResponse>("api/auth/login", new { model.Username, model.Password }, cancellationToken);
+        PostAsync<LoginApiResponse>(
+            "api/auth/login",
+            new { model.Username, model.Password, model.AccountType },
+            cancellationToken);
 
     public Task<ApiResult> RegisterAsync(RegisterViewModel model, CancellationToken cancellationToken) =>
         PostAsync("api/auth/register", new

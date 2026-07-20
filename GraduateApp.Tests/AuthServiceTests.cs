@@ -1,6 +1,8 @@
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
+using GraduateApp.API.Security;
 using GraduateApp.API.Services;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
@@ -15,6 +17,20 @@ namespace GraduateApp.Tests;
 public sealed class AuthServiceTests
 {
     [Fact]
+    public void Login_validation_messages_are_explicitly_turkish_and_require_account_type()
+    {
+        var model = new LoginDto();
+        var results = new List<ValidationResult>();
+
+        Validator.TryValidateObject(model, new ValidationContext(model), results, validateAllProperties: true);
+
+        Assert.Contains(results, result => result.ErrorMessage == "Kullanıcı adı zorunludur.");
+        Assert.Contains(results, result => result.ErrorMessage == "Parola zorunludur.");
+        Assert.Contains(results, result => result.ErrorMessage == "Hesap türü zorunludur.");
+        Assert.DoesNotContain(results, result => result.ErrorMessage?.Contains("required", StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    [Fact]
     public async Task StudentLogin_AcceptsValidPassword_AndRejectsInvalidPassword()
     {
         await using var db = TestDb.Create();
@@ -28,12 +44,14 @@ public sealed class AuthServiceTests
         var valid = await service.LoginAsync(new LoginDto
         {
             Username = student.Tc,
-            Password = "Strong-Student-1!"
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
         }, CancellationToken.None);
         var invalid = await service.LoginAsync(new LoginDto
         {
             Username = student.Tc,
-            Password = "Wrong-Password-1!"
+            Password = "Wrong-Password-1!",
+            AccountType = LoginAccountType.Student
         }, CancellationToken.None);
 
         Assert.True(valid.IsSuccess);
@@ -57,12 +75,14 @@ public sealed class AuthServiceTests
         var inactive = await service.LoginAsync(new LoginDto
         {
             Username = student.Email,
-            Password = "Strong-Student-1!"
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
         }, CancellationToken.None);
         var missing = await service.LoginAsync(new LoginDto
         {
             Username = "missing@example.test",
-            Password = "Strong-Student-1!"
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
         }, CancellationToken.None);
 
         Assert.False(inactive.IsSuccess);
@@ -139,13 +159,15 @@ public sealed class AuthServiceTests
         var locked = await service.LoginAsync(new LoginDto
         {
             Username = student.Tc,
-            Password = "Strong-Student-1!"
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
         }, CancellationToken.None);
         clock.Advance(TimeSpan.FromMinutes(6));
         var afterLockout = await service.LoginAsync(new LoginDto
         {
             Username = student.Tc,
-            Password = "Strong-Student-1!"
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
         }, CancellationToken.None);
 
         Assert.False(locked.IsSuccess);
@@ -167,12 +189,14 @@ public sealed class AuthServiceTests
         var valid = await service.LoginAsync(new LoginDto
         {
             Username = admin.Email,
-            Password = "Strong-Admin-1!"
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Admin
         }, CancellationToken.None);
         var invalid = await service.LoginAsync(new LoginDto
         {
             Username = admin.Email,
-            Password = "Wrong-Admin-1!"
+            Password = "Wrong-Admin-1!",
+            AccountType = LoginAccountType.Admin
         }, CancellationToken.None);
 
         Assert.True(valid.IsSuccess);
@@ -382,6 +406,159 @@ public sealed class AuthServiceTests
         Assert.DoesNotContain(request.BirthDate.ToString("O"), output, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task RegisterStudent_rejects_admin_email_with_invariant_case_and_whitespace_normalization()
+    {
+        await using var db = TestDb.Create();
+        var admin = CreateAdmin();
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+        var request = CreateRegistrationRequest(
+            "10000000078",
+            "  AdMiN@Example.Test  ",
+            "Student-Password-1!");
+
+        var result = await service.RegisterStudentAsync(request, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Single(db.Admins);
+        Assert.Empty(db.Students);
+        Assert.Single(db.LoginIdentities);
+        Assert.DoesNotContain(admin.Email, result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Explicit_account_type_prevents_cross_role_login_fallback()
+    {
+        await using var db = TestDb.Create();
+        var studentHasher = new PasswordHasher<Student>();
+        var adminHasher = new PasswordHasher<Admin>();
+        var student = CreateStudent();
+        var admin = CreateAdmin();
+        student.PasswordHash = studentHasher.HashPassword(student, "Strong-Student-1!");
+        admin.PasswordHash = adminHasher.HashPassword(admin, "Strong-Admin-1!");
+        db.AddRange(student, admin);
+        await db.SaveChangesAsync();
+        var service = CreateService(db, studentHasher: studentHasher, adminHasher: adminHasher);
+
+        var studentRouteWithAdminCredentials = await service.LoginAsync(new LoginDto
+        {
+            Username = admin.Email,
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Student
+        }, CancellationToken.None);
+        var adminRouteWithStudentCredentials = await service.LoginAsync(new LoginDto
+        {
+            Username = student.Email,
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+        var adminLogin = await service.LoginAsync(new LoginDto
+        {
+            Username = admin.Email,
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+
+        Assert.False(studentRouteWithAdminCredentials.IsSuccess);
+        Assert.False(adminRouteWithStudentCredentials.IsSuccess);
+        Assert.True(adminLogin.IsSuccess);
+        Assert.Equal(ApiAuthenticationDefaults.AdminRole, adminLogin.Value!.Role);
+    }
+
+    [Fact]
+    public async Task Forgot_password_resolves_exact_identity_and_binds_token_to_admin()
+    {
+        await using var db = TestDb.Create();
+        var admin = CreateAdmin();
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        var email = new CapturingEmailSender();
+        var service = CreateService(db, emailSender: email);
+
+        await service.RequestPasswordResetAsync(
+            new ForgotPasswordDto { Email = "  ADMIN@example.test " },
+            CancellationToken.None);
+
+        var token = Assert.Single(db.PasswordResetTokens);
+        Assert.Equal(admin.AdminId, token.AdminId);
+        Assert.Null(token.Tc);
+        Assert.NotNull(email.ResetLink);
+    }
+
+    [Fact]
+    public async Task Admin_password_reset_enables_only_new_password_for_admin_login()
+    {
+        await using var db = TestDb.Create();
+        var adminHasher = new PasswordHasher<Admin>();
+        var admin = CreateAdmin();
+        admin.PasswordHash = adminHasher.HashPassword(admin, "Old-Admin-Password-1!");
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        var email = new CapturingEmailSender();
+        var service = CreateService(db, emailSender: email, adminHasher: adminHasher);
+        await service.RequestPasswordResetAsync(
+            new ForgotPasswordDto { Email = admin.Email },
+            CancellationToken.None);
+
+        var reset = await service.ResetPasswordAsync(new ResetPasswordDto
+        {
+            Token = ExtractToken(email.ResetLink!),
+            NewPassword = "New-Admin-Password-1!",
+            ConfirmPassword = "New-Admin-Password-1!"
+        }, CancellationToken.None);
+        var oldPassword = await service.LoginAsync(new LoginDto
+        {
+            Username = admin.Email,
+            Password = "Old-Admin-Password-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+        var newPassword = await service.LoginAsync(new LoginDto
+        {
+            Username = admin.Email,
+            Password = "New-Admin-Password-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+
+        Assert.True(reset.IsSuccess);
+        Assert.False(oldPassword.IsSuccess);
+        Assert.True(newPassword.IsSuccess);
+        Assert.False(admin.MustChangePassword);
+    }
+
+    [Fact]
+    public async Task Corrupt_identity_returns_generic_unauthorized_and_writes_pii_free_audit()
+    {
+        await using var db = TestDb.Create();
+        var student = CreateStudent();
+        student.LoginIdentity!.NormalizedEmail = "MISMATCH@EXAMPLE.TEST";
+        student.PasswordHash = new PasswordHasher<Student>()
+            .HashPassword(student, "Strong-Student-1!");
+        db.Students.Add(student);
+        await db.SaveChangesAsync();
+        var logger = new CapturingLogger<AuthService>();
+        var service = CreateService(db, logger: logger);
+
+        var result = await service.LoginAsync(new LoginDto
+        {
+            Username = student.Tc,
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status401Unauthorized, result.StatusCode);
+        Assert.Equal("Kullanıcı adı veya parola hatalı.", result.Error);
+        var audit = Assert.Single(db.SecurityAuditLogs);
+        Assert.Equal("LoginIdentityIntegrityFailure", audit.EventType);
+        var output = string.Join(Environment.NewLine, logger.Entries.Append(audit.Details));
+        Assert.DoesNotContain(student.Tc, output, StringComparison.Ordinal);
+        Assert.DoesNotContain(student.Email, output, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Strong-Student", output, StringComparison.Ordinal);
+    }
+
     private static AuthService CreateService(
         GraduateAppDbContext db,
         TestTimeProvider? timeProvider = null,
@@ -406,7 +583,8 @@ public sealed class AuthServiceTests
             configuration,
             clock,
             logger ?? NullLogger<AuthService>.Instance,
-            new StudentRegistrationValidator(clock, Options.Create(new RegistrationOptions())));
+            new StudentRegistrationValidator(clock, Options.Create(new RegistrationOptions())),
+            new InvariantEmailNormalizer());
     }
 
     private static RegisterStudentDto CreateRegistrationRequest(
@@ -426,28 +604,50 @@ public sealed class AuthServiceTests
             ConfirmPassword = password
         };
 
-    private static Student CreateStudent() => new()
+    private static Student CreateStudent()
     {
-        Tc = "10000000146",
-        PublicId = Guid.NewGuid(),
-        StudentName = "Test",
-        StudentSurname = "Öğrenci",
-        Email = "student@example.test",
-        NormalizedEmail = "STUDENT@EXAMPLE.TEST",
-        SecurityStamp = Guid.NewGuid().ToString("N"),
-        IsActive = true,
-        CreatedAtUtc = DateTime.UtcNow,
-        UpdatedAtUtc = DateTime.UtcNow
-    };
+        var student = new Student
+        {
+            Tc = "10000000146",
+            PublicId = Guid.NewGuid(),
+            StudentName = "Test",
+            StudentSurname = "Öğrenci",
+            Email = "student@example.test",
+            NormalizedEmail = "STUDENT@EXAMPLE.TEST",
+            SecurityStamp = Guid.NewGuid().ToString("N"),
+            IsActive = true,
+            CreatedAtUtc = DateTime.UtcNow,
+            UpdatedAtUtc = DateTime.UtcNow
+        };
+        student.LoginIdentity = new LoginIdentity
+        {
+            NormalizedEmail = student.NormalizedEmail,
+            AccountType = LoginAccountType.Student,
+            Student = student,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+        return student;
+    }
 
-    private static Admin CreateAdmin() => new()
+    private static Admin CreateAdmin()
     {
-        Email = "admin@example.test",
-        NormalizedEmail = "ADMIN@EXAMPLE.TEST",
-        SecurityStamp = Guid.NewGuid().ToString("N"),
-        CreatedAtUtc = DateTime.UtcNow,
-        UpdatedAtUtc = DateTime.UtcNow
-    };
+        var admin = new Admin
+        {
+            Email = "admin@example.test",
+            NormalizedEmail = "ADMIN@EXAMPLE.TEST",
+            SecurityStamp = Guid.NewGuid().ToString("N"),
+            CreatedAtUtc = DateTime.UtcNow,
+            UpdatedAtUtc = DateTime.UtcNow
+        };
+        admin.LoginIdentity = new LoginIdentity
+        {
+            NormalizedEmail = admin.NormalizedEmail,
+            AccountType = LoginAccountType.Admin,
+            Admin = admin,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+        return admin;
+    }
 
     private static string ExtractToken(Uri resetLink) =>
         QueryHelpers.ParseQuery(resetLink.Query)["token"].ToString();

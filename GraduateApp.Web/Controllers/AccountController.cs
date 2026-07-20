@@ -14,12 +14,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            return RedirectForRole();
-        }
-
-        return View(new LoginViewModel { ReturnUrl = NormalizeReturnUrl(returnUrl) });
+        return View(CreateLoginModel(LoginAccountType.Student, returnUrl));
     }
 
     [HttpPost]
@@ -27,23 +22,58 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, CancellationToken cancellationToken)
     {
+        model.AccountType = LoginAccountType.Student;
+        return await LoginCoreAsync(model, "Student", cancellationToken);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult AdminLogin(string? returnUrl = null) =>
+        View("Login", CreateLoginModel(LoginAccountType.Admin, returnUrl));
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminLogin(LoginViewModel model, CancellationToken cancellationToken)
+    {
+        model.AccountType = LoginAccountType.Admin;
+        return await LoginCoreAsync(model, "Admin", cancellationToken);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SwitchAccount(LoginAccountType accountType)
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return accountType == LoginAccountType.Admin
+            ? RedirectToAction(nameof(AdminLogin))
+            : RedirectToAction(nameof(Login));
+    }
+
+    private async Task<IActionResult> LoginCoreAsync(
+        LoginViewModel model,
+        string expectedRole,
+        CancellationToken cancellationToken)
+    {
         model.ReturnUrl = NormalizeReturnUrl(model.ReturnUrl);
+        PopulateExistingSession(model);
         if (!ModelState.IsValid)
         {
-            return View(model);
+            return View("Login", model);
         }
 
         var result = await apiClient.LoginAsync(model, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
             ModelState.AddModelError(string.Empty, result.Error ?? "Giriş yapılamadı.");
-            return View(model);
+            return View("Login", model);
         }
 
-        if (result.Value.Role is not ("Student" or "Admin") || string.IsNullOrWhiteSpace(result.Value.AccessToken))
+        if (result.Value.Role != expectedRole || string.IsNullOrWhiteSpace(result.Value.AccessToken))
         {
             ModelState.AddModelError(string.Empty, "Kimlik doğrulama yanıtı geçersiz.");
-            return View(model);
+            return View("Login", model);
         }
 
         var claims = new[]
@@ -53,6 +83,11 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
             new Claim(ApiSessionConstants.AccessTokenClaim, result.Value.AccessToken)
         };
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
+
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity),
@@ -199,9 +234,24 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult AccessDenied() => View();
 
-    private IActionResult RedirectForRole() => User.IsInRole("Admin")
-        ? RedirectToAction("Index", "Admin")
-        : RedirectToAction("Index", "Panel");
+    private LoginViewModel CreateLoginModel(LoginAccountType accountType, string? returnUrl)
+    {
+        var model = new LoginViewModel
+        {
+            AccountType = accountType,
+            ReturnUrl = NormalizeReturnUrl(returnUrl)
+        };
+        PopulateExistingSession(model);
+        return model;
+    }
+
+    private void PopulateExistingSession(LoginViewModel model)
+    {
+        model.HasExistingSession = User.Identity?.IsAuthenticated == true;
+        model.ExistingRoleDisplay = User.IsInRole("Admin")
+            ? "Yönetici"
+            : User.IsInRole("Student") ? "Öğrenci" : null;
+    }
 
     private string? NormalizeReturnUrl(string? returnUrl) =>
         !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;

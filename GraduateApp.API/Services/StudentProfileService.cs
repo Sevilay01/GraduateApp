@@ -13,7 +13,8 @@ public interface IStudentProfileService
 
 public sealed class StudentProfileService(
     GraduateAppDbContext dbContext,
-    TimeProvider timeProvider) : IStudentProfileService
+    TimeProvider timeProvider,
+    IEmailNormalizer emailNormalizer) : IStudentProfileService
 {
     public async Task<StudentProfileDto?> GetAsync(string studentTc, CancellationToken cancellationToken)
     {
@@ -30,16 +31,26 @@ public sealed class StudentProfileService(
     {
         var student = await dbContext.Students
             .Include(item => item.EducationInfos)
+            .Include(item => item.LoginIdentity)
             .SingleOrDefaultAsync(item => item.Tc == studentTc, cancellationToken);
         if (student is null)
         {
             return ServiceResult<StudentProfileDto>.Failure("Öğrenci profili bulunamadı.", StatusCodes.Status404NotFound);
         }
 
-        var normalizedEmail = request.Email.Trim().ToUpperInvariant();
-        if (await dbContext.Students.AnyAsync(
-            item => item.Tc != studentTc
-                && (item.NormalizedEmail == normalizedEmail || item.Email.ToUpper() == normalizedEmail),
+        if (student.LoginIdentity is null
+            || student.LoginIdentity.AccountType != LoginAccountType.Student
+            || student.LoginIdentity.StudentTc != student.Tc)
+        {
+            return ServiceResult<StudentProfileDto>.Failure(
+                "Hesap bilgileri doğrulanamadı. Lütfen destek birimiyle iletişime geçin.",
+                StatusCodes.Status409Conflict);
+        }
+
+        var normalizedEmail = emailNormalizer.Normalize(request.Email);
+        if (await dbContext.LoginIdentities.AnyAsync(
+            item => item.LoginIdentityId != student.LoginIdentity.LoginIdentityId
+                && item.NormalizedEmail == normalizedEmail,
             cancellationToken))
         {
             return ServiceResult<StudentProfileDto>.Failure("E-posta adresi başka bir hesap tarafından kullanılıyor.", StatusCodes.Status409Conflict);
@@ -68,6 +79,7 @@ public sealed class StudentProfileService(
         student.StudentSurname = request.LastName.Trim();
         student.Email = request.Email.Trim();
         student.NormalizedEmail = normalizedEmail;
+        student.LoginIdentity.NormalizedEmail = normalizedEmail;
         student.Telephone = normalizedTelephone;
         student.FatherName = string.IsNullOrWhiteSpace(request.FatherName) ? null : request.FatherName.Trim();
         student.BirthDate = request.BirthDate;

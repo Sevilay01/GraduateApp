@@ -70,12 +70,16 @@ public sealed class AccessTokenService : IAccessTokenService
                 student => student.Tc == payload.Subject
                     && student.IsActive
                     && student.SecurityStamp == payload.SecurityStamp
+                    && student.LoginIdentity != null
+                    && student.LoginIdentity.AccountType == LoginAccountType.Student
                     && (student.LockoutEndUtc == null || student.LockoutEndUtc <= _timeProvider.GetUtcNow()),
                 cancellationToken),
             ApiAuthenticationDefaults.AdminRole when int.TryParse(payload.Subject, out var adminId) =>
                 await _dbContext.Admins.AsNoTracking().AnyAsync(
                     admin => admin.AdminId == adminId
                         && admin.SecurityStamp == payload.SecurityStamp
+                        && admin.LoginIdentity != null
+                        && admin.LoginIdentity.AccountType == LoginAccountType.Admin
                         && (admin.LockoutEndUtc == null || admin.LockoutEndUtc <= _timeProvider.GetUtcNow()),
                     cancellationToken),
             _ => false
