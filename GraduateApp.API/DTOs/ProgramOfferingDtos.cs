@@ -5,7 +5,7 @@ namespace GraduateApp.API.DTOs;
 
 public sealed class ProgramOfferingRequirementInputDto
 {
-    [Range(1, int.MaxValue)]
+    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir sınav seçiniz.")]
     public int ExamId { get; init; }
 
     [Range(
@@ -22,19 +22,19 @@ public sealed class ProgramOfferingRequirementInputDto
 
 public class ProgramOfferingCreateDto : IValidatableObject
 {
-    [Range(1, int.MaxValue)]
+    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir program seçiniz.")]
     public int ProgramId { get; init; }
 
-    [Range(2000, 2200)]
+    [Range(2000, 2200, ErrorMessage = "Akademik yıl başlangıcı 2000 ile 2200 arasında olmalıdır.")]
     public int AcademicYearStart { get; init; }
 
-    [EnumDataType(typeof(AcademicTerm))]
+    [EnumDataType(typeof(AcademicTerm), ErrorMessage = "Geçerli bir dönem seçiniz.")]
     public AcademicTerm Term { get; init; }
 
     public DateTime ApplicationStartUtc { get; init; }
     public DateTime ApplicationDeadlineUtc { get; init; }
 
-    [Range(1, 100000)]
+    [Range(1, 100000, ErrorMessage = "Kontenjan 1 ile 100000 arasında olmalıdır.")]
     public int Quota { get; init; }
 
     public bool IsOpen { get; init; }
@@ -63,7 +63,10 @@ public class ProgramOfferingCreateDto : IValidatableObject
 
 public sealed class ProgramOfferingUpdateDto : ProgramOfferingCreateDto
 {
-    [Required, StringLength(64)]
+    [Required(ErrorMessage = "İlan eşzamanlılık bilgisi zorunludur.")]
+    [StringLength(
+        64,
+        ErrorMessage = "İlan eşzamanlılık bilgisi geçersiz.")]
     public string RowVersion { get; init; } = string.Empty;
     public bool IsArchived { get; init; }
 }

@@ -101,7 +101,12 @@
                         </div>
                         <div class="col-12 col-sm-6">
                             <label asp-for="Form.Term" class="form-label"></label>
-                            <select asp-for="Form.Term" class="form-select" asp-items="Html.GetEnumSelectList<AcademicTerm>()"></select>
+                            <select asp-for="Form.Term" class="form-select">
+                                @foreach (var term in AcademicTermDisplayExtensions.OfferingValues)
+                                {
+                                    <option value="@((int)term)">@term.DisplayName()</option>
+                                }
+                            </select>
                             <span asp-validation-for="Form.Term" class="text-danger"></span>
                         </div>
                     </div>
