@@ -8,7 +8,10 @@
         <h1 class="h2 mb-1">Öğrenci paneli</h1>
         <p class="text-muted mb-0">Açık programları ve başvuru durumlarınızı görüntüleyin.</p>
     </div>
-    <a asp-action="Profile" class="btn btn-outline-primary">Profil ve eğitim bilgilerim</a>
+    <div class="d-flex gap-2">
+        <a asp-action="ExamScores" class="btn btn-outline-primary">Sınav sonuçlarım</a>
+        <a asp-action="Profile" class="btn btn-outline-primary">Profil ve eğitim bilgilerim</a>
+    </div>
 </div>
 
 @if (Model.ErrorMessage is not null)

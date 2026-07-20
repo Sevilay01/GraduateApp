@@ -1,0 +1,73 @@
+@model AdminStudentListViewModel
+@{
+    ViewData["Title"] = "Öğrenci yönetimi";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+    <div>
+        <h1 class="h2 mb-1">Öğrenci yönetimi</h1>
+        <p class="text-muted mb-0">Öğrencileri arayın ve gerektiğinde hesap erişimini güvenli biçimde pasifleştirin.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Başvuru yönetimine dön</a>
+</div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+}
+
+<form method="get" class="card card-body mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-8">
+            <label for="student-search" class="form-label">Ad, soyad, e-posta veya TC ile ara</label>
+            <input id="student-search" name="search" value="@Model.Search" class="form-control" autocomplete="off" />
+        </div>
+        <div class="col-12 col-md-4">
+            <button type="submit" class="btn btn-primary">Ara</button>
+            <a asp-action="Students" class="btn btn-outline-secondary">Temizle</a>
+        </div>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr><th>Öğrenci</th><th>Kimlik</th><th>E-posta</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var student in Model.Result.Items)
+            {
+                <tr>
+                    <td>@student.FullName</td>
+                    <td>@student.MaskedTc</td>
+                    <td>@student.Email</td>
+                    <td>
+                        <span class="badge @(student.IsActive ? "text-bg-success" : "text-bg-secondary")">
+                            @(student.IsActive ? "Aktif" : "Pasif")
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        @if (student.IsActive)
+                        {
+                            <a asp-action="DeactivateStudent" asp-route-tc="@student.Tc" class="btn btn-sm btn-outline-danger">Pasifleştir</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.Result.TotalPages > 1)
+{
+    <nav aria-label="Öğrenci listesi sayfaları">
+        <ul class="pagination">
+            @for (var pageNumber = 1; pageNumber <= Model.Result.TotalPages; pageNumber++)
+            {
+                <li class="page-item @(pageNumber == Model.Result.Page ? "active" : null)">
+                    <a class="page-link" asp-action="Students" asp-route-search="@Model.Search" asp-route-page="@pageNumber" asp-route-pageSize="@Model.Result.PageSize">@pageNumber</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

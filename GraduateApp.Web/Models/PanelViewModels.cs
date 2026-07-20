@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GraduateApp.Web.Models;
 
 public sealed class ProgramViewModel
@@ -51,5 +53,52 @@ public sealed class PanelDashboardViewModel
 public sealed class HomeViewModel
 {
     public IReadOnlyList<ProgramViewModel> OpenPrograms { get; set; } = [];
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class StudentExamScoreViewModel
+{
+    public int ScoreId { get; set; }
+    public int ExamId { get; set; }
+    public string ExamName { get; set; } = string.Empty;
+    public decimal Score { get; set; }
+    public DateOnly? ExamDate { get; set; }
+}
+
+public sealed class StudentExamCatalogItemViewModel
+{
+    public int ExamId { get; set; }
+    public string ExamName { get; set; } = string.Empty;
+    public decimal MaximumScore { get; set; }
+}
+
+public sealed class StudentExamScoreInputViewModel
+{
+    public int ScoreId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir sınav seçiniz.")]
+    [Display(Name = "Sınav")]
+    public int ExamId { get; set; }
+
+    [Required(ErrorMessage = "Sınav puanı zorunludur.")]
+    [Range(
+        typeof(decimal),
+        "0",
+        "999.99",
+        ParseLimitsInInvariantCulture = true,
+        ErrorMessage = "Sınav puanı 0 ile 999,99 arasında olmalıdır.")]
+    [Display(Name = "Puan")]
+    public decimal? Score { get; set; }
+
+    [Required(ErrorMessage = "Sınav tarihi zorunludur.")]
+    [Display(Name = "Sınav tarihi")]
+    public DateOnly? ExamDate { get; set; }
+}
+
+public sealed class StudentExamScoresPageViewModel
+{
+    public IReadOnlyList<StudentExamScoreViewModel> Scores { get; set; } = [];
+    public IReadOnlyList<StudentExamCatalogItemViewModel> Exams { get; set; } = [];
+    public StudentExamScoreInputViewModel Form { get; set; } = new();
     public string? ErrorMessage { get; set; }
 }

@@ -189,3 +189,33 @@ public sealed class UpdateApplicationStatusViewModel
     [Display(Name = "Not")]
     public string? Notes { get; set; }
 }
+
+public sealed class AdminStudentListItemViewModel
+{
+    public string Tc { get; set; } = string.Empty;
+    public string MaskedTc { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+}
+
+public sealed class AdminStudentListViewModel
+{
+    public PagedResultViewModel<AdminStudentListItemViewModel> Result { get; set; } = new();
+    public string? Search { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class AdminStudentDetailViewModel
+{
+    public string Tc { get; set; } = string.Empty;
+    public string MaskedTc { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Telephone { get; set; }
+    public bool IsActive { get; set; }
+    public int ApplicationCount { get; set; }
+    public int ExamScoreCount { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+}

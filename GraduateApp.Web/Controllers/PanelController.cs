@@ -84,6 +84,82 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         return RedirectToAction(nameof(Profile));
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ExamScores(int? editId, CancellationToken cancellationToken)
+    {
+        var scoresTask = apiClient.GetMyExamScoresAsync(cancellationToken);
+        var examsTask = apiClient.GetExamCatalogAsync(cancellationToken);
+        await Task.WhenAll(scoresTask, examsTask);
+        var scores = await scoresTask;
+        var exams = await examsTask;
+        var selected = editId.HasValue
+            ? scores.Value?.SingleOrDefault(item => item.ScoreId == editId.Value)
+            : null;
+
+        return View(new StudentExamScoresPageViewModel
+        {
+            Scores = scores.Value ?? [],
+            Exams = exams.Value ?? [],
+            Form = selected is null
+                ? new StudentExamScoreInputViewModel()
+                : new StudentExamScoreInputViewModel
+                {
+                    ScoreId = selected.ScoreId,
+                    ExamId = selected.ExamId,
+                    Score = selected.Score,
+                    ExamDate = selected.ExamDate
+                },
+            ErrorMessage = !scores.IsSuccess || !exams.IsSuccess
+                ? scores.Error ?? exams.Error ?? "Sınav sonuçları yüklenemedi."
+                : editId.HasValue && selected is null
+                    ? "Düzenlemek istediğiniz sınav sonucu bulunamadı."
+                    : null
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveExamScore(
+        [Bind(Prefix = "Form")] StudentExamScoreInputViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return await RenderExamScoresAsync(model, null, cancellationToken);
+        }
+
+        var result = model.ScoreId > 0
+            ? await apiClient.UpdateExamScoreAsync(model, cancellationToken)
+            : await apiClient.CreateExamScoreAsync(model, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Sınav sonucu kaydedilemedi.");
+            return await RenderExamScoresAsync(model, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = model.ScoreId > 0
+            ? "Sınav sonucunuz güncellendi."
+            : "Sınav sonucunuz eklendi.";
+        return RedirectToAction(nameof(ExamScores));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteExamScore(int scoreId, CancellationToken cancellationToken)
+    {
+        if (scoreId <= 0)
+        {
+            TempData["ErrorMessage"] = "Geçerli bir sınav sonucu seçiniz.";
+            return RedirectToAction(nameof(ExamScores));
+        }
+
+        var result = await apiClient.DeleteExamScoreAsync(scoreId, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Sınav sonucunuz silindi."
+            : result.Error ?? "Sınav sonucu silinemedi.";
+        return RedirectToAction(nameof(ExamScores));
+    }
+
     private static StudentProfileViewModel MapProfile(
         StudentProfileApiModel profile,
         IReadOnlyList<UniversityViewModel> universities) => new()
@@ -101,4 +177,23 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             Gno = profile.Education?.Gno,
             Universities = universities
         };
+
+    private async Task<IActionResult> RenderExamScoresAsync(
+        StudentExamScoreInputViewModel form,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var scoresTask = apiClient.GetMyExamScoresAsync(cancellationToken);
+        var examsTask = apiClient.GetExamCatalogAsync(cancellationToken);
+        await Task.WhenAll(scoresTask, examsTask);
+        var scores = await scoresTask;
+        var exams = await examsTask;
+        return View(nameof(ExamScores), new StudentExamScoresPageViewModel
+        {
+            Scores = scores.Value ?? [],
+            Exams = exams.Value ?? [],
+            Form = form,
+            ErrorMessage = errorMessage ?? scores.Error ?? exams.Error
+        });
+    }
 }

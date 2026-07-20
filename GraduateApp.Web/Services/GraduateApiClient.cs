@@ -59,6 +59,37 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult> CreateApplicationAsync(int programOfferingId, CancellationToken cancellationToken) =>
         PostAsync("api/applications", new { programOfferingId }, cancellationToken);
 
+    public Task<ApiResult<IReadOnlyList<StudentExamScoreViewModel>>> GetMyExamScoresAsync(
+        CancellationToken cancellationToken) =>
+        GetAsync<IReadOnlyList<StudentExamScoreViewModel>>("api/students/me/exam-scores", cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<StudentExamCatalogItemViewModel>>> GetExamCatalogAsync(
+        CancellationToken cancellationToken) =>
+        GetAsync<IReadOnlyList<StudentExamCatalogItemViewModel>>("api/students/me/exam-scores/catalog", cancellationToken);
+
+    public Task<ApiResult<StudentExamScoreViewModel>> CreateExamScoreAsync(
+        StudentExamScoreInputViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<StudentExamScoreViewModel>("api/students/me/exam-scores", new
+        {
+            model.ExamId,
+            model.Score,
+            model.ExamDate
+        }, cancellationToken);
+
+    public Task<ApiResult<StudentExamScoreViewModel>> UpdateExamScoreAsync(
+        StudentExamScoreInputViewModel model,
+        CancellationToken cancellationToken) =>
+        PutAsync<StudentExamScoreViewModel>($"api/students/me/exam-scores/{model.ScoreId}", new
+        {
+            model.ExamId,
+            model.Score,
+            model.ExamDate
+        }, cancellationToken);
+
+    public Task<ApiResult> DeleteExamScoreAsync(int scoreId, CancellationToken cancellationToken) =>
+        DeleteAsync($"api/students/me/exam-scores/{scoreId}", cancellationToken);
+
     public Task<ApiResult<PagedResultViewModel<AdminApplicationListItemViewModel>>> GetAdminApplicationsAsync(
         string? search,
         ApplicationStatus? status,
@@ -141,6 +172,37 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         CancellationToken cancellationToken) =>
         GetAsync<AdminApplicationDetailViewModel>($"api/applications/admin/{applicationId}", cancellationToken);
 
+    public Task<ApiResult<PagedResultViewModel<AdminStudentListItemViewModel>>> GetAdminStudentsAsync(
+        string? search,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = new List<string>
+        {
+            $"page={Math.Max(page, 1)}",
+            $"pageSize={Math.Clamp(pageSize, 10, 100)}"
+        };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        }
+
+        return GetAsync<PagedResultViewModel<AdminStudentListItemViewModel>>(
+            $"api/admin/students?{string.Join('&', query)}",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<AdminStudentDetailViewModel>> GetAdminStudentAsync(
+        string tc,
+        CancellationToken cancellationToken) =>
+        GetAsync<AdminStudentDetailViewModel>(
+            $"api/admin/students/{Uri.EscapeDataString(tc)}",
+            cancellationToken);
+
+    public Task<ApiResult> DeactivateStudentAsync(string tc, CancellationToken cancellationToken) =>
+        PostAsync($"api/admin/students/{Uri.EscapeDataString(tc)}/deactivate", new { }, cancellationToken);
+
     public Task<ApiResult> UpdateApplicationStatusAsync(
         UpdateApplicationStatusViewModel model,
         CancellationToken cancellationToken) =>
@@ -218,6 +280,12 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         {
             Content = JsonContent.Create(body, options: JsonOptions)
         };
+        return await SendAsync(request, cancellationToken);
+    }
+
+    private async Task<ApiResult> DeleteAsync(string path, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, path);
         return await SendAsync(request, cancellationToken);
     }
 

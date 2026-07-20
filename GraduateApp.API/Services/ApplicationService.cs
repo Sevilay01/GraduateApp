@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using System.Text.Json;
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
@@ -88,22 +89,32 @@ public sealed class ApplicationService(
                 if (requirement.IsRequired)
                 {
                     return ServiceResult<StudentApplicationDto>.Failure(
-                        $"Gerekli {requirement.Exam.ExamName} sınav sonucu bulunamadı.",
+                        $"Başvuru için gerekli {requirement.Exam.ExamName} sınav sonucunuz bulunmuyor. Sınav sonuçlarım ekranından ekleyiniz.",
                         StatusCodes.Status409Conflict);
                 }
 
                 continue;
             }
 
-            var scoreIsValid = score.Score >= requirement.MinimumScore
-                && (!requirement.MinimumValidityDate.HasValue
-                    || (score.ExamDate.HasValue && score.ExamDate.Value >= requirement.MinimumValidityDate.Value));
-            if (!scoreIsValid)
+            if (score.Score < requirement.MinimumScore)
             {
                 if (requirement.IsRequired)
                 {
                     return ServiceResult<StudentApplicationDto>.Failure(
-                        $"{requirement.Exam.ExamName} sınav koşulu sağlanmıyor.",
+                        $"{requirement.Exam.ExamName} puanınız yetersiz. Başvuru için en az {FormatScore(requirement.MinimumScore)} puan gereklidir.",
+                        StatusCodes.Status409Conflict);
+                }
+
+                continue;
+            }
+
+            if (requirement.MinimumValidityDate.HasValue
+                && (!score.ExamDate.HasValue || score.ExamDate.Value < requirement.MinimumValidityDate.Value))
+            {
+                if (requirement.IsRequired)
+                {
+                    return ServiceResult<StudentApplicationDto>.Failure(
+                        $"{requirement.Exam.ExamName} sınav tarihiniz ilan koşulunu sağlamıyor. En erken {requirement.MinimumValidityDate.Value:dd.MM.yyyy} tarihli sonuç gereklidir.",
                         StatusCodes.Status409Conflict);
                 }
 
@@ -381,4 +392,6 @@ public sealed class ApplicationService(
         ApplicationStatusRules.TryParseStoredValue(value, out var status) ? status : null;
 
     private static string MaskTc(string tc) => tc.Length >= 4 ? $"*******{tc[^4..]}" : "***********";
+    private static string FormatScore(decimal score) =>
+        score.ToString("0.##", CultureInfo.GetCultureInfo("tr-TR"));
 }

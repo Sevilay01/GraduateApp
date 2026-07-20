@@ -9,6 +9,62 @@ namespace GraduateApp.Web.Controllers;
 public sealed class AdminController(GraduateApiClient apiClient) : Controller
 {
     [HttpGet]
+    public async Task<IActionResult> Students(
+        string? search,
+        int page = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await apiClient.GetAdminStudentsAsync(search, page, pageSize, cancellationToken);
+        return View(new AdminStudentListViewModel
+        {
+            Result = result.Value ?? new PagedResultViewModel<AdminStudentListItemViewModel>
+            {
+                Page = Math.Max(page, 1),
+                PageSize = Math.Clamp(pageSize, 10, 100)
+            },
+            Search = search,
+            ErrorMessage = result.IsSuccess ? null : result.Error
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DeactivateStudent(string tc, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(tc))
+        {
+            TempData["ErrorMessage"] = "Öğrenci seçilmedi.";
+            return RedirectToAction(nameof(Students));
+        }
+
+        var result = await apiClient.GetAdminStudentAsync(tc, cancellationToken);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Öğrenci bulunamadı.";
+            return RedirectToAction(nameof(Students));
+        }
+
+        return View(result.Value);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmDeactivateStudent(string tc, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(tc))
+        {
+            TempData["ErrorMessage"] = "Öğrenci seçilmedi.";
+            return RedirectToAction(nameof(Students));
+        }
+
+        var result = await apiClient.DeactivateStudentAsync(tc, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Öğrenci pasifleştirildi ve mevcut oturumları iptal edildi."
+            : result.Error ?? "Öğrenci pasifleştirilemedi.";
+        return RedirectToAction(nameof(Students));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Index(
         string? search,
         ApplicationStatus? status,

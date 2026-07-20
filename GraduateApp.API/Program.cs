@@ -41,7 +41,9 @@ builder.Services.AddScoped<IPasswordHasher<Admin>, PasswordHasher<Admin>>();
 builder.Services.AddScoped<IAccessTokenService, AccessTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<IAdminStudentService, AdminStudentService>();
 builder.Services.AddScoped<IProgramOfferingService, ProgramOfferingService>();
+builder.Services.AddScoped<IStudentExamScoreService, StudentExamScoreService>();
 builder.Services.AddScoped<IStudentProfileService, StudentProfileService>();
 builder.Services.AddHostedService<AdminBootstrapHostedService>();
 
@@ -67,7 +69,7 @@ if (allowedOrigins.Length > 0)
 {
     builder.Services.AddCors(options => options.AddPolicy("TrustedWeb", policy => policy
         .WithOrigins(allowedOrigins)
-        .WithMethods("GET", "POST", "PUT")
+        .WithMethods("GET", "POST", "PUT", "DELETE")
         .WithHeaders("Authorization", "Content-Type")));
 }
 
