@@ -21,7 +21,7 @@
                     Bu işlem katalog verilerini veya öğrencinin geçmiş başvuru kayıtlarını silmez.
                 </div>
                 <form asp-action="ConfirmDeactivateStudent" method="post">
-                    <input type="hidden" name="tc" value="@Model.Tc" />
+                    <input type="hidden" name="publicId" value="@Model.PublicId" />
                     <button type="submit" class="btn btn-danger">Evet, öğrenciyi pasifleştir</button>
                     <a asp-action="Students" class="btn btn-outline-secondary">Vazgeç</a>
                 </form>

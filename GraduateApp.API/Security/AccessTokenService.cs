@@ -68,6 +68,7 @@ public sealed class AccessTokenService : IAccessTokenService
         {
             ApiAuthenticationDefaults.StudentRole => await _dbContext.Students.AsNoTracking().AnyAsync(
                 student => student.Tc == payload.Subject
+                    && student.IsActive
                     && student.SecurityStamp == payload.SecurityStamp
                     && (student.LockoutEndUtc == null || student.LockoutEndUtc <= _timeProvider.GetUtcNow()),
                 cancellationToken),

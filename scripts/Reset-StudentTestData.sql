@@ -6,6 +6,14 @@
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
+DECLARE @DatabaseName sysname = DB_NAME();
+IF @DatabaseName IS NULL
+    OR (@DatabaseName NOT LIKE N'GraduateAppReset[_]%'
+        AND @DatabaseName NOT LIKE N'GraduateAppTest[_]%'
+        AND @DatabaseName NOT LIKE N'GraduateAppDev[_]%'
+        AND @DatabaseName <> N'GraduateAppDevelopment')
+    THROW 52000, 'Bu script yalnızca GraduateApp Development/Test veritabanlarında çalıştırılabilir.', 1;
+
 BEGIN TRY
     BEGIN TRANSACTION;
 
@@ -24,6 +32,7 @@ BEGIN TRY
     DELETE FROM [dbo].[EducationInfo];
     DELETE FROM [dbo].[PasswordResetTokens] WHERE [TC] IS NOT NULL;
     DELETE FROM [dbo].[SystemLogs] WHERE [TC] IS NOT NULL;
+    DELETE FROM [dbo].[SecurityAuditLogs] WHERE [TargetType] IN (N'Student', N'Application');
     DELETE FROM [dbo].[Students];
 
     IF @AdminCount <> (SELECT COUNT_BIG(*) FROM [dbo].[Admins])

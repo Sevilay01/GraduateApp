@@ -192,7 +192,7 @@ public sealed class UpdateApplicationStatusViewModel
 
 public sealed class AdminStudentListItemViewModel
 {
-    public string Tc { get; set; } = string.Empty;
+    public Guid PublicId { get; set; }
     public string MaskedTc { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -209,7 +209,7 @@ public sealed class AdminStudentListViewModel
 
 public sealed class AdminStudentDetailViewModel
 {
-    public string Tc { get; set; } = string.Empty;
+    public Guid PublicId { get; set; }
     public string MaskedTc { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

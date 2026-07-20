@@ -3,6 +3,7 @@ namespace GraduateApp.API.Models;
 public sealed class Student
 {
     public string Tc { get; set; } = string.Empty;
+    public Guid PublicId { get; set; } = Guid.NewGuid();
     public string StudentName { get; set; } = string.Empty;
     public string StudentSurname { get; set; } = string.Empty;
     public string? FatherName { get; set; }
@@ -12,6 +13,7 @@ public sealed class Student
     public string? Telephone { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
+    public bool IsActive { get; set; } = true;
     public int AccessFailedCount { get; set; }
     public DateTimeOffset? LockoutEndUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; }

@@ -194,14 +194,17 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     }
 
     public Task<ApiResult<AdminStudentDetailViewModel>> GetAdminStudentAsync(
-        string tc,
+        Guid publicId,
         CancellationToken cancellationToken) =>
         GetAsync<AdminStudentDetailViewModel>(
-            $"api/admin/students/{Uri.EscapeDataString(tc)}",
+            $"api/admin/students/{publicId:D}",
             cancellationToken);
 
-    public Task<ApiResult> DeactivateStudentAsync(string tc, CancellationToken cancellationToken) =>
-        PostAsync($"api/admin/students/{Uri.EscapeDataString(tc)}/deactivate", new { }, cancellationToken);
+    public Task<ApiResult> DeactivateStudentAsync(Guid publicId, CancellationToken cancellationToken) =>
+        PostAsync($"api/admin/students/{publicId:D}/deactivate", new { }, cancellationToken);
+
+    public Task<ApiResult> ActivateStudentAsync(Guid publicId, CancellationToken cancellationToken) =>
+        PostAsync($"api/admin/students/{publicId:D}/activate", new { }, cancellationToken);
 
     public Task<ApiResult> UpdateApplicationStatusAsync(
         UpdateApplicationStatusViewModel model,

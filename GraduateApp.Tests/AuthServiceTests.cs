@@ -43,6 +43,117 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
+    public async Task Inactive_student_cannot_login_with_correct_password_and_response_does_not_disclose_account()
+    {
+        await using var db = TestDb.Create();
+        var studentHasher = new PasswordHasher<Student>();
+        var student = CreateStudent();
+        student.IsActive = false;
+        student.PasswordHash = studentHasher.HashPassword(student, "Strong-Student-1!");
+        db.Students.Add(student);
+        await db.SaveChangesAsync();
+        var service = CreateService(db, studentHasher: studentHasher);
+
+        var inactive = await service.LoginAsync(new LoginDto
+        {
+            Username = student.Email,
+            Password = "Strong-Student-1!"
+        }, CancellationToken.None);
+        var missing = await service.LoginAsync(new LoginDto
+        {
+            Username = "missing@example.test",
+            Password = "Strong-Student-1!"
+        }, CancellationToken.None);
+
+        Assert.False(inactive.IsSuccess);
+        Assert.Equal(StatusCodes.Status401Unauthorized, inactive.StatusCode);
+        Assert.Equal(missing.Error, inactive.Error);
+        Assert.DoesNotContain(student.Email, inactive.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(student.Tc, inactive.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Forgot_password_does_not_create_or_send_token_for_inactive_student()
+    {
+        await using var db = TestDb.Create();
+        var student = CreateStudent();
+        student.IsActive = false;
+        db.Students.Add(student);
+        await db.SaveChangesAsync();
+        var email = new CapturingEmailSender();
+        var service = CreateService(db, emailSender: email);
+
+        await service.RequestPasswordResetAsync(
+            new ForgotPasswordDto { Email = student.Email },
+            CancellationToken.None);
+
+        Assert.Null(email.ResetLink);
+        Assert.Empty(db.PasswordResetTokens);
+    }
+
+    [Fact]
+    public async Task Password_reset_cannot_reactivate_an_inactive_student()
+    {
+        await using var db = TestDb.Create();
+        var studentHasher = new PasswordHasher<Student>();
+        var student = CreateStudent();
+        student.PasswordHash = studentHasher.HashPassword(student, "Strong-Student-1!");
+        db.Students.Add(student);
+        await db.SaveChangesAsync();
+        var email = new CapturingEmailSender();
+        var service = CreateService(db, emailSender: email, studentHasher: studentHasher);
+        await service.RequestPasswordResetAsync(
+            new ForgotPasswordDto { Email = student.Email },
+            CancellationToken.None);
+        var token = ExtractToken(email.ResetLink!);
+        student.IsActive = false;
+        await db.SaveChangesAsync();
+
+        var result = await service.ResetPasswordAsync(new ResetPasswordDto
+        {
+            Token = token,
+            NewPassword = "New-Student-Password-1!",
+            ConfirmPassword = "New-Student-Password-1!"
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.False(student.IsActive);
+        Assert.Equal(
+            PasswordVerificationResult.Success,
+            studentHasher.VerifyHashedPassword(student, student.PasswordHash, "Strong-Student-1!"));
+    }
+
+    [Fact]
+    public async Task Temporary_lockout_expires_without_changing_persistent_active_status()
+    {
+        await using var db = TestDb.Create();
+        var studentHasher = new PasswordHasher<Student>();
+        var student = CreateStudent();
+        student.LockoutEndUtc = new DateTimeOffset(2026, 7, 20, 9, 5, 0, TimeSpan.Zero);
+        student.PasswordHash = studentHasher.HashPassword(student, "Strong-Student-1!");
+        db.Students.Add(student);
+        await db.SaveChangesAsync();
+        var clock = new TestTimeProvider(new DateTimeOffset(2026, 7, 20, 9, 0, 0, TimeSpan.Zero));
+        var service = CreateService(db, clock, studentHasher: studentHasher);
+
+        var locked = await service.LoginAsync(new LoginDto
+        {
+            Username = student.Tc,
+            Password = "Strong-Student-1!"
+        }, CancellationToken.None);
+        clock.Advance(TimeSpan.FromMinutes(6));
+        var afterLockout = await service.LoginAsync(new LoginDto
+        {
+            Username = student.Tc,
+            Password = "Strong-Student-1!"
+        }, CancellationToken.None);
+
+        Assert.False(locked.IsSuccess);
+        Assert.True(afterLockout.IsSuccess);
+        Assert.True(student.IsActive);
+    }
+
+    [Fact]
     public async Task AdminLogin_AcceptsValidPassword_AndRejectsInvalidPassword()
     {
         await using var db = TestDb.Create();
@@ -148,6 +259,9 @@ public sealed class AuthServiceTests
         Assert.Equal(StatusCodes.Status201Created, second.StatusCode);
         var students = db.Students.OrderBy(student => student.Tc).ToArray();
         Assert.Equal(2, students.Length);
+        Assert.All(students, student => Assert.True(student.IsActive));
+        Assert.Equal(2, students.Select(student => student.PublicId).Distinct().Count());
+        Assert.DoesNotContain(students, student => student.PublicId == Guid.Empty);
         Assert.All(students, student => Assert.StartsWith("+905", student.Telephone, StringComparison.Ordinal));
         var storedFirst = students.Single(student => student.Tc == firstRequest.Tc);
         Assert.Equal("Test Baba", storedFirst.FatherName);
@@ -315,11 +429,13 @@ public sealed class AuthServiceTests
     private static Student CreateStudent() => new()
     {
         Tc = "10000000146",
+        PublicId = Guid.NewGuid(),
         StudentName = "Test",
         StudentSurname = "Öğrenci",
         Email = "student@example.test",
         NormalizedEmail = "STUDENT@EXAMPLE.TEST",
         SecurityStamp = Guid.NewGuid().ToString("N"),
+        IsActive = true,
         CreatedAtUtc = DateTime.UtcNow,
         UpdatedAtUtc = DateTime.UtcNow
     };

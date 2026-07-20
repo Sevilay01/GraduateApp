@@ -19,24 +19,38 @@ public sealed class AdminStudentsController(IAdminStudentService studentService)
         CancellationToken cancellationToken = default) =>
         Ok(await studentService.GetAsync(search, page, pageSize, cancellationToken));
 
-    [HttpGet("{tc}")]
-    public async Task<IActionResult> GetDetail(string tc, CancellationToken cancellationToken)
+    [HttpGet("{publicId:guid}")]
+    public async Task<IActionResult> GetDetail(Guid publicId, CancellationToken cancellationToken)
     {
-        var student = await studentService.GetDetailAsync(tc, cancellationToken);
+        var student = await studentService.GetDetailAsync(publicId, cancellationToken);
         return student is null
             ? Problem(statusCode: StatusCodes.Status404NotFound, detail: "Öğrenci bulunamadı.")
             : Ok(student);
     }
 
-    [HttpPost("{tc}/deactivate")]
-    public async Task<IActionResult> Deactivate(string tc, CancellationToken cancellationToken)
+    [HttpPost("{publicId:guid}/deactivate")]
+    public async Task<IActionResult> Deactivate(Guid publicId, CancellationToken cancellationToken)
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var adminId))
         {
             return Unauthorized();
         }
 
-        var result = await studentService.DeactivateAsync(tc, adminId, cancellationToken);
+        var result = await studentService.DeactivateAsync(publicId, adminId, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpPost("{publicId:guid}/activate")]
+    public async Task<IActionResult> Activate(Guid publicId, CancellationToken cancellationToken)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await studentService.ActivateAsync(publicId, adminId, cancellationToken);
         return result.IsSuccess
             ? NoContent()
             : Problem(statusCode: result.StatusCode, detail: result.Error);

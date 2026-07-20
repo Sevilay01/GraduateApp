@@ -19,7 +19,7 @@
 <form method="get" class="card card-body mb-4">
     <div class="row g-3 align-items-end">
         <div class="col-12 col-md-8">
-            <label for="student-search" class="form-label">Ad, soyad, e-posta veya TC ile ara</label>
+            <label for="student-search" class="form-label">Ad, soyad veya e-posta ile ara</label>
             <input id="student-search" name="search" value="@Model.Search" class="form-control" autocomplete="off" />
         </div>
         <div class="col-12 col-md-4">
@@ -49,7 +49,11 @@
                     <td class="text-end">
                         @if (student.IsActive)
                         {
-                            <a asp-action="DeactivateStudent" asp-route-tc="@student.Tc" class="btn btn-sm btn-outline-danger">Pasifleştir</a>
+                            <a asp-action="DeactivateStudent" asp-route-publicId="@student.PublicId" class="btn btn-sm btn-outline-danger">Pasifleştir</a>
+                        }
+                        else
+                        {
+                            <a asp-action="ActivateStudent" asp-route-publicId="@student.PublicId" class="btn btn-sm btn-outline-success">Aktifleştir</a>
                         }
                     </td>
                 </tr>

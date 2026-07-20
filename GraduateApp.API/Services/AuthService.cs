@@ -75,6 +75,7 @@ public sealed class AuthService(
         var student = new Student
         {
             Tc = request.Tc,
+            PublicId = Guid.NewGuid(),
             StudentName = normalized.FirstName,
             StudentSurname = normalized.LastName,
             FatherName = normalized.FatherName,
@@ -83,6 +84,7 @@ public sealed class AuthService(
             NormalizedEmail = normalizedEmail,
             Telephone = normalized.Telephone,
             SecurityStamp = NewSecurityStamp(),
+            IsActive = true,
             CreatedAtUtc = now,
             UpdatedAtUtc = now
         };
@@ -137,6 +139,12 @@ public sealed class AuthService(
 
         if (student is not null)
         {
+            if (!student.IsActive)
+            {
+                PerformDummyPasswordVerification(request.Password);
+                return InvalidLogin<LoginResponse>();
+            }
+
             if (student.LockoutEndUtc > now)
             {
                 return InvalidLogin<LoginResponse>();
@@ -229,7 +237,7 @@ public sealed class AuthService(
                 cancellationToken)
             : null;
 
-        if (student is null && admin is null)
+        if ((student is null && admin is null) || student is { IsActive: false })
         {
             PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"));
             return;
@@ -285,7 +293,10 @@ public sealed class AuthService(
             .SingleOrDefaultAsync(item => item.TokenHash == tokenHash, cancellationToken);
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
-        if (token is null || token.IsUsed || token.ExpirationDate <= now)
+        if (token is null
+            || token.IsUsed
+            || token.ExpirationDate <= now
+            || token.TcNavigation is { IsActive: false })
         {
             return ServiceResult.Failure("Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.", StatusCodes.Status400BadRequest);
         }

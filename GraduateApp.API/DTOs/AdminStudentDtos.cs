@@ -1,7 +1,7 @@
 namespace GraduateApp.API.DTOs;
 
 public sealed record AdminStudentListItemDto(
-    string Tc,
+    Guid PublicId,
     string MaskedTc,
     string FullName,
     string Email,
@@ -9,7 +9,7 @@ public sealed record AdminStudentListItemDto(
     DateTime UpdatedAtUtc);
 
 public sealed record AdminStudentDetailDto(
-    string Tc,
+    Guid PublicId,
     string MaskedTc,
     string FullName,
     string Email,
