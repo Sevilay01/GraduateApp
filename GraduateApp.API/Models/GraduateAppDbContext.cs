@@ -79,7 +79,7 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         modelBuilder.Entity<ApplicationStatusHistory>(entity =>
         {
             entity.HasKey(e => e.HistoryId);
-            entity.ToTable("ApplicationStatusHistory", table => table.HasTrigger("trg_UpdateApplicationStatus"));
+            entity.ToTable("ApplicationStatusHistory");
             entity.Property(e => e.HistoryId).HasColumnName("HistoryID");
             entity.Property(e => e.ApplicationId).HasColumnName("ApplicationID");
             entity.Property(e => e.PreviousStatus).HasMaxLength(50);
