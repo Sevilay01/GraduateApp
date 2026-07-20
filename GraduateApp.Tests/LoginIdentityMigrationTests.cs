@@ -16,6 +16,7 @@ public sealed class LoginIdentityMigrationTests
 {
     private const string PreviousMigration = "20260720105222_RemoveLegacyApplicationStatusTrigger";
     private const string LoginIdentityMigration = "20260720115611_AddCentralLoginIdentities";
+    private const string ValidationMigration = "20260720124735_ValidateCentralLoginIdentityData";
 
     [Fact]
     public void Migration_script_checks_collision_before_creating_table_and_blocks_destructive_down()
@@ -77,7 +78,7 @@ public sealed class LoginIdentityMigrationTests
         await CreateCurrentAuthSchemaAsync(database);
         await database.ExecuteAsync(CreateExistingAccountsSql("STUDENT@EXAMPLE.TEST", "ADMIN@EXAMPLE.TEST"));
 
-        await database.MigrateAsync(LoginIdentityMigration);
+        await database.MigrateAsync(ValidationMigration);
 
         Assert.Equal(2, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[LoginIdentities];"));
         Assert.Equal(
@@ -115,6 +116,119 @@ public sealed class LoginIdentityMigrationTests
         Assert.Single(results, result => !result.IsSuccess && result.StatusCode == 409);
         Assert.Equal(1, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[Students];"));
         Assert.Equal(1, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[LoginIdentities];"));
+    }
+
+    [Fact]
+    public void Forward_validation_migration_is_non_mutating_and_reports_safe_failure_types()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppIdentityValidationScriptTest;Integrated Security=true")
+            .Options;
+        using var db = new GraduateAppDbContext(options);
+        var script = db.GetService<IMigrator>().GenerateScript(LoginIdentityMigration, ValidationMigration);
+
+        Assert.Contains("THROW 51031", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51032", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51033", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51034", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51035", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51036", script, StringComparison.Ordinal);
+        Assert.Contains("@affectedCount", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("UPDATE [dbo].[Students]", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("UPDATE [dbo].[Admins]", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DELETE FROM [dbo].[Students]", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DELETE FROM [dbo].[Admins]", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [LocalDbFact]
+    public async Task Canonical_normalized_email_mismatch_stops_forward_migration_without_data_changes()
+    {
+        await using var database = new LocalDbTestDatabase(
+            $"GraduateAppIdentityCanonical_{Guid.NewGuid():N}",
+            null);
+        await database.CreateAsync();
+        await CreateCurrentAuthSchemaAsync(database);
+        await database.ExecuteAsync(CreateExistingAccountsSql("STUDENT@EXAMPLE.TEST", "ADMIN@EXAMPLE.TEST"));
+        await database.MigrateAsync(LoginIdentityMigration);
+        await database.ExecuteAsync(
+            "UPDATE [dbo].[Students] SET [NormalizedEmail] = N'WRONG@EXAMPLE.TEST' WHERE [TC] = '10000000146';");
+
+        var exception = await Assert.ThrowsAsync<SqlException>(
+            () => database.MigrateAsync(ValidationMigration));
+
+        Assert.Equal(51033, exception.Number);
+        Assert.Contains("1 hesapta", exception.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("student@example.test", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(
+            "WRONG@EXAMPLE.TEST",
+            await database.ScalarAsync<string>(
+                "SELECT [NormalizedEmail] FROM [dbo].[Students] WHERE [TC] = '10000000146';"));
+        Assert.Equal(
+            "STUDENT@EXAMPLE.TEST",
+            await database.ScalarAsync<string>(
+                "SELECT [NormalizedEmail] FROM [dbo].[LoginIdentities] WHERE [StudentTC] = '10000000146';"));
+        Assert.Equal(
+            0,
+            await database.ScalarAsync<int>(
+                $"SELECT COUNT(*) FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'{ValidationMigration}';"));
+    }
+
+    [LocalDbFact]
+    public async Task Subject_constraints_accept_role_specific_nulls_and_reject_invalid_shapes()
+    {
+        await using var database = new LocalDbTestDatabase(
+            $"GraduateAppIdentitySubjects_{Guid.NewGuid():N}",
+            null);
+        await database.CreateAsync();
+        await CreateCurrentAuthSchemaAsync(database);
+        await database.ExecuteAsync(CreateExistingAccountsSql("STUDENT@EXAMPLE.TEST", "ADMIN@EXAMPLE.TEST"));
+        await database.MigrateAsync(LoginIdentityMigration);
+
+        Assert.Equal(
+            1,
+            await database.ScalarAsync<int>(
+                "SELECT COUNT(*) FROM [dbo].[LoginIdentities] WHERE [AccountType] = N'Student' AND [StudentTC] IS NOT NULL AND [AdminID] IS NULL;"));
+        Assert.Equal(
+            1,
+            await database.ScalarAsync<int>(
+                "SELECT COUNT(*) FROM [dbo].[LoginIdentities] WHERE [AccountType] = N'Admin' AND [StudentTC] IS NULL AND [AdminID] IS NOT NULL;"));
+        Assert.Equal(
+            3,
+            await database.ScalarAsync<int>(
+                "SELECT COUNT(*) FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[LoginIdentities]') AND [is_unique] = 1 AND [name] IN (N'IX_LoginIdentities_NormalizedEmail', N'IX_LoginIdentities_StudentTC', N'IX_LoginIdentities_AdminID');"));
+
+        await database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[Students]
+                ([TC], [PublicID], [StudentName], [StudentSurname], [Email], [NormalizedEmail], [PasswordHash], [SecurityStamp], [IsActive], [AccessFailedCount], [CreatedAtUtc], [UpdatedAtUtc])
+            VALUES
+                ('10000000214', NEWID(), N'İkinci', N'Öğrenci', N'second@example.test', N'SECOND@EXAMPLE.TEST', 'hash', 'stamp-2', 1, 0, SYSUTCDATETIME(), SYSUTCDATETIME());
+
+            INSERT INTO [dbo].[Admins]
+                ([Email], [NormalizedEmail], [PasswordHash], [SecurityStamp], [AccessFailedCount], [MustChangePassword], [CreatedAtUtc], [UpdatedAtUtc])
+            VALUES
+                (N'second.admin@example.test', N'SECOND.ADMIN@EXAMPLE.TEST', 'hash', 'stamp-2', 0, 1, SYSUTCDATETIME(), SYSUTCDATETIME());
+            """);
+
+        var bothSubjects = await Assert.ThrowsAsync<SqlException>(() => database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[LoginIdentities]
+                ([NormalizedEmail], [AccountType], [StudentTC], [AdminID], [CreatedAtUtc])
+            VALUES
+                (N'BOTH@EXAMPLE.TEST', N'Student', '10000000214',
+                 (SELECT [AdminID] FROM [dbo].[Admins] WHERE [NormalizedEmail] = N'SECOND.ADMIN@EXAMPLE.TEST'),
+                 SYSUTCDATETIME());
+            """));
+        var neitherSubject = await Assert.ThrowsAsync<SqlException>(() => database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[LoginIdentities]
+                ([NormalizedEmail], [AccountType], [StudentTC], [AdminID], [CreatedAtUtc])
+            VALUES
+                (N'NEITHER@EXAMPLE.TEST', N'Student', NULL, NULL, SYSUTCDATETIME());
+            """));
+
+        Assert.Contains("CK_LoginIdentities_Subject", bothSubjects.Message, StringComparison.Ordinal);
+        Assert.Contains("CK_LoginIdentities_Subject", neitherSubject.Message, StringComparison.Ordinal);
     }
 
     private static GraduateAppDbContext CreateContext(string connectionString) =>

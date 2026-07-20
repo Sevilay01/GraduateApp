@@ -101,3 +101,5 @@ public sealed record LoginResponse(
     string Role,
     string DisplayName,
     bool MustChangePassword);
+
+public sealed record PasswordResetResponse(LoginAccountType AccountType);

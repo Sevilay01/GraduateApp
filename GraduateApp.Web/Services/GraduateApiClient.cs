@@ -34,8 +34,10 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult> ForgotPasswordAsync(ForgotPasswordViewModel model, CancellationToken cancellationToken) =>
         PostAsync("api/auth/forgot-password", new { model.Email }, cancellationToken);
 
-    public Task<ApiResult> ResetPasswordAsync(ResetPasswordViewModel model, CancellationToken cancellationToken) =>
-        PostAsync("api/auth/reset-password", new
+    public Task<ApiResult<PasswordResetApiResponse>> ResetPasswordAsync(
+        ResetPasswordViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<PasswordResetApiResponse>("api/auth/reset-password", new
         {
             model.Token,
             model.NewPassword,

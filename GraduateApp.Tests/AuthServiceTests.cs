@@ -240,7 +240,9 @@ public sealed class AuthServiceTests
         var secondUse = await service.ResetPasswordAsync(request, CancellationToken.None);
 
         Assert.True(firstUse.IsSuccess);
+        Assert.Equal(LoginAccountType.Student, firstUse.Value!.AccountType);
         Assert.False(secondUse.IsSuccess);
+        Assert.Null(secondUse.Value);
     }
 
     [Fact]
@@ -469,6 +471,71 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
+    public async Task Account_type_filter_resolves_only_requested_role_when_corrupt_data_has_same_email()
+    {
+        await using var db = TestDb.Create();
+        var studentHasher = new PasswordHasher<Student>();
+        var adminHasher = new PasswordHasher<Admin>();
+        var student = CreateStudent();
+        var admin = CreateAdmin();
+        student.Email = admin.Email;
+        student.NormalizedEmail = admin.NormalizedEmail;
+        student.LoginIdentity!.NormalizedEmail = admin.NormalizedEmail;
+        student.PasswordHash = studentHasher.HashPassword(student, "Strong-Student-1!");
+        admin.PasswordHash = adminHasher.HashPassword(admin, "Strong-Admin-1!");
+        db.AddRange(student, admin);
+        await db.SaveChangesAsync();
+        var service = CreateService(db, studentHasher: studentHasher, adminHasher: adminHasher);
+
+        var adminLogin = await service.LoginAsync(new LoginDto
+        {
+            Username = admin.Email,
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+        var studentLogin = await service.LoginAsync(new LoginDto
+        {
+            Username = student.Email,
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
+        }, CancellationToken.None);
+
+        Assert.True(adminLogin.IsSuccess);
+        Assert.Equal(ApiAuthenticationDefaults.AdminRole, adminLogin.Value!.Role);
+        Assert.True(studentLogin.IsSuccess);
+        Assert.Equal(ApiAuthenticationDefaults.StudentRole, studentLogin.Value!.Role);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Numeric_admin_email_cannot_collide_with_student_tc_login_query()
+    {
+        await using var db = TestDb.Create();
+        var studentHasher = new PasswordHasher<Student>();
+        var student = CreateStudent();
+        var admin = CreateAdmin();
+        admin.Email = student.Tc;
+        admin.NormalizedEmail = student.Tc;
+        admin.LoginIdentity!.NormalizedEmail = student.Tc;
+        student.PasswordHash = studentHasher.HashPassword(student, "Strong-Student-1!");
+        admin.PasswordHash = new PasswordHasher<Admin>().HashPassword(admin, "Strong-Admin-1!");
+        db.AddRange(student, admin);
+        await db.SaveChangesAsync();
+        var service = CreateService(db, studentHasher: studentHasher);
+
+        var result = await service.LoginAsync(new LoginDto
+        {
+            Username = student.Tc,
+            Password = "Strong-Student-1!",
+            AccountType = LoginAccountType.Student
+        }, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(ApiAuthenticationDefaults.StudentRole, result.Value!.Role);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
     public async Task Forgot_password_resolves_exact_identity_and_binds_token_to_admin()
     {
         await using var db = TestDb.Create();
@@ -523,9 +590,28 @@ public sealed class AuthServiceTests
         }, CancellationToken.None);
 
         Assert.True(reset.IsSuccess);
+        Assert.Equal(LoginAccountType.Admin, reset.Value!.AccountType);
         Assert.False(oldPassword.IsSuccess);
         Assert.True(newPassword.IsSuccess);
         Assert.False(admin.MustChangePassword);
+    }
+
+    [Fact]
+    public async Task Invalid_reset_token_does_not_return_account_type()
+    {
+        await using var db = TestDb.Create();
+        var service = CreateService(db);
+
+        var result = await service.ResetPasswordAsync(new ResetPasswordDto
+        {
+            Token = "invalid-token",
+            NewPassword = "New-Password-1!",
+            ConfirmPassword = "New-Password-1!"
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Value);
+        Assert.Equal("Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.", result.Error);
     }
 
     [Fact]

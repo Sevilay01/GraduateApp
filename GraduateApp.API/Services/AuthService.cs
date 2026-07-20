@@ -15,7 +15,7 @@ public interface IAuthService
     Task<ServiceResult> RegisterStudentAsync(RegisterStudentDto request, CancellationToken cancellationToken);
     Task<ServiceResult<LoginResponse>> LoginAsync(LoginDto request, CancellationToken cancellationToken);
     Task RequestPasswordResetAsync(ForgotPasswordDto request, CancellationToken cancellationToken);
-    Task<ServiceResult> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken);
+    Task<ServiceResult<PasswordResetResponse>> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken);
     Task<ServiceResult> ChangePasswordAsync(string subject, string role, ChangePasswordDto request, CancellationToken cancellationToken);
     Task RevokeSessionsAsync(string subject, string role, CancellationToken cancellationToken);
 }
@@ -60,7 +60,12 @@ public sealed class AuthService(
         }
 
         var normalized = registration.Value;
-        var normalizedEmail = emailNormalizer.Normalize(normalized.Email);
+        if (!emailNormalizer.TryNormalize(normalized.Email, out var normalizedEmail))
+        {
+            return ServiceResult.Failure(
+                "Geçerli bir e-posta adresi giriniz.",
+                StatusCodes.Status400BadRequest);
+        }
         await using var transaction = dbContext.Database.IsRelational()
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken)
             : null;
@@ -163,8 +168,9 @@ public sealed class AuthService(
         var identities = await dbContext.LoginIdentities
             .Include(identity => identity.Student)
             .Include(identity => identity.Admin)
-            .Where(identity => request.AccountType == LoginAccountType.Student && identity.StudentTc == username
-                || identity.NormalizedEmail == normalizedEmail)
+            .Where(identity => identity.AccountType == request.AccountType.Value
+                && ((request.AccountType == LoginAccountType.Student && identity.StudentTc == username)
+                    || identity.NormalizedEmail == normalizedEmail))
             .Take(2)
             .ToListAsync(cancellationToken);
 
@@ -200,7 +206,11 @@ public sealed class AuthService(
 
     public async Task RequestPasswordResetAsync(ForgotPasswordDto request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = emailNormalizer.Normalize(request.Email);
+        if (!emailNormalizer.TryNormalize(request.Email, out var normalizedEmail))
+        {
+            PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), LoginAccountType.Student);
+            return;
+        }
         var identities = await dbContext.LoginIdentities
             .Include(identity => identity.Student)
             .Include(identity => identity.Admin)
@@ -272,11 +282,15 @@ public sealed class AuthService(
         }
     }
 
-    public async Task<ServiceResult> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken)
+    public async Task<ServiceResult<PasswordResetResponse>> ResetPasswordAsync(
+        ResetPasswordDto request,
+        CancellationToken cancellationToken)
     {
         if (!PasswordPolicy.IsValid(request.NewPassword))
         {
-            return ServiceResult.Failure(PasswordPolicy.ValidationMessage, StatusCodes.Status400BadRequest);
+            return ServiceResult<PasswordResetResponse>.Failure(
+                PasswordPolicy.ValidationMessage,
+                StatusCodes.Status400BadRequest);
         }
 
         var tokenHash = HashToken(request.Token);
@@ -293,7 +307,7 @@ public sealed class AuthService(
             || token.ExpirationDate <= now
             || token.TcNavigation is { IsActive: false })
         {
-            return ServiceResult.Failure("Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.", StatusCodes.Status400BadRequest);
+            return InvalidPasswordReset();
         }
 
         var loginIdentity = token.TcNavigation?.LoginIdentity ?? token.Admin?.LoginIdentity;
@@ -304,9 +318,7 @@ public sealed class AuthService(
                 await RecordIdentityIntegrityFailureAsync(loginIdentity.LoginIdentityId, cancellationToken);
             }
 
-            return ServiceResult.Failure(
-                "Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
-                StatusCodes.Status400BadRequest);
+            return InvalidPasswordReset();
         }
 
         if (token.TcNavigation is not null)
@@ -328,7 +340,7 @@ public sealed class AuthService(
         }
         else
         {
-            return ServiceResult.Failure("Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.", StatusCodes.Status400BadRequest);
+            return InvalidPasswordReset();
         }
 
         var relatedTokens = await dbContext.PasswordResetTokens
@@ -344,11 +356,14 @@ public sealed class AuthService(
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            return ServiceResult.Success();
+            return ServiceResult<PasswordResetResponse>.Success(
+                new PasswordResetResponse(loginIdentity.AccountType));
         }
         catch (DbUpdateConcurrencyException)
         {
-            return ServiceResult.Failure("Parola sıfırlama bağlantısı daha önce kullanılmış.", StatusCodes.Status409Conflict);
+            return ServiceResult<PasswordResetResponse>.Failure(
+                "Parola sıfırlama bağlantısı daha önce kullanılmış.",
+                StatusCodes.Status409Conflict);
         }
     }
 
@@ -618,4 +633,9 @@ public sealed class AuthService(
 
     private static ServiceResult<T> InvalidLogin<T>() =>
         ServiceResult<T>.Failure("Kullanıcı adı veya parola hatalı.", StatusCodes.Status401Unauthorized);
+
+    private static ServiceResult<PasswordResetResponse> InvalidPasswordReset() =>
+        ServiceResult<PasswordResetResponse>.Failure(
+            "Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+            StatusCodes.Status400BadRequest);
 }

@@ -72,6 +72,9 @@ public sealed class AccessTokenService : IAccessTokenService
                     && student.SecurityStamp == payload.SecurityStamp
                     && student.LoginIdentity != null
                     && student.LoginIdentity.AccountType == LoginAccountType.Student
+                    && student.LoginIdentity.StudentTc == student.Tc
+                    && student.LoginIdentity.AdminId == null
+                    && student.LoginIdentity.NormalizedEmail == student.NormalizedEmail
                     && (student.LockoutEndUtc == null || student.LockoutEndUtc <= _timeProvider.GetUtcNow()),
                 cancellationToken),
             ApiAuthenticationDefaults.AdminRole when int.TryParse(payload.Subject, out var adminId) =>
@@ -80,6 +83,9 @@ public sealed class AccessTokenService : IAccessTokenService
                         && admin.SecurityStamp == payload.SecurityStamp
                         && admin.LoginIdentity != null
                         && admin.LoginIdentity.AccountType == LoginAccountType.Admin
+                        && admin.LoginIdentity.AdminId == admin.AdminId
+                        && admin.LoginIdentity.StudentTc == null
+                        && admin.LoginIdentity.NormalizedEmail == admin.NormalizedEmail
                         && (admin.LockoutEndUtc == null || admin.LockoutEndUtc <= _timeProvider.GetUtcNow()),
                     cancellationToken),
             _ => false

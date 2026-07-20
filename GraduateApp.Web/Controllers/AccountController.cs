@@ -183,14 +183,22 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         }
 
         var result = await apiClient.ResetPasswordAsync(model, cancellationToken);
-        if (!result.IsSuccess)
+        if (!result.IsSuccess || result.Value is null)
         {
             ModelState.AddModelError(string.Empty, result.Error ?? "Parola sıfırlanamadı.");
             return View(model);
         }
 
+        if (result.Value.AccountType is not (LoginAccountType.Student or LoginAccountType.Admin))
+        {
+            ModelState.AddModelError(string.Empty, "Parola sıfırlama yanıtı doğrulanamadı.");
+            return View(model);
+        }
+
         TempData["SuccessMessage"] = "Parolanız güncellendi. Yeni parolanızla giriş yapabilirsiniz.";
-        return RedirectToAction(nameof(Login));
+        return result.Value.AccountType == LoginAccountType.Admin
+            ? RedirectToAction(nameof(AdminLogin))
+            : RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
@@ -202,6 +210,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model, CancellationToken cancellationToken)
     {
+        var currentRole = User.FindFirstValue(ClaimTypes.Role);
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -216,7 +225,9 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         TempData["SuccessMessage"] = "Parolanız değiştirildi. Lütfen tekrar giriş yapın.";
-        return RedirectToAction(nameof(Login));
+        return currentRole == "Admin"
+            ? RedirectToAction(nameof(AdminLogin))
+            : RedirectToAction(nameof(Login));
     }
 
     [HttpPost]

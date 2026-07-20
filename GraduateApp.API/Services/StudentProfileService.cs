@@ -47,7 +47,12 @@ public sealed class StudentProfileService(
                 StatusCodes.Status409Conflict);
         }
 
-        var normalizedEmail = emailNormalizer.Normalize(request.Email);
+        if (!emailNormalizer.TryNormalize(request.Email, out var normalizedEmail))
+        {
+            return ServiceResult<StudentProfileDto>.Failure(
+                "Geçerli bir e-posta adresi giriniz.",
+                StatusCodes.Status400BadRequest);
+        }
         if (await dbContext.LoginIdentities.AnyAsync(
             item => item.LoginIdentityId != student.LoginIdentity.LoginIdentityId
                 && item.NormalizedEmail == normalizedEmail,

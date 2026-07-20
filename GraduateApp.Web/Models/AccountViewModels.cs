@@ -138,3 +138,8 @@ public sealed class LoginApiResponse
     public string DisplayName { get; set; } = string.Empty;
     public bool MustChangePassword { get; set; }
 }
+
+public sealed class PasswordResetApiResponse
+{
+    public LoginAccountType AccountType { get; set; }
+}

@@ -11,6 +11,22 @@ namespace GraduateApp.Tests;
 public sealed class AdminBootstrapHostedServiceTests
 {
     [Fact]
+    public async Task Bootstrap_rejects_invalid_email_without_creating_admin()
+    {
+        await using var provider = CreateProvider();
+        var service = CreateService(provider, "not-an-email", "Bootstrap-Password-1!");
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.StartAsync(CancellationToken.None));
+
+        Assert.Equal("Bootstrap admin e-posta adresi geçersiz.", exception.Message);
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<GraduateAppDbContext>();
+        Assert.Empty(db.Admins);
+        Assert.Empty(db.LoginIdentities);
+    }
+
+    [Fact]
     public async Task Bootstrap_rejects_student_owned_email_without_creating_admin()
     {
         await using var provider = CreateProvider();
@@ -60,6 +76,37 @@ public sealed class AdminBootstrapHostedServiceTests
         Assert.Equal(originalHash, admin.PasswordHash);
         Assert.Single(verificationDb.LoginIdentities);
         Assert.Equal(LoginAccountType.Admin, verificationDb.LoginIdentities.Single().AccountType);
+    }
+
+    [Fact]
+    public async Task Existing_admin_blocks_different_bootstrap_email_without_creating_second_admin()
+    {
+        await using var provider = CreateProvider();
+        await CreateService(provider, "first.admin@example.test", "Bootstrap-Password-1!")
+            .StartAsync(CancellationToken.None);
+
+        string originalHash;
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<GraduateAppDbContext>();
+            originalHash = (await db.Admins.SingleAsync()).PasswordHash;
+        }
+
+        var secondBootstrap = CreateService(
+            provider,
+            "second.admin@example.test",
+            "Different-Password-1!");
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => secondBootstrap.StartAsync(CancellationToken.None));
+
+        Assert.Equal(
+            "Sistemde zaten bir yönetici hesabı var; yeni yönetici bootstrap üzerinden oluşturulamaz.",
+            exception.Message);
+        await using var verificationScope = provider.CreateAsyncScope();
+        var verificationDb = verificationScope.ServiceProvider.GetRequiredService<GraduateAppDbContext>();
+        Assert.Single(verificationDb.Admins);
+        Assert.Single(verificationDb.LoginIdentities);
+        Assert.Equal(originalHash, verificationDb.Admins.Single().PasswordHash);
     }
 
     private static ServiceProvider CreateProvider()

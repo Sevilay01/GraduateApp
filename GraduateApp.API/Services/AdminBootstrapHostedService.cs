@@ -41,7 +41,11 @@ public sealed class AdminBootstrapHostedService(
             return;
         }
 
-        var normalizedEmail = emailNormalizer.Normalize(email);
+        if (!emailNormalizer.TryNormalize(email, out var normalizedEmail))
+        {
+            throw new InvalidOperationException("Bootstrap admin e-posta adresi geçersiz.");
+        }
+
         await using var transaction = dbContext.Database.IsRelational()
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
@@ -49,10 +53,10 @@ public sealed class AdminBootstrapHostedService(
             .Include(item => item.Admin)
             .Include(item => item.Student)
             .SingleOrDefaultAsync(item => item.NormalizedEmail == normalizedEmail, cancellationToken);
-        if (identity is not null)
+        if (identity is not null
+            && identity.AccountType == LoginAccountType.Admin)
         {
-            if (identity.AccountType == LoginAccountType.Admin
-                && identity.AdminId is not null
+            if (identity.AdminId is not null
                 && identity.StudentTc is null
                 && identity.Admin is not null
                 && identity.Student is null
@@ -63,7 +67,19 @@ public sealed class AdminBootstrapHostedService(
             }
 
             throw new InvalidOperationException(
-                "Bootstrap admin hesabı oluşturulamadı: merkezi giriş kimliği başka bir hesapla çakışıyor veya tutarsız.");
+                "Bootstrap admin hesabı oluşturulamadı: merkezi yönetici kimliği tutarsız.");
+        }
+
+        if (await dbContext.Admins.AnyAsync(cancellationToken))
+        {
+            throw new InvalidOperationException(
+                "Sistemde zaten bir yönetici hesabı var; yeni yönetici bootstrap üzerinden oluşturulamaz.");
+        }
+
+        if (identity is not null)
+        {
+            throw new InvalidOperationException(
+                "Bootstrap admin hesabı oluşturulamadı: merkezi giriş kimliği başka bir hesapla çakışıyor.");
         }
 
         if (await dbContext.Students.AnyAsync(

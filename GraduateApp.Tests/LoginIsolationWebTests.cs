@@ -120,6 +120,64 @@ public sealed class LoginIsolationWebTests
         Assert.Equal(nameof(AccountController.AdminLogin), result.ActionName);
     }
 
+    [Theory]
+    [InlineData("Admin", nameof(AccountController.AdminLogin))]
+    [InlineData("Student", nameof(AccountController.Login))]
+    public async Task Change_password_redirects_to_login_for_claimed_role(
+        string role,
+        string expectedAction)
+    {
+        var authentication = new RecordingAuthenticationService();
+        var controller = CreateController(new StaticResponseHandler(HttpStatusCode.NoContent));
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = CreateHttpContext(
+                CreatePrincipal(role),
+                CreateRequestServices(authentication)),
+            RouteData = new RouteData(),
+            ActionDescriptor = new ControllerActionDescriptor()
+        };
+
+        var result = Assert.IsType<RedirectToActionResult>(
+            await controller.ChangePassword(new ChangePasswordViewModel
+            {
+                CurrentPassword = "Old-Password-1!",
+                NewPassword = "New-Password-1!",
+                ConfirmPassword = "New-Password-1!"
+            }, CancellationToken.None));
+
+        Assert.Equal(expectedAction, result.ActionName);
+        Assert.Equal(1, authentication.SignOutCount);
+    }
+
+    [Theory]
+    [InlineData("Admin", nameof(AccountController.AdminLogin))]
+    [InlineData("Student", nameof(AccountController.Login))]
+    public async Task Reset_password_redirects_using_server_side_account_type(
+        string accountType,
+        string expectedAction)
+    {
+        var controller = CreateController(new StaticResponseHandler(
+            HttpStatusCode.OK,
+            $$"""{"accountType":"{{accountType}}"}"""));
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = CreateHttpContext(requestServices: CreateRequestServices()),
+            RouteData = new RouteData(),
+            ActionDescriptor = new ControllerActionDescriptor()
+        };
+
+        var result = Assert.IsType<RedirectToActionResult>(
+            await controller.ResetPassword(new ResetPasswordViewModel
+            {
+                Token = "server-issued-token",
+                NewPassword = "New-Password-1!",
+                ConfirmPassword = "New-Password-1!"
+            }, CancellationToken.None));
+
+        Assert.Equal(expectedAction, result.ActionName);
+    }
+
     [Fact]
     public void Login_view_exposes_turkish_role_switching_text()
     {
@@ -195,6 +253,24 @@ public sealed class LoginIsolationWebTests
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             };
+        }
+    }
+
+    private sealed class StaticResponseHandler(
+        HttpStatusCode statusCode,
+        string? json = null) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var response = new HttpResponseMessage(statusCode);
+            if (json is not null)
+            {
+                response.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            }
+
+            return Task.FromResult(response);
         }
     }
 
