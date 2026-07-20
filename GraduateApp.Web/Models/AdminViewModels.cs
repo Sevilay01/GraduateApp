@@ -116,7 +116,12 @@ public sealed class ProgramOfferingRequirementInputViewModel
     [Range(1, int.MaxValue)]
     public int ExamId { get; set; }
 
-    [Range(typeof(decimal), "0", "999.99")]
+    [Range(
+        typeof(decimal),
+        "0",
+        "999.99",
+        ParseLimitsInInvariantCulture = true,
+        ErrorMessage = "Puan 0 ile 999,99 arasında olmalıdır.")]
     public decimal MinimumScore { get; set; }
     public DateOnly? MinimumValidityDate { get; set; }
     public bool IsRequired { get; set; }

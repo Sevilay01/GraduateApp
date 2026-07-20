@@ -8,7 +8,12 @@ public sealed class ProgramOfferingRequirementInputDto
     [Range(1, int.MaxValue)]
     public int ExamId { get; init; }
 
-    [Range(typeof(decimal), "0", "999.99")]
+    [Range(
+        typeof(decimal),
+        "0",
+        "999.99",
+        ParseLimitsInInvariantCulture = true,
+        ErrorMessage = "Puan 0 ile 999,99 arasında olmalıdır.")]
     public decimal MinimumScore { get; init; }
 
     public DateOnly? MinimumValidityDate { get; init; }
