@@ -50,6 +50,7 @@ secrets.json
 /migration-validation-*.sql
 /migration-registration-fix.sql
 /migration-academic-period.sql
+/remove-trigger-migration.sql
 
 # Publish and package output
 [Pp]ublish/
