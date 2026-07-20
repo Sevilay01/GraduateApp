@@ -230,9 +230,11 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         modelBuilder.Entity<Student>(entity =>
         {
             entity.HasKey(e => e.Tc);
+            entity.HasIndex(e => e.PublicId).IsUnique();
             entity.HasIndex(e => e.NormalizedEmail).IsUnique();
             entity.HasIndex(e => e.Telephone).IsUnique().HasFilter("[Telephone] IS NOT NULL");
             entity.Property(e => e.Tc).HasMaxLength(11).IsUnicode(false).IsFixedLength().HasColumnName("TC");
+            entity.Property(e => e.PublicId).HasColumnName("PublicID").HasDefaultValueSql("NEWID()");
             entity.Property(e => e.StudentName).HasMaxLength(50).IsRequired();
             entity.Property(e => e.StudentSurname).HasMaxLength(50).IsRequired();
             entity.Property(e => e.FatherName).HasMaxLength(50);
@@ -242,6 +244,7 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
             entity.Property(e => e.Telephone).HasMaxLength(15).IsUnicode(false);
             entity.Property(e => e.PasswordHash).HasMaxLength(512).IsUnicode(false).IsRequired();
             entity.Property(e => e.SecurityStamp).HasMaxLength(64).IsUnicode(false).IsRequired();
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.LockoutEndUtc).HasColumnType("datetimeoffset");
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(e => e.UpdatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");

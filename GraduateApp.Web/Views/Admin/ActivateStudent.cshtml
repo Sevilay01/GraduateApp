@@ -1,0 +1,28 @@
+@model AdminStudentDetailViewModel
+@{
+    ViewData["Title"] = "Öğrenciyi aktifleştir";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+        <section class="card border-success" aria-labelledby="confirmation-heading">
+            <div class="card-body">
+                <h1 id="confirmation-heading" class="h3 text-success">Öğrenciyi aktifleştirmeyi onaylayın</h1>
+                <p>
+                    <strong>@Model.FullName</strong> (@Model.MaskedTc) öğrencisinin hesabı yeniden aktifleştirilecek.
+                    Güvenlik damgası yenileneceği için önceki oturumlar geçerli olmayacak.
+                </p>
+                <dl class="row">
+                    <dt class="col-sm-4">E-posta</dt><dd class="col-sm-8">@Model.Email</dd>
+                    <dt class="col-sm-4">Başvuru sayısı</dt><dd class="col-sm-8">@Model.ApplicationCount</dd>
+                    <dt class="col-sm-4">Sınav sonucu sayısı</dt><dd class="col-sm-8">@Model.ExamScoreCount</dd>
+                </dl>
+                <form asp-action="ConfirmActivateStudent" method="post">
+                    <input type="hidden" name="publicId" value="@Model.PublicId" />
+                    <button type="submit" class="btn btn-success">Evet, öğrenciyi aktifleştir</button>
+                    <a asp-action="Students" class="btn btn-outline-secondary">Vazgeç</a>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>

@@ -93,6 +93,30 @@ public sealed class ApplicationServiceTests
         Assert.Equal("ALES", snapshot.ExamNameSnapshot);
     }
 
+    [Fact]
+    public async Task Create_explains_missing_required_exam_score()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db, isOpen: true);
+        offering.ExamRequirements.Add(new ProgramOfferingExamRequirement
+        {
+            Exam = new Exam { ExamName = "ALES" },
+            MinimumScore = 70,
+            IsRequired = true
+        });
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).CreateAsync(
+            "10000000146",
+            offering.ProgramOfferingId,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("ALES sınav sonucunuz bulunmuyor", result.Error, StringComparison.Ordinal);
+        Assert.Contains("Sınav sonuçlarım", result.Error, StringComparison.Ordinal);
+        Assert.Empty(db.Applications);
+    }
+
     [Theory]
     [InlineData(69, "2026-01-01")]
     [InlineData(75, "2024-12-31")]
@@ -123,6 +147,10 @@ public sealed class ApplicationServiceTests
             CancellationToken.None);
 
         Assert.False(result.IsSuccess);
+        Assert.Contains(
+            scoreValue < 70 ? "puanınız yetersiz" : "sınav tarihiniz ilan koşulunu sağlamıyor",
+            result.Error,
+            StringComparison.Ordinal);
         Assert.Empty(db.Applications);
         Assert.Empty(db.ApplicationScoreSnapshots);
     }

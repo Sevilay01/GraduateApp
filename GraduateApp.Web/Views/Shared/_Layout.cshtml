@@ -22,11 +22,13 @@
                         @if (User.IsInRole("Student"))
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="Index">Başvurularım</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="ExamScores">Sınav sonuçlarım</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="Profile">Profilim</a></li>
                         }
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Yönetim paneli</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Students">Öğrenciler</a></li>
                         }
                     </ul>
                     <div class="d-flex align-items-center gap-2">

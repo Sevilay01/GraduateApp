@@ -1,5 +1,6 @@
 using System.Reflection;
 using GraduateApp.API.Controllers;
+using GraduateApp.API.DTOs;
 using GraduateApp.Web.Controllers;
 using Microsoft.AspNetCore.Authorization;
 
@@ -43,5 +44,92 @@ public sealed class AuthorizationTests
 
         Assert.NotNull(authorize);
         Assert.Equal("Admin", authorize!.Roles);
+    }
+
+    [Fact]
+    public void ApiStudentExamScoreEndpoints_RequireStudentRole_AndDoNotAcceptTc()
+    {
+        var authorize = typeof(StudentsController).GetCustomAttribute<AuthorizeAttribute>();
+        var methods = new[]
+        {
+            nameof(StudentsController.GetExamScores),
+            nameof(StudentsController.GetExamCatalog),
+            nameof(StudentsController.CreateExamScore),
+            nameof(StudentsController.UpdateExamScore),
+            nameof(StudentsController.DeleteExamScore)
+        };
+
+        Assert.NotNull(authorize);
+        Assert.Equal("Student", authorize!.Roles);
+        foreach (var methodName in methods)
+        {
+            var method = typeof(StudentsController).GetMethod(methodName);
+            Assert.NotNull(method);
+            Assert.DoesNotContain(method!.GetParameters(), parameter =>
+                parameter.Name is "tc" or "studentTc");
+        }
+    }
+
+    [Fact]
+    public void ApiAdminStudentManagement_RequiresAdminRole()
+    {
+        var authorize = typeof(AdminStudentsController).GetCustomAttribute<AuthorizeAttribute>();
+
+        Assert.NotNull(authorize);
+        Assert.Equal("Admin", authorize!.Roles);
+    }
+
+    [Fact]
+    public void ApiAdminStudentManagement_UsesPublicId_and_does_not_return_or_accept_raw_tc()
+    {
+        var contractTypes = new[]
+        {
+            typeof(AdminStudentListItemDto),
+            typeof(AdminStudentDetailDto)
+        };
+        Assert.All(contractTypes, type =>
+            Assert.DoesNotContain(type.GetProperties(), property =>
+                string.Equals(property.Name, "Tc", StringComparison.OrdinalIgnoreCase)));
+
+        var endpointNames = new[]
+        {
+            nameof(AdminStudentsController.GetDetail),
+            nameof(AdminStudentsController.Deactivate),
+            nameof(AdminStudentsController.Activate)
+        };
+        foreach (var endpointName in endpointNames)
+        {
+            var method = typeof(AdminStudentsController).GetMethod(endpointName);
+            Assert.NotNull(method);
+            Assert.Contains(method!.GetParameters(), parameter =>
+                parameter.Name == "publicId" && parameter.ParameterType == typeof(Guid));
+            Assert.DoesNotContain(method.GetParameters(), parameter =>
+                parameter.Name is "tc" or "studentTc");
+            var route = method.GetCustomAttributes()
+                .OfType<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>()
+                .Single()
+                .Template;
+            Assert.Contains("{publicId:guid}", route, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void WebStudentDeactivation_UsesPostAndAntiforgery()
+    {
+        var method = typeof(AdminController).GetMethod(nameof(AdminController.ConfirmDeactivateStudent));
+
+        Assert.NotNull(method);
+        Assert.NotNull(method!.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
+        Assert.NotNull(method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
+    }
+
+    [Fact]
+    public void WebStudentActivation_UsesPostAndAntiforgery()
+    {
+        var method = typeof(AdminController).GetMethod(nameof(AdminController.ConfirmActivateStudent));
+
+        Assert.NotNull(method);
+        Assert.NotNull(method!.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
+        Assert.NotNull(method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
     }
 }

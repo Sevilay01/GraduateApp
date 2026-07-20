@@ -10,7 +10,9 @@ namespace GraduateApp.API.Controllers;
 [ApiController]
 [Route("api/students")]
 [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
-public sealed class StudentsController(IStudentProfileService profileService) : ControllerBase
+public sealed class StudentsController(
+    IStudentProfileService profileService,
+    IStudentExamScoreService examScoreService) : ControllerBase
 {
     [HttpGet("me")]
     public async Task<IActionResult> GetProfile(CancellationToken cancellationToken)
@@ -45,4 +47,67 @@ public sealed class StudentsController(IStudentProfileService profileService) : 
     [HttpGet("universities")]
     public async Task<IActionResult> GetUniversities(CancellationToken cancellationToken) =>
         Ok(await profileService.GetUniversitiesAsync(cancellationToken));
+
+    [HttpGet("me/exam-scores")]
+    public async Task<IActionResult> GetExamScores(CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return string.IsNullOrWhiteSpace(studentTc)
+            ? Unauthorized()
+            : Ok(await examScoreService.GetForStudentAsync(studentTc, cancellationToken));
+    }
+
+    [HttpGet("me/exam-scores/catalog")]
+    public async Task<IActionResult> GetExamCatalog(CancellationToken cancellationToken) =>
+        Ok(await examScoreService.GetCatalogAsync(cancellationToken));
+
+    [HttpPost("me/exam-scores")]
+    public async Task<IActionResult> CreateExamScore(
+        StudentExamScoreInputDto request,
+        CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
+        {
+            return Unauthorized();
+        }
+
+        var result = await examScoreService.CreateAsync(studentTc, request, cancellationToken);
+        return result.IsSuccess
+            ? StatusCode(result.StatusCode, result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpPut("me/exam-scores/{scoreId:int}")]
+    public async Task<IActionResult> UpdateExamScore(
+        int scoreId,
+        StudentExamScoreInputDto request,
+        CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
+        {
+            return Unauthorized();
+        }
+
+        var result = await examScoreService.UpdateAsync(studentTc, scoreId, request, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpDelete("me/exam-scores/{scoreId:int}")]
+    public async Task<IActionResult> DeleteExamScore(int scoreId, CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
+        {
+            return Unauthorized();
+        }
+
+        var result = await examScoreService.DeleteAsync(studentTc, scoreId, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
 }
