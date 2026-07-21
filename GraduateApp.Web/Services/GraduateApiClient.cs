@@ -211,6 +211,168 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult> ActivateStudentAsync(Guid publicId, CancellationToken cancellationToken) =>
         PostAsync($"api/admin/students/{publicId:D}/activate", new { }, cancellationToken);
 
+    public Task<ApiResult<PagedResultViewModel<InstituteAdminViewModel>>> GetAdminInstitutesAsync(
+        string? search,
+        bool? isActive,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = new List<string>
+        {
+            $"page={Math.Max(page, 1)}",
+            $"pageSize={Math.Clamp(pageSize, 10, 100)}"
+        };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        }
+
+        if (isActive.HasValue)
+        {
+            query.Add($"isActive={isActive.Value.ToString().ToLowerInvariant()}");
+        }
+
+        return GetAsync<PagedResultViewModel<InstituteAdminViewModel>>(
+            $"api/admin/institutes?{string.Join('&', query)}",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<InstituteAdminViewModel>> GetAdminInstituteAsync(
+        int instituteId,
+        CancellationToken cancellationToken) =>
+        GetAsync<InstituteAdminViewModel>($"api/admin/institutes/{instituteId}", cancellationToken);
+
+    public Task<ApiResult<InstituteAdminViewModel>> CreateInstituteAsync(
+        InstituteFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<InstituteAdminViewModel>("api/admin/institutes", new { model.InstituteName }, cancellationToken);
+
+    public Task<ApiResult<InstituteAdminViewModel>> UpdateInstituteAsync(
+        InstituteFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PutAsync<InstituteAdminViewModel>(
+            $"api/admin/institutes/{model.InstituteId}",
+            new { model.InstituteName, model.RowVersion },
+            cancellationToken);
+
+    public Task<ApiResult<InstituteAdminViewModel>> ActivateInstituteAsync(
+        int instituteId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<InstituteAdminViewModel>(
+            $"api/admin/institutes/{instituteId}/activate",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult<InstituteAdminViewModel>> DeactivateInstituteAsync(
+        int instituteId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<InstituteAdminViewModel>(
+            $"api/admin/institutes/{instituteId}/deactivate",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult> DeleteInstituteAsync(
+        int instituteId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        DeleteAsync(
+            $"api/admin/institutes/{instituteId}?rowVersion={Uri.EscapeDataString(rowVersion)}",
+            cancellationToken);
+
+    public Task<ApiResult<PagedResultViewModel<ProgramAdminViewModel>>> GetAdminProgramsAsync(
+        string? search,
+        bool? isActive,
+        int? instituteId,
+        string? degreeType,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = new List<string>
+        {
+            $"page={Math.Max(page, 1)}",
+            $"pageSize={Math.Clamp(pageSize, 10, 100)}"
+        };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        }
+
+        if (isActive.HasValue)
+        {
+            query.Add($"isActive={isActive.Value.ToString().ToLowerInvariant()}");
+        }
+
+        if (instituteId.HasValue)
+        {
+            query.Add($"instituteId={instituteId.Value}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(degreeType))
+        {
+            query.Add($"degreeType={Uri.EscapeDataString(degreeType)}");
+        }
+
+        return GetAsync<PagedResultViewModel<ProgramAdminViewModel>>(
+            $"api/admin/programs?{string.Join('&', query)}",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<ProgramAdminViewModel>> GetAdminProgramAsync(
+        int programId,
+        CancellationToken cancellationToken) =>
+        GetAsync<ProgramAdminViewModel>($"api/admin/programs/{programId}", cancellationToken);
+
+    public Task<ApiResult<ProgramAdminViewModel>> CreateProgramAsync(
+        ProgramFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<ProgramAdminViewModel>("api/admin/programs", new
+        {
+            model.InstituteId,
+            model.ProgramName,
+            model.DegreeType
+        }, cancellationToken);
+
+    public Task<ApiResult<ProgramAdminViewModel>> UpdateProgramAsync(
+        ProgramFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PutAsync<ProgramAdminViewModel>($"api/admin/programs/{model.ProgramId}", new
+        {
+            model.InstituteId,
+            model.ProgramName,
+            model.DegreeType,
+            model.RowVersion
+        }, cancellationToken);
+
+    public Task<ApiResult<ProgramAdminViewModel>> ActivateProgramAsync(
+        int programId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<ProgramAdminViewModel>(
+            $"api/admin/programs/{programId}/activate",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult<ProgramAdminViewModel>> DeactivateProgramAsync(
+        int programId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<ProgramAdminViewModel>(
+            $"api/admin/programs/{programId}/deactivate",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult> DeleteProgramAsync(
+        int programId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        DeleteAsync(
+            $"api/admin/programs/{programId}?rowVersion={Uri.EscapeDataString(rowVersion)}",
+            cancellationToken);
+
     public Task<ApiResult> UpdateApplicationStatusAsync(
         UpdateApplicationStatusViewModel model,
         CancellationToken cancellationToken) =>

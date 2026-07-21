@@ -79,6 +79,8 @@ builder.Services.AddScoped<IAccessTokenService, AccessTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IAdminStudentService, AdminStudentService>();
+builder.Services.AddScoped<IInstituteAdminService, InstituteAdminService>();
+builder.Services.AddScoped<IProgramAdminService, ProgramAdminService>();
 builder.Services.AddScoped<IProgramOfferingService, ProgramOfferingService>();
 builder.Services.AddScoped<IStudentExamScoreService, StudentExamScoreService>();
 builder.Services.AddScoped<IStudentProfileService, StudentProfileService>();

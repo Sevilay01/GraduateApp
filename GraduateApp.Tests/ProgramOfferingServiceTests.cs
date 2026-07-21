@@ -68,6 +68,27 @@ public sealed class ProgramOfferingServiceTests
     }
 
     [Fact]
+    public async Task Inactive_institute_excludes_program_from_catalog_and_blocks_new_offering()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        program.Institute.IsActive = false;
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        var catalog = await service.GetCatalogAsync(CancellationToken.None);
+        var result = await service.CreateAsync(
+            1,
+            CreateRequest(program.ProgramId, AcademicTerm.Fall),
+            CancellationToken.None);
+
+        Assert.DoesNotContain(catalog.Programs, item => item.ProgramId == program.ProgramId);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+        Assert.Empty(db.ProgramOfferings);
+    }
+
+    [Fact]
     public async Task Update_returns_safe_conflict_when_optimistic_concurrency_fails()
     {
         var interceptor = new SwitchableConcurrencyInterceptor();
@@ -115,7 +136,7 @@ public sealed class ProgramOfferingServiceTests
         var program = new GraduateApp.API.Models.Program
         {
             ProgramName = "Bilgisayar Mühendisliği",
-            DegreeType = "Tezli",
+            DegreeType = "Tezli Yüksek Lisans",
             IsActive = true,
             Institute = new Institute { InstituteName = "Fen Bilimleri" }
         };

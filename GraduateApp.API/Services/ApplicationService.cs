@@ -38,6 +38,7 @@ public sealed class ApplicationService(
         await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
         var offering = await dbContext.ProgramOfferings
             .Include(item => item.Program)
+                .ThenInclude(item => item.Institute)
             .Include(item => item.ExamRequirements)
                 .ThenInclude(item => item.Exam)
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == programOfferingId, cancellationToken);
@@ -47,6 +48,7 @@ public sealed class ApplicationService(
         }
 
         if (!offering.Program.IsActive
+            || !offering.Program.Institute.IsActive
             || offering.IsArchived
             || !offering.IsOpen
             || !offering.ApplicationStartUtc.HasValue

@@ -80,6 +80,24 @@ public sealed class AuthorizationTests
     }
 
     [Fact]
+    public void Institute_and_program_management_require_admin_and_exclude_student_role()
+    {
+        var controllerTypes = new[]
+        {
+            typeof(AdminInstitutesController),
+            typeof(AdminProgramsController)
+        };
+
+        foreach (var controllerType in controllerTypes)
+        {
+            var authorize = controllerType.GetCustomAttribute<AuthorizeAttribute>();
+            Assert.NotNull(authorize);
+            Assert.Equal("Admin", authorize!.Roles);
+            Assert.DoesNotContain("Student", authorize.Roles, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
     public void ApiAdminStudentManagement_UsesPublicId_and_does_not_return_or_accept_raw_tc()
     {
         var contractTypes = new[]
@@ -131,5 +149,29 @@ public sealed class AuthorizationTests
         Assert.NotNull(method);
         Assert.NotNull(method!.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
         Assert.NotNull(method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
+    }
+
+    [Fact]
+    public void Web_institute_and_program_mutations_use_post_and_antiforgery()
+    {
+        var methodNames = new[]
+        {
+            nameof(AdminController.SaveInstitute),
+            nameof(AdminController.ActivateInstitute),
+            nameof(AdminController.DeactivateInstitute),
+            nameof(AdminController.ConfirmDeleteInstitute),
+            nameof(AdminController.SaveProgram),
+            nameof(AdminController.ActivateProgram),
+            nameof(AdminController.DeactivateProgram),
+            nameof(AdminController.ConfirmDeleteProgram)
+        };
+
+        foreach (var methodName in methodNames)
+        {
+            var method = typeof(AdminController).GetMethod(methodName);
+            Assert.NotNull(method);
+            Assert.NotNull(method!.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
+            Assert.NotNull(method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
+        }
     }
 }

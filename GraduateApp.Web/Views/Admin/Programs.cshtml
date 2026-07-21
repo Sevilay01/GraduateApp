@@ -1,0 +1,194 @@
+@model ProgramPageViewModel
+@{
+    ViewData["Title"] = "Program yönetimi";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div>
+        <h1 class="h2 mb-1">Program yönetimi</h1>
+        <p class="text-muted mb-0">Lisansüstü programları enstitü ve derece türüyle birlikte yönetin.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Institutes" class="btn btn-outline-primary">Enstitüleri yönet</a>
+        <a asp-action="Offerings" class="btn btn-outline-secondary">Dönemsel ilanlar</a>
+    </div>
+</div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+}
+
+<div class="alert alert-info" role="note">
+    İlanı veya geçmiş kaydı olan programı silmek yerine pasifleştirin. Bir program kendi kaydı aktif olsa bile bağlı enstitüsü pasifse yeni seçimlerde etkili olarak pasiftir.
+</div>
+
+<form method="get" class="card card-body mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-3">
+            <label asp-for="Search" class="form-label">Program adı</label>
+            <input asp-for="Search" class="form-control" placeholder="Ada göre ara" />
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+            <label asp-for="InstituteId" class="form-label">Enstitü</label>
+            <select asp-for="InstituteId" class="form-select">
+                <option value="">Tümü</option>
+                @foreach (var institute in Model.Institutes)
+                {
+                    <option value="@institute.InstituteId">@institute.InstituteName@(!institute.IsActive ? " (pasif)" : string.Empty)</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+            <label asp-for="DegreeType" class="form-label">Derece türü</label>
+            <select asp-for="DegreeType" class="form-select">
+                <option value="">Tümü</option>
+                @foreach (var degreeType in Model.DegreeTypes)
+                {
+                    <option value="@degreeType">@degreeType</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
+            <label asp-for="IsActive" class="form-label">Kayıt durumu</label>
+            <select asp-for="IsActive" class="form-select">
+                <option value="">Tümü</option>
+                <option value="true">Aktif</option>
+                <option value="false">Pasif</option>
+            </select>
+        </div>
+        <div class="col-12 col-lg-1 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Filtrele</button>
+        </div>
+    </div>
+    <div class="mt-3"><a asp-action="Programs" class="link-secondary">Filtreleri temizle</a></div>
+</form>
+
+<div class="row g-4">
+    <div class="col-12 col-xxl-8">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>Enstitü</th><th>Program</th><th>Derece</th><th>İlan</th><th>Durum</th><th class="text-end">İşlemler</th></tr>
+                </thead>
+                <tbody>
+                    @if (Model.Result.Items.Count == 0)
+                    {
+                        <tr><td colspan="6" class="text-muted text-center py-4">Filtreye uygun program bulunamadı.</td></tr>
+                    }
+                    @foreach (var program in Model.Result.Items)
+                    {
+                        <tr>
+                            <td>@program.InstituteName</td>
+                            <td>@program.ProgramName</td>
+                            <td>@program.DegreeType</td>
+                            <td>@program.OfferingCount</td>
+                            <td>
+                                @if (program.IsEffectivelyActive)
+                                {
+                                    <span class="badge text-bg-success">Aktif</span>
+                                }
+                                else if (program.IsActive)
+                                {
+                                    <span class="badge text-bg-warning">Enstitü pasif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-end flex-wrap gap-2">
+                                    <a asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@program.ProgramId" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                    @if (program.IsActive)
+                                    {
+                                        <form asp-action="DeactivateProgram" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@program.ProgramId" />
+                                            <input type="hidden" name="rowVersion" value="@program.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-warning" type="submit">Pasifleştir</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="ActivateProgram" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@program.ProgramId" />
+                                            <input type="hidden" name="rowVersion" value="@program.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Aktifleştir</button>
+                                        </form>
+                                    }
+                                    <a asp-action="DeleteProgram" asp-route-id="@program.ProgramId" class="btn btn-sm btn-outline-danger">Sil</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Result.TotalPages > 1)
+        {
+            <nav aria-label="Program listesi sayfaları">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">Önceki</a></li>
+                    <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
+                    <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">Sonraki</a></li>
+                </ul>
+            </nav>
+        }
+    </div>
+
+    <div class="col-12 col-xxl-4">
+        <section class="card">
+            <div class="card-body">
+                <h2 class="h4">@(Model.Form.ProgramId > 0 ? "Programı düzenle" : "Yeni program")</h2>
+                <form asp-action="SaveProgram" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                    <input asp-for="Form.ProgramId" type="hidden" />
+                    @if (Model.Form.ProgramId > 0)
+                    {
+                        <input asp-for="Form.RowVersion" type="hidden" />
+                    }
+                    <div class="mb-3">
+                        <label asp-for="Form.InstituteId" class="form-label"></label>
+                        <select asp-for="Form.InstituteId" class="form-select">
+                            @foreach (var institute in Model.Institutes)
+                            {
+                                <option value="@institute.InstituteId">@institute.InstituteName@(!institute.IsActive ? " (pasif)" : string.Empty)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.InstituteId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.ProgramName" class="form-label"></label>
+                        <input asp-for="Form.ProgramName" class="form-control" maxlength="100" autocomplete="off" />
+                        <span asp-validation-for="Form.ProgramName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.DegreeType" class="form-label"></label>
+                        <select asp-for="Form.DegreeType" class="form-select">
+                            @foreach (var degreeType in Model.DegreeTypes)
+                            {
+                                <option value="@degreeType">@degreeType</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.DegreeType" class="text-danger"></span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" type="submit">@(Model.Form.ProgramId > 0 ? "Değişiklikleri kaydet" : "Program oluştur")</button>
+                        @if (Model.Form.ProgramId > 0)
+                        {
+                            <a asp-action="Programs" class="btn btn-outline-secondary">Vazgeç</a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

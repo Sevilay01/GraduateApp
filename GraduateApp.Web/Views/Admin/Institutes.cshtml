@@ -1,0 +1,139 @@
+@model InstitutePageViewModel
+@{
+    ViewData["Title"] = "Enstitü yönetimi";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div>
+        <h1 class="h2 mb-1">Enstitü yönetimi</h1>
+        <p class="text-muted mb-0">Enstitüleri oluşturun, düzenleyin veya yeni seçimlere kapatın.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Programs" class="btn btn-primary">Programları yönet</a>
+        <a asp-action="Offerings" class="btn btn-outline-secondary">Dönemsel ilanlar</a>
+    </div>
+</div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+}
+
+<div class="alert alert-info" role="note">
+    Kullanılmış bir enstitüyü silmek yerine pasifleştirin. Pasif enstitülerin programları yeni ilan ve başvuru seçimlerinde gösterilmez; geçmiş kayıtlar korunur.
+</div>
+
+<form method="get" class="card card-body mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-6">
+            <label asp-for="Search" class="form-label">Enstitü adı</label>
+            <input asp-for="Search" class="form-control" placeholder="Ada göre ara" />
+        </div>
+        <div class="col-12 col-md-3">
+            <label asp-for="IsActive" class="form-label">Durum</label>
+            <select asp-for="IsActive" class="form-select">
+                <option value="">Tümü</option>
+                <option value="true">Aktif</option>
+                <option value="false">Pasif</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Filtrele</button>
+            <a asp-action="Institutes" class="btn btn-outline-secondary">Temizle</a>
+        </div>
+    </div>
+</form>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>Enstitü</th><th>Program</th><th>Durum</th><th class="text-end">İşlemler</th></tr>
+                </thead>
+                <tbody>
+                    @if (Model.Result.Items.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-muted text-center py-4">Filtreye uygun enstitü bulunamadı.</td></tr>
+                    }
+                    @foreach (var institute in Model.Result.Items)
+                    {
+                        <tr>
+                            <td>@institute.InstituteName</td>
+                            <td>@institute.ProgramCount</td>
+                            <td><span class="badge @(institute.IsActive ? "text-bg-success" : "text-bg-secondary")">@(institute.IsActive ? "Aktif" : "Pasif")</span></td>
+                            <td>
+                                <div class="d-flex justify-content-end flex-wrap gap-2">
+                                    <a asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@institute.InstituteId" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                    @if (institute.IsActive)
+                                    {
+                                        <form asp-action="DeactivateInstitute" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@institute.InstituteId" />
+                                            <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-warning" type="submit">Pasifleştir</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="ActivateInstitute" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@institute.InstituteId" />
+                                            <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Aktifleştir</button>
+                                        </form>
+                                    }
+                                    <a asp-action="DeleteInstitute" asp-route-id="@institute.InstituteId" class="btn btn-sm btn-outline-danger">Sil</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Result.TotalPages > 1)
+        {
+            <nav aria-label="Enstitü listesi sayfaları">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">Önceki</a></li>
+                    <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
+                    <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">Sonraki</a></li>
+                </ul>
+            </nav>
+        }
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <section class="card">
+            <div class="card-body">
+                <h2 class="h4">@(Model.Form.InstituteId > 0 ? "Enstitüyü düzenle" : "Yeni enstitü")</h2>
+                <form asp-action="SaveInstitute" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                    <input asp-for="Form.InstituteId" type="hidden" />
+                    @if (Model.Form.InstituteId > 0)
+                    {
+                        <input asp-for="Form.RowVersion" type="hidden" />
+                    }
+                    <div class="mb-3">
+                        <label asp-for="Form.InstituteName" class="form-label"></label>
+                        <input asp-for="Form.InstituteName" class="form-control" maxlength="100" autocomplete="off" />
+                        <span asp-validation-for="Form.InstituteName" class="text-danger"></span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" type="submit">@(Model.Form.InstituteId > 0 ? "Değişiklikleri kaydet" : "Enstitü oluştur")</button>
+                        @if (Model.Form.InstituteId > 0)
+                        {
+                            <a asp-action="Institutes" class="btn btn-outline-secondary">Vazgeç</a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

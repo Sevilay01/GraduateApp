@@ -1,0 +1,28 @@
+@model InstituteAdminViewModel
+@{
+    ViewData["Title"] = "Enstitüyü sil";
+}
+
+<div class="card border-danger mx-auto" style="max-width: 42rem;">
+    <div class="card-body">
+        <h1 class="h3">Enstitüyü kalıcı olarak sil</h1>
+        <p><strong>@Model.InstituteName</strong> enstitüsünü silmek üzeresiniz.</p>
+        @if (Model.ProgramCount > 0)
+        {
+            <div class="alert alert-warning" role="alert">
+                Bu enstitüye bağlı @Model.ProgramCount program var. Veri bütünlüğünü korumak için kalıcı silme engellenecektir; enstitüyü pasifleştirin.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger" role="alert">Bu işlem geri alınamaz. Yalnızca hiç kullanılmamış enstitüler kalıcı olarak silinebilir.</div>
+        }
+        <form asp-action="ConfirmDeleteInstitute" method="post" class="d-flex gap-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.InstituteId" />
+            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+            <button class="btn btn-danger" type="submit" disabled="@(Model.ProgramCount > 0)">Kalıcı olarak sil</button>
+            <a asp-action="Institutes" class="btn btn-outline-secondary">Vazgeç</a>
+        </form>
+    </div>
+</div>
