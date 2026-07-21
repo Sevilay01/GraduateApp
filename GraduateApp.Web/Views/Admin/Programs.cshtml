@@ -100,13 +100,24 @@
                             <td>
                                 <div class="d-flex justify-content-end flex-wrap gap-2">
                                     <a asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@program.ProgramId" class="btn btn-sm btn-outline-primary">Düzenle</a>
-                                    <form asp-action="SetProgramActive" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@program.ProgramId" />
-                                        <input type="hidden" name="rowVersion" value="@program.RowVersion" />
-                                        <input type="hidden" name="isActive" value="@(!program.IsActive)" />
-                                        <button class="btn btn-sm @(program.IsActive ? "btn-outline-warning" : "btn-outline-success")" type="submit">@(program.IsActive ? "Pasifleştir" : "Aktifleştir")</button>
-                                    </form>
+                                    @if (program.IsActive)
+                                    {
+                                        <form asp-action="DeactivateProgram" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@program.ProgramId" />
+                                            <input type="hidden" name="rowVersion" value="@program.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-warning" type="submit">Pasifleştir</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="ActivateProgram" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@program.ProgramId" />
+                                            <input type="hidden" name="rowVersion" value="@program.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Aktifleştir</button>
+                                        </form>
+                                    }
                                     <a asp-action="DeleteProgram" asp-route-id="@program.ProgramId" class="btn btn-sm btn-outline-danger">Sil</a>
                                 </div>
                             </td>

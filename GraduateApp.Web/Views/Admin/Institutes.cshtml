@@ -65,13 +65,24 @@
                             <td>
                                 <div class="d-flex justify-content-end flex-wrap gap-2">
                                     <a asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@institute.InstituteId" class="btn btn-sm btn-outline-primary">Düzenle</a>
-                                    <form asp-action="SetInstituteActive" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@institute.InstituteId" />
-                                        <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
-                                        <input type="hidden" name="isActive" value="@(!institute.IsActive)" />
-                                        <button class="btn btn-sm @(institute.IsActive ? "btn-outline-warning" : "btn-outline-success")" type="submit">@(institute.IsActive ? "Pasifleştir" : "Aktifleştir")</button>
-                                    </form>
+                                    @if (institute.IsActive)
+                                    {
+                                        <form asp-action="DeactivateInstitute" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@institute.InstituteId" />
+                                            <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-warning" type="submit">Pasifleştir</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="ActivateInstitute" method="post" data-disable-on-submit="true">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@institute.InstituteId" />
+                                            <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Aktifleştir</button>
+                                        </form>
+                                    }
                                     <a asp-action="DeleteInstitute" asp-route-id="@institute.InstituteId" class="btn btn-sm btn-outline-danger">Sil</a>
                                 </div>
                             </td>

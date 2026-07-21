@@ -276,10 +276,35 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetInstituteActive(
+    public Task<IActionResult> ActivateInstitute(
         int id,
         string rowVersion,
-        bool isActive,
+        CancellationToken cancellationToken) =>
+        ChangeInstituteActiveAsync(
+            id,
+            rowVersion,
+            token => apiClient.ActivateInstituteAsync(id, rowVersion, token),
+            "Enstitü aktifleştirildi.",
+            cancellationToken);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> DeactivateInstitute(
+        int id,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        ChangeInstituteActiveAsync(
+            id,
+            rowVersion,
+            token => apiClient.DeactivateInstituteAsync(id, rowVersion, token),
+            "Enstitü pasifleştirildi. Bağlı programlar yeni seçimlerde gösterilmeyecek.",
+            cancellationToken);
+
+    private async Task<IActionResult> ChangeInstituteActiveAsync(
+        int id,
+        string rowVersion,
+        Func<CancellationToken, Task<ApiResult<InstituteAdminViewModel>>> changeActive,
+        string successMessage,
         CancellationToken cancellationToken)
     {
         if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
@@ -288,9 +313,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             return RedirectToAction(nameof(Institutes));
         }
 
-        var result = await apiClient.SetInstituteActiveAsync(id, rowVersion, isActive, cancellationToken);
+        var result = await changeActive(cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? isActive ? "Enstitü aktifleştirildi." : "Enstitü pasifleştirildi. Bağlı programlar yeni seçimlerde gösterilmeyecek."
+            ? successMessage
             : result.Error ?? "Enstitü durumu değiştirilemedi.";
         return RedirectToAction(nameof(Institutes));
     }
@@ -415,10 +440,35 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetProgramActive(
+    public Task<IActionResult> ActivateProgram(
         int id,
         string rowVersion,
-        bool isActive,
+        CancellationToken cancellationToken) =>
+        ChangeProgramActiveAsync(
+            id,
+            rowVersion,
+            token => apiClient.ActivateProgramAsync(id, rowVersion, token),
+            "Program aktifleştirildi.",
+            cancellationToken);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> DeactivateProgram(
+        int id,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        ChangeProgramActiveAsync(
+            id,
+            rowVersion,
+            token => apiClient.DeactivateProgramAsync(id, rowVersion, token),
+            "Program pasifleştirildi. Mevcut ilan ve başvurular korunuyor.",
+            cancellationToken);
+
+    private async Task<IActionResult> ChangeProgramActiveAsync(
+        int id,
+        string rowVersion,
+        Func<CancellationToken, Task<ApiResult<ProgramAdminViewModel>>> changeActive,
+        string successMessage,
         CancellationToken cancellationToken)
     {
         if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
@@ -427,9 +477,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             return RedirectToAction(nameof(Programs));
         }
 
-        var result = await apiClient.SetProgramActiveAsync(id, rowVersion, isActive, cancellationToken);
+        var result = await changeActive(cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? isActive ? "Program aktifleştirildi." : "Program pasifleştirildi. Mevcut ilan ve başvurular korunuyor."
+            ? successMessage
             : result.Error ?? "Program durumu değiştirilemedi.";
         return RedirectToAction(nameof(Programs));
     }

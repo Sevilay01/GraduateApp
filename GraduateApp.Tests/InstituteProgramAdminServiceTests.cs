@@ -330,6 +330,69 @@ public sealed class InstituteProgramAdminServiceTests
     }
 
     [Fact]
+    public async Task Institute_deactivate_then_activate_with_current_rowversion_succeeds()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute
+        {
+            InstituteName = "Fen Bilimleri",
+            IsActive = true,
+            RowVersion = RowVersion
+        };
+        db.Institutes.Add(institute);
+        await db.SaveChangesAsync();
+        var service = CreateInstituteService(db);
+
+        var deactivated = await service.SetActiveAsync(
+            institute.InstituteId,
+            7,
+            false,
+            new CatalogConcurrencyDto { RowVersion = Convert.ToBase64String(RowVersion) },
+            CancellationToken.None);
+        var activated = await service.SetActiveAsync(
+            institute.InstituteId,
+            7,
+            true,
+            new CatalogConcurrencyDto { RowVersion = deactivated.Value!.RowVersion },
+            CancellationToken.None);
+
+        Assert.True(deactivated.IsSuccess);
+        Assert.True(activated.IsSuccess);
+        Assert.True(db.Institutes.Single().IsActive);
+        Assert.Equal(
+            ["InstituteDeactivated", "InstituteActivated"],
+            db.SecurityAuditLogs.OrderBy(item => item.AuditId).Select(item => item.EventType));
+    }
+
+    [Fact]
+    public async Task Stale_institute_toggle_returns_safe_conflict()
+    {
+        var interceptor = new SwitchableConcurrencyInterceptor();
+        await using var db = TestDb.Create(interceptor);
+        var institute = new Institute
+        {
+            InstituteName = "Fen Bilimleri",
+            IsActive = false,
+            RowVersion = RowVersion
+        };
+        db.Institutes.Add(institute);
+        await db.SaveChangesAsync();
+        interceptor.Enabled = true;
+
+        var result = await CreateInstituteService(db).SetActiveAsync(
+            institute.InstituteId,
+            1,
+            true,
+            new CatalogConcurrencyDto { RowVersion = Convert.ToBase64String(RowVersion) },
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Contains("başka bir kullanıcı", result.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("RowVersion", result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Program_activate_and_deactivate_require_rowversion_and_write_audit()
     {
         await using var db = TestDb.Create();
@@ -361,7 +424,7 @@ public sealed class InstituteProgramAdminServiceTests
             program.ProgramId,
             7,
             true,
-            new CatalogConcurrencyDto { RowVersion = Convert.ToBase64String(RowVersion) },
+            new CatalogConcurrencyDto { RowVersion = deactivated.Value!.RowVersion },
             CancellationToken.None);
 
         Assert.Equal(StatusCodes.Status400BadRequest, invalid.StatusCode);
@@ -371,6 +434,36 @@ public sealed class InstituteProgramAdminServiceTests
         Assert.Equal(
             ["ProgramDeactivated", "ProgramActivated"],
             db.SecurityAuditLogs.OrderBy(item => item.AuditId).Select(item => item.EventType));
+    }
+
+    [Fact]
+    public async Task Stale_program_toggle_returns_safe_conflict()
+    {
+        var interceptor = new SwitchableConcurrencyInterceptor();
+        await using var db = TestDb.Create(interceptor);
+        var program = new GraduateApp.API.Models.Program
+        {
+            Institute = new Institute { InstituteName = "Fen Bilimleri" },
+            ProgramName = "Fizik",
+            DegreeType = "Doktora",
+            IsActive = true,
+            RowVersion = RowVersion
+        };
+        db.Programs.Add(program);
+        await db.SaveChangesAsync();
+        interceptor.Enabled = true;
+
+        var result = await CreateProgramService(db).SetActiveAsync(
+            program.ProgramId,
+            1,
+            false,
+            new CatalogConcurrencyDto { RowVersion = Convert.ToBase64String(RowVersion) },
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Contains("başka bir kullanıcı", result.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("RowVersion", result.Error, StringComparison.OrdinalIgnoreCase);
     }
 
     private static InstituteAdminService CreateInstituteService(GraduateAppDbContext db) =>

@@ -256,13 +256,21 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             new { model.InstituteName, model.RowVersion },
             cancellationToken);
 
-    public Task<ApiResult<InstituteAdminViewModel>> SetInstituteActiveAsync(
+    public Task<ApiResult<InstituteAdminViewModel>> ActivateInstituteAsync(
         int instituteId,
         string rowVersion,
-        bool isActive,
         CancellationToken cancellationToken) =>
         PostAsync<InstituteAdminViewModel>(
-            $"api/admin/institutes/{instituteId}/{(isActive ? "activate" : "deactivate")}",
+            $"api/admin/institutes/{instituteId}/activate",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult<InstituteAdminViewModel>> DeactivateInstituteAsync(
+        int instituteId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<InstituteAdminViewModel>(
+            $"api/admin/institutes/{instituteId}/deactivate",
             new { rowVersion },
             cancellationToken);
 
@@ -339,13 +347,21 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             model.RowVersion
         }, cancellationToken);
 
-    public Task<ApiResult<ProgramAdminViewModel>> SetProgramActiveAsync(
+    public Task<ApiResult<ProgramAdminViewModel>> ActivateProgramAsync(
         int programId,
         string rowVersion,
-        bool isActive,
         CancellationToken cancellationToken) =>
         PostAsync<ProgramAdminViewModel>(
-            $"api/admin/programs/{programId}/{(isActive ? "activate" : "deactivate")}",
+            $"api/admin/programs/{programId}/activate",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult<ProgramAdminViewModel>> DeactivateProgramAsync(
+        int programId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<ProgramAdminViewModel>(
+            $"api/admin/programs/{programId}/deactivate",
             new { rowVersion },
             cancellationToken);
 

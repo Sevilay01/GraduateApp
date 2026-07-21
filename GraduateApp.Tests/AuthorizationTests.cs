@@ -157,10 +157,12 @@ public sealed class AuthorizationTests
         var methodNames = new[]
         {
             nameof(AdminController.SaveInstitute),
-            nameof(AdminController.SetInstituteActive),
+            nameof(AdminController.ActivateInstitute),
+            nameof(AdminController.DeactivateInstitute),
             nameof(AdminController.ConfirmDeleteInstitute),
             nameof(AdminController.SaveProgram),
-            nameof(AdminController.SetProgramActive),
+            nameof(AdminController.ActivateProgram),
+            nameof(AdminController.DeactivateProgram),
             nameof(AdminController.ConfirmDeleteProgram)
         };
 
