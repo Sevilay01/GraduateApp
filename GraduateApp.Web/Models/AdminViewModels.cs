@@ -47,7 +47,7 @@ public sealed class ApplicationStatusHistoryViewModel
 public sealed class AdminApplicationDetailViewModel
 {
     public int ApplicationId { get; set; }
-    public string Tc { get; set; } = string.Empty;
+    public string MaskedTc { get; set; } = string.Empty;
     public string StudentFullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string ProgramName { get; set; } = string.Empty;

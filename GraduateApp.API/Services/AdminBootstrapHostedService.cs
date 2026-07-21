@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Data;
 using GraduateApp.API.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,8 @@ public sealed class AdminBootstrapHostedService(
     IServiceScopeFactory scopeFactory,
     IConfiguration configuration,
     ILogger<AdminBootstrapHostedService> logger,
-    TimeProvider timeProvider) : IHostedService
+    TimeProvider timeProvider,
+    IEmailNormalizer emailNormalizer) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -32,18 +34,63 @@ public sealed class AdminBootstrapHostedService(
 
         await using var scope = scopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<GraduateAppDbContext>();
-        if (!await dbContext.Database.CanConnectAsync(cancellationToken))
+        if (dbContext.Database.IsRelational()
+            && !await dbContext.Database.CanConnectAsync(cancellationToken))
         {
             logger.LogWarning("Bootstrap admin oluşturulamadı; veritabanına bağlanılamıyor.");
             return;
         }
 
-        var normalizedEmail = email.Trim().ToUpperInvariant();
-        if (await dbContext.Admins.AnyAsync(
-            admin => admin.NormalizedEmail == normalizedEmail || admin.Email.ToUpper() == normalizedEmail,
-            cancellationToken))
+        if (!emailNormalizer.TryNormalize(email, out var normalizedEmail))
         {
-            return;
+            throw new InvalidOperationException("Bootstrap admin e-posta adresi geçersiz.");
+        }
+
+        await using var transaction = dbContext.Database.IsRelational()
+            ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
+        var identity = await dbContext.LoginIdentities
+            .Include(item => item.Admin)
+            .Include(item => item.Student)
+            .SingleOrDefaultAsync(item => item.NormalizedEmail == normalizedEmail, cancellationToken);
+        if (identity is not null
+            && identity.AccountType == LoginAccountType.Admin)
+        {
+            if (identity.AdminId is not null
+                && identity.StudentTc is null
+                && identity.Admin is not null
+                && identity.Student is null
+                && identity.NormalizedEmail == emailNormalizer.Normalize(identity.Admin.Email)
+                && identity.Admin.NormalizedEmail == identity.NormalizedEmail)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException(
+                "Bootstrap admin hesabı oluşturulamadı: merkezi yönetici kimliği tutarsız.");
+        }
+
+        if (await dbContext.Admins.AnyAsync(cancellationToken))
+        {
+            throw new InvalidOperationException(
+                "Sistemde zaten bir yönetici hesabı var; yeni yönetici bootstrap üzerinden oluşturulamaz.");
+        }
+
+        if (identity is not null)
+        {
+            throw new InvalidOperationException(
+                "Bootstrap admin hesabı oluşturulamadı: merkezi giriş kimliği başka bir hesapla çakışıyor.");
+        }
+
+        if (await dbContext.Students.AnyAsync(
+                item => item.NormalizedEmail == normalizedEmail,
+                cancellationToken)
+            || await dbContext.Admins.AnyAsync(
+                item => item.NormalizedEmail == normalizedEmail,
+                cancellationToken))
+        {
+            throw new InvalidOperationException(
+                "Bootstrap admin hesabı oluşturulamadı: hesap merkezi giriş kimliğiyle eşleşmiyor.");
         }
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
@@ -58,8 +105,28 @@ public sealed class AdminBootstrapHostedService(
         };
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<Admin>>();
         admin.PasswordHash = hasher.HashPassword(admin, password);
+        admin.LoginIdentity = new LoginIdentity
+        {
+            NormalizedEmail = normalizedEmail,
+            AccountType = LoginAccountType.Admin,
+            Admin = admin,
+            CreatedAtUtc = now
+        };
         dbContext.Admins.Add(admin);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException(
+                "Bootstrap admin hesabı oluşturulamadı: merkezi giriş kimliği başka bir hesap tarafından kullanılıyor.");
+        }
+
         logger.LogInformation("Bootstrap admin hesabı oluşturuldu; ilk girişte parola değişikliği zorunludur.");
     }
 

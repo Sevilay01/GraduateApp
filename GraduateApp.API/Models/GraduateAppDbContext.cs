@@ -11,6 +11,7 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
     public DbSet<EducationInfo> EducationInfos => Set<EducationInfo>();
     public DbSet<Exam> Exams => Set<Exam>();
     public DbSet<Institute> Institutes => Set<Institute>();
+    public DbSet<LoginIdentity> LoginIdentities => Set<LoginIdentity>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Program> Programs => Set<Program>();
     public DbSet<ProgramOffering> ProgramOfferings => Set<ProgramOffering>();
@@ -79,7 +80,7 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         modelBuilder.Entity<ApplicationStatusHistory>(entity =>
         {
             entity.HasKey(e => e.HistoryId);
-            entity.ToTable("ApplicationStatusHistory", table => table.HasTrigger("trg_UpdateApplicationStatus"));
+            entity.ToTable("ApplicationStatusHistory");
             entity.Property(e => e.HistoryId).HasColumnName("HistoryID");
             entity.Property(e => e.ApplicationId).HasColumnName("ApplicationID");
             entity.Property(e => e.PreviousStatus).HasMaxLength(50);
@@ -125,6 +126,28 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
             entity.HasIndex(e => e.InstituteName).IsUnique();
             entity.Property(e => e.InstituteId).HasColumnName("InstituteID");
             entity.Property(e => e.InstituteName).HasMaxLength(100).IsRequired();
+        });
+
+        modelBuilder.Entity<LoginIdentity>(entity =>
+        {
+            entity.HasKey(e => e.LoginIdentityId);
+            entity.HasIndex(e => e.NormalizedEmail).IsUnique();
+            entity.HasIndex(e => e.StudentTc).IsUnique().HasFilter("[StudentTC] IS NOT NULL");
+            entity.HasIndex(e => e.AdminId).IsUnique().HasFilter("[AdminID] IS NOT NULL");
+            entity.ToTable("LoginIdentities", table => table.HasCheckConstraint(
+                "CK_LoginIdentities_Subject",
+                "([AccountType] = N'Student' AND [StudentTC] IS NOT NULL AND [AdminID] IS NULL) OR ([AccountType] = N'Admin' AND [StudentTC] IS NULL AND [AdminID] IS NOT NULL)"));
+            entity.Property(e => e.LoginIdentityId).HasColumnName("LoginIdentityID");
+            entity.Property(e => e.NormalizedEmail).HasMaxLength(254).IsRequired();
+            entity.Property(e => e.AccountType).HasConversion<string>().HasMaxLength(20).IsRequired();
+            entity.Property(e => e.StudentTc).HasMaxLength(11).IsUnicode(false).IsFixedLength().HasColumnName("StudentTC");
+            entity.Property(e => e.AdminId).HasColumnName("AdminID");
+            entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.RowVersion).IsRowVersion();
+            entity.HasOne(e => e.Student).WithOne(e => e.LoginIdentity)
+                .HasForeignKey<LoginIdentity>(e => e.StudentTc).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Admin).WithOne(e => e.LoginIdentity)
+                .HasForeignKey<LoginIdentity>(e => e.AdminId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<PasswordResetToken>(entity =>

@@ -24,4 +24,5 @@ public sealed class Student
     public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
     public ICollection<StudentExamScore> StudentExamScores { get; set; } = new List<StudentExamScore>();
     public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
+    public LoginIdentity? LoginIdentity { get; set; }
 }

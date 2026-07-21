@@ -130,16 +130,26 @@ public sealed class AdminStudentServiceTests
         Assert.Equal("student11@example.test", search.Items[0].Email);
     }
 
-    private static Student CreateStudent(string tc, string email) => new()
+    private static Student CreateStudent(string tc, string email)
     {
-        Tc = tc,
-        PublicId = Guid.NewGuid(),
-        StudentName = "Test",
-        StudentSurname = "Öğrenci",
-        Email = email,
-        NormalizedEmail = email.ToUpperInvariant(),
-        PasswordHash = "hash",
-        SecurityStamp = Guid.NewGuid().ToString("N"),
-        IsActive = true
-    };
+        var student = new Student
+        {
+            Tc = tc,
+            PublicId = Guid.NewGuid(),
+            StudentName = "Test",
+            StudentSurname = "Öğrenci",
+            Email = email,
+            NormalizedEmail = email.ToUpperInvariant(),
+            PasswordHash = "hash",
+            SecurityStamp = Guid.NewGuid().ToString("N"),
+            IsActive = true
+        };
+        student.LoginIdentity = new LoginIdentity
+        {
+            NormalizedEmail = student.NormalizedEmail,
+            AccountType = LoginAccountType.Student,
+            Student = student
+        };
+        return student;
+    }
 }

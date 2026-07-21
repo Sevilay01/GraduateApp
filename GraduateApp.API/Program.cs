@@ -30,6 +30,7 @@ builder.Services.AddAuthentication(ApiAuthenticationDefaults.Scheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IEmailNormalizer, InvariantEmailNormalizer>();
 builder.Services.AddOptions<RegistrationOptions>()
     .Bind(builder.Configuration.GetSection(RegistrationOptions.SectionName))
     .Validate(options => options.MinimumAge is >= 16 and <= 30, "Registration:MinimumAge geçersiz.")

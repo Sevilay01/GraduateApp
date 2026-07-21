@@ -4,6 +4,7 @@ using GraduateApp.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GraduateApp.API.Migrations
 {
     [DbContext(typeof(GraduateAppDbContext))]
-    partial class GraduateAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260720105222_RemoveLegacyApplicationStatusTrigger")]
+    partial class RemoveLegacyApplicationStatusTrigger
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -311,66 +314,6 @@ namespace GraduateApp.API.Migrations
                         .IsUnique();
 
                     b.ToTable("Institutes");
-                });
-
-            modelBuilder.Entity("GraduateApp.API.Models.LoginIdentity", b =>
-                {
-                    b.Property<int>("LoginIdentityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("LoginIdentityID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LoginIdentityId"));
-
-                    b.Property<string>("AccountType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("AdminId")
-                        .HasColumnType("int")
-                        .HasColumnName("AdminID");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
-
-                    b.Property<string>("NormalizedEmail")
-                        .IsRequired()
-                        .HasMaxLength(254)
-                        .HasColumnType("nvarchar(254)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("StudentTc")
-                        .HasMaxLength(11)
-                        .IsUnicode(false)
-                        .HasColumnType("char(11)")
-                        .HasColumnName("StudentTC")
-                        .IsFixedLength();
-
-                    b.HasKey("LoginIdentityId");
-
-                    b.HasIndex("AdminId")
-                        .IsUnique()
-                        .HasFilter("[AdminID] IS NOT NULL");
-
-                    b.HasIndex("NormalizedEmail")
-                        .IsUnique();
-
-                    b.HasIndex("StudentTc")
-                        .IsUnique()
-                        .HasFilter("[StudentTC] IS NOT NULL");
-
-                    b.ToTable("LoginIdentities", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_LoginIdentities_Subject", "([AccountType] = N'Student' AND [StudentTC] IS NOT NULL AND [AdminID] IS NULL) OR ([AccountType] = N'Admin' AND [StudentTC] IS NULL AND [AdminID] IS NOT NULL)");
-                        });
                 });
 
             modelBuilder.Entity("GraduateApp.API.Models.PasswordResetToken", b =>
@@ -972,23 +915,6 @@ namespace GraduateApp.API.Migrations
                     b.Navigation("University");
                 });
 
-            modelBuilder.Entity("GraduateApp.API.Models.LoginIdentity", b =>
-                {
-                    b.HasOne("GraduateApp.API.Models.Admin", "Admin")
-                        .WithOne("LoginIdentity")
-                        .HasForeignKey("GraduateApp.API.Models.LoginIdentity", "AdminId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("GraduateApp.API.Models.Student", "Student")
-                        .WithOne("LoginIdentity")
-                        .HasForeignKey("GraduateApp.API.Models.LoginIdentity", "StudentTc")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Admin");
-
-                    b.Navigation("Student");
-                });
-
             modelBuilder.Entity("GraduateApp.API.Models.PasswordResetToken", b =>
                 {
                     b.HasOne("GraduateApp.API.Models.Admin", "Admin")
@@ -1098,8 +1024,6 @@ namespace GraduateApp.API.Migrations
                 {
                     b.Navigation("ApplicationStatusHistories");
 
-                    b.Navigation("LoginIdentity");
-
                     b.Navigation("PasswordResetTokens");
 
                     b.Navigation("SystemLogs");
@@ -1145,8 +1069,6 @@ namespace GraduateApp.API.Migrations
                     b.Navigation("Applications");
 
                     b.Navigation("EducationInfos");
-
-                    b.Navigation("LoginIdentity");
 
                     b.Navigation("PasswordResetTokens");
 
