@@ -129,9 +129,19 @@ namespace GraduateApp.API.Migrations
                 END;
                 """);
 
-            migrationBuilder.DropIndex(
-                name: "IX_Programs_InstituteID",
-                table: "Programs");
+            migrationBuilder.Sql(
+                """
+                IF EXISTS
+                (
+                    SELECT 1
+                    FROM sys.indexes
+                    WHERE [object_id] = OBJECT_ID(N'[dbo].[Programs]')
+                      AND [name] = N'IX_Programs_InstituteID'
+                )
+                BEGIN
+                    DROP INDEX [IX_Programs_InstituteID] ON [dbo].[Programs];
+                END;
+                """);
 
             migrationBuilder.AlterColumn<string>(
                 name: "DegreeType",

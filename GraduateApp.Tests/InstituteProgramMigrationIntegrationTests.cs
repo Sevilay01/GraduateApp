@@ -24,9 +24,16 @@ public sealed class InstituteProgramMigrationIntegrationTests
 
         Assert.Contains("THROW 51303", up, StringComparison.Ordinal);
         Assert.Contains("THROW 51306", up, StringComparison.Ordinal);
+        Assert.Contains("THROW 51307", up, StringComparison.Ordinal);
+        Assert.Contains("IF EXISTS", up, StringComparison.Ordinal);
+        Assert.Contains("[name] = N'IX_Programs_InstituteID'", up, StringComparison.Ordinal);
+        Assert.Contains("DROP INDEX [IX_Programs_InstituteID] ON [dbo].[Programs]", up, StringComparison.Ordinal);
         Assert.True(
-            up.IndexOf("THROW 51306", StringComparison.Ordinal)
-                < up.IndexOf("DROP INDEX [IX_Programs_InstituteID]", StringComparison.Ordinal));
+            up.IndexOf("THROW 51307", StringComparison.Ordinal)
+                < up.IndexOf("IF EXISTS", StringComparison.Ordinal));
+        Assert.True(
+            up.IndexOf("IF EXISTS", StringComparison.Ordinal)
+                < up.IndexOf("DROP INDEX [IX_Programs_InstituteID] ON [dbo].[Programs]", StringComparison.Ordinal));
         Assert.DoesNotContain("UPDATE [dbo].[Institutes]", up, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("UPDATE [dbo].[Programs]", up, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("DELETE FROM [dbo].[Institutes]", up, StringComparison.OrdinalIgnoreCase);
@@ -35,7 +42,7 @@ public sealed class InstituteProgramMigrationIntegrationTests
     }
 
     [LocalDbFact]
-    public async Task In_place_upgrade_preserves_rows_and_adds_constraints_audit_fields_and_rowversions()
+    public async Task In_place_upgrade_with_legacy_index_removes_it_and_preserves_rows()
     {
         await using var database = await CreateLegacyCatalogDatabaseAsync("Upgrade");
         await database.ExecuteAsync(
@@ -68,9 +75,42 @@ public sealed class InstituteProgramMigrationIntegrationTests
             await database.ScalarAsync<int>(
                 "SELECT COUNT(*) FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Programs]') AND [name] = N'IX_Programs_InstituteID_ProgramName_DegreeType' AND [is_unique] = 1;"));
         Assert.Equal(
+            0,
+            await database.ScalarAsync<int>(
+                "SELECT COUNT(*) FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Programs]') AND [name] = N'IX_Programs_InstituteID';"));
+        Assert.Equal(
             3,
             await database.ScalarAsync<int>(
                 "SELECT COUNT(*) FROM sys.check_constraints WHERE [parent_object_id] IN (OBJECT_ID(N'[dbo].[Institutes]'), OBJECT_ID(N'[dbo].[Programs]')) AND [name] IN (N'CK_Institutes_InstituteName_Trimmed', N'CK_Programs_ProgramName_Trimmed', N'CK_Programs_DegreeType');"));
+        Assert.Equal(
+            1,
+            await database.ScalarAsync<int>(
+                $"SELECT COUNT(*) FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'{CurrentMigration}';"));
+    }
+
+    [LocalDbFact]
+    public async Task In_place_upgrade_without_legacy_index_still_succeeds()
+    {
+        await using var database = await CreateLegacyCatalogDatabaseAsync("NoLegacyIndex", includeLegacyIndex: false);
+        await database.ExecuteAsync(
+            """
+            INSERT INTO [dbo].[Institutes] ([InstituteName]) VALUES (N'Sosyal Bilimler');
+            DECLARE @InstituteID int = SCOPE_IDENTITY();
+            INSERT INTO [dbo].[Programs] ([InstituteID], [ProgramName], [DegreeType], [IsActive])
+            VALUES (@InstituteID, N'Tarih', N'Doktora', 1);
+            """);
+
+        await database.MigrateAsync(CurrentMigration);
+
+        Assert.Equal(1, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[Programs];"));
+        Assert.Equal(
+            1,
+            await database.ScalarAsync<int>(
+                "SELECT COUNT(*) FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Programs]') AND [name] = N'IX_Programs_InstituteID_ProgramName_DegreeType' AND [is_unique] = 1;"));
+        Assert.Equal(
+            0,
+            await database.ScalarAsync<int>(
+                "SELECT COUNT(*) FROM sys.indexes WHERE [object_id] = OBJECT_ID(N'[dbo].[Programs]') AND [name] = N'IX_Programs_InstituteID';"));
         Assert.Equal(
             1,
             await database.ScalarAsync<int>(
@@ -152,7 +192,9 @@ public sealed class InstituteProgramMigrationIntegrationTests
         }
     }
 
-    private static async Task<LocalDbTestDatabase> CreateLegacyCatalogDatabaseAsync(string suffix)
+    private static async Task<LocalDbTestDatabase> CreateLegacyCatalogDatabaseAsync(
+        string suffix,
+        bool includeLegacyIndex = true)
     {
         var database = new LocalDbTestDatabase(
             $"GraduateAppInstituteProgram{suffix}_{Guid.NewGuid():N}",
@@ -182,8 +224,6 @@ public sealed class InstituteProgramMigrationIntegrationTests
                     CONSTRAINT [FK_Programs_Institutes_InstituteID]
                         FOREIGN KEY ([InstituteID]) REFERENCES [dbo].[Institutes] ([InstituteID])
                 );
-                CREATE INDEX [IX_Programs_InstituteID] ON [dbo].[Programs] ([InstituteID]);
-
                 CREATE TABLE [dbo].[__EFMigrationsHistory]
                 (
                     [MigrationId] nvarchar(150) NOT NULL,
@@ -199,6 +239,12 @@ public sealed class InstituteProgramMigrationIntegrationTests
                     (N'20260720115611_AddCentralLoginIdentities', N'10.0.10'),
                     (N'20260720124735_ValidateCentralLoginIdentityData', N'10.0.10');
                 """);
+            if (includeLegacyIndex)
+            {
+                await database.ExecuteAsync(
+                    "CREATE INDEX [IX_Programs_InstituteID] ON [dbo].[Programs] ([InstituteID]);");
+            }
+
             return database;
         }
         catch
