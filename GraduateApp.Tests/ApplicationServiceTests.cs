@@ -192,6 +192,87 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task Admin_detail_returns_masked_tc_by_default()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db, isOpen: true);
+        var service = CreateService(db);
+        var created = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+
+        var detail = await service.GetDetailForAdminAsync(created.Value!.ApplicationId, CancellationToken.None);
+
+        Assert.NotNull(detail);
+        Assert.Equal("*******0146", detail!.MaskedTc);
+        Assert.DoesNotContain("10000000146", detail.MaskedTc, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UpdateStatus_PendingToUnderReview_adds_exactly_one_history_and_one_audit()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db, isOpen: true);
+        var service = CreateService(db);
+        var created = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        var historyCountBefore = db.ApplicationStatusHistories.Count();
+
+        var result = await service.UpdateStatusAsync(
+            created.Value!.ApplicationId,
+            adminId: 1,
+            new ApplicationStatusUpdateDto
+            {
+                NewStatus = ApplicationStatus.UnderReview,
+                RowVersion = created.Value.RowVersion
+            },
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(ApplicationStatus.UnderReview.ToString(), db.Applications.Single().CurrentStatus);
+        Assert.Equal(historyCountBefore + 1, db.ApplicationStatusHistories.Count());
+        var history = db.ApplicationStatusHistories.Single(item => item.PreviousStatus == ApplicationStatus.Pending.ToString());
+        Assert.Equal(ApplicationStatus.UnderReview.ToString(), history.StatusName);
+        var audit = Assert.Single(db.SecurityAuditLogs);
+        Assert.Equal("ApplicationStatusChanged", audit.EventType);
+        Assert.Equal(created.Value.ApplicationId.ToString(), audit.TargetId);
+    }
+
+    [Theory]
+    [InlineData(ApplicationStatus.Approved)]
+    [InlineData(ApplicationStatus.Rejected)]
+    public async Task UpdateStatus_UnderReview_can_transition_to_final_status(ApplicationStatus finalStatus)
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db, isOpen: true);
+        var service = CreateService(db);
+        var created = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        var underReview = await service.UpdateStatusAsync(
+            created.Value!.ApplicationId,
+            adminId: 1,
+            new ApplicationStatusUpdateDto
+            {
+                NewStatus = ApplicationStatus.UnderReview,
+                RowVersion = created.Value.RowVersion
+            },
+            CancellationToken.None);
+        var currentRowVersion = Convert.ToBase64String(db.Applications.Single().RowVersion);
+
+        var result = await service.UpdateStatusAsync(
+            created.Value.ApplicationId,
+            adminId: 1,
+            new ApplicationStatusUpdateDto
+            {
+                NewStatus = finalStatus,
+                RowVersion = currentRowVersion
+            },
+            CancellationToken.None);
+
+        Assert.True(underReview.IsSuccess);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(finalStatus.ToString(), db.Applications.Single().CurrentStatus);
+        Assert.Equal(3, db.ApplicationStatusHistories.Count());
+        Assert.Equal(2, db.SecurityAuditLogs.Count());
+    }
+
+    [Fact]
     public async Task UpdateStatus_RejectsInvalidTransition()
     {
         await using var db = TestDb.Create();

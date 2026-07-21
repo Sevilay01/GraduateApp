@@ -1,8 +1,13 @@
+using System.Globalization;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
+var turkishCulture = CultureInfo.GetCultureInfo("tr-TR");
+CultureInfo.DefaultThreadCurrentCulture = turkishCulture;
+CultureInfo.DefaultThreadCurrentUICulture = turkishCulture;
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -21,7 +26,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews(options =>
-    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    var messages = options.ModelBindingMessageProvider;
+    messages.SetMissingBindRequiredValueAccessor(_ => "Bu alan zorunludur.");
+    messages.SetMissingKeyOrValueAccessor(() => "Bu alan zorunludur.");
+    messages.SetMissingRequestBodyRequiredValueAccessor(() => "Gerekli bilgiler gönderilmedi.");
+    messages.SetValueMustNotBeNullAccessor(_ => "Bu alan zorunludur.");
+    messages.SetAttemptedValueIsInvalidAccessor((_, _) => "Girilen değer geçerli bir sayı veya tarih biçiminde değil.");
+    messages.SetNonPropertyAttemptedValueIsInvalidAccessor(_ => "Girilen değer geçerli bir sayı veya tarih biçiminde değil.");
+    messages.SetUnknownValueIsInvalidAccessor(_ => "Girilen değer geçersiz.");
+    messages.SetNonPropertyUnknownValueIsInvalidAccessor(() => "Girilen değer geçersiz.");
+    messages.SetValueIsInvalidAccessor(_ => "Girilen değer geçersiz.");
+    messages.SetValueMustBeANumberAccessor(_ => "Geçerli bir sayı giriniz.");
+    messages.SetNonPropertyValueMustBeANumberAccessor(() => "Geçerli bir sayı giriniz.");
+});
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.DefaultRequestCulture = new RequestCulture(turkishCulture, turkishCulture);
+    options.SupportedCultures = [turkishCulture];
+    options.SupportedUICultures = [turkishCulture];
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<ApiAccessTokenHandler>();
 builder.Services.AddHttpClient<GraduateApiClient>((services, client) =>
@@ -53,6 +78,7 @@ else
 }
 
 app.UseStatusCodePagesWithReExecute("/Home/HttpStatus", "?code={0}");
+app.UseRequestLocalization();
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();

@@ -184,7 +184,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
         if (model.ProgramOfferingId > 0 && string.IsNullOrWhiteSpace(model.RowVersion))
         {
-            ModelState.AddModelError("Form.RowVersion", "İlan eş zamanlılık bilgisi eksik. Sayfayı yenileyin.");
+            ModelState.AddModelError("Form.RowVersion", "İlan eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.");
         }
 
         if (!ModelState.IsValid)
@@ -272,7 +272,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Quota = offering?.Quota > 0 ? offering.Quota : 1,
             IsOpen = offering?.IsOpen ?? false,
             IsArchived = offering?.IsArchived ?? false,
-            RowVersion = offering?.RowVersion ?? string.Empty,
+            RowVersion = offering?.RowVersion,
             ExamRequirements = requirements,
             Programs = catalog.Programs,
             Exams = catalog.Exams

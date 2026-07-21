@@ -53,7 +53,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     {
         var result = await authService.ResetPasswordAsync(request, cancellationToken);
         return result.IsSuccess
-            ? NoContent()
+            ? Ok(result.Value)
             : Problem(statusCode: result.StatusCode, detail: result.Error);
     }
 

@@ -285,7 +285,7 @@ public sealed class ApplicationService(
 
         return new AdminApplicationDetailDto(
             application.ApplicationId,
-            application.Tc,
+            MaskTc(application.Tc),
             $"{application.TcNavigation.StudentName} {application.TcNavigation.StudentSurname}".Trim(),
             application.TcNavigation.Email,
             offering.Program.ProgramName,
@@ -307,6 +307,7 @@ public sealed class ApplicationService(
         ApplicationStatusUpdateDto request,
         CancellationToken cancellationToken)
     {
+        await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
         var application = await dbContext.Applications.SingleOrDefaultAsync(
             item => item.ApplicationId == applicationId,
             cancellationToken);
@@ -356,10 +357,21 @@ public sealed class ApplicationService(
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Entry(application).ReloadAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
             return ServiceResult.Success();
         }
         catch (DbUpdateConcurrencyException)
         {
+            if (transaction is not null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
             return ServiceResult.Failure(
                 "Başvuru başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);

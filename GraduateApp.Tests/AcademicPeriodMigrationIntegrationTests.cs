@@ -17,7 +17,7 @@ public sealed class AcademicPeriodMigrationIntegrationTests
         await database.CreateAsync();
         await CreateLegacySchemaAsync(database);
 
-        await database.MigrateAsync();
+        await database.MigrateAsync("20260717123013_AddAcademicPeriodOfferings");
 
         Assert.Equal(2, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[Applications];"));
         Assert.Equal(2, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[ProgramOfferings];"));

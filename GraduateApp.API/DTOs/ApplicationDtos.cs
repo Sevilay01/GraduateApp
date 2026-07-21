@@ -58,7 +58,7 @@ public sealed record ApplicationStatusHistoryDto(
 
 public sealed record AdminApplicationDetailDto(
     int ApplicationId,
-    string Tc,
+    string MaskedTc,
     string StudentFullName,
     string Email,
     string ProgramName,

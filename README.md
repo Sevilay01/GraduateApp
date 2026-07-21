@@ -39,7 +39,7 @@ Cors__AllowedOrigins__0
 GraduateApi__BaseAddress
 ```
 
-`BootstrapAdmin` değerleri birlikte sağlanır. E-posta mevcut değilse API başlangıcında admin oluşturulur; parola hashlenir ve ilk girişte değiştirilmesi zorunludur. Uygulamada gerçek bir varsayılan admin parolası yoktur. Bootstrap secret'larını hesap oluşturulduktan sonra ortamdan kaldırın.
+`BootstrapAdmin` değerleri birlikte sağlanır ve yalnızca sistemde hiç yönetici yokken ilk yönetici hesabını oluşturur. E-posta doğrulanır, parola hashlenir ve ilk girişte değiştirilmesi zorunludur. Sistemde bir yönetici varken farklı bootstrap e-postasıyla ikinci yönetici oluşturulmaz; ek yönetici desteği ileride yetkili bir yönetim akışıyla sağlanmalıdır. Uygulamada gerçek bir varsayılan admin parolası yoktur. Bootstrap secret'larını hesap oluşturulduktan sonra ortamdan kaldırın; secret'ların kaldırılması mevcut hesabı silmez veya değiştirmez.
 
 Web, API'yi varsayılan geliştirme adresi olan `https://localhost:7037/` üzerinden çağırır. Farklı bir adres için `GraduateApi__BaseAddress` kullanın. API'nin parola sıfırlama bağlantısında kullandığı Web adresi `Web__BaseUrl` ile yapılandırılır.
 
@@ -69,6 +69,20 @@ Migration aşağıdaki durumlarda veri silmek yerine hata verip transaction'ı d
 - normalize edildiğinde yinelenen e-posta.
 
 Bu kayıtlar DBA/ürün sahibi kararıyla çözülmeden migration'ı zorlamayın. Migration `Down` metodu da veri kaybı riski nedeniyle otomatik tablo/kolon silmez.
+
+Merkezi `LoginIdentities` migration'ı daha önce uygulanmış olabileceğinden geçmiş migration dosyası değiştirilmez. İleri doğrulama migration'ı; kaynak e-postaların null/boş olmamasını, canonical normalize değerleri, roller arası çakışmaları ve her hesabın tam olarak bir doğru merkezi kimliğe bağlı olmasını veri değiştirmeden denetler.
+
+### Birden fazla yönetici kaydı
+
+Mevcut veritabanında birden fazla yönetici kaydı bulunabilir; uygulama ve migration'lar bu hesapları otomatik silmez. Kullanılmayan bir yöneticiyi kaldırmadan önce en az şu bağımlılıklar incelenmelidir:
+
+- `ApplicationStatusHistory.ChangedByAdminID`
+- `PasswordResetTokens.AdminID`
+- `SystemLogs.AdminID`
+- `SecurityAuditLogs.ActorAdminID`
+- `LoginIdentities.AdminID`
+
+Bağımlı kayıt varsa geçmiş ve audit bütünlüğünü bozacak fiziksel silme yerine, ayrı bir ileri geliştirmede kalıcı yönetici aktiflik durumu ve oturum iptaliyle devre dışı bırakma tasarımı tercih edilmelidir. Bootstrap mevcut yöneticileri silmez, güncellemez veya ikinci yönetici üretmek için kullanılmaz.
 
 Migration sonrasında mevcut programlar güvenli varsayılan olarak kapalıdır. Başvuru açılacak programlar için `IsOpen = 1` ve gerekiyorsa UTC `ApplicationDeadlineUtc` değeri yetkili bir veritabanı operasyonuyla belirlenmelidir.
 

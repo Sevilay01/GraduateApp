@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Data;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
 using GraduateApp.API.Security;
@@ -14,7 +15,7 @@ public interface IAuthService
     Task<ServiceResult> RegisterStudentAsync(RegisterStudentDto request, CancellationToken cancellationToken);
     Task<ServiceResult<LoginResponse>> LoginAsync(LoginDto request, CancellationToken cancellationToken);
     Task RequestPasswordResetAsync(ForgotPasswordDto request, CancellationToken cancellationToken);
-    Task<ServiceResult> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken);
+    Task<ServiceResult<PasswordResetResponse>> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken);
     Task<ServiceResult> ChangePasswordAsync(string subject, string role, ChangePasswordDto request, CancellationToken cancellationToken);
     Task RevokeSessionsAsync(string subject, string role, CancellationToken cancellationToken);
 }
@@ -28,7 +29,8 @@ public sealed class AuthService(
     IConfiguration configuration,
     TimeProvider timeProvider,
     ILogger<AuthService> logger,
-    StudentRegistrationValidator registrationValidator) : IAuthService
+    StudentRegistrationValidator registrationValidator,
+    IEmailNormalizer emailNormalizer) : IAuthService
 {
     private const int MaximumFailedAttempts = 5;
     private static readonly EventId StudentRegistrationDatabaseFailure = new(1001, nameof(StudentRegistrationDatabaseFailure));
@@ -58,15 +60,29 @@ public sealed class AuthService(
         }
 
         var normalized = registration.Value;
-        var normalizedEmail = NormalizeEmail(normalized.Email);
-        var exists = await dbContext.Students.AnyAsync(
-            student => student.Tc == request.Tc
-                || student.NormalizedEmail == normalizedEmail
-                || student.Email.ToUpper() == normalizedEmail
-                || student.Telephone == normalized.Telephone,
+        if (!emailNormalizer.TryNormalize(normalized.Email, out var normalizedEmail))
+        {
+            return ServiceResult.Failure(
+                "Geçerli bir e-posta adresi giriniz.",
+                StatusCodes.Status400BadRequest);
+        }
+        await using var transaction = dbContext.Database.IsRelational()
+            ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken)
+            : null;
+        var identityExists = await dbContext.LoginIdentities.AnyAsync(
+            identity => identity.NormalizedEmail == normalizedEmail,
+            cancellationToken);
+        var unlinkedAccountExists = await dbContext.Students.AnyAsync(
+            student => student.NormalizedEmail == normalizedEmail,
+            cancellationToken)
+            || await dbContext.Admins.AnyAsync(
+                admin => admin.NormalizedEmail == normalizedEmail,
+                cancellationToken);
+        var studentExists = await dbContext.Students.AnyAsync(
+            student => student.Tc == request.Tc || student.Telephone == normalized.Telephone,
             cancellationToken);
 
-        if (exists)
+        if (identityExists || unlinkedAccountExists || studentExists)
         {
             return ServiceResult.Failure("Bu bilgilerle kayıt oluşturulamıyor.", StatusCodes.Status409Conflict);
         }
@@ -89,11 +105,23 @@ public sealed class AuthService(
             UpdatedAtUtc = now
         };
         student.PasswordHash = studentPasswordHasher.HashPassword(student, request.Password);
+        student.LoginIdentity = new LoginIdentity
+        {
+            NormalizedEmail = normalizedEmail,
+            AccountType = LoginAccountType.Student,
+            Student = student,
+            CreatedAtUtc = now
+        };
 
         dbContext.Students.Add(student);
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
             return ServiceResult.Success(StatusCodes.Status201Created);
         }
         catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
@@ -128,118 +156,97 @@ public sealed class AuthService(
     public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginDto request, CancellationToken cancellationToken)
     {
         var username = request.Username.Trim();
-        var normalizedEmail = NormalizeEmail(username);
+        var normalizedEmail = emailNormalizer.Normalize(username);
         var now = timeProvider.GetUtcNow();
 
-        var student = await dbContext.Students.FirstOrDefaultAsync(
-            item => item.Tc == username
-                || item.NormalizedEmail == normalizedEmail
-                || item.Email.ToUpper() == normalizedEmail,
-            cancellationToken);
-
-        if (student is not null)
+        if (request.AccountType is not (LoginAccountType.Student or LoginAccountType.Admin))
         {
-            if (!student.IsActive)
-            {
-                PerformDummyPasswordVerification(request.Password);
-                return InvalidLogin<LoginResponse>();
-            }
-
-            if (student.LockoutEndUtc > now)
-            {
-                return InvalidLogin<LoginResponse>();
-            }
-
-            var verification = studentPasswordHasher.VerifyHashedPassword(student, student.PasswordHash, request.Password);
-            if (verification == PasswordVerificationResult.Failed)
-            {
-                await RecordStudentFailureAsync(student, now, cancellationToken);
-                return InvalidLogin<LoginResponse>();
-            }
-
-            student.AccessFailedCount = 0;
-            student.LockoutEndUtc = null;
-            student.NormalizedEmail = NormalizeEmail(student.Email);
-            student.UpdatedAtUtc = now.UtcDateTime;
-            if (verification == PasswordVerificationResult.SuccessRehashNeeded)
-            {
-                student.PasswordHash = studentPasswordHasher.HashPassword(student, request.Password);
-            }
-
-            await dbContext.SaveChangesAsync(cancellationToken);
-            var displayName = $"{student.StudentName} {student.StudentSurname}".Trim();
-            var issued = accessTokenService.Issue(student.Tc, ApiAuthenticationDefaults.StudentRole, displayName, student.SecurityStamp);
-            return ServiceResult<LoginResponse>.Success(new LoginResponse(
-                issued.Token,
-                issued.ExpiresAtUtc,
-                ApiAuthenticationDefaults.StudentRole,
-                displayName,
-                false));
-        }
-
-        var admin = await dbContext.Admins.FirstOrDefaultAsync(
-            item => item.NormalizedEmail == normalizedEmail || item.Email.ToUpper() == normalizedEmail,
-            cancellationToken);
-
-        if (admin is null || admin.LockoutEndUtc > now)
-        {
-            PerformDummyPasswordVerification(request.Password);
+            PerformDummyPasswordVerification(request.Password, LoginAccountType.Student);
             return InvalidLogin<LoginResponse>();
         }
 
-        var adminVerification = adminPasswordHasher.VerifyHashedPassword(admin, admin.PasswordHash, request.Password);
-        if (adminVerification == PasswordVerificationResult.Failed)
+        IQueryable<LoginIdentity> identitiesQuery = dbContext.LoginIdentities
+            .Include(identity => identity.Student)
+            .Include(identity => identity.Admin);
+        identitiesQuery = request.AccountType == LoginAccountType.Admin
+            ? identitiesQuery.Where(identity => identity.AccountType == LoginAccountType.Admin
+                && identity.NormalizedEmail == normalizedEmail)
+            : identitiesQuery.Where(identity => identity.AccountType == LoginAccountType.Student
+                && (identity.StudentTc == username || identity.NormalizedEmail == normalizedEmail));
+
+        var identities = await identitiesQuery
+            .OrderBy(identity => identity.LoginIdentityId)
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        if (identities.Count != 1)
         {
-            admin.AccessFailedCount++;
-            if (admin.AccessFailedCount >= MaximumFailedAttempts)
+            if (identities.Count > 1)
             {
-                admin.LockoutEndUtc = now.Add(LockoutDuration);
-                admin.AccessFailedCount = 0;
+                await RecordIdentityIntegrityFailureAsync(identities[0].LoginIdentityId, cancellationToken);
             }
 
-            admin.UpdatedAtUtc = now.UtcDateTime;
-            await dbContext.SaveChangesAsync(cancellationToken);
+            PerformDummyPasswordVerification(request.Password, request.AccountType.Value);
             return InvalidLogin<LoginResponse>();
         }
 
-        admin.AccessFailedCount = 0;
-        admin.LockoutEndUtc = null;
-        admin.NormalizedEmail = NormalizeEmail(admin.Email);
-        admin.UpdatedAtUtc = now.UtcDateTime;
-        if (adminVerification == PasswordVerificationResult.SuccessRehashNeeded)
+        var identity = identities[0];
+        if (identity.AccountType != request.AccountType)
         {
-            admin.PasswordHash = adminPasswordHasher.HashPassword(admin, request.Password);
+            PerformDummyPasswordVerification(request.Password, request.AccountType.Value);
+            return InvalidLogin<LoginResponse>();
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        var adminToken = accessTokenService.Issue(
-            admin.AdminId.ToString(),
-            ApiAuthenticationDefaults.AdminRole,
-            "Yönetici",
-            admin.SecurityStamp);
-        return ServiceResult<LoginResponse>.Success(new LoginResponse(
-            adminToken.Token,
-            adminToken.ExpiresAtUtc,
-            ApiAuthenticationDefaults.AdminRole,
-            "Yönetici",
-            admin.MustChangePassword));
+        if (!IsIdentityConsistent(identity))
+        {
+            await RecordIdentityIntegrityFailureAsync(identity.LoginIdentityId, cancellationToken);
+            PerformDummyPasswordVerification(request.Password, request.AccountType.Value);
+            return InvalidLogin<LoginResponse>();
+        }
+
+        return identity.AccountType == LoginAccountType.Student
+            ? await LoginStudentAsync(identity.Student!, request.Password, now, cancellationToken)
+            : await LoginAdminAsync(identity.Admin!, request.Password, now, cancellationToken);
     }
 
     public async Task RequestPasswordResetAsync(ForgotPasswordDto request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = NormalizeEmail(request.Email);
-        var student = await dbContext.Students.FirstOrDefaultAsync(
-            item => item.NormalizedEmail == normalizedEmail || item.Email.ToUpper() == normalizedEmail,
-            cancellationToken);
-        var admin = student is null
-            ? await dbContext.Admins.FirstOrDefaultAsync(
-                item => item.NormalizedEmail == normalizedEmail || item.Email.ToUpper() == normalizedEmail,
-                cancellationToken)
-            : null;
-
-        if ((student is null && admin is null) || student is { IsActive: false })
+        if (!emailNormalizer.TryNormalize(request.Email, out var normalizedEmail))
         {
-            PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"));
+            PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), LoginAccountType.Student);
+            return;
+        }
+        var identities = await dbContext.LoginIdentities
+            .Include(identity => identity.Student)
+            .Include(identity => identity.Admin)
+            .Where(identity => identity.NormalizedEmail == normalizedEmail)
+            .OrderBy(identity => identity.LoginIdentityId)
+            .Take(2)
+            .ToListAsync(cancellationToken);
+        if (identities.Count != 1)
+        {
+            if (identities.Count > 1)
+            {
+                await RecordIdentityIntegrityFailureAsync(identities[0].LoginIdentityId, cancellationToken);
+            }
+
+            PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), LoginAccountType.Student);
+            return;
+        }
+
+        var identity = identities[0];
+        if (!IsIdentityConsistent(identity))
+        {
+            await RecordIdentityIntegrityFailureAsync(identity.LoginIdentityId, cancellationToken);
+            PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), identity.AccountType);
+            return;
+        }
+
+        var student = identity.Student;
+        var admin = identity.Admin;
+        if (student is { IsActive: false })
+        {
+            PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), LoginAccountType.Student);
             return;
         }
 
@@ -273,23 +280,31 @@ public sealed class AuthService(
             var resetLink = CreateResetLink(rawToken);
             await emailSender.SendAsync(student?.Email ?? admin!.Email, resetLink, cancellationToken);
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            logger.LogError(exception, "Password reset bildirimi gönderilemedi.");
+            logger.LogError(
+                new EventId(1004, "PasswordResetNotificationFailure"),
+                "Password reset notification could not be sent.");
         }
     }
 
-    public async Task<ServiceResult> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken)
+    public async Task<ServiceResult<PasswordResetResponse>> ResetPasswordAsync(
+        ResetPasswordDto request,
+        CancellationToken cancellationToken)
     {
         if (!PasswordPolicy.IsValid(request.NewPassword))
         {
-            return ServiceResult.Failure(PasswordPolicy.ValidationMessage, StatusCodes.Status400BadRequest);
+            return ServiceResult<PasswordResetResponse>.Failure(
+                PasswordPolicy.ValidationMessage,
+                StatusCodes.Status400BadRequest);
         }
 
         var tokenHash = HashToken(request.Token);
         var token = await dbContext.PasswordResetTokens
             .Include(item => item.TcNavigation)
+                .ThenInclude(student => student!.LoginIdentity)
             .Include(item => item.Admin)
+                .ThenInclude(admin => admin!.LoginIdentity)
             .SingleOrDefaultAsync(item => item.TokenHash == tokenHash, cancellationToken);
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
@@ -298,7 +313,18 @@ public sealed class AuthService(
             || token.ExpirationDate <= now
             || token.TcNavigation is { IsActive: false })
         {
-            return ServiceResult.Failure("Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.", StatusCodes.Status400BadRequest);
+            return InvalidPasswordReset();
+        }
+
+        var loginIdentity = token.TcNavigation?.LoginIdentity ?? token.Admin?.LoginIdentity;
+        if (loginIdentity is null || !IsIdentityConsistent(loginIdentity))
+        {
+            if (loginIdentity is not null)
+            {
+                await RecordIdentityIntegrityFailureAsync(loginIdentity.LoginIdentityId, cancellationToken);
+            }
+
+            return InvalidPasswordReset();
         }
 
         if (token.TcNavigation is not null)
@@ -320,7 +346,7 @@ public sealed class AuthService(
         }
         else
         {
-            return ServiceResult.Failure("Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.", StatusCodes.Status400BadRequest);
+            return InvalidPasswordReset();
         }
 
         var relatedTokens = await dbContext.PasswordResetTokens
@@ -336,11 +362,14 @@ public sealed class AuthService(
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            return ServiceResult.Success();
+            return ServiceResult<PasswordResetResponse>.Success(
+                new PasswordResetResponse(loginIdentity.AccountType));
         }
         catch (DbUpdateConcurrencyException)
         {
-            return ServiceResult.Failure("Parola sıfırlama bağlantısı daha önce kullanılmış.", StatusCodes.Status409Conflict);
+            return ServiceResult<PasswordResetResponse>.Failure(
+                "Parola sıfırlama bağlantısı daha önce kullanılmış.",
+                StatusCodes.Status409Conflict);
         }
     }
 
@@ -423,6 +452,147 @@ public sealed class AuthService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    private async Task<ServiceResult<LoginResponse>> LoginStudentAsync(
+        Student student,
+        string password,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (!student.IsActive)
+        {
+            PerformDummyPasswordVerification(password, LoginAccountType.Student);
+            return InvalidLogin<LoginResponse>();
+        }
+
+        if (student.LockoutEndUtc > now)
+        {
+            PerformDummyPasswordVerification(password, LoginAccountType.Student);
+            return InvalidLogin<LoginResponse>();
+        }
+
+        var verification = studentPasswordHasher.VerifyHashedPassword(student, student.PasswordHash, password);
+        if (verification == PasswordVerificationResult.Failed)
+        {
+            await RecordStudentFailureAsync(student, now, cancellationToken);
+            return InvalidLogin<LoginResponse>();
+        }
+
+        student.AccessFailedCount = 0;
+        student.LockoutEndUtc = null;
+        student.UpdatedAtUtc = now.UtcDateTime;
+        if (verification == PasswordVerificationResult.SuccessRehashNeeded)
+        {
+            student.PasswordHash = studentPasswordHasher.HashPassword(student, password);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        var displayName = $"{student.StudentName} {student.StudentSurname}".Trim();
+        var issued = accessTokenService.Issue(
+            student.Tc,
+            ApiAuthenticationDefaults.StudentRole,
+            displayName,
+            student.SecurityStamp);
+        return ServiceResult<LoginResponse>.Success(new LoginResponse(
+            issued.Token,
+            issued.ExpiresAtUtc,
+            ApiAuthenticationDefaults.StudentRole,
+            displayName,
+            false));
+    }
+
+    private async Task<ServiceResult<LoginResponse>> LoginAdminAsync(
+        Admin admin,
+        string password,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (admin.LockoutEndUtc > now)
+        {
+            PerformDummyPasswordVerification(password, LoginAccountType.Admin);
+            return InvalidLogin<LoginResponse>();
+        }
+
+        var verification = adminPasswordHasher.VerifyHashedPassword(admin, admin.PasswordHash, password);
+        if (verification == PasswordVerificationResult.Failed)
+        {
+            admin.AccessFailedCount++;
+            if (admin.AccessFailedCount >= MaximumFailedAttempts)
+            {
+                admin.LockoutEndUtc = now.Add(LockoutDuration);
+                admin.AccessFailedCount = 0;
+            }
+
+            admin.UpdatedAtUtc = now.UtcDateTime;
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return InvalidLogin<LoginResponse>();
+        }
+
+        admin.AccessFailedCount = 0;
+        admin.LockoutEndUtc = null;
+        admin.UpdatedAtUtc = now.UtcDateTime;
+        if (verification == PasswordVerificationResult.SuccessRehashNeeded)
+        {
+            admin.PasswordHash = adminPasswordHasher.HashPassword(admin, password);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        var issued = accessTokenService.Issue(
+            admin.AdminId.ToString(),
+            ApiAuthenticationDefaults.AdminRole,
+            "Yönetici",
+            admin.SecurityStamp);
+        return ServiceResult<LoginResponse>.Success(new LoginResponse(
+            issued.Token,
+            issued.ExpiresAtUtc,
+            ApiAuthenticationDefaults.AdminRole,
+            "Yönetici",
+            admin.MustChangePassword));
+    }
+
+    private bool IsIdentityConsistent(LoginIdentity identity) => identity.AccountType switch
+    {
+        LoginAccountType.Student => identity.StudentTc is not null
+            && identity.AdminId is null
+            && identity.Student is not null
+            && identity.Admin is null
+            && identity.NormalizedEmail == emailNormalizer.Normalize(identity.Student.Email)
+            && identity.Student.NormalizedEmail == identity.NormalizedEmail,
+        LoginAccountType.Admin => identity.StudentTc is null
+            && identity.AdminId is not null
+            && identity.Student is null
+            && identity.Admin is not null
+            && identity.NormalizedEmail == emailNormalizer.Normalize(identity.Admin.Email)
+            && identity.Admin.NormalizedEmail == identity.NormalizedEmail,
+        _ => false
+    };
+
+    private async Task RecordIdentityIntegrityFailureAsync(int identityId, CancellationToken cancellationToken)
+    {
+        logger.LogWarning(
+            new EventId(1002, "LoginIdentityIntegrityFailure"),
+            "Login identity integrity validation failed for identity id {IdentityId}.",
+            identityId);
+        dbContext.SecurityAuditLogs.Add(new SecurityAuditLog
+        {
+            EventType = "LoginIdentityIntegrityFailure",
+            TargetType = "LoginIdentity",
+            TargetId = identityId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            Details = "Merkezi giriş kimliği ilişki doğrulamasını geçemedi.",
+            CreatedAtUtc = timeProvider.GetUtcNow().UtcDateTime
+        });
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            logger.LogError(
+                new EventId(1003, "LoginIdentityAuditFailure"),
+                "Login identity integrity audit record could not be persisted.");
+        }
+    }
+
     private async Task RecordStudentFailureAsync(Student student, DateTimeOffset now, CancellationToken cancellationToken)
     {
         student.AccessFailedCount++;
@@ -436,11 +606,19 @@ public sealed class AuthService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private void PerformDummyPasswordVerification(string password)
+    private void PerformDummyPasswordVerification(string password, LoginAccountType accountType)
     {
+        if (accountType == LoginAccountType.Admin)
+        {
+            var dummyAdmin = new Admin();
+            var dummyHash = adminPasswordHasher.HashPassword(dummyAdmin, "Dummy-Password-Only-For-Timing-1!");
+            _ = adminPasswordHasher.VerifyHashedPassword(dummyAdmin, dummyHash, password);
+            return;
+        }
+
         var dummyStudent = new Student();
-        var dummyHash = studentPasswordHasher.HashPassword(dummyStudent, "Dummy-Password-Only-For-Timing-1!");
-        _ = studentPasswordHasher.VerifyHashedPassword(dummyStudent, dummyHash, password);
+        var studentDummyHash = studentPasswordHasher.HashPassword(dummyStudent, "Dummy-Password-Only-For-Timing-1!");
+        _ = studentPasswordHasher.VerifyHashedPassword(dummyStudent, studentDummyHash, password);
     }
 
     private Uri CreateResetLink(string rawToken)
@@ -456,10 +634,14 @@ public sealed class AuthService(
         return new Uri(QueryHelpers.AddQueryString(resetUrl, "token", rawToken));
     }
 
-    private static string NormalizeEmail(string email) => email.Trim().ToUpperInvariant();
     private static string NewSecurityStamp() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     private static string HashToken(string token) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
 
     private static ServiceResult<T> InvalidLogin<T>() =>
         ServiceResult<T>.Failure("Kullanıcı adı veya parola hatalı.", StatusCodes.Status401Unauthorized);
+
+    private static ServiceResult<PasswordResetResponse> InvalidPasswordReset() =>
+        ServiceResult<PasswordResetResponse>.Failure(
+            "Parola sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+            StatusCodes.Status400BadRequest);
 }

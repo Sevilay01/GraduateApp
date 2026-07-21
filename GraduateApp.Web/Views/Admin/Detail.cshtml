@@ -16,7 +16,7 @@
                 <h2 id="application-info-heading" class="h4">Başvuru bilgileri</h2>
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Öğrenci</dt><dd class="col-sm-8">@Model.StudentFullName</dd>
-                    <dt class="col-sm-4">TC kimlik numarası</dt><dd class="col-sm-8">@Model.Tc</dd>
+                    <dt class="col-sm-4">TC kimlik numarası</dt><dd class="col-sm-8">@Model.MaskedTc</dd>
                     <dt class="col-sm-4">E-posta</dt><dd class="col-sm-8">@Model.Email</dd>
                     <dt class="col-sm-4">Enstitü</dt><dd class="col-sm-8">@Model.InstituteName</dd>
                     <dt class="col-sm-4">Program</dt><dd class="col-sm-8">@Model.ProgramName</dd>
@@ -29,10 +29,10 @@
 
         <section class="card shadow-sm mt-4" aria-labelledby="scores-heading">
             <div class="card-body">
-                <h2 id="scores-heading" class="h4">Başvuru puan snapshot’ı</h2>
+                <h2 id="scores-heading" class="h4">Başvuru anındaki sınav sonuçları</h2>
                 @if (Model.ScoreSnapshots.Count == 0)
                 {
-                    <p class="text-muted mb-0">Bu başvuru için puan snapshot’ı bulunmuyor.</p>
+                    <p class="text-muted mb-0">Bu başvuru için kaydedilmiş sınav sonucu bulunmuyor.</p>
                 }
                 else
                 {
@@ -66,7 +66,7 @@
                             <li class="list-group-item">
                                 <div class="d-flex justify-content-between gap-3">
                                     <strong>@history.CurrentStatus.DisplayName()</strong>
-                                    <time class="small text-muted" datetime="@history.ChangedAtUtc.ToString("O")">@history.ChangedAtUtc.ToString("dd.MM.yyyy HH:mm") UTC</time>
+                                    <time class="small text-muted" datetime="@history.ChangedAtUtc.ToString("O")">@IstanbulTime.FromUtc(history.ChangedAtUtc).ToString("dd.MM.yyyy HH:mm") (İstanbul)</time>
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(history.Notes))
                                 {

@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using GraduateApp.API.Models;
 using GraduateApp.API.Security;
 using GraduateApp.API.Services;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -22,14 +23,50 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<GraduateAppDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDataProtection().SetApplicationName("GraduateApp.API");
 builder.Services.AddProblemDetails();
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        var messages = options.ModelBindingMessageProvider;
+        messages.SetMissingBindRequiredValueAccessor(_ => "Bu alan zorunludur.");
+        messages.SetMissingKeyOrValueAccessor(() => "Bu alan zorunludur.");
+        messages.SetMissingRequestBodyRequiredValueAccessor(() => "Gerekli bilgiler gönderilmedi.");
+        messages.SetValueMustNotBeNullAccessor(_ => "Bu alan zorunludur.");
+        messages.SetAttemptedValueIsInvalidAccessor((_, _) => "Girilen değer geçerli bir sayı veya tarih biçiminde değil.");
+        messages.SetNonPropertyAttemptedValueIsInvalidAccessor(_ => "Girilen değer geçerli bir sayı veya tarih biçiminde değil.");
+        messages.SetUnknownValueIsInvalidAccessor(_ => "Girilen değer geçersiz.");
+        messages.SetNonPropertyUnknownValueIsInvalidAccessor(() => "Girilen değer geçersiz.");
+        messages.SetValueIsInvalidAccessor(_ => "Girilen değer geçersiz.");
+        messages.SetValueMustBeANumberAccessor(_ => "Geçerli bir sayı giriniz.");
+        messages.SetNonPropertyValueMustBeANumberAccessor(() => "Geçerli bir sayı giriniz.");
+    })
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var validationMessages = context.ModelState.Values
+            .SelectMany(entry => entry.Errors)
+            .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage)
+                ? "Girilen değer geçersiz."
+                : error.ErrorMessage)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        return new BadRequestObjectResult(new ProblemDetails
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Gönderilen bilgiler doğrulanamadı.",
+            Detail = validationMessages.Length == 0
+                ? "Girilen değerleri kontrol edip tekrar deneyiniz."
+                : string.Join(' ', validationMessages)
+        });
+    };
+});
 
 builder.Services.AddAuthentication(ApiAuthenticationDefaults.Scheme)
     .AddScheme<AuthenticationSchemeOptions, ApiBearerAuthenticationHandler>(ApiAuthenticationDefaults.Scheme, _ => { });
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IEmailNormalizer, InvariantEmailNormalizer>();
 builder.Services.AddOptions<RegistrationOptions>()
     .Bind(builder.Configuration.GetSection(RegistrationOptions.SectionName))
     .Validate(options => options.MinimumAge is >= 16 and <= 30, "Registration:MinimumAge geçersiz.")
@@ -74,6 +111,16 @@ if (allowedOrigins.Length > 0)
 }
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    var databaseTarget = new SqlConnectionStringBuilder(connectionString);
+    app.Logger.LogInformation(
+        new EventId(1001, "DatabaseTarget"),
+        "Database target: data source {DataSource}, database {DatabaseName}.",
+        databaseTarget.DataSource,
+        databaseTarget.InitialCatalog);
+}
 
 app.UseExceptionHandler(exceptionApp => exceptionApp.Run(async context =>
 {
