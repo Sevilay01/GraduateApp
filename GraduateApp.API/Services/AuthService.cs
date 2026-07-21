@@ -183,7 +183,7 @@ public sealed class AuthService(
         {
             if (identities.Count > 1)
             {
-                await RecordIdentityIntegrityFailureAsync(identities[0].LoginIdentityId, cancellationToken);
+                await RecordIdentityIntegrityFailureAsync(identities[0], cancellationToken);
             }
 
             PerformDummyPasswordVerification(request.Password, request.AccountType.Value);
@@ -199,7 +199,7 @@ public sealed class AuthService(
 
         if (!IsIdentityConsistent(identity))
         {
-            await RecordIdentityIntegrityFailureAsync(identity.LoginIdentityId, cancellationToken);
+            await RecordIdentityIntegrityFailureAsync(identity, cancellationToken);
             PerformDummyPasswordVerification(request.Password, request.AccountType.Value);
             return InvalidLogin<LoginResponse>();
         }
@@ -227,7 +227,7 @@ public sealed class AuthService(
         {
             if (identities.Count > 1)
             {
-                await RecordIdentityIntegrityFailureAsync(identities[0].LoginIdentityId, cancellationToken);
+                await RecordIdentityIntegrityFailureAsync(identities[0], cancellationToken);
             }
 
             PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), LoginAccountType.Student);
@@ -237,7 +237,7 @@ public sealed class AuthService(
         var identity = identities[0];
         if (!IsIdentityConsistent(identity))
         {
-            await RecordIdentityIntegrityFailureAsync(identity.LoginIdentityId, cancellationToken);
+            await RecordIdentityIntegrityFailureAsync(identity, cancellationToken);
             PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), identity.AccountType);
             return;
         }
@@ -250,12 +250,19 @@ public sealed class AuthService(
             return;
         }
 
+        if (admin is { IsActive: false } or { IsInvitationPending: true })
+        {
+            PerformDummyPasswordVerification(Guid.NewGuid().ToString("N"), LoginAccountType.Admin);
+            return;
+        }
+
         var rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var token = new PasswordResetToken
         {
             Tc = student?.Tc,
             AdminId = admin?.AdminId,
+            Purpose = PasswordResetTokenPurpose.PasswordReset,
             TokenHash = HashToken(rawToken),
             CreatedAtUtc = now,
             ExpirationDate = now.Add(ResetTokenLifetime),
@@ -263,7 +270,8 @@ public sealed class AuthService(
         };
 
         var activeTokens = await dbContext.PasswordResetTokens
-            .Where(item => !item.IsUsed
+            .Where(item => item.Purpose == PasswordResetTokenPurpose.PasswordReset
+                && !item.IsUsed
                 && ((student != null && item.Tc == student.Tc)
                     || (admin != null && item.AdminId == admin.AdminId)))
             .ToListAsync(cancellationToken);
@@ -305,13 +313,17 @@ public sealed class AuthService(
                 .ThenInclude(student => student!.LoginIdentity)
             .Include(item => item.Admin)
                 .ThenInclude(admin => admin!.LoginIdentity)
-            .SingleOrDefaultAsync(item => item.TokenHash == tokenHash, cancellationToken);
+            .SingleOrDefaultAsync(item => item.TokenHash == tokenHash
+                && item.Purpose == PasswordResetTokenPurpose.PasswordReset,
+                cancellationToken);
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
         if (token is null
             || token.IsUsed
             || token.ExpirationDate <= now
-            || token.TcNavigation is { IsActive: false })
+            || token.TcNavigation is { IsActive: false }
+            || token.Admin is { IsActive: false }
+            || token.Admin is { IsInvitationPending: true })
         {
             return InvalidPasswordReset();
         }
@@ -321,7 +333,7 @@ public sealed class AuthService(
         {
             if (loginIdentity is not null)
             {
-                await RecordIdentityIntegrityFailureAsync(loginIdentity.LoginIdentityId, cancellationToken);
+                await RecordIdentityIntegrityFailureAsync(loginIdentity, cancellationToken);
             }
 
             return InvalidPasswordReset();
@@ -350,7 +362,8 @@ public sealed class AuthService(
         }
 
         var relatedTokens = await dbContext.PasswordResetTokens
-            .Where(item => !item.IsUsed
+            .Where(item => item.Purpose == PasswordResetTokenPurpose.PasswordReset
+                && !item.IsUsed
                 && ((token.Tc != null && item.Tc == token.Tc)
                     || (token.AdminId != null && item.AdminId == token.AdminId)))
             .ToListAsync(cancellationToken);
@@ -400,7 +413,10 @@ public sealed class AuthService(
         else if (role == ApiAuthenticationDefaults.AdminRole && int.TryParse(subject, out var adminId))
         {
             var admin = await dbContext.Admins.SingleOrDefaultAsync(item => item.AdminId == adminId, cancellationToken);
-            if (admin is null || adminPasswordHasher.VerifyHashedPassword(admin, admin.PasswordHash, request.CurrentPassword) == PasswordVerificationResult.Failed)
+            if (admin is null
+                || !admin.IsActive
+                || admin.IsInvitationPending
+                || adminPasswordHasher.VerifyHashedPassword(admin, admin.PasswordHash, request.CurrentPassword) == PasswordVerificationResult.Failed)
             {
                 return ServiceResult.Failure("Mevcut parola doğrulanamadı.", StatusCodes.Status400BadRequest);
             }
@@ -512,6 +528,12 @@ public sealed class AuthService(
             return InvalidLogin<LoginResponse>();
         }
 
+        if (!admin.IsActive || admin.IsInvitationPending)
+        {
+            PerformDummyPasswordVerification(password, LoginAccountType.Admin);
+            return InvalidLogin<LoginResponse>();
+        }
+
         var verification = adminPasswordHasher.VerifyHashedPassword(admin, admin.PasswordHash, password);
         if (verification == PasswordVerificationResult.Failed)
         {
@@ -566,17 +588,21 @@ public sealed class AuthService(
         _ => false
     };
 
-    private async Task RecordIdentityIntegrityFailureAsync(int identityId, CancellationToken cancellationToken)
+    private async Task RecordIdentityIntegrityFailureAsync(LoginIdentity identity, CancellationToken cancellationToken)
     {
+        var isAdminIdentity = identity.AccountType == LoginAccountType.Admin;
+        var eventType = isAdminIdentity ? "AdminIdentityIntegrityFailure" : "LoginIdentityIntegrityFailure";
         logger.LogWarning(
-            new EventId(1002, "LoginIdentityIntegrityFailure"),
+            new EventId(1002, eventType),
             "Login identity integrity validation failed for identity id {IdentityId}.",
-            identityId);
+            identity.LoginIdentityId);
         dbContext.SecurityAuditLogs.Add(new SecurityAuditLog
         {
-            EventType = "LoginIdentityIntegrityFailure",
-            TargetType = "LoginIdentity",
-            TargetId = identityId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            EventType = eventType,
+            TargetType = isAdminIdentity ? "Admin" : "LoginIdentity",
+            TargetId = isAdminIdentity && identity.Admin is not null
+                ? identity.Admin.PublicId.ToString("D")
+                : identity.LoginIdentityId.ToString(System.Globalization.CultureInfo.InvariantCulture),
             Details = "Merkezi giriş kimliği ilişki doğrulamasını geçemedi.",
             CreatedAtUtc = timeProvider.GetUtcNow().UtcDateTime
         });

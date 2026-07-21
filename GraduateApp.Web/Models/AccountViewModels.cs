@@ -110,6 +110,24 @@ public sealed class ResetPasswordViewModel
     public string ConfirmPassword { get; set; } = string.Empty;
 }
 
+public sealed class AcceptAdminInvitationViewModel
+{
+    [Required(ErrorMessage = "Davet bağlantısı zorunludur.")]
+    public string Token { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Yeni parola zorunludur.")]
+    [StringLength(128, MinimumLength = 12, ErrorMessage = "Yeni parola 12 ile 128 karakter arasında olmalıdır.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Yeni parola")]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Yeni parola tekrarı zorunludur.")]
+    [Compare(nameof(NewPassword), ErrorMessage = "Parolalar eşleşmiyor.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Yeni parola tekrarı")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
 public sealed class ChangePasswordViewModel
 {
     [Required(ErrorMessage = "Mevcut parola zorunludur.")]

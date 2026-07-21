@@ -29,8 +29,10 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         modelBuilder.Entity<Admin>(entity =>
         {
             entity.HasKey(e => e.AdminId);
+            entity.HasIndex(e => e.PublicId).IsUnique();
             entity.HasIndex(e => e.NormalizedEmail).IsUnique();
             entity.Property(e => e.AdminId).HasColumnName("AdminID");
+            entity.Property(e => e.PublicId).HasColumnName("PublicID");
             entity.Property(e => e.Email).HasMaxLength(254).IsRequired();
             entity.Property(e => e.NormalizedEmail).HasMaxLength(254).IsRequired();
             entity.Property(e => e.PasswordHash).HasMaxLength(512).IsUnicode(false).IsRequired();
@@ -38,6 +40,9 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
             entity.Property(e => e.LockoutEndUtc).HasColumnType("datetimeoffset");
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(e => e.UpdatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsInvitationPending).HasDefaultValue(false);
+            entity.Property(e => e.RowVersion).IsRowVersion();
         });
 
         modelBuilder.Entity<Application>(entity =>
@@ -161,13 +166,20 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         {
             entity.HasKey(e => e.TokenId);
             entity.HasIndex(e => e.TokenHash).IsUnique();
-            entity.ToTable("PasswordResetTokens", table => table.HasCheckConstraint(
-                "CK_PasswordResetTokens_Subject",
-                "([TC] IS NOT NULL AND [AdminID] IS NULL) OR ([TC] IS NULL AND [AdminID] IS NOT NULL)"));
+            entity.ToTable("PasswordResetTokens", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_PasswordResetTokens_Subject",
+                    "([TC] IS NOT NULL AND [AdminID] IS NULL) OR ([TC] IS NULL AND [AdminID] IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "CK_PasswordResetTokens_Purpose",
+                    "[Purpose] IN (N'PasswordReset', N'AdminInvitation') AND ([Purpose] <> N'AdminInvitation' OR [AdminID] IS NOT NULL)");
+            });
             entity.Property(e => e.TokenId).HasColumnName("TokenID");
             entity.Property(e => e.Tc).HasMaxLength(11).IsUnicode(false).IsFixedLength().HasColumnName("TC");
             entity.Property(e => e.AdminId).HasColumnName("AdminID");
             entity.Property(e => e.TokenHash).HasMaxLength(256).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Purpose).HasConversion<string>().HasMaxLength(32).HasDefaultValue(PasswordResetTokenPurpose.PasswordReset).IsRequired();
             entity.Property(e => e.ExpirationDate).HasColumnType("datetime2");
             entity.Property(e => e.IsUsed).HasDefaultValue(false);
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");

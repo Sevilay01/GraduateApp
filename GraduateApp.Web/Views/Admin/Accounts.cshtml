@@ -1,0 +1,164 @@
+@model AdminAccountPageViewModel
+@{
+    ViewData["Title"] = "Yönetici hesapları";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div>
+        <h1 class="h2 mb-1">Yönetici hesapları</h1>
+        <p class="text-muted mb-0">Yöneticileri davet edin; hesapları silmeden güvenli biçimde aktifleştirin veya pasifleştirin.</p>
+    </div>
+</div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+}
+
+<div class="row g-4">
+    <div class="col-12 col-xl-9">
+        <form method="get" class="card card-body mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-6">
+                    <label asp-for="Search" class="form-label">E-posta</label>
+                    <input asp-for="Search" class="form-control" placeholder="E-postaya göre ara" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="Status" class="form-label">Durum</label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="">Tümü</option>
+                        <option value="Active">Aktif</option>
+                        <option value="Inactive">Pasif</option>
+                        <option value="InvitationPending">Davet bekliyor</option>
+                        <option value="Locked">Kilitli</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Filtrele</button>
+                    <a asp-action="Accounts" class="btn btn-outline-secondary">Temizle</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>E-posta</th><th>Durum</th><th>Giriş güvenliği</th><th>Tarihler</th><th class="text-end">İşlemler</th></tr>
+                </thead>
+                <tbody>
+                    @if (Model.Result.Items.Count == 0)
+                    {
+                        <tr><td colspan="5" class="text-muted text-center py-4">Filtreye uygun yönetici hesabı bulunamadı.</td></tr>
+                    }
+                    @foreach (var account in Model.Result.Items)
+                    {
+                        <tr>
+                            <td>
+                                @account.Email
+                                @if (account.IsCurrentAdmin)
+                                {
+                                    <span class="badge text-bg-info ms-1">Mevcut hesap</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!account.IsActive)
+                                {
+                                    <span class="badge text-bg-secondary">Pasif</span>
+                                }
+                                else if (account.IsInvitationPending)
+                                {
+                                    <span class="badge text-bg-warning">Davet bekliyor</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-success">Aktif</span>
+                                }
+                            </td>
+                            <td>
+                                @if (account.IsLocked)
+                                {
+                                    <span class="badge text-bg-danger">Kilitli</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Başarısız giriş: @account.AccessFailedCount</span>
+                                }
+                            </td>
+                            <td class="small">
+                                <div>Oluşturma: @IstanbulTime.FromUtc(account.CreatedAtUtc).ToString("g")</div>
+                                <div>Güncelleme: @IstanbulTime.FromUtc(account.UpdatedAtUtc).ToString("g")</div>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-end flex-wrap gap-2">
+                                    @if (account.IsInvitationPending && account.IsActive)
+                                    {
+                                        <form asp-action="ResendAdminInvitation" method="post" data-disable-on-submit="true">
+                                            <input type="hidden" name="publicId" value="@account.PublicId" />
+                                            <input type="hidden" name="rowVersion" value="@account.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-primary" type="submit">Daveti yeniden gönder</button>
+                                        </form>
+                                    }
+                                    @if (account.IsLocked)
+                                    {
+                                        <form asp-action="UnlockAdmin" method="post" data-disable-on-submit="true">
+                                            <input type="hidden" name="publicId" value="@account.PublicId" />
+                                            <input type="hidden" name="rowVersion" value="@account.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-info" type="submit">Kilidi aç</button>
+                                        </form>
+                                    }
+                                    @if (!account.IsCurrentAdmin && account.IsActive)
+                                    {
+                                        <form asp-action="DeactivateAdmin" method="post" data-disable-on-submit="true">
+                                            <input type="hidden" name="publicId" value="@account.PublicId" />
+                                            <input type="hidden" name="rowVersion" value="@account.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-warning" type="submit">Pasifleştir</button>
+                                        </form>
+                                    }
+                                    else if (!account.IsActive)
+                                    {
+                                        <form asp-action="ActivateAdmin" method="post" data-disable-on-submit="true">
+                                            <input type="hidden" name="publicId" value="@account.PublicId" />
+                                            <input type="hidden" name="rowVersion" value="@account.RowVersion" />
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Aktifleştir</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Result.TotalPages > 1)
+        {
+            <nav aria-label="Yönetici hesapları sayfaları">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Accounts" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">Önceki</a></li>
+                    <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
+                    <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Accounts" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">Sonraki</a></li>
+                </ul>
+            </nav>
+        }
+    </div>
+
+    <div class="col-12 col-xl-3">
+        <section class="card">
+            <div class="card-body">
+                <h2 class="h4">Yönetici davet et</h2>
+                <p class="small text-muted">Parola oluşturulmaz veya gösterilmez. Yönetici parolasını tek kullanımlık bağlantıdan belirler.</p>
+                <form asp-action="InviteAdmin" method="post" novalidate data-disable-on-submit="true">
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Invite.Email" class="form-label"></label>
+                        <input asp-for="Invite.Email" name="Email" class="form-control" autocomplete="email" maxlength="254" />
+                        <span asp-validation-for="Invite.Email" class="text-danger"></span>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Davet gönder</button>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

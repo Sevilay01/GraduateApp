@@ -202,6 +202,36 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
+    public IActionResult AcceptAdminInvitation(string? token) =>
+        View(new AcceptAdminInvitationViewModel { Token = token ?? string.Empty });
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AcceptAdminInvitation(
+        AcceptAdminInvitationViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            ClearInvitationPasswords(model);
+            return View(model);
+        }
+
+        var result = await apiClient.AcceptAdminInvitationAsync(model, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Yönetici daveti kabul edilemedi.");
+            ClearInvitationPasswords(model);
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Yönetici hesabınız etkinleştirildi. Yeni parolanızla giriş yapabilirsiniz.";
+        return RedirectToAction(nameof(AdminLogin));
+    }
+
+    [HttpGet]
     [Authorize]
     public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
 
@@ -278,6 +308,14 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         model.Password = string.Empty;
         model.ConfirmPassword = string.Empty;
         ModelState.Remove(nameof(model.Password));
+        ModelState.Remove(nameof(model.ConfirmPassword));
+    }
+
+    private void ClearInvitationPasswords(AcceptAdminInvitationViewModel model)
+    {
+        model.NewPassword = string.Empty;
+        model.ConfirmPassword = string.Empty;
+        ModelState.Remove(nameof(model.NewPassword));
         ModelState.Remove(nameof(model.ConfirmPassword));
     }
 }

@@ -74,6 +74,9 @@ public sealed class AdminBootstrapHostedServiceTests
         var verificationDb = verificationScope.ServiceProvider.GetRequiredService<GraduateAppDbContext>();
         var admin = await verificationDb.Admins.SingleAsync();
         Assert.Equal(originalHash, admin.PasswordHash);
+        Assert.NotEqual(Guid.Empty, admin.PublicId);
+        Assert.True(admin.IsActive);
+        Assert.False(admin.IsInvitationPending);
         Assert.Single(verificationDb.LoginIdentities);
         Assert.Equal(LoginAccountType.Admin, verificationDb.LoginIdentities.Single().AccountType);
     }

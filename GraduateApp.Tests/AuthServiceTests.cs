@@ -206,6 +206,89 @@ public sealed class AuthServiceTests
         Assert.Equal(1, admin.AccessFailedCount);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task Inactive_or_pending_admin_cannot_login_and_failed_count_is_unchanged(
+        bool isActive,
+        bool isInvitationPending)
+    {
+        await using var db = TestDb.Create();
+        var hasher = new PasswordHasher<Admin>();
+        var admin = CreateAdmin();
+        admin.IsActive = isActive;
+        admin.IsInvitationPending = isInvitationPending;
+        admin.PasswordHash = hasher.HashPassword(admin, "Strong-Admin-1!");
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        var service = CreateService(db, adminHasher: hasher);
+
+        var result = await service.LoginAsync(new LoginDto
+        {
+            Username = admin.Email,
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status401Unauthorized, result.StatusCode);
+        Assert.Equal("Kullanıcı adı veya parola hatalı.", result.Error);
+        Assert.Equal(0, admin.AccessFailedCount);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task Inactive_or_pending_admin_does_not_receive_normal_password_reset(
+        bool isActive,
+        bool isInvitationPending)
+    {
+        await using var db = TestDb.Create();
+        var admin = CreateAdmin();
+        admin.IsActive = isActive;
+        admin.IsInvitationPending = isInvitationPending;
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        var sender = new CapturingEmailSender();
+        var service = CreateService(db, emailSender: sender);
+
+        await service.RequestPasswordResetAsync(new ForgotPasswordDto { Email = admin.Email }, CancellationToken.None);
+
+        Assert.Null(sender.ResetLink);
+        Assert.Empty(db.PasswordResetTokens);
+    }
+
+    [Fact]
+    public async Task Invitation_token_is_not_accepted_by_normal_password_reset()
+    {
+        await using var db = TestDb.Create();
+        var admin = CreateAdmin();
+        admin.IsInvitationPending = true;
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        const string rawToken = "invitation-purpose-token";
+        db.PasswordResetTokens.Add(new PasswordResetToken
+        {
+            AdminId = admin.AdminId,
+            Purpose = PasswordResetTokenPurpose.AdminInvitation,
+            TokenHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(rawToken))),
+            CreatedAtUtc = DateTime.UtcNow,
+            ExpirationDate = DateTime.UtcNow.AddHours(1)
+        });
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        var result = await service.ResetPasswordAsync(new ResetPasswordDto
+        {
+            Token = rawToken,
+            NewPassword = "Strong-New-Admin-1!",
+            ConfirmPassword = "Strong-New-Admin-1!"
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(admin.IsInvitationPending);
+    }
+
     [Fact]
     public async Task Missing_admin_identity_does_not_verify_a_real_admin_or_increment_its_counter()
     {
@@ -713,7 +796,9 @@ public sealed class AuthServiceTests
         Assert.Equal(StatusCodes.Status401Unauthorized, result.StatusCode);
         Assert.Equal(0, admin.AccessFailedCount);
         var audit = Assert.Single(db.SecurityAuditLogs);
-        Assert.Equal("LoginIdentityIntegrityFailure", audit.EventType);
+        Assert.Equal("AdminIdentityIntegrityFailure", audit.EventType);
+        Assert.Equal("Admin", audit.TargetType);
+        Assert.Equal(admin.PublicId.ToString("D"), audit.TargetId);
         var output = string.Join(Environment.NewLine, logger.Entries.Append(audit.Details));
         Assert.DoesNotContain(admin.Email, output, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Strong-Admin", output, StringComparison.Ordinal);

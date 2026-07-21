@@ -9,6 +9,85 @@ namespace GraduateApp.Web.Controllers;
 public sealed class AdminController(GraduateApiClient apiClient) : Controller
 {
     [HttpGet]
+    public async Task<IActionResult> Accounts(
+        string? search,
+        AdminAccountStatus? status,
+        int page = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await apiClient.GetAdminAccountsAsync(search, status, page, pageSize, cancellationToken);
+        return View(new AdminAccountPageViewModel
+        {
+            Result = result.Value ?? new PagedResultViewModel<AdminAccountViewModel>
+            {
+                Page = Math.Max(page, 1),
+                PageSize = Math.Clamp(pageSize, 10, 100)
+            },
+            Search = search,
+            Status = status,
+            ErrorMessage = result.IsSuccess ? null : result.Error
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> InviteAdmin(InviteAdminViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Yönetici daveti için geçerli bir e-posta adresi giriniz.";
+            return RedirectToAction(nameof(Accounts));
+        }
+
+        var result = await apiClient.InviteAdminAsync(model, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Yönetici daveti oluşturuldu."
+            : result.Error ?? "Yönetici daveti oluşturulamadı.";
+        return RedirectToAction(nameof(Accounts));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> ResendAdminInvitation(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.ResendAdminInvitationAsync(publicId, rowVersion, token), "Yönetici daveti yeniden oluşturuldu.", cancellationToken);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> ActivateAdmin(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.ActivateAdminAsync(publicId, rowVersion, token), "Yönetici hesabı aktifleştirildi.", cancellationToken);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> DeactivateAdmin(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.DeactivateAdminAsync(publicId, rowVersion, token), "Yönetici hesabı pasifleştirildi ve mevcut oturumları iptal edildi.", cancellationToken);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> UnlockAdmin(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.UnlockAdminAsync(publicId, rowVersion, token), "Yönetici hesabının kilidi açıldı.", cancellationToken);
+
+    private async Task<IActionResult> ChangeAdminAccountAsync(
+        Guid publicId,
+        string rowVersion,
+        Func<CancellationToken, Task<ApiResult<AdminAccountViewModel>>> operation,
+        string successMessage,
+        CancellationToken cancellationToken)
+    {
+        if (publicId == Guid.Empty || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "Yönetici hesap bilgisi geçersiz. Sayfayı yenileyiniz.";
+            return RedirectToAction(nameof(Accounts));
+        }
+
+        var result = await operation(cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? successMessage
+            : result.Error ?? "Yönetici hesabı güncellenemedi.";
+        return RedirectToAction(nameof(Accounts));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Students(
         string? search,
         int page = 1,
