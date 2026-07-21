@@ -130,6 +130,51 @@ public sealed class GraduateApiClientTests
         Assert.Equal(rowVersion, body.RootElement.GetProperty("rowVersion").GetString());
     }
 
+    [Fact]
+    public async Task Program_update_uses_typed_admin_route_and_preserves_row_version()
+    {
+        const string rowVersion = "AQIDBAUGBwg=";
+        var handler = new CaptureHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        await client.UpdateProgramAsync(new ProgramFormViewModel
+        {
+            ProgramId = 17,
+            InstituteId = 3,
+            ProgramName = "Bilgisayar Mühendisliği",
+            DegreeType = "Tezli Yüksek Lisans",
+            RowVersion = rowVersion
+        }, CancellationToken.None);
+
+        Assert.Equal(HttpMethod.Put, handler.Method);
+        Assert.Equal("api/admin/programs/17", handler.RequestUri!.PathAndQuery.TrimStart('/'));
+        using var body = JsonDocument.Parse(handler.RequestBody!);
+        Assert.Equal(3, body.RootElement.GetProperty("instituteId").GetInt32());
+        Assert.Equal("Tezli Yüksek Lisans", body.RootElement.GetProperty("degreeType").GetString());
+        Assert.Equal(rowVersion, body.RootElement.GetProperty("rowVersion").GetString());
+        Assert.False(body.RootElement.TryGetProperty("isActive", out _));
+    }
+
+    [Fact]
+    public async Task Institute_delete_sends_row_version_in_escaped_query_string()
+    {
+        var handler = new CaptureHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        await client.DeleteInstituteAsync(8, "AQIDBAUGBwg=", CancellationToken.None);
+
+        Assert.Equal(HttpMethod.Delete, handler.Method);
+        Assert.Equal("/api/admin/institutes/8?rowVersion=AQIDBAUGBwg%3D", handler.RequestUri!.PathAndQuery);
+    }
+
     private static ProgramOfferingFormViewModel CreateOfferingForm(string? rowVersion) => new()
     {
         ProgramId = 1,
@@ -150,6 +195,7 @@ public sealed class GraduateApiClientTests
     private sealed class CaptureHandler : HttpMessageHandler
     {
         public HttpMethod? Method { get; private set; }
+        public Uri? RequestUri { get; private set; }
         public string? RequestBody { get; private set; }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -157,7 +203,10 @@ public sealed class GraduateApiClientTests
             CancellationToken cancellationToken)
         {
             Method = request.Method;
-            RequestBody = await request.Content!.ReadAsStringAsync(cancellationToken);
+            RequestUri = request.RequestUri;
+            RequestBody = request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync(cancellationToken);
             return new HttpResponseMessage(HttpStatusCode.BadRequest)
             {
                 Content = JsonContent.Create(new { detail = "Doğrulama başarısız." })

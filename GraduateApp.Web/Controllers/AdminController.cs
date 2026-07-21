@@ -209,6 +209,265 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Institutes(
+        string? search,
+        bool? isActive,
+        int page = 1,
+        int pageSize = 20,
+        int? editId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var list = await apiClient.GetAdminInstitutesAsync(search, isActive, page, pageSize, cancellationToken);
+        ApiResult<InstituteAdminViewModel>? selectedResult = null;
+        if (editId.HasValue)
+        {
+            selectedResult = await apiClient.GetAdminInstituteAsync(editId.Value, cancellationToken);
+        }
+        var selected = selectedResult?.Value;
+        return View(new InstitutePageViewModel
+        {
+            Result = list.Value ?? new PagedResultViewModel<InstituteAdminViewModel>
+            {
+                Page = Math.Max(page, 1),
+                PageSize = Math.Clamp(pageSize, 10, 100)
+            },
+            Search = search,
+            IsActive = isActive,
+            Form = new InstituteFormViewModel
+            {
+                InstituteId = selected?.InstituteId ?? 0,
+                InstituteName = selected?.InstituteName ?? string.Empty,
+                RowVersion = selected?.RowVersion
+            },
+            ErrorMessage = list.IsSuccess && (selectedResult is null || selectedResult.IsSuccess)
+                ? null
+                : list.Error ?? selectedResult?.Error ?? "Enstitü bilgileri yüklenemedi."
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveInstitute(
+        [Bind(Prefix = "Form")] InstituteFormViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (model.InstituteId > 0 && string.IsNullOrWhiteSpace(model.RowVersion))
+        {
+            ModelState.AddModelError("Form.RowVersion", "Enstitü eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return await RenderInstituteFormAsync(model, "Enstitü bilgileri doğrulanamadı.", cancellationToken);
+        }
+
+        var result = model.InstituteId > 0
+            ? await apiClient.UpdateInstituteAsync(model, cancellationToken)
+            : await apiClient.CreateInstituteAsync(model, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Enstitü kaydedilemedi.");
+            return await RenderInstituteFormAsync(model, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = model.InstituteId > 0 ? "Enstitü güncellendi." : "Enstitü oluşturuldu.";
+        return RedirectToAction(nameof(Institutes));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetInstituteActive(
+        int id,
+        string rowVersion,
+        bool isActive,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "Enstitü aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.";
+            return RedirectToAction(nameof(Institutes));
+        }
+
+        var result = await apiClient.SetInstituteActiveAsync(id, rowVersion, isActive, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? isActive ? "Enstitü aktifleştirildi." : "Enstitü pasifleştirildi. Bağlı programlar yeni seçimlerde gösterilmeyecek."
+            : result.Error ?? "Enstitü durumu değiştirilemedi.";
+        return RedirectToAction(nameof(Institutes));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DeleteInstitute(int id, CancellationToken cancellationToken)
+    {
+        var result = await apiClient.GetAdminInstituteAsync(id, cancellationToken);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Enstitü bulunamadı.";
+            return RedirectToAction(nameof(Institutes));
+        }
+
+        return View(result.Value);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmDeleteInstitute(
+        int id,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "Enstitü silme bilgisi geçersiz. Sayfayı yenileyiniz.";
+            return RedirectToAction(nameof(Institutes));
+        }
+
+        var result = await apiClient.DeleteInstituteAsync(id, rowVersion, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Kullanılmamış enstitü kalıcı olarak silindi."
+            : result.Error ?? "Enstitü silinemedi.";
+        return RedirectToAction(nameof(Institutes));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Programs(
+        string? search,
+        bool? isActive,
+        int? instituteId,
+        string? degreeType,
+        int page = 1,
+        int pageSize = 20,
+        int? editId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var programsTask = apiClient.GetAdminProgramsAsync(
+            search,
+            isActive,
+            instituteId,
+            degreeType,
+            page,
+            pageSize,
+            cancellationToken);
+        var institutesTask = apiClient.GetAdminInstitutesAsync(null, null, 1, 100, cancellationToken);
+        await Task.WhenAll(programsTask, institutesTask);
+        var programs = await programsTask;
+        var institutes = await institutesTask;
+        ApiResult<ProgramAdminViewModel>? selectedResult = null;
+        if (editId.HasValue)
+        {
+            selectedResult = await apiClient.GetAdminProgramAsync(editId.Value, cancellationToken);
+        }
+        var selected = selectedResult?.Value;
+        var instituteItems = institutes.Value?.Items ?? [];
+        return View(new ProgramPageViewModel
+        {
+            Result = programs.Value ?? new PagedResultViewModel<ProgramAdminViewModel>
+            {
+                Page = Math.Max(page, 1),
+                PageSize = Math.Clamp(pageSize, 10, 100)
+            },
+            Institutes = instituteItems,
+            Search = search,
+            IsActive = isActive,
+            InstituteId = instituteId,
+            DegreeType = degreeType,
+            Form = new ProgramFormViewModel
+            {
+                ProgramId = selected?.ProgramId ?? 0,
+                InstituteId = selected?.InstituteId ?? instituteItems.FirstOrDefault()?.InstituteId ?? 0,
+                ProgramName = selected?.ProgramName ?? string.Empty,
+                DegreeType = selected?.DegreeType ?? ProgramDegreeTypeOptions.Values[0],
+                RowVersion = selected?.RowVersion
+            },
+            ErrorMessage = programs.IsSuccess && institutes.IsSuccess && (selectedResult is null || selectedResult.IsSuccess)
+                ? null
+                : programs.Error ?? institutes.Error ?? selectedResult?.Error ?? "Program bilgileri yüklenemedi."
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveProgram(
+        [Bind(Prefix = "Form")] ProgramFormViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (model.ProgramId > 0 && string.IsNullOrWhiteSpace(model.RowVersion))
+        {
+            ModelState.AddModelError("Form.RowVersion", "Program eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return await RenderProgramFormAsync(model, "Program bilgileri doğrulanamadı.", cancellationToken);
+        }
+
+        var result = model.ProgramId > 0
+            ? await apiClient.UpdateProgramAsync(model, cancellationToken)
+            : await apiClient.CreateProgramAsync(model, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Program kaydedilemedi.");
+            return await RenderProgramFormAsync(model, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = model.ProgramId > 0 ? "Program güncellendi." : "Program oluşturuldu.";
+        return RedirectToAction(nameof(Programs));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetProgramActive(
+        int id,
+        string rowVersion,
+        bool isActive,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "Program aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.";
+            return RedirectToAction(nameof(Programs));
+        }
+
+        var result = await apiClient.SetProgramActiveAsync(id, rowVersion, isActive, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? isActive ? "Program aktifleştirildi." : "Program pasifleştirildi. Mevcut ilan ve başvurular korunuyor."
+            : result.Error ?? "Program durumu değiştirilemedi.";
+        return RedirectToAction(nameof(Programs));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DeleteProgram(int id, CancellationToken cancellationToken)
+    {
+        var result = await apiClient.GetAdminProgramAsync(id, cancellationToken);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Program bulunamadı.";
+            return RedirectToAction(nameof(Programs));
+        }
+
+        return View(result.Value);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmDeleteProgram(
+        int id,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "Program silme bilgisi geçersiz. Sayfayı yenileyiniz.";
+            return RedirectToAction(nameof(Programs));
+        }
+
+        var result = await apiClient.DeleteProgramAsync(id, rowVersion, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "İlanı bulunmayan program kalıcı olarak silindi."
+            : result.Error ?? "Program silinemedi.";
+        return RedirectToAction(nameof(Programs));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Detail(int id, CancellationToken cancellationToken)
     {
         var result = await apiClient.GetAdminApplicationDetailAsync(id, cancellationToken);
@@ -309,6 +568,39 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             ErrorMessage = errorMessage
                 ?? offerings.Error
                 ?? catalog.Error
+        });
+    }
+
+    private async Task<IActionResult> RenderInstituteFormAsync(
+        InstituteFormViewModel form,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var list = await apiClient.GetAdminInstitutesAsync(null, null, 1, 20, cancellationToken);
+        return View(nameof(Institutes), new InstitutePageViewModel
+        {
+            Result = list.Value ?? new PagedResultViewModel<InstituteAdminViewModel> { Page = 1, PageSize = 20 },
+            Form = form,
+            ErrorMessage = errorMessage ?? list.Error
+        });
+    }
+
+    private async Task<IActionResult> RenderProgramFormAsync(
+        ProgramFormViewModel form,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var programsTask = apiClient.GetAdminProgramsAsync(null, null, null, null, 1, 20, cancellationToken);
+        var institutesTask = apiClient.GetAdminInstitutesAsync(null, null, 1, 100, cancellationToken);
+        await Task.WhenAll(programsTask, institutesTask);
+        var programs = await programsTask;
+        var institutes = await institutesTask;
+        return View(nameof(Programs), new ProgramPageViewModel
+        {
+            Result = programs.Value ?? new PagedResultViewModel<ProgramAdminViewModel> { Page = 1, PageSize = 20 },
+            Institutes = institutes.Value?.Items ?? [],
+            Form = form,
+            ErrorMessage = errorMessage ?? programs.Error ?? institutes.Error
         });
     }
 }

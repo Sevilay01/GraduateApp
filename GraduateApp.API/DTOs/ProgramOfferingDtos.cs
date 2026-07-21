@@ -87,7 +87,11 @@ public sealed record ProgramOfferingAdminDto(
     string RowVersion,
     IReadOnlyList<ExamRequirementDto> ExamRequirements);
 
-public sealed record ProgramCatalogItemDto(int ProgramId, string ProgramName, string InstituteName);
+public sealed record ProgramCatalogItemDto(
+    int ProgramId,
+    string ProgramName,
+    string InstituteName,
+    string DegreeType);
 public sealed record ExamCatalogItemDto(int ExamId, string ExamName);
 public sealed record ProgramOfferingCatalogDto(
     IReadOnlyList<ProgramCatalogItemDto> Programs,

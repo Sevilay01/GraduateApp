@@ -95,6 +95,7 @@ public sealed class ProgramCatalogItemViewModel
     public int ProgramId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
     public string InstituteName { get; set; } = string.Empty;
+    public string DegreeType { get; set; } = string.Empty;
 }
 
 public sealed class ExamCatalogItemViewModel
@@ -227,4 +228,98 @@ public sealed class AdminStudentDetailViewModel
     public int ApplicationCount { get; set; }
     public int ExamScoreCount { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
+}
+
+public sealed class InstituteAdminViewModel
+{
+    public int InstituteId { get; set; }
+    public string InstituteName { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
+    public int ProgramCount { get; set; }
+}
+
+public sealed class InstituteFormViewModel
+{
+    public int InstituteId { get; set; }
+
+    [Required(ErrorMessage = "Enstitü adı zorunludur.")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Enstitü adı 2 ile 100 karakter arasında olmalıdır.")]
+    [Display(Name = "Enstitü adı")]
+    public string InstituteName { get; set; } = string.Empty;
+
+    [StringLength(24, MinimumLength = 12, ErrorMessage = "Enstitü eşzamanlılık bilgisi geçersiz.")]
+    public string? RowVersion { get; set; }
+}
+
+public sealed class InstitutePageViewModel
+{
+    public PagedResultViewModel<InstituteAdminViewModel> Result { get; set; } = new();
+    public InstituteFormViewModel Form { get; set; } = new();
+    public string? Search { get; set; }
+    public bool? IsActive { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class ProgramAdminViewModel
+{
+    public int ProgramId { get; set; }
+    public int InstituteId { get; set; }
+    public string InstituteName { get; set; } = string.Empty;
+    public string ProgramName { get; set; } = string.Empty;
+    public string DegreeType { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public bool IsEffectivelyActive { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
+    public int OfferingCount { get; set; }
+}
+
+public sealed class ProgramFormViewModel
+{
+    public int ProgramId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir enstitü seçiniz.")]
+    [Display(Name = "Enstitü")]
+    public int InstituteId { get; set; }
+
+    [Required(ErrorMessage = "Program adı zorunludur.")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Program adı 2 ile 100 karakter arasında olmalıdır.")]
+    [Display(Name = "Program adı")]
+    public string ProgramName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Derece türü zorunludur.")]
+    [StringLength(50, ErrorMessage = "Derece türü en fazla 50 karakter olabilir.")]
+    [Display(Name = "Derece türü")]
+    public string DegreeType { get; set; } = string.Empty;
+
+    [StringLength(24, MinimumLength = 12, ErrorMessage = "Program eşzamanlılık bilgisi geçersiz.")]
+    public string? RowVersion { get; set; }
+}
+
+public sealed class ProgramPageViewModel
+{
+    public PagedResultViewModel<ProgramAdminViewModel> Result { get; set; } = new();
+    public ProgramFormViewModel Form { get; set; } = new();
+    public IReadOnlyList<InstituteAdminViewModel> Institutes { get; set; } = [];
+    public IReadOnlyList<string> DegreeTypes { get; set; } = ProgramDegreeTypeOptions.Values;
+    public string? Search { get; set; }
+    public bool? IsActive { get; set; }
+    public int? InstituteId { get; set; }
+    public string? DegreeType { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public static class ProgramDegreeTypeOptions
+{
+    public static IReadOnlyList<string> Values { get; } =
+    [
+        "Doktora",
+        "Tezli Yüksek Lisans",
+        "Tezsiz Yüksek Lisans",
+        "Uzaktan Tezsiz Yüksek Lisans"
+    ];
 }

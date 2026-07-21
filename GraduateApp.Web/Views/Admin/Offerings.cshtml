@@ -87,7 +87,7 @@
                         <select asp-for="Form.ProgramId" class="form-select">
                             @foreach (var program in Model.Form.Programs)
                             {
-                                <option value="@program.ProgramId">@program.ProgramName · @program.InstituteName</option>
+                                <option value="@program.ProgramId">@program.InstituteName · @program.ProgramName · @program.DegreeType</option>
                             }
                         </select>
                         <span asp-validation-for="Form.ProgramId" class="text-danger"></span>

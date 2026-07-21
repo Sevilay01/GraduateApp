@@ -124,8 +124,15 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         {
             entity.HasKey(e => e.InstituteId);
             entity.HasIndex(e => e.InstituteName).IsUnique();
+            entity.ToTable("Institutes", table => table.HasCheckConstraint(
+                "CK_Institutes_InstituteName_Trimmed",
+                "[InstituteName] = LTRIM(RTRIM([InstituteName])) AND LEN([InstituteName]) >= 2"));
             entity.Property(e => e.InstituteId).HasColumnName("InstituteID");
             entity.Property(e => e.InstituteName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.UpdatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.RowVersion).IsRowVersion();
         });
 
         modelBuilder.Entity<LoginIdentity>(entity =>
@@ -174,11 +181,24 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         modelBuilder.Entity<Program>(entity =>
         {
             entity.HasKey(e => e.ProgramId);
+            entity.HasIndex(e => new { e.InstituteId, e.ProgramName, e.DegreeType }).IsUnique();
+            entity.ToTable("Programs", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_Programs_ProgramName_Trimmed",
+                    "[ProgramName] = LTRIM(RTRIM([ProgramName])) AND LEN([ProgramName]) >= 2");
+                table.HasCheckConstraint(
+                    "CK_Programs_DegreeType",
+                    "[DegreeType] IN (N'Doktora',N'Tezli Yüksek Lisans',N'Tezsiz Yüksek Lisans',N'Uzaktan Tezsiz Yüksek Lisans')");
+            });
             entity.Property(e => e.ProgramId).HasColumnName("ProgramID");
             entity.Property(e => e.InstituteId).HasColumnName("InstituteID");
             entity.Property(e => e.ProgramName).HasMaxLength(100).IsRequired();
-            entity.Property(e => e.DegreeType).HasMaxLength(50);
+            entity.Property(e => e.DegreeType).HasMaxLength(50).IsRequired();
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.UpdatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.RowVersion).IsRowVersion();
             entity.HasOne(e => e.Institute).WithMany(e => e.Programs)
                 .HasForeignKey(e => e.InstituteId).OnDelete(DeleteBehavior.Restrict);
         });

@@ -60,6 +60,61 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task Create_rejects_offering_when_its_institute_is_inactive()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db, isOpen: true);
+        offering.Program.Institute.IsActive = false;
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).CreateAsync(
+            "10000000146",
+            offering.ProgramOfferingId,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Empty(db.Applications);
+    }
+
+    [Fact]
+    public async Task Deactivation_preserves_historical_application_and_program_name()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db, isOpen: true);
+        var created = await CreateService(db).CreateAsync(
+            "10000000146",
+            offering.ProgramOfferingId,
+            CancellationToken.None);
+        Assert.True(created.IsSuccess);
+        var rowVersion = Convert.ToBase64String(offering.Program.RowVersion);
+
+        var programResult = await new ProgramAdminService(
+            db,
+            new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 10, 0, 0, TimeSpan.Zero))).SetActiveAsync(
+            offering.ProgramId,
+            1,
+            false,
+            new CatalogConcurrencyDto { RowVersion = rowVersion },
+            CancellationToken.None);
+        var instituteResult = await new InstituteAdminService(
+            db,
+            new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 10, 1, 0, TimeSpan.Zero))).SetActiveAsync(
+            offering.Program.InstituteId,
+            1,
+            false,
+            new CatalogConcurrencyDto { RowVersion = Convert.ToBase64String(offering.Program.Institute.RowVersion) },
+            CancellationToken.None);
+        var historical = await CreateService(db).GetForStudentAsync("10000000146", CancellationToken.None);
+
+        Assert.True(programResult.IsSuccess);
+        Assert.True(instituteResult.IsSuccess);
+        Assert.Single(db.Applications);
+        Assert.Single(historical);
+        Assert.Equal("Bilgisayar Mühendisliği", historical[0].ProgramName);
+    }
+
+    [Fact]
     public async Task Create_ValidatesRequiredScore_AndCapturesImmutableSnapshot()
     {
         await using var db = TestDb.Create();
@@ -303,9 +358,14 @@ public sealed class ApplicationServiceTests
         var program = new GraduateApp.API.Models.Program
         {
             ProgramName = "Bilgisayar Mühendisliği",
-            DegreeType = "Tezli",
+            DegreeType = "Tezli Yüksek Lisans",
             IsActive = true,
-            Institute = new Institute { InstituteName = "Fen Bilimleri" }
+            RowVersion = [1, 2, 3, 4, 5, 6, 7, 8],
+            Institute = new Institute
+            {
+                InstituteName = "Fen Bilimleri",
+                RowVersion = [8, 7, 6, 5, 4, 3, 2, 1]
+            }
         };
         var offering = new ProgramOffering
         {

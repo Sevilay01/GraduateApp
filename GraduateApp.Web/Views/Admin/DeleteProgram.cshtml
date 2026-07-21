@@ -1,0 +1,28 @@
+@model ProgramAdminViewModel
+@{
+    ViewData["Title"] = "Programı sil";
+}
+
+<div class="card border-danger mx-auto" style="max-width: 42rem;">
+    <div class="card-body">
+        <h1 class="h3">Programı kalıcı olarak sil</h1>
+        <p><strong>@Model.InstituteName · @Model.ProgramName · @Model.DegreeType</strong> programını silmek üzeresiniz.</p>
+        @if (Model.OfferingCount > 0)
+        {
+            <div class="alert alert-warning" role="alert">
+                Bu programa bağlı @Model.OfferingCount dönemsel ilan var. Geçmiş kayıtları korumak için kalıcı silme engellenecektir; programı pasifleştirin.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger" role="alert">Bu işlem geri alınamaz. Yalnızca hiç ilanı olmayan programlar kalıcı olarak silinebilir.</div>
+        }
+        <form asp-action="ConfirmDeleteProgram" method="post" class="d-flex gap-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.ProgramId" />
+            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+            <button class="btn btn-danger" type="submit" disabled="@(Model.OfferingCount > 0)">Kalıcı olarak sil</button>
+            <a asp-action="Programs" class="btn btn-outline-secondary">Vazgeç</a>
+        </form>
+    </div>
+</div>

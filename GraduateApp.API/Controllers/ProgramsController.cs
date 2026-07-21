@@ -19,6 +19,7 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
         var withdrawn = ApplicationStatus.Withdrawn.ToString();
         var offerings = await dbContext.ProgramOfferings.AsNoTracking()
             .Where(item => item.Program.IsActive
+                && item.Program.Institute.IsActive
                 && item.IsOpen
                 && !item.IsArchived
                 && item.ApplicationStartUtc.HasValue
@@ -27,9 +28,12 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
                 && item.ApplicationDeadlineUtc.Value >= now
                 && item.Quota > 0
                 && item.Applications.Count(application => application.CurrentStatus != withdrawn) < item.Quota)
-            .OrderBy(item => item.Program.ProgramName)
+            .OrderBy(item => item.Program.Institute.InstituteName)
+            .ThenBy(item => item.Program.ProgramName)
+            .ThenBy(item => item.Program.DegreeType)
             .ThenBy(item => item.AcademicYearStart)
             .ThenBy(item => item.Term)
+            .ThenBy(item => item.ProgramOfferingId)
             .Include(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
             .ToListAsync(cancellationToken);

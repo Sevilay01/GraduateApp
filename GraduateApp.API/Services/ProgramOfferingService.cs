@@ -56,7 +56,10 @@ public sealed class ProgramOfferingService(
         var offerings = await query
             .OrderByDescending(item => item.AcademicYearStart)
             .ThenBy(item => item.Term)
+            .ThenBy(item => item.Program.Institute.InstituteName)
             .ThenBy(item => item.Program.ProgramName)
+            .ThenBy(item => item.Program.DegreeType)
+            .ThenBy(item => item.ProgramOfferingId)
             .ToListAsync(cancellationToken);
         return offerings.Select(Map).ToArray();
     }
@@ -64,15 +67,20 @@ public sealed class ProgramOfferingService(
     public async Task<ProgramOfferingCatalogDto> GetCatalogAsync(CancellationToken cancellationToken)
     {
         var programs = await dbContext.Programs.AsNoTracking()
-            .Where(item => item.IsActive)
-            .OrderBy(item => item.ProgramName)
+            .Where(item => item.IsActive && item.Institute.IsActive)
+            .OrderBy(item => item.Institute.InstituteName)
+            .ThenBy(item => item.ProgramName)
+            .ThenBy(item => item.DegreeType)
+            .ThenBy(item => item.ProgramId)
             .Select(item => new ProgramCatalogItemDto(
                 item.ProgramId,
                 item.ProgramName,
-                item.Institute.InstituteName))
+                item.Institute.InstituteName,
+                item.DegreeType))
             .ToListAsync(cancellationToken);
         var exams = await dbContext.Exams.AsNoTracking()
             .OrderBy(item => item.ExamName)
+            .ThenBy(item => item.ExamId)
             .Select(item => new ExamCatalogItemDto(item.ExamId, item.ExamName))
             .ToListAsync(cancellationToken);
         return new ProgramOfferingCatalogDto(programs, exams);
@@ -245,7 +253,9 @@ public sealed class ProgramOfferingService(
         }
 
         if (!await dbContext.Programs.AnyAsync(
-            item => item.ProgramId == request.ProgramId && item.IsActive,
+            item => item.ProgramId == request.ProgramId
+                && item.IsActive
+                && item.Institute.IsActive,
             cancellationToken))
         {
             return InvalidRequest("Aktif program bulunamadı.");
