@@ -128,6 +128,12 @@ Test paketi şu kritik davranışları kapsar:
 - reset token süre aşımı ve tekrar kullanımının reddi;
 - API hata/bozuk gövde durumunda Web'in kontrollü mesaj üretmesi.
 
+## Sürekli entegrasyon
+
+GitHub Actions kalite kapısı, tüm pull request'lerde ve `main` dalına yapılan push'larda Windows üzerinde .NET 10 ile çalışır. Workflow restore, Release build, tüm testler, biçim doğrulaması, idempotent EF migration script üretimi, doğrudan ve transitif NuGet güvenlik açığı taraması ile whitespace kontrolünü uygular.
+
+SQL entegrasyon testleri yalnızca CI runner'ındaki izole LocalDB veritabanlarını kullanır; LocalDB kullanılamıyorsa testler sessizce atlanmaz ve job açık bir hatayla durur. Migration adımı yalnızca runner'ın geçici klasöründe SQL üretir; herhangi bir veritabanına migration uygulamaz. CI bootstrap admin veya production secret oluşturmaz.
+
 ## Production notları
 
 - Data Protection key ring'i container/çoklu instance ortamında kalıcı ve erişimi sınırlı ortak depoda tutun.
