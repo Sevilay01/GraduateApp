@@ -202,6 +202,50 @@ public sealed class AuthServiceTests
         Assert.True(valid.IsSuccess);
         Assert.Equal("Admin", valid.Value!.Role);
         Assert.False(invalid.IsSuccess);
+        Assert.Equal(StatusCodes.Status401Unauthorized, invalid.StatusCode);
+        Assert.Equal(1, admin.AccessFailedCount);
+    }
+
+    [Fact]
+    public async Task Missing_admin_identity_does_not_verify_a_real_admin_or_increment_its_counter()
+    {
+        await using var db = TestDb.Create();
+        var admin = CreateAdmin();
+        var trackingHasher = new TrackingAdminPasswordHasher();
+        admin.PasswordHash = trackingHasher.HashPassword(admin, "Strong-Admin-1!");
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        var service = CreateService(db, adminHasher: trackingHasher);
+
+        var result = await service.LoginAsync(new LoginDto
+        {
+            Username = "missing@example.test",
+            Password = "Wrong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.DoesNotContain(admin, trackingHasher.VerifiedUsers);
+        Assert.Equal(0, admin.AccessFailedCount);
+    }
+
+    [Fact]
+    public async Task Ordered_login_and_password_reset_queries_do_not_emit_row_limiting_warning()
+    {
+        await using var db = TestDb.CreateWithStrictQueryWarnings();
+        var service = CreateService(db);
+
+        var login = await service.LoginAsync(new LoginDto
+        {
+            Username = "missing@example.test",
+            Password = "Wrong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+        await service.RequestPasswordResetAsync(
+            new ForgotPasswordDto { Email = "missing@example.test" },
+            CancellationToken.None);
+
+        Assert.False(login.IsSuccess);
     }
 
     [Fact]
@@ -645,12 +689,42 @@ public sealed class AuthServiceTests
         Assert.DoesNotContain("Strong-Student", output, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Corrupt_admin_identity_returns_safe_unauthorized_without_password_attempt()
+    {
+        await using var db = TestDb.Create();
+        var admin = CreateAdmin();
+        admin.NormalizedEmail = "MISMATCH@EXAMPLE.TEST";
+        admin.PasswordHash = new PasswordHasher<Admin>()
+            .HashPassword(admin, "Strong-Admin-1!");
+        db.Admins.Add(admin);
+        await db.SaveChangesAsync();
+        var logger = new CapturingLogger<AuthService>();
+        var service = CreateService(db, logger: logger);
+
+        var result = await service.LoginAsync(new LoginDto
+        {
+            Username = admin.Email,
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status401Unauthorized, result.StatusCode);
+        Assert.Equal(0, admin.AccessFailedCount);
+        var audit = Assert.Single(db.SecurityAuditLogs);
+        Assert.Equal("LoginIdentityIntegrityFailure", audit.EventType);
+        var output = string.Join(Environment.NewLine, logger.Entries.Append(audit.Details));
+        Assert.DoesNotContain(admin.Email, output, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Strong-Admin", output, StringComparison.Ordinal);
+    }
+
     private static AuthService CreateService(
         GraduateAppDbContext db,
         TestTimeProvider? timeProvider = null,
         CapturingEmailSender? emailSender = null,
-        PasswordHasher<Student>? studentHasher = null,
-        PasswordHasher<Admin>? adminHasher = null,
+        IPasswordHasher<Student>? studentHasher = null,
+        IPasswordHasher<Admin>? adminHasher = null,
         ILogger<AuthService>? logger = null)
     {
         var configuration = new ConfigurationBuilder()
@@ -737,4 +811,22 @@ public sealed class AuthServiceTests
 
     private static string ExtractToken(Uri resetLink) =>
         QueryHelpers.ParseQuery(resetLink.Query)["token"].ToString();
+
+    private sealed class TrackingAdminPasswordHasher : IPasswordHasher<Admin>
+    {
+        private readonly PasswordHasher<Admin> inner = new();
+
+        public List<Admin> VerifiedUsers { get; } = [];
+
+        public string HashPassword(Admin user, string password) => inner.HashPassword(user, password);
+
+        public PasswordVerificationResult VerifyHashedPassword(
+            Admin user,
+            string hashedPassword,
+            string providedPassword)
+        {
+            VerifiedUsers.Add(user);
+            return inner.VerifyHashedPassword(user, hashedPassword, providedPassword);
+        }
+    }
 }

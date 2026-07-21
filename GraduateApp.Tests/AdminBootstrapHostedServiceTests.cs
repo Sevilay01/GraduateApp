@@ -79,6 +79,42 @@ public sealed class AdminBootstrapHostedServiceTests
     }
 
     [Fact]
+    public async Task Bootstrap_restart_logs_safe_warning_when_configured_password_is_stale()
+    {
+        await using var provider = CreateProvider();
+        await CreateService(provider, "admin@example.test", "Bootstrap-Password-1!")
+            .StartAsync(CancellationToken.None);
+        var logger = new CapturingLogger<AdminBootstrapHostedService>();
+
+        await CreateService(
+                provider,
+                "admin@example.test",
+                "Different-Password-1!",
+                logger)
+            .StartAsync(CancellationToken.None);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.Contains("never rotates an existing password", entry, StringComparison.Ordinal);
+        Assert.DoesNotContain("admin@example.test", entry, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Different-Password", entry, StringComparison.Ordinal);
+        await using var scope = provider.CreateAsyncScope();
+        var admin = await scope.ServiceProvider.GetRequiredService<GraduateAppDbContext>()
+            .Admins.SingleAsync();
+        Assert.Equal(
+            PasswordVerificationResult.Success,
+            new PasswordHasher<Admin>().VerifyHashedPassword(
+                admin,
+                admin.PasswordHash,
+                "Bootstrap-Password-1!"));
+        Assert.Equal(
+            PasswordVerificationResult.Failed,
+            new PasswordHasher<Admin>().VerifyHashedPassword(
+                admin,
+                admin.PasswordHash,
+                "Different-Password-1!"));
+    }
+
+    [Fact]
     public async Task Existing_admin_blocks_different_bootstrap_email_without_creating_second_admin()
     {
         await using var provider = CreateProvider();
@@ -122,7 +158,8 @@ public sealed class AdminBootstrapHostedServiceTests
     private static AdminBootstrapHostedService CreateService(
         ServiceProvider provider,
         string? email,
-        string? password)
+        string? password,
+        Microsoft.Extensions.Logging.ILogger<AdminBootstrapHostedService>? logger = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -134,7 +171,7 @@ public sealed class AdminBootstrapHostedServiceTests
         return new AdminBootstrapHostedService(
             provider.GetRequiredService<IServiceScopeFactory>(),
             configuration,
-            NullLogger<AdminBootstrapHostedService>.Instance,
+            logger ?? NullLogger<AdminBootstrapHostedService>.Instance,
             TimeProvider.System,
             new InvariantEmailNormalizer());
     }

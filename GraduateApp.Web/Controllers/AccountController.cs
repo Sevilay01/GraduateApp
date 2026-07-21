@@ -22,7 +22,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, CancellationToken cancellationToken)
     {
-        model.AccountType = LoginAccountType.Student;
+        SetServerAccountType(model, LoginAccountType.Student);
         return await LoginCoreAsync(model, "Student", cancellationToken);
     }
 
@@ -36,7 +36,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AdminLogin(LoginViewModel model, CancellationToken cancellationToken)
     {
-        model.AccountType = LoginAccountType.Admin;
+        SetServerAccountType(model, LoginAccountType.Admin);
         return await LoginCoreAsync(model, "Admin", cancellationToken);
     }
 
@@ -254,6 +254,12 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         };
         PopulateExistingSession(model);
         return model;
+    }
+
+    private void SetServerAccountType(LoginViewModel model, LoginAccountType accountType)
+    {
+        ModelState.Remove(nameof(LoginViewModel.AccountType));
+        model.AccountType = accountType;
     }
 
     private void PopulateExistingSession(LoginViewModel model)

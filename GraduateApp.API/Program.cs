@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using GraduateApp.API.Models;
 using GraduateApp.API.Security;
 using GraduateApp.API.Services;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -110,6 +111,16 @@ if (allowedOrigins.Length > 0)
 }
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    var databaseTarget = new SqlConnectionStringBuilder(connectionString);
+    app.Logger.LogInformation(
+        new EventId(1001, "DatabaseTarget"),
+        "Database target: data source {DataSource}, database {DatabaseName}.",
+        databaseTarget.DataSource,
+        databaseTarget.InitialCatalog);
+}
 
 app.UseExceptionHandler(exceptionApp => exceptionApp.Run(async context =>
 {

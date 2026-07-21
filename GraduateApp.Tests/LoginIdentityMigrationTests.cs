@@ -174,6 +174,33 @@ public sealed class LoginIdentityMigrationTests
     }
 
     [LocalDbFact]
+    public async Task Turkish_sql_upper_can_differ_while_invariant_canonical_value_validates_ordinally()
+    {
+        await using var database = new LocalDbTestDatabase(
+            $"GraduateAppIdentityInvariant_{Guid.NewGuid():N}",
+            "Turkish_100_CI_AS");
+        await database.CreateAsync();
+        await CreateCurrentAuthSchemaAsync(database);
+        await database.ExecuteAsync(CreateExistingAccountsSql("STUDENT@EXAMPLE.TEST", "IDARI@EXAMPLE.TEST"));
+        await database.ExecuteAsync(
+            "UPDATE [dbo].[Admins] SET [Email] = N'idari@example.test' WHERE [AdminID] = 1;");
+
+        await database.MigrateAsync(ValidationMigration);
+
+        var stored = await database.ScalarAsync<string>(
+            "SELECT [NormalizedEmail] FROM [dbo].[Admins] WHERE [AdminID] = 1;");
+        var sqlUpper = await database.ScalarAsync<string>(
+            "SELECT UPPER(LTRIM(RTRIM([Email]))) FROM [dbo].[Admins] WHERE [AdminID] = 1;");
+        var invariant = new InvariantEmailNormalizer().Normalize("idari@example.test");
+        Assert.Equal(invariant, stored);
+        Assert.False(string.Equals(sqlUpper, invariant, StringComparison.Ordinal));
+        Assert.Equal(
+            1,
+            await database.ScalarAsync<int>(
+                $"SELECT COUNT(*) FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'{ValidationMigration}';"));
+    }
+
+    [LocalDbFact]
     public async Task Subject_constraints_accept_role_specific_nulls_and_reject_invalid_shapes()
     {
         await using var database = new LocalDbTestDatabase(

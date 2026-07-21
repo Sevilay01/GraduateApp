@@ -159,18 +159,23 @@ public sealed class AuthService(
         var normalizedEmail = emailNormalizer.Normalize(username);
         var now = timeProvider.GetUtcNow();
 
-        if (request.AccountType is null)
+        if (request.AccountType is not (LoginAccountType.Student or LoginAccountType.Admin))
         {
             PerformDummyPasswordVerification(request.Password, LoginAccountType.Student);
             return InvalidLogin<LoginResponse>();
         }
 
-        var identities = await dbContext.LoginIdentities
+        IQueryable<LoginIdentity> identitiesQuery = dbContext.LoginIdentities
             .Include(identity => identity.Student)
-            .Include(identity => identity.Admin)
-            .Where(identity => identity.AccountType == request.AccountType.Value
-                && ((request.AccountType == LoginAccountType.Student && identity.StudentTc == username)
-                    || identity.NormalizedEmail == normalizedEmail))
+            .Include(identity => identity.Admin);
+        identitiesQuery = request.AccountType == LoginAccountType.Admin
+            ? identitiesQuery.Where(identity => identity.AccountType == LoginAccountType.Admin
+                && identity.NormalizedEmail == normalizedEmail)
+            : identitiesQuery.Where(identity => identity.AccountType == LoginAccountType.Student
+                && (identity.StudentTc == username || identity.NormalizedEmail == normalizedEmail));
+
+        var identities = await identitiesQuery
+            .OrderBy(identity => identity.LoginIdentityId)
             .Take(2)
             .ToListAsync(cancellationToken);
 
@@ -215,6 +220,7 @@ public sealed class AuthService(
             .Include(identity => identity.Student)
             .Include(identity => identity.Admin)
             .Where(identity => identity.NormalizedEmail == normalizedEmail)
+            .OrderBy(identity => identity.LoginIdentityId)
             .Take(2)
             .ToListAsync(cancellationToken);
         if (identities.Count != 1)

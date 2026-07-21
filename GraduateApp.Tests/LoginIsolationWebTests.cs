@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -62,6 +63,38 @@ public sealed class LoginIsolationWebTests
         Assert.NotNull(authentication.SignedInPrincipal);
         Assert.True(authentication.SignedInPrincipal!.IsInRole("Admin"));
         Assert.False(authentication.SignedInPrincipal.IsInRole("Student"));
+    }
+
+    [Fact]
+    public async Task Admin_login_ignores_manipulated_account_type_and_clears_its_binding_error()
+    {
+        var handler = new LoginResponseHandler("Admin");
+        var authentication = new RecordingAuthenticationService();
+        var controller = CreateController(handler);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = CreateHttpContext(requestServices: CreateRequestServices(authentication)),
+            RouteData = new RouteData(),
+            ActionDescriptor = new ControllerActionDescriptor()
+        };
+        controller.ModelState.SetModelValue(
+            nameof(LoginViewModel.AccountType),
+            new ValueProviderResult("not-a-valid-role"));
+        controller.ModelState.AddModelError(
+            nameof(LoginViewModel.AccountType),
+            "Hesap türü geçersizdir.");
+
+        var result = await controller.AdminLogin(new LoginViewModel
+        {
+            Username = "admin@example.test",
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Student
+        }, CancellationToken.None);
+
+        Assert.IsType<RedirectToActionResult>(result);
+        Assert.DoesNotContain(nameof(LoginViewModel.AccountType), controller.ModelState.Keys);
+        Assert.Contains("\"accountType\":\"Admin\"", handler.RequestBody, StringComparison.Ordinal);
+        Assert.True(authentication.SignedInPrincipal!.IsInRole("Admin"));
     }
 
     [Fact]
@@ -192,6 +225,7 @@ public sealed class LoginIsolationWebTests
         Assert.Contains("Yönetici girişi", view, StringComparison.Ordinal);
         Assert.Contains("Öğrenci girişi", view, StringComparison.Ordinal);
         Assert.Contains("Farklı hesapla giriş yap", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("asp-for=\"AccountType\"", view, StringComparison.Ordinal);
     }
 
     private static AccountController CreateController(HttpMessageHandler handler) =>

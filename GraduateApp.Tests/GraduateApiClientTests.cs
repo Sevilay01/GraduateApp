@@ -10,6 +10,71 @@ namespace GraduateApp.Tests;
 public sealed class GraduateApiClientTests
 {
     [Fact]
+    public async Task Admin_login_sends_string_enum_account_type_in_request_body()
+    {
+        var handler = new CaptureHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        await client.LoginAsync(new LoginViewModel
+        {
+            Username = "admin@example.test",
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+
+        Assert.Equal(HttpMethod.Post, handler.Method);
+        using var body = JsonDocument.Parse(handler.RequestBody!);
+        Assert.Equal("admin@example.test", body.RootElement.GetProperty("username").GetString());
+        Assert.Equal("Admin", body.RootElement.GetProperty("accountType").GetString());
+        Assert.Equal(JsonValueKind.String, body.RootElement.GetProperty("password").ValueKind);
+    }
+
+    [Fact]
+    public void Web_and_api_login_account_type_values_are_identical()
+    {
+        Assert.Equal(
+            (int)GraduateApp.API.Models.LoginAccountType.Student,
+            (int)LoginAccountType.Student);
+        Assert.Equal(
+            (int)GraduateApp.API.Models.LoginAccountType.Admin,
+            (int)LoginAccountType.Admin);
+        Assert.Equal(
+            GraduateApp.API.Models.LoginAccountType.Admin.ToString(),
+            LoginAccountType.Admin.ToString());
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    public async Task Login_preserves_distinct_api_failure_status(HttpStatusCode statusCode)
+    {
+        using var httpClient = new HttpClient(new StubHandler(new HttpResponseMessage(statusCode)
+        {
+            Content = JsonContent.Create(new { detail = $"safe-{(int)statusCode}" })
+        }))
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        var result = await client.LoginAsync(new LoginViewModel
+        {
+            Username = "admin@example.test",
+            Password = "Strong-Admin-1!",
+            AccountType = LoginAccountType.Admin
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(statusCode, result.StatusCode);
+        Assert.Equal($"safe-{(int)statusCode}", result.Error);
+    }
+
+    [Fact]
     public async Task FailedApiResponse_IsHandledWithoutDeserializingDomainPayload()
     {
         using var httpClient = new HttpClient(new StubHandler(new HttpResponseMessage(HttpStatusCode.InternalServerError)

@@ -34,6 +34,7 @@ public sealed class AdminBootstrapHostedService(
 
         await using var scope = scopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<GraduateAppDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<Admin>>();
         if (dbContext.Database.IsRelational()
             && !await dbContext.Database.CanConnectAsync(cancellationToken))
         {
@@ -63,6 +64,15 @@ public sealed class AdminBootstrapHostedService(
                 && identity.NormalizedEmail == emailNormalizer.Normalize(identity.Admin.Email)
                 && identity.Admin.NormalizedEmail == identity.NormalizedEmail)
             {
+                if (hasher.VerifyHashedPassword(identity.Admin, identity.Admin.PasswordHash, password)
+                    == PasswordVerificationResult.Failed)
+                {
+                    logger.LogWarning(
+                        new EventId(1004, "BootstrapAdminPasswordMismatch"),
+                        "Configured bootstrap admin password does not match the existing admin password. " +
+                        "Bootstrap configuration never rotates an existing password; use the password reset flow.");
+                }
+
                 return;
             }
 
@@ -103,7 +113,6 @@ public sealed class AdminBootstrapHostedService(
             CreatedAtUtc = now,
             UpdatedAtUtc = now
         };
-        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<Admin>>();
         admin.PasswordHash = hasher.HashPassword(admin, password);
         admin.LoginIdentity = new LoginIdentity
         {

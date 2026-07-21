@@ -22,6 +22,16 @@ internal static class TestDb
         var options = optionsBuilder.Options;
         return new GraduateAppDbContext(options);
     }
+
+    public static GraduateAppDbContext CreateWithStrictQueryWarnings()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .ConfigureWarnings(warnings => warnings.Throw(
+                CoreEventId.RowLimitingOperationWithoutOrderByWarning))
+            .Options;
+        return new GraduateAppDbContext(options);
+    }
 }
 
 internal sealed class ThrowingSaveChangesInterceptor(Func<Exception> exceptionFactory) : SaveChangesInterceptor
