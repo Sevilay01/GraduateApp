@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Build, test, and verify
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+      ConnectionStrings__DefaultConnection: 'Server=(localdb)\MSSQLLocalDB;Database=GraduateApp_CI_Migrations;Integrated Security=true;Encrypt=false;TrustServerCertificate=true'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 10.0.10
+
+      - name: Require SQL Server LocalDB for integration tests
+        shell: pwsh
+        run: |
+          $localDb = Get-Command sqllocaldb -ErrorAction SilentlyContinue
+          if ($null -eq $localDb) {
+            throw 'SQL Server LocalDB bulunamadı; SQL entegrasyon testleri atlanmayacak.'
+          }
+
+          $instances = @(& sqllocaldb info 2>&1) | ForEach-Object { $_.ToString().Trim() }
+          if ($LASTEXITCODE -ne 0) {
+            throw 'SQL Server LocalDB örnekleri sorgulanamadı; SQL entegrasyon testleri atlanmayacak.'
+          }
+
+          if ($instances -notcontains 'MSSQLLocalDB') {
+            & sqllocaldb create MSSQLLocalDB
+            if ($LASTEXITCODE -ne 0) {
+              throw 'CI için MSSQLLocalDB örneği oluşturulamadı.'
+            }
+          }
+
+          & sqllocaldb start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) {
+            throw 'CI için MSSQLLocalDB örneği başlatılamadı.'
+          }
+
+      - name: Restore
+        run: dotnet restore GraduateApp.slnx
+
+      - name: Build
+        run: dotnet build GraduateApp.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test GraduateApp.slnx -c Release --no-build
+
+      - name: Verify formatting
+        run: dotnet format GraduateApp.slnx --verify-no-changes
+
+      - name: Generate idempotent migration script
+        shell: pwsh
+        run: dotnet ef migrations script --idempotent --project GraduateApp.API --startup-project GraduateApp.API --output "$env:RUNNER_TEMP\GraduateApp.Migrations.sql"
+
+      - name: Audit vulnerable packages
+        shell: pwsh
+        run: |
+          dotnet list GraduateApp.slnx package --vulnerable --include-transitive
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+          $json = & dotnet list GraduateApp.slnx package --vulnerable --include-transitive --format json
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+          $report = $json | ConvertFrom-Json
+          $vulnerablePackages = @(
+            foreach ($project in @($report.projects)) {
+              foreach ($framework in @($project.frameworks)) {
+                foreach ($package in @($framework.topLevelPackages) + @($framework.transitivePackages)) {
+                  if ($null -ne $package -and @($package.vulnerabilities).Count -gt 0) {
+                    [pscustomobject]@{
+                      Project = $project.path
+                      Framework = $framework.framework
+                      Package = $package.id
+                      Version = $package.resolvedVersion
+                    }
+                  }
+                }
+              }
+            }
+          )
+
+          if ($vulnerablePackages.Count -gt 0) {
+            $vulnerablePackages | Format-Table | Out-String | Write-Error
+            throw 'Bilinen güvenlik açığı olan NuGet paketi bulundu.'
+          }
+
+      - name: Check whitespace errors
+        run: git diff --check
