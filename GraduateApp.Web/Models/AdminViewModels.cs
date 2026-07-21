@@ -113,10 +113,15 @@ public sealed class ProgramOfferingRequirementInputViewModel
 {
     public bool IsConfigured { get; set; }
 
-    [Range(1, int.MaxValue)]
+    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir sınav seçiniz.")]
     public int ExamId { get; set; }
 
-    [Range(typeof(decimal), "0", "999.99")]
+    [Range(
+        typeof(decimal),
+        "0",
+        "999.99",
+        ParseLimitsInInvariantCulture = true,
+        ErrorMessage = "Puan 0 ile 999,99 arasında olmalıdır.")]
     public decimal MinimumScore { get; set; }
     public DateOnly? MinimumValidityDate { get; set; }
     public bool IsRequired { get; set; }
@@ -126,27 +131,29 @@ public sealed class ProgramOfferingFormViewModel
 {
     public int ProgramOfferingId { get; set; }
 
-    [Range(1, int.MaxValue)]
+    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir program seçiniz.")]
     [Display(Name = "Program")]
     public int ProgramId { get; set; }
 
-    [Range(2000, 2200)]
+    [Range(2000, 2200, ErrorMessage = "Akademik yıl başlangıcı 2000 ile 2200 arasında olmalıdır.")]
     [Display(Name = "Akademik yıl başlangıcı")]
     public int AcademicYearStart { get; set; }
 
-    [EnumDataType(typeof(AcademicTerm))]
+    [EnumDataType(typeof(AcademicTerm), ErrorMessage = "Geçerli bir dönem seçiniz.")]
     [Display(Name = "Dönem")]
     public AcademicTerm Term { get; set; }
 
-    [Required, DataType(DataType.DateTime)]
+    [Required(ErrorMessage = "Başvuru başlangıç tarihi zorunludur.")]
+    [DataType(DataType.DateTime)]
     [Display(Name = "Başvuru başlangıcı (İstanbul)")]
     public DateTime ApplicationStartLocal { get; set; }
 
-    [Required, DataType(DataType.DateTime)]
+    [Required(ErrorMessage = "Son başvuru tarihi zorunludur.")]
+    [DataType(DataType.DateTime)]
     [Display(Name = "Son başvuru (İstanbul)")]
     public DateTime ApplicationDeadlineLocal { get; set; }
 
-    [Range(1, 100000)]
+    [Range(1, 100000, ErrorMessage = "Kontenjan 1 ile 100000 arasında olmalıdır.")]
     [Display(Name = "Kontenjan")]
     public int Quota { get; set; }
 
@@ -156,8 +163,10 @@ public sealed class ProgramOfferingFormViewModel
     [Display(Name = "Arşivle")]
     public bool IsArchived { get; set; }
 
-    [StringLength(64)]
-    public string RowVersion { get; set; } = string.Empty;
+    [StringLength(
+        64,
+        ErrorMessage = "İlan eşzamanlılık bilgisi geçersiz.")]
+    public string? RowVersion { get; set; }
     public List<ProgramOfferingRequirementInputViewModel> ExamRequirements { get; set; } = [];
     public IReadOnlyList<ProgramCatalogItemViewModel> Programs { get; set; } = [];
     public IReadOnlyList<ExamCatalogItemViewModel> Exams { get; set; } = [];
