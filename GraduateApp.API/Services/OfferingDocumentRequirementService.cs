@@ -2,6 +2,7 @@ using System.Data;
 using System.Text.Json;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
@@ -104,6 +105,10 @@ public sealed class OfferingDocumentRequirementService(
             return ServiceResult<OfferingDocumentRequirementDto>.Success(Map(requirement), StatusCodes.Status201Created);
         }
         catch (DbUpdateConcurrencyException)
+        {
+            return ConfigurationConcurrencyConflict();
+        }
+        catch (Exception exception) when (IsSqlServerDeadlock(exception))
         {
             return ConfigurationConcurrencyConflict();
         }
@@ -267,6 +272,10 @@ public sealed class OfferingDocumentRequirementService(
         {
             return ConfigurationConcurrencyConflict();
         }
+        catch (Exception exception) when (IsSqlServerDeadlock(exception))
+        {
+            return ConfigurationConcurrencyConflict();
+        }
         catch (DbUpdateException)
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(
@@ -313,6 +322,10 @@ public sealed class OfferingDocumentRequirementService(
         ServiceResult<OfferingDocumentRequirementDto>.Failure(
             "Belge koşulu veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
             StatusCodes.Status409Conflict);
+
+    private static bool IsSqlServerDeadlock(Exception exception) =>
+        exception is SqlException { Number: 1205 }
+        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 
     private void AddAudit(
         int adminId,

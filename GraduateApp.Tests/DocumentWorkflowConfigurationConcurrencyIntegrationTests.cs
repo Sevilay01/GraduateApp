@@ -3,7 +3,6 @@ using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
 using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -18,7 +17,7 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
             $"GraduateAppDocumentInvariant_{Guid.NewGuid():N}",
             null);
         await database.CreateAsync();
-        await database.MigrateAsync();
+        await database.CreateCurrentModelSchemaAsync();
         var aggregates = await SeedAggregatesAsync(database.ConnectionString);
 
         await RequirementFirstAsync(database.ConnectionString, aggregates[0]);
@@ -127,13 +126,7 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         Assert.False(attempts.All(item => item.Succeeded));
         Assert.All(attempts, attempt =>
         {
-            if (attempt.Exception is not null)
-            {
-                Assert.True(
-                    attempt.Exception is DbUpdateException or SqlException,
-                    $"Beklenmeyen eşzamanlılık hatası: {attempt.Exception.GetType().Name}");
-            }
-            else if (!attempt.Succeeded)
+            if (!attempt.Succeeded)
             {
                 Assert.Equal(StatusCodes.Status409Conflict, attempt.StatusCode);
             }
@@ -176,20 +169,13 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         Task start)
     {
         await start;
-        try
-        {
-            await using var db = CreateContext(connectionString);
-            var result = await CreateOfferingService(db).UpdateAsync(
-                aggregate.OfferingId,
-                1,
-                OpenRequest(aggregate),
-                CancellationToken.None);
-            return new Attempt(result.IsSuccess, result.StatusCode, null);
-        }
-        catch (Exception exception) when (exception is DbUpdateException or SqlException)
-        {
-            return new Attempt(false, null, exception);
-        }
+        await using var db = CreateContext(connectionString);
+        var result = await CreateOfferingService(db).UpdateAsync(
+            aggregate.OfferingId,
+            1,
+            OpenRequest(aggregate),
+            CancellationToken.None);
+        return new Attempt(result.IsSuccess, result.StatusCode);
     }
 
     private static async Task<Attempt> DeactivateAfterSignalAsync(
@@ -198,25 +184,18 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         Task start)
     {
         await start;
-        try
-        {
-            await using var db = CreateContext(connectionString);
-            var result = await CreateRequirementService(db).SetActiveAsync(
-                aggregate.OfferingId,
-                aggregate.RequirementPublicId,
-                1,
-                new DocumentRequirementActiveDto
-                {
-                    IsActive = false,
-                    RowVersion = aggregate.RequirementRowVersion
-                },
-                CancellationToken.None);
-            return new Attempt(result.IsSuccess, result.StatusCode, null);
-        }
-        catch (Exception exception) when (exception is DbUpdateException or SqlException)
-        {
-            return new Attempt(false, null, exception);
-        }
+        await using var db = CreateContext(connectionString);
+        var result = await CreateRequirementService(db).SetActiveAsync(
+            aggregate.OfferingId,
+            aggregate.RequirementPublicId,
+            1,
+            new DocumentRequirementActiveDto
+            {
+                IsActive = false,
+                RowVersion = aggregate.RequirementRowVersion
+            },
+            CancellationToken.None);
+        return new Attempt(result.IsSuccess, result.StatusCode);
     }
 
     private static async Task<IReadOnlyList<AggregateState>> SeedAggregatesAsync(string connectionString)
@@ -341,5 +320,5 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         Guid RequirementPublicId,
         string RequirementRowVersion);
 
-    private sealed record Attempt(bool Succeeded, int? StatusCode, Exception? Exception);
+    private sealed record Attempt(bool Succeeded, int StatusCode);
 }

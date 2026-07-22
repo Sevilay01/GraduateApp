@@ -2,6 +2,7 @@ using System.Data;
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -242,6 +243,12 @@ public sealed class ProgramOfferingService(
                 "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
+        catch (Exception exception) when (IsSqlServerDeadlock(exception))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status409Conflict);
+        }
         catch (DbUpdateException)
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
@@ -362,6 +369,10 @@ public sealed class ProgramOfferingService(
         dbContext.Database.IsRelational()
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
+
+    private static bool IsSqlServerDeadlock(Exception exception) =>
+        exception is SqlException { Number: 1205 }
+        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 
     private static ProgramOfferingAdminDto Map(ProgramOffering offering) => new(
         offering.ProgramOfferingId,
