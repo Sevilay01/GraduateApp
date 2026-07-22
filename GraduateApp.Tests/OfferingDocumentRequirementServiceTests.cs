@@ -138,6 +138,78 @@ public sealed class OfferingDocumentRequirementServiceTests
         Assert.Single(db.ProgramOfferingDocumentRequirements);
     }
 
+    [Fact]
+    public async Task Open_offering_last_active_required_requirement_cannot_be_deactivated()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        var service = CreateService(db);
+        var created = await service.CreateAsync(offering.ProgramOfferingId, 1, Request("TRANSCRIPT"), CancellationToken.None);
+        offering.IsOpen = true;
+        await db.SaveChangesAsync();
+        var auditCount = db.SecurityAuditLogs.Count();
+
+        var result = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            created.Value!.PublicId,
+            1,
+            new DocumentRequirementActiveDto { IsActive = false, RowVersion = created.Value.RowVersion },
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal(
+            "Açık bir ilanın son aktif zorunlu belge koşulu kaldırılamaz. Önce ilanı kapatın.",
+            result.Error);
+        Assert.True(db.ProgramOfferingDocumentRequirements.Single().IsActive);
+        Assert.Equal(auditCount, db.SecurityAuditLogs.Count());
+    }
+
+    [Fact]
+    public async Task Open_offering_last_active_required_requirement_cannot_be_made_optional()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        var service = CreateService(db);
+        var created = await service.CreateAsync(offering.ProgramOfferingId, 1, Request("TRANSCRIPT"), CancellationToken.None);
+        offering.IsOpen = true;
+        await db.SaveChangesAsync();
+
+        var result = await service.UpdateAsync(
+            offering.ProgramOfferingId,
+            created.Value!.PublicId,
+            1,
+            UpdateRequest(created.Value, isRequired: false),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.True(db.ProgramOfferingDocumentRequirements.Single().IsRequired);
+    }
+
+    [Fact]
+    public async Task Open_offering_requirement_can_be_deactivated_when_another_active_required_one_exists()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        var service = CreateService(db);
+        var transcript = await service.CreateAsync(offering.ProgramOfferingId, 1, Request("TRANSCRIPT"), CancellationToken.None);
+        var diploma = await service.CreateAsync(offering.ProgramOfferingId, 1, Request("DIPLOMA"), CancellationToken.None);
+        offering.IsOpen = true;
+        await db.SaveChangesAsync();
+
+        var result = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            transcript.Value!.PublicId,
+            1,
+            new DocumentRequirementActiveDto { IsActive = false, RowVersion = transcript.Value.RowVersion },
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value!.IsActive);
+        Assert.True(db.ProgramOfferingDocumentRequirements.Single(item => item.PublicId == diploma.Value!.PublicId).IsActive);
+    }
+
     private static OfferingDocumentRequirementService CreateService(GraduateAppDbContext db) => new(
         db,
         new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)),
@@ -151,6 +223,19 @@ public sealed class OfferingDocumentRequirementServiceTests
         AllowedContentCategory = DocumentContentCategory.PdfOnly,
         MaximumBytes = 1024
     };
+
+    private static OfferingDocumentRequirementUpdateDto UpdateRequest(
+        OfferingDocumentRequirementDto requirement,
+        bool isRequired) => new()
+        {
+            DocumentCode = requirement.DocumentCode,
+            DisplayName = requirement.DisplayName,
+            Description = requirement.Description,
+            IsRequired = isRequired,
+            AllowedContentCategory = requirement.AllowedContentCategory,
+            MaximumBytes = requirement.MaximumBytes,
+            RowVersion = requirement.RowVersion
+        };
 
     private static async Task<ProgramOffering> SeedOfferingAsync(GraduateAppDbContext db)
     {

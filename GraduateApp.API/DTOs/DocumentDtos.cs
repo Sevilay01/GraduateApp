@@ -101,6 +101,11 @@ public sealed record StudentApplicationDetailDto(
     IReadOnlyList<ApplicationDocumentRequirementDto> DocumentRequirements,
     IReadOnlyList<string> MissingRequiredDocuments);
 
+public sealed record DocumentWorkflowInvariantViolationDto(
+    Guid ApplicationPublicId,
+    ApplicationStatus CurrentStatus,
+    string ViolationCategory);
+
 public sealed class DocumentReviewDto
 {
     [EnumDataType(typeof(DocumentReviewStatus), ErrorMessage = "Geçersiz belge inceleme durumu.")]

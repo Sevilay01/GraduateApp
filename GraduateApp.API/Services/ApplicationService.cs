@@ -14,6 +14,8 @@ public interface IApplicationService
     Task<ServiceResult<StudentApplicationDto>> CreateAsync(string studentTc, int programOfferingId, CancellationToken cancellationToken);
     Task<IReadOnlyList<StudentApplicationDto>> GetForStudentAsync(string studentTc, CancellationToken cancellationToken);
     Task<StudentApplicationDetailDto?> GetDetailForStudentAsync(string studentTc, Guid publicId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<DocumentWorkflowInvariantViolationDto>> GetDocumentWorkflowInvariantViolationsAsync(
+        CancellationToken cancellationToken);
     Task<ServiceResult> SubmitAsync(string studentTc, Guid publicId, CancellationToken cancellationToken);
     Task<PagedResult<AdminApplicationListItemDto>> GetForAdminAsync(
         string? search,
@@ -51,6 +53,14 @@ public sealed class ApplicationService(
         {
             return ServiceResult<StudentApplicationDto>.Failure(
                 "Bu ilan şu anda başvuruya açık değil.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (offering.DocumentRequirements.Count == 0
+            || !offering.DocumentRequirements.Any(item => item.IsRequired))
+        {
+            return ServiceResult<StudentApplicationDto>.Failure(
+                "İlanda en az bir aktif ve zorunlu belge koşulu bulunmalıdır. Lütfen ilan yöneticisiyle iletişime geçin.",
                 StatusCodes.Status409Conflict);
         }
 
@@ -175,6 +185,26 @@ public sealed class ApplicationService(
             return ServiceResult.Failure("Yalnızca taslak başvurular gönderilebilir.", StatusCodes.Status409Conflict);
         }
 
+        if (application.DocumentRequirementSnapshots.Count == 0)
+        {
+            return await BlockSubmissionAsync(
+                application,
+                "Bu taslak için geçerli belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.",
+                "NoRequirementSnapshots",
+                transaction,
+                cancellationToken);
+        }
+
+        if (!application.DocumentRequirementSnapshots.Any(item => item.IsRequired))
+        {
+            return await BlockSubmissionAsync(
+                application,
+                "Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.",
+                "NoRequiredRequirementSnapshots",
+                transaction,
+                cancellationToken);
+        }
+
         var missing = application.DocumentRequirementSnapshots
             .Where(item => item.IsRequired && !item.Documents.Any(document => document.IsCurrent))
             .Select(item => item.DisplayName)
@@ -288,6 +318,40 @@ public sealed class ApplicationService(
                 "Başvuru gönderilemedi; ilan koşullarını yeniden kontrol edin.",
                 StatusCodes.Status409Conflict);
         }
+    }
+
+    public async Task<IReadOnlyList<DocumentWorkflowInvariantViolationDto>> GetDocumentWorkflowInvariantViolationsAsync(
+        CancellationToken cancellationToken)
+    {
+        var draft = ApplicationStatus.Draft.ToString();
+        var candidates = await dbContext.Applications.AsNoTracking()
+            .Where(item => item.UsesDocumentWorkflow && item.CurrentStatus != draft)
+            .Select(item => new
+            {
+                item.PublicId,
+                item.CurrentStatus,
+                SnapshotCount = item.DocumentRequirementSnapshots.Count,
+                RequiredSnapshotCount = item.DocumentRequirementSnapshots.Count(requirement => requirement.IsRequired),
+                MissingRequiredDocumentCount = item.DocumentRequirementSnapshots.Count(requirement =>
+                    requirement.IsRequired
+                    && !requirement.Documents.Any(document => document.IsCurrent))
+            })
+            .ToListAsync(cancellationToken);
+
+        return candidates
+            .Select(item => new DocumentWorkflowInvariantViolationDto(
+                item.PublicId,
+                ParseStatus(item.CurrentStatus),
+                item.SnapshotCount == 0
+                    ? "NoRequirementSnapshots"
+                    : item.RequiredSnapshotCount == 0
+                        ? "NoRequiredRequirementSnapshots"
+                        : item.MissingRequiredDocumentCount > 0
+                            ? "MissingRequiredDocuments"
+                            : string.Empty))
+            .Where(item => item.ViolationCategory.Length > 0)
+            .OrderBy(item => item.ApplicationPublicId)
+            .ToArray();
     }
 
     public async Task<PagedResult<AdminApplicationListItemDto>> GetForAdminAsync(

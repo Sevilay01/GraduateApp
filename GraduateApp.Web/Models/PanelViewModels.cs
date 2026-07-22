@@ -101,6 +101,21 @@ public sealed class StudentApplicationDetailViewModel
     public IReadOnlyList<string> MissingRequiredDocuments { get; set; } = [];
 }
 
+public static class DocumentWorkflowSubmissionPresentation
+{
+    public static bool HasValidRequiredDocumentConfiguration(this StudentApplicationDetailViewModel model) =>
+        model.UsesDocumentWorkflow
+        && model.DocumentRequirements.Count > 0
+        && model.DocumentRequirements.Any(item => item.IsRequired);
+
+    public static bool CanSubmitDocumentWorkflow(this StudentApplicationDetailViewModel model) =>
+        model.CurrentStatus == ApplicationStatus.Draft
+        && model.HasValidRequiredDocumentConfiguration()
+        && model.DocumentRequirements
+            .Where(item => item.IsRequired)
+            .All(item => item.CurrentDocument is not null);
+}
+
 public static class DocumentPresentation
 {
     public static string CategoryName(this DocumentContentCategory category) => category switch

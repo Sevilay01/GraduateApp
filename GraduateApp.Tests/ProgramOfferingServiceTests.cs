@@ -11,6 +11,40 @@ namespace GraduateApp.Tests;
 public sealed class ProgramOfferingServiceTests
 {
     [Fact]
+    public async Task Create_rejects_an_open_offering_and_does_not_persist_it()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var request = CreateRequest(program.ProgramId, AcademicTerm.Fall, isOpen: true);
+
+        var result = await CreateService(db).CreateAsync(1, request, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal(
+            "Yeni ilan önce kapalı oluşturulmalıdır. En az bir zorunlu belge koşulu tanımlandıktan sonra ilanı açabilirsiniz.",
+            result.Error);
+        Assert.Empty(db.ProgramOfferings);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "ProgramOfferingCreated");
+    }
+
+    [Fact]
+    public async Task Create_always_persists_a_closed_offering()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+
+        var result = await CreateService(db).CreateAsync(
+            1,
+            CreateRequest(program.ProgramId, AcademicTerm.Fall),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value!.IsOpen);
+        Assert.False(db.ProgramOfferings.Single().IsOpen);
+    }
+
+    [Fact]
     public async Task Create_rejects_duplicate_program_year_term_but_allows_another_term()
     {
         await using var db = TestDb.Create();
@@ -128,6 +162,60 @@ public sealed class ProgramOfferingServiceTests
         Assert.DoesNotContain("RowVersion", result.Error, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task Update_cannot_open_without_an_active_required_document_requirement(
+        bool addOptionalRequirement,
+        bool addInactiveRequiredRequirement)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        if (addOptionalRequirement || addInactiveRequiredRequirement)
+        {
+            offering.DocumentRequirements.Add(DocumentRequirement(
+                isRequired: addInactiveRequiredRequirement,
+                isActive: !addInactiveRequiredRequirement));
+        }
+
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal(
+            "İlan açılmadan önce en az bir aktif ve zorunlu belge koşulu tanımlayın.",
+            result.Error);
+        Assert.False(offering.IsOpen);
+    }
+
+    [Fact]
+    public async Task Update_can_open_when_an_active_required_document_requirement_exists()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Value!.IsOpen);
+        Assert.True(db.ProgramOfferings.Single().IsOpen);
+    }
+
     private static ProgramOfferingService CreateService(GraduateAppDbContext db) =>
         new(db, new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)));
 
@@ -148,7 +236,8 @@ public sealed class ProgramOfferingServiceTests
     private static ProgramOfferingCreateDto CreateRequest(
         int programId,
         AcademicTerm term,
-        int year = 2026) => new()
+        int year = 2026,
+        bool isOpen = false) => new()
         {
             ProgramId = programId,
             AcademicYearStart = year,
@@ -156,8 +245,50 @@ public sealed class ProgramOfferingServiceTests
             ApplicationStartUtc = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc),
             ApplicationDeadlineUtc = new DateTime(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc),
             Quota = 10,
+            IsOpen = isOpen
+        };
+
+    private static ProgramOffering AddOffering(GraduateAppDbContext db, int programId)
+    {
+        var offering = new ProgramOffering
+        {
+            ProgramId = programId,
+            AcademicYearStart = 2026,
+            Term = AcademicTerm.Fall,
+            ApplicationStartUtc = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc),
+            ApplicationDeadlineUtc = new DateTime(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc),
+            Quota = 10,
             IsOpen = false
         };
+        db.ProgramOfferings.Add(offering);
+        return offering;
+    }
+
+    private static ProgramOfferingDocumentRequirement DocumentRequirement(bool isRequired, bool isActive) => new()
+    {
+        PublicId = Guid.NewGuid(),
+        DocumentCode = "TRANSCRIPT",
+        NormalizedDocumentCode = "TRANSCRIPT",
+        DisplayName = "Transkript",
+        IsRequired = isRequired,
+        IsActive = isActive,
+        AllowedContentCategory = DocumentContentCategory.PdfOnly,
+        MaximumBytes = 1024,
+        CreatedAtUtc = DateTime.UtcNow,
+        UpdatedAtUtc = DateTime.UtcNow
+    };
+
+    private static ProgramOfferingUpdateDto UpdateRequest(ProgramOffering offering, bool isOpen) => new()
+    {
+        ProgramId = offering.ProgramId,
+        AcademicYearStart = offering.AcademicYearStart,
+        Term = offering.Term,
+        ApplicationStartUtc = offering.ApplicationStartUtc!.Value,
+        ApplicationDeadlineUtc = offering.ApplicationDeadlineUtc!.Value,
+        Quota = offering.Quota,
+        IsOpen = isOpen,
+        RowVersion = Convert.ToBase64String(offering.RowVersion)
+    };
 
     private sealed class SwitchableConcurrencyInterceptor : SaveChangesInterceptor
     {

@@ -1,7 +1,8 @@
 @model StudentApplicationDetailViewModel
 @{
     ViewData["Title"] = "Başvuru belgeleri";
-    var canSubmit = Model.CurrentStatus == ApplicationStatus.Draft && Model.MissingRequiredDocuments.Count == 0;
+    var hasInvalidRequirementConfiguration = !Model.HasValidRequiredDocumentConfiguration();
+    var canSubmit = Model.CanSubmitDocumentWorkflow();
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -110,7 +111,14 @@ else
             <button type="submit" class="btn btn-success" disabled="@(!canSubmit)">Başvuruyu gönder</button>
             @if (!canSubmit)
             {
-                <span class="text-muted ms-2">Önce tüm zorunlu belgeleri yükleyin.</span>
+                if (hasInvalidRequirementConfiguration)
+                {
+                    <span class="text-warning ms-2">Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.</span>
+                }
+                else
+                {
+                    <span class="text-muted ms-2">Önce tüm zorunlu belgeleri yükleyin.</span>
+                }
             }
         </form>
     }
