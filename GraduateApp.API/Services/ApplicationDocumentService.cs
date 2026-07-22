@@ -275,9 +275,17 @@ public sealed class ApplicationDocumentService(
                 cancellationToken);
         if (document is null
             || !document.IsCurrent
-            || document.Application.CurrentStatus is "Draft" or "Approved" or "Rejected" or "Withdrawn")
+            || !ApplicationStatusRules.TryParseStoredValue(document.Application.CurrentStatus, out var applicationStatus)
+            || applicationStatus is not (ApplicationStatus.Pending or ApplicationStatus.UnderReview))
         {
             return ServiceResult<ApplicationDocumentDto>.Failure("Belge bulunamadı veya bu durumda incelenemez.", StatusCodes.Status404NotFound);
+        }
+
+        if (document.ReviewStatus != DocumentReviewStatus.Pending)
+        {
+            return ServiceResult<ApplicationDocumentDto>.Failure(
+                "Yalnızca inceleme bekleyen güncel belge incelenebilir.",
+                StatusCodes.Status409Conflict);
         }
 
         byte[] rowVersion;
