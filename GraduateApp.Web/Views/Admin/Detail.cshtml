@@ -116,7 +116,7 @@
                                    asp-route-documentPublicId="@current.PublicId"
                                    class="btn btn-sm btn-outline-secondary">Güncel belgeyi indir</a>
 
-                                @if (Model.CurrentStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview)
+                                @if (Model.CurrentStatus.CanReviewDocument(current.ReviewStatus))
                                 {
                                     <div class="row g-2 mt-2">
                                         <div class="col-auto">
