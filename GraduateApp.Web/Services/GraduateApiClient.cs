@@ -44,6 +44,16 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             model.ConfirmPassword
         }, cancellationToken);
 
+    public Task<ApiResult> AcceptAdminInvitationAsync(
+        AcceptAdminInvitationViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync("api/auth/admin-invitations/accept", new
+        {
+            model.Token,
+            model.NewPassword,
+            model.ConfirmPassword
+        }, cancellationToken);
+
     public Task<ApiResult> ChangePasswordAsync(ChangePasswordViewModel model, CancellationToken cancellationToken) =>
         PostAsync("api/auth/change-password", new
         {
@@ -210,6 +220,50 @@ public sealed class GraduateApiClient(HttpClient httpClient)
 
     public Task<ApiResult> ActivateStudentAsync(Guid publicId, CancellationToken cancellationToken) =>
         PostAsync($"api/admin/students/{publicId:D}/activate", new { }, cancellationToken);
+
+    public Task<ApiResult<PagedResultViewModel<AdminAccountViewModel>>> GetAdminAccountsAsync(
+        string? search,
+        AdminAccountStatus? status,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = new List<string>
+        {
+            $"page={Math.Max(page, 1)}",
+            $"pageSize={Math.Clamp(pageSize, 10, 100)}"
+        };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        }
+
+        if (status.HasValue)
+        {
+            query.Add($"status={status.Value}");
+        }
+
+        return GetAsync<PagedResultViewModel<AdminAccountViewModel>>(
+            $"api/admin/accounts?{string.Join('&', query)}",
+            cancellationToken);
+    }
+
+    public Task<ApiResult<AdminAccountViewModel>> InviteAdminAsync(
+        InviteAdminViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<AdminAccountViewModel>("api/admin/accounts/invitations", new { model.Email }, cancellationToken);
+
+    public Task<ApiResult<AdminAccountViewModel>> ResendAdminInvitationAsync(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        PostAsync<AdminAccountViewModel>($"api/admin/accounts/{publicId:D}/resend-invitation", new { rowVersion }, cancellationToken);
+
+    public Task<ApiResult<AdminAccountViewModel>> ActivateAdminAsync(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        PostAsync<AdminAccountViewModel>($"api/admin/accounts/{publicId:D}/activate", new { rowVersion }, cancellationToken);
+
+    public Task<ApiResult<AdminAccountViewModel>> DeactivateAdminAsync(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        PostAsync<AdminAccountViewModel>($"api/admin/accounts/{publicId:D}/deactivate", new { rowVersion }, cancellationToken);
+
+    public Task<ApiResult<AdminAccountViewModel>> UnlockAdminAsync(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
+        PostAsync<AdminAccountViewModel>($"api/admin/accounts/{publicId:D}/unlock", new { rowVersion }, cancellationToken);
 
     public Task<ApiResult<PagedResultViewModel<InstituteAdminViewModel>>> GetAdminInstitutesAsync(
         string? search,

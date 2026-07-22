@@ -72,6 +72,10 @@ builder.Services.AddOptions<RegistrationOptions>()
     .Validate(options => options.MinimumAge is >= 16 and <= 30, "Registration:MinimumAge geçersiz.")
     .Validate(options => options.MaximumAge is >= 60 and <= 120, "Registration:MaximumAge geçersiz.")
     .ValidateOnStart();
+builder.Services.AddOptions<AdminInvitationOptions>()
+    .Bind(builder.Configuration.GetSection(AdminInvitationOptions.SectionName))
+    .Validate(options => options.LifetimeHours is >= 1 and <= 168, "AdminInvitation:LifetimeHours 1 ile 168 arasında olmalıdır.")
+    .ValidateOnStart();
 builder.Services.AddScoped<StudentRegistrationValidator>();
 builder.Services.AddScoped<IPasswordHasher<Student>, PasswordHasher<Student>>();
 builder.Services.AddScoped<IPasswordHasher<Admin>, PasswordHasher<Admin>>();
@@ -79,6 +83,7 @@ builder.Services.AddScoped<IAccessTokenService, AccessTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IAdminStudentService, AdminStudentService>();
+builder.Services.AddScoped<IAdminAccountService, AdminAccountService>();
 builder.Services.AddScoped<IInstituteAdminService, InstituteAdminService>();
 builder.Services.AddScoped<IProgramAdminService, ProgramAdminService>();
 builder.Services.AddScoped<IProgramOfferingService, ProgramOfferingService>();
@@ -89,10 +94,12 @@ builder.Services.AddHostedService<AdminBootstrapHostedService>();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddSingleton<IPasswordResetEmailSender, DevelopmentFilePasswordResetEmailSender>();
+    builder.Services.AddSingleton<IAdminInvitationEmailSender, DevelopmentFileAdminInvitationEmailSender>();
 }
 else
 {
     builder.Services.AddSingleton<IPasswordResetEmailSender, UnavailablePasswordResetEmailSender>();
+    builder.Services.AddSingleton<IAdminInvitationEmailSender, UnavailableAdminInvitationEmailSender>();
 }
 
 builder.Services.AddRateLimiter(options =>

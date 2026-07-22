@@ -80,6 +80,8 @@ public sealed class AccessTokenService : IAccessTokenService
             ApiAuthenticationDefaults.AdminRole when int.TryParse(payload.Subject, out var adminId) =>
                 await _dbContext.Admins.AsNoTracking().AnyAsync(
                     admin => admin.AdminId == adminId
+                        && admin.IsActive
+                        && !admin.IsInvitationPending
                         && admin.SecurityStamp == payload.SecurityStamp
                         && admin.LoginIdentity != null
                         && admin.LoginIdentity.AccountType == LoginAccountType.Admin

@@ -106,10 +106,13 @@ public sealed class AdminBootstrapHostedService(
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var admin = new Admin
         {
+            PublicId = Guid.NewGuid(),
             Email = email.Trim(),
             NormalizedEmail = normalizedEmail,
             SecurityStamp = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)),
             MustChangePassword = true,
+            IsActive = true,
+            IsInvitationPending = false,
             CreatedAtUtc = now,
             UpdatedAtUtc = now
         };

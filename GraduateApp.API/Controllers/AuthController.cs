@@ -10,7 +10,7 @@ namespace GraduateApp.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(IAuthService authService) : ControllerBase
+public sealed class AuthController(IAuthService authService, IAdminAccountService adminAccountService) : ControllerBase
 {
     [HttpPost("register")]
     [AllowAnonymous]
@@ -54,6 +54,19 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         var result = await authService.ResetPasswordAsync(request, cancellationToken);
         return result.IsSuccess
             ? Ok(result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpPost("admin-invitations/accept")]
+    [AllowAnonymous]
+    [EnableRateLimiting("password-reset")]
+    public async Task<IActionResult> AcceptAdminInvitation(
+        AcceptAdminInvitationDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await adminAccountService.AcceptInvitationAsync(request, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
             : Problem(statusCode: result.StatusCode, detail: result.Error);
     }
 

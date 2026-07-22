@@ -230,6 +230,46 @@ public sealed class AdminStudentDetailViewModel
     public DateTime UpdatedAtUtc { get; set; }
 }
 
+public enum AdminAccountStatus
+{
+    Active = 1,
+    Inactive = 2,
+    InvitationPending = 3,
+    Locked = 4
+}
+
+public sealed class AdminAccountViewModel
+{
+    public Guid PublicId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public bool IsInvitationPending { get; set; }
+    public bool IsLocked { get; set; }
+    public int AccessFailedCount { get; set; }
+    public bool IsCurrentAdmin { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
+}
+
+public sealed class InviteAdminViewModel
+{
+    [Required(ErrorMessage = "E-posta zorunludur.")]
+    [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi giriniz.")]
+    [StringLength(254, ErrorMessage = "E-posta en fazla 254 karakter olabilir.")]
+    [Display(Name = "Yeni yöneticinin e-posta adresi")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public sealed class AdminAccountPageViewModel
+{
+    public PagedResultViewModel<AdminAccountViewModel> Result { get; set; } = new();
+    public InviteAdminViewModel Invite { get; set; } = new();
+    public string? Search { get; set; }
+    public AdminAccountStatus? Status { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
 public sealed class InstituteAdminViewModel
 {
     public int InstituteId { get; set; }

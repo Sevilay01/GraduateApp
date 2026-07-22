@@ -80,6 +80,17 @@ public sealed class AuthorizationTests
     }
 
     [Fact]
+    public void Api_admin_account_management_requires_admin_role_and_has_no_delete_endpoint()
+    {
+        var authorize = typeof(AdminAccountsController).GetCustomAttribute<AuthorizeAttribute>();
+
+        Assert.NotNull(authorize);
+        Assert.Equal("Admin", authorize!.Roles);
+        Assert.DoesNotContain(typeof(AdminAccountsController).GetMethods(), method =>
+            method.GetCustomAttributes().OfType<Microsoft.AspNetCore.Mvc.HttpDeleteAttribute>().Any());
+    }
+
+    [Fact]
     public void Institute_and_program_management_require_admin_and_exclude_student_role()
     {
         var controllerTypes = new[]
