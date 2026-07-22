@@ -78,6 +78,40 @@ Migration; beklenen temel tablo/kolon veya durum constraint'i bulunmazsa, hedef 
 
 `EducationInfo.DiplomaPath`, `EducationInfo.TranscriptPath` ve `ReferenceLetter.FilePath` alanları legacy kabul edilir. Sahiplikleri ve dosya içerikleri doğrulanamadığı için silinmez, migration ile taşınmaz ve yeni güvenli belge kayıtlarıyla otomatik birleştirilmez.
 
+### Başvuru değerlendirme ve sonuç yayımlama
+
+Yeni oluşturulan dönemsel ilanlar değerlendirme iş akışını kullanır; migration öncesi ilan ve başvurular `UsesEvaluationWorkflow = 0` ile legacy davranışını korur. Bir değerlendirme ilanı açılmadan önce en az bir kriter tanımlanmalı, pozitif kriter ağırlıklarının toplamı tam olarak `10000` basis point olmalı ve kriter kodları ile eşitlik bozma öncelikleri ilan içinde benzersiz olmalıdır. Desteklenen kaynaklar:
+
+- `UndergraduateGpa`: maksimum ham puan tam olarak 4 olan tek lisans GNO kriteri;
+- `ExamScore`: ilanın zorunlu sınav koşullarından birine bağlı, açıkça tanımlanmış pozitif maksimum puanlı kriter;
+- `ManualScore`: maksimum ham puan tam olarak 100 olan yönetici puanı.
+
+İlk taslak başvuru oluştuğunda ilanın kriter politikası kilitlenir. Gönderim anında GNO ve sınav ham puanları ile kriter kodu, adı, kaynak türü, maksimum puan, ağırlık ve eşitlik önceliği başvuruya snapshot olarak kopyalanır; manuel bileşen boş kalır. Puanlama yalnızca `decimal` aritmetik kullanır:
+
+```text
+NormalizedExact = (RawScore / MaximumRawScore) * 100
+NormalizedScore = round_away_from_zero(NormalizedExact, 4)
+WeightedScore   = round_away_from_zero(NormalizedExact * WeightBasisPoints / 10000, 4)
+TotalScore      = round_away_from_zero(sum(WeightedScore), 4)
+```
+
+Ağırlıklı puan, dört haneye yuvarlanmış `NormalizedScore` üzerinden değil yuvarlanmamış `NormalizedExact` üzerinden hesaplanır; böylece ara yuvarlama puanı değiştirmez. Kalıcı ve gösterilen değerler dört ondalık haneye `MidpointRounding.AwayFromZero` ile yuvarlanır.
+
+Yeni iş akışında kontenjan gönderim sırasında başvuruyu engellemez; kontenjan sıralama sonunda kabul sayısını belirler. Legacy ilanların mevcut gönderim-kota kuralı değişmez. Yönetici önce başvuruyu `UnderReview` durumuna alır, zorunlu güncel belgeleri onaylar, uygunluk kararı verir ve manuel bileşenleri tamamlar. Uygun adaylar toplam puan azalan, kriter öncelik sırasındaki normalize puanlar azalan, başvuru tarihi artan ve son olarak başvuru `PublicID` artan biçimde deterministik sıralanır.
+
+`Finalize` ilan kapalıyken, son başvuru tarihi geçtikten ve tüm adaylar tamamlandıktan sonra sıra ve sonuçları tek transaction içinde dondurur; öğrenciye hiçbir puan, sıra veya karar açmaz ve başvuru durumlarını değiştirmez. Ayrı onay ekranındaki `Publish` işlemi sonuçları tek transaction içinde yayımlar, kabul edilenleri `Approved`, diğer sonuçları `Rejected` yapar, durum geçmişi ve PII içermeyen audit kayıtlarını ekler. Öğrenci yalnızca kendi başvurusunun yayımlanmış sonucunu ayrı sahiplik kontrollü endpoint üzerinden görebilir. Tüm yönetici mutasyonları admin rolü, antiforgery, rowversion ve güvenli Türkçe hata sözleşmeleriyle korunur.
+
+`AddApplicationEvaluationAndResults` ileri migration'ı kriter, değerlendirme ve bileşen tablolarını; unique/filtered indexleri; check constraint'leri ve rowversion alanlarını ekler. Migration beklenen güvenli temel şema yoksa, hedef nesneler migration geçmişi dışında mevcutsa veya tanımsız başvuru durumu bulunursa veri değiştirmeden Türkçe `THROW` ile durur. Mevcut ilan ve başvuruları otomatik olarak yeni akışa almaz. `Down` veri kaybı riski nedeniyle desteklenmez; geri dönüş yeni uygulama binary'si yerine doğrulanmış veritabanı yedeği ve önceki uygulama sürümüyle planlanmalıdır.
+
+Değerlendirme smoke testi:
+
+1. Kapalı yeni ilan oluşturun; toplamı 10000 olmayan politika ile açılamadığını, geçerli kriterler ve zorunlu belge koşuluyla açılabildiğini doğrulayın.
+2. Taslak oluşturulduktan sonra kriter ekleme, değiştirme ve silmenin reddedildiğini doğrulayın.
+3. Öğrenci GNO/sınav bilgilerini ve zorunlu belgelerini tamamlayıp başvursun; otomatik değerlerin submit anında snapshot olduğunu ve kota dolu olsa da yeni akış başvurusunun gönderilebildiğini doğrulayın.
+4. Admin başvuruyu incelemeye alsın, belgeleri onaylasın, uygunluk ve manuel puanı kaydetsin; stale rowversion denemelerinin 409 verdiğini doğrulayın.
+5. Önizleme sırasını kontrol edin, ilanı kapatıp son tarihten sonra kesinleştirin; öğrenci ekranında sonuç bulunmadığını doğrulayın.
+6. Ayrı onay sayfasından yayımlayın; statü/geçmiş/audit kayıtlarını ve yalnızca başvuru sahibinin sonuç kırılımını görebildiğini doğrulayın.
+
 ## Güvenli belge depolama
 
 Development ortamında belgeler API projesinin `GraduateApp.API/.dev-storage/` dizininde, `wwwroot` dışında ve Git tarafından izlenmeden tutulur. Kullanıcının dosya adı depolama anahtarı yapılmaz; tahmin edilemez opaque anahtar kullanılır ve metadata dışında fiziksel yol veya erişilebilir URL veritabanına yazılmaz. Geçici dosyalar doğrulama sonunda temizlenir; depolama yazımı geçici dosya + atomik taşıma kullanır ve mevcut anahtarın üzerine yazmaz.

@@ -4,6 +4,7 @@ using GraduateApp.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GraduateApp.API.Migrations
 {
     [DbContext(typeof(GraduateAppDbContext))]
-    partial class GraduateAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260722170322_AddApplicationEvaluationAndResults")]
+    partial class AddApplicationEvaluationAndResults
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

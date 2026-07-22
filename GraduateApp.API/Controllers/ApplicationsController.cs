@@ -12,7 +12,8 @@ namespace GraduateApp.API.Controllers;
 [Route("api/applications")]
 public sealed class ApplicationsController(
     IApplicationService applicationService,
-    IApplicationDocumentService documentService) : ControllerBase
+    IApplicationDocumentService documentService,
+    IApplicationEvaluationService evaluationService) : ControllerBase
 {
     [HttpPost]
     [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
@@ -73,6 +74,22 @@ public sealed class ApplicationsController(
         return result.IsSuccess
             ? NoContent()
             : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpGet("mine/{publicId:guid}/evaluation-result")]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
+    public async Task<IActionResult> GetMineEvaluationResult(Guid publicId, CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
+        {
+            return Unauthorized();
+        }
+
+        var result = await evaluationService.GetPublishedForStudentAsync(studentTc, publicId, cancellationToken);
+        return result is null
+            ? Problem(statusCode: StatusCodes.Status404NotFound, detail: "Yayımlanmış başvuru sonucu bulunamadı.")
+            : Ok(result);
     }
 
     [HttpPost("mine/{publicId:guid}/document-requirements/{requirementPublicId:guid}/upload")]

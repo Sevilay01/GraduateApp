@@ -56,6 +56,15 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        if (result.Value.UsesEvaluationWorkflow)
+        {
+            var published = await apiClient.GetMyPublishedEvaluationAsync(publicId, cancellationToken);
+            if (published.IsSuccess)
+            {
+                result.Value.PublishedEvaluation = published.Value;
+            }
+        }
+
         return View(result.Value);
     }
 

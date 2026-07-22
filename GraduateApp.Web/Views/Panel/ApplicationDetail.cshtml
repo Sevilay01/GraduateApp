@@ -13,6 +13,49 @@
     <span class="badge text-bg-secondary fs-6">@Model.CurrentStatus.DisplayName()</span>
 </div>
 
+@if (Model.UsesEvaluationWorkflow)
+{
+    if (Model.PublishedEvaluation is null)
+    {
+        <div class="alert alert-info" role="status">Değerlendirme süreci devam ediyor. Sonuçlar kesinleştirilip yayımlanana kadar puan, sıralama ve karar gösterilmez.</div>
+    }
+    else
+    {
+        var result = Model.PublishedEvaluation;
+        <section class="card border-primary mb-4" aria-labelledby="evaluation-result-heading">
+            <div class="card-body">
+                <h2 id="evaluation-result-heading" class="h4">Yayımlanmış değerlendirme sonucu</h2>
+                <dl class="row">
+                    <dt class="col-sm-4">Karar</dt><dd class="col-sm-8"><strong>@result.Outcome.DisplayName()</strong></dd>
+                    <dt class="col-sm-4">Toplam puan</dt><dd class="col-sm-8">@(result.TotalScore?.ToString("0.0000") ?? "-")</dd>
+                    <dt class="col-sm-4">Sıra</dt><dd class="col-sm-8">@(result.Rank?.ToString() ?? "-")</dd>
+                    <dt class="col-sm-4">Yayımlanma</dt><dd class="col-sm-8">@IstanbulTime.FromUtc(result.ResultsPublishedAtUtc).ToString("dd.MM.yyyy HH:mm")</dd>
+                </dl>
+                @if (result.Components.Count > 0)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead><tr><th>Kriter</th><th>Ham</th><th>Normalize</th><th>Ağırlık</th><th>Katkı</th></tr></thead>
+                            <tbody>
+                            @foreach (var component in result.Components)
+                            {
+                                <tr>
+                                    <td>@component.DisplayName</td>
+                                    <td>@component.RawScore.ToString("0.0000")</td>
+                                    <td>@component.NormalizedScore.ToString("0.0000")</td>
+                                    <td>@((component.WeightBasisPoints / 100m).ToString("0.##"))%</td>
+                                    <td>@component.WeightedScore.ToString("0.0000")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+}
+
 @if (TempData["SuccessMessage"] is string success)
 {
     <div class="alert alert-success" role="status">@success</div>

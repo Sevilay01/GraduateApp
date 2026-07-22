@@ -60,7 +60,8 @@ public sealed class ApplicationStatusTriggerMigrationIntegrationTests
             """
             ALTER TABLE [dbo].[Applications]
                 ADD [PublicID] uniqueidentifier NOT NULL CONSTRAINT [DF_TestApplications_PublicID] DEFAULT (NEWID()),
-                    [UsesDocumentWorkflow] bit NOT NULL CONSTRAINT [DF_TestApplications_UsesDocumentWorkflow] DEFAULT (0);
+                    [UsesDocumentWorkflow] bit NOT NULL CONSTRAINT [DF_TestApplications_UsesDocumentWorkflow] DEFAULT (0),
+                    [UsesEvaluationWorkflow] bit NOT NULL CONSTRAINT [DF_TestApplications_UsesEvaluationWorkflow] DEFAULT (0);
             """);
 
         Assert.Equal(

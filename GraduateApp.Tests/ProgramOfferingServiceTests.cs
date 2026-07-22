@@ -41,6 +41,7 @@ public sealed class ProgramOfferingServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.False(result.Value!.IsOpen);
+        Assert.True(result.Value.UsesEvaluationWorkflow);
         Assert.False(db.ProgramOfferings.Single().IsOpen);
     }
 
@@ -216,6 +217,127 @@ public sealed class ProgramOfferingServiceTests
         Assert.True(db.ProgramOfferings.Single().IsOpen);
     }
 
+    [Fact]
+    public async Task Evaluation_offering_cannot_open_until_policy_weights_equal_ten_thousand()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        offering.UsesEvaluationWorkflow = true;
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        offering.EvaluationCriteria.Add(new ProgramOfferingEvaluationCriterion
+        {
+            PublicId = Guid.NewGuid(),
+            Code = "MANUAL",
+            NormalizedCode = "MANUAL",
+            DisplayName = "Mülakat",
+            SourceType = EvaluationCriterionSourceType.ManualScore,
+            WeightBasisPoints = 9999,
+            MaximumRawScore = 100m,
+            TieBreakPriority = 1
+        });
+        await db.SaveChangesAsync();
+
+        var blocked = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true),
+            CancellationToken.None);
+        offering.EvaluationCriteria.Single().WeightBasisPoints = 10000;
+        await db.SaveChangesAsync();
+        var opened = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true),
+            CancellationToken.None);
+
+        Assert.False(blocked.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, blocked.StatusCode);
+        Assert.True(opened.IsSuccess);
+    }
+
+    [Theory]
+    [InlineData(OfferingEvaluationState.Finalized)]
+    [InlineData(OfferingEvaluationState.Published)]
+    public async Task Finalized_or_published_evaluation_offering_cannot_be_edited(OfferingEvaluationState state)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        offering.UsesEvaluationWorkflow = true;
+        offering.EvaluationState = state;
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(
+                offering,
+                isOpen: false,
+                quota: offering.Quota + 1,
+                applicationDeadlineUtc: offering.ApplicationDeadlineUtc!.Value.AddDays(1)),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+    }
+
+    [Fact]
+    public async Task Existing_legacy_offering_can_enable_evaluation_only_before_any_draft_exists()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var available = AddOffering(db, program.ProgramId);
+        var locked = AddOffering(db, program.ProgramId);
+        locked.Term = AcademicTerm.Spring;
+        locked.Applications.Add(new Application
+        {
+            PublicId = Guid.NewGuid(),
+            Tc = "10000000146",
+            CurrentStatus = ApplicationStatus.Draft.ToString(),
+            UsesDocumentWorkflow = true
+        });
+        await db.SaveChangesAsync();
+
+        var enabled = await CreateService(db).UpdateAsync(
+            available.ProgramOfferingId,
+            1,
+            UpdateRequest(available, isOpen: false, usesEvaluationWorkflow: true),
+            CancellationToken.None);
+        var blocked = await CreateService(db).UpdateAsync(
+            locked.ProgramOfferingId,
+            1,
+            UpdateRequest(locked, isOpen: false, usesEvaluationWorkflow: true),
+            CancellationToken.None);
+
+        Assert.True(enabled.IsSuccess);
+        Assert.True(available.UsesEvaluationWorkflow);
+        Assert.False(blocked.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, blocked.StatusCode);
+        Assert.False(locked.UsesEvaluationWorkflow);
+    }
+
+    [Fact]
+    public async Task Existing_legacy_offering_cannot_enable_evaluation_and_open_without_a_valid_policy()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true, usesEvaluationWorkflow: true),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.False(offering.UsesEvaluationWorkflow);
+        Assert.False(offering.IsOpen);
+    }
+
     private static ProgramOfferingService CreateService(GraduateAppDbContext db) =>
         new(db, new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)));
 
@@ -278,17 +400,23 @@ public sealed class ProgramOfferingServiceTests
         UpdatedAtUtc = DateTime.UtcNow
     };
 
-    private static ProgramOfferingUpdateDto UpdateRequest(ProgramOffering offering, bool isOpen) => new()
-    {
-        ProgramId = offering.ProgramId,
-        AcademicYearStart = offering.AcademicYearStart,
-        Term = offering.Term,
-        ApplicationStartUtc = offering.ApplicationStartUtc!.Value,
-        ApplicationDeadlineUtc = offering.ApplicationDeadlineUtc!.Value,
-        Quota = offering.Quota,
-        IsOpen = isOpen,
-        RowVersion = Convert.ToBase64String(offering.RowVersion)
-    };
+    private static ProgramOfferingUpdateDto UpdateRequest(
+        ProgramOffering offering,
+        bool isOpen,
+        bool? usesEvaluationWorkflow = null,
+        int? quota = null,
+        DateTime? applicationDeadlineUtc = null) => new()
+        {
+            ProgramId = offering.ProgramId,
+            AcademicYearStart = offering.AcademicYearStart,
+            Term = offering.Term,
+            ApplicationStartUtc = offering.ApplicationStartUtc!.Value,
+            ApplicationDeadlineUtc = applicationDeadlineUtc ?? offering.ApplicationDeadlineUtc!.Value,
+            Quota = quota ?? offering.Quota,
+            IsOpen = isOpen,
+            UsesEvaluationWorkflow = usesEvaluationWorkflow ?? offering.UsesEvaluationWorkflow,
+            RowVersion = Convert.ToBase64String(offering.RowVersion)
+        };
 
     private sealed class SwitchableConcurrencyInterceptor : SaveChangesInterceptor
     {

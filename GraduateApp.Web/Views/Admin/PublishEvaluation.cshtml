@@ -1,0 +1,22 @@
+@model EvaluationPublishPageViewModel
+@{
+    ViewData["Title"] = "Sonuçları yayımla";
+}
+
+<h1 class="h2">Sonuçları yayımla</h1>
+<p class="lead">@Model.ProgramName</p>
+<div class="alert alert-danger" role="alert">
+    Bu işlem kesinleştirilmiş sonuçları öğrencilere açar ve başvuru durumlarını atomik olarak Onaylandı/Reddedildi yapar. İşlem geri alınamaz.
+</div>
+<dl class="row">
+    <dt class="col-sm-4">Kontenjan</dt><dd class="col-sm-8">@Model.Summary.Quota</dd>
+    <dt class="col-sm-4">Kabul</dt><dd class="col-sm-8">@Model.Summary.AdmittedCount</dd>
+    <dt class="col-sm-4">Kabul edilmeyen</dt><dd class="col-sm-8">@Model.Summary.NotAdmittedCount</dd>
+    <dt class="col-sm-4">Uygun olmayan</dt><dd class="col-sm-8">@Model.Summary.IneligibleCount</dd>
+</dl>
+<form asp-action="PublishEvaluation" method="post">
+    <input type="hidden" name="programOfferingId" value="@Model.ProgramOfferingId" />
+    <input type="hidden" name="rowVersion" value="@Model.Summary.OfferingRowVersion" />
+    <button class="btn btn-danger">Sonuçları kesin olarak yayımla</button>
+    <a asp-action="Evaluation" asp-route-id="@Model.ProgramOfferingId" class="btn btn-outline-secondary">Vazgeç</a>
+</form>

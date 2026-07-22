@@ -103,6 +103,8 @@ builder.Services.AddScoped<IAdminAccountService, AdminAccountService>();
 builder.Services.AddScoped<IInstituteAdminService, InstituteAdminService>();
 builder.Services.AddScoped<IProgramAdminService, ProgramAdminService>();
 builder.Services.AddScoped<IProgramOfferingService, ProgramOfferingService>();
+builder.Services.AddScoped<IEvaluationPolicyService, EvaluationPolicyService>();
+builder.Services.AddScoped<IApplicationEvaluationService, ApplicationEvaluationService>();
 builder.Services.AddScoped<IOfferingDocumentRequirementService, OfferingDocumentRequirementService>();
 builder.Services.AddScoped<IStudentExamScoreService, StudentExamScoreService>();
 builder.Services.AddScoped<IStudentProfileService, StudentProfileService>();

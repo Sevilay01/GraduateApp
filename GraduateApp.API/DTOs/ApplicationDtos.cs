@@ -73,6 +73,7 @@ public sealed record AdminApplicationDetailDto(
     IReadOnlyList<ApplicationStatusHistoryDto> History,
     IReadOnlyList<ApplicationScoreSnapshotDto> ScoreSnapshots,
     bool UsesDocumentWorkflow,
+    bool UsesEvaluationWorkflow,
     IReadOnlyList<ApplicationDocumentRequirementDto> DocumentRequirements);
 
 public sealed record ApplicationScoreSnapshotDto(

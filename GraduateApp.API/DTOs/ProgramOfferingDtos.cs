@@ -38,6 +38,7 @@ public class ProgramOfferingCreateDto : IValidatableObject
     public int Quota { get; init; }
 
     public bool IsOpen { get; init; }
+    public bool UsesEvaluationWorkflow { get; init; }
     public IReadOnlyList<ProgramOfferingRequirementInputDto> ExamRequirements { get; init; } = [];
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -84,6 +85,10 @@ public sealed record ProgramOfferingAdminDto(
     int Quota,
     bool IsOpen,
     bool IsArchived,
+    bool UsesEvaluationWorkflow,
+    OfferingEvaluationState EvaluationState,
+    DateTime? EvaluationFinalizedAtUtc,
+    DateTime? ResultsPublishedAtUtc,
     string RowVersion,
     IReadOnlyList<ExamRequirementDto> ExamRequirements);
 

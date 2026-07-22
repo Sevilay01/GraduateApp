@@ -98,6 +98,7 @@ public sealed record StudentApplicationDetailDto(
     DateTime ApplicationDateUtc,
     ApplicationStatus CurrentStatus,
     bool UsesDocumentWorkflow,
+    bool UsesEvaluationWorkflow,
     IReadOnlyList<ApplicationDocumentRequirementDto> DocumentRequirements,
     IReadOnlyList<string> MissingRequiredDocuments);
 
