@@ -679,6 +679,7 @@ public sealed class AuthServiceTests
         var token = Assert.Single(db.PasswordResetTokens);
         Assert.Equal(admin.AdminId, token.AdminId);
         Assert.Null(token.Tc);
+        Assert.Equal(PasswordResetTokenPurpose.PasswordReset, token.Purpose);
         Assert.NotNull(email.ResetLink);
     }
 

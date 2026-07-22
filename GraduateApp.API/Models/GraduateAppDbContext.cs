@@ -179,7 +179,12 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
             entity.Property(e => e.Tc).HasMaxLength(11).IsUnicode(false).IsFixedLength().HasColumnName("TC");
             entity.Property(e => e.AdminId).HasColumnName("AdminID");
             entity.Property(e => e.TokenHash).HasMaxLength(256).IsUnicode(false).IsRequired();
-            entity.Property(e => e.Purpose).HasConversion<string>().HasMaxLength(32).HasDefaultValue(PasswordResetTokenPurpose.PasswordReset).IsRequired();
+            entity.Property(e => e.Purpose)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .HasDefaultValue(PasswordResetTokenPurpose.PasswordReset)
+                .HasSentinel(default(PasswordResetTokenPurpose))
+                .IsRequired();
             entity.Property(e => e.ExpirationDate).HasColumnType("datetime2");
             entity.Property(e => e.IsUsed).HasDefaultValue(false);
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
