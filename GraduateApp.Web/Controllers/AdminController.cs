@@ -352,15 +352,29 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         string rowVersion,
         CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Belge koşulu durumu doğrulanamadı. Sayfayı yenileyip tekrar deneyin.";
+            return RedirectToAction(nameof(Offerings), new { requirementOfferingId = programOfferingId });
+        }
+
         var result = await apiClient.SetOfferingDocumentRequirementActiveAsync(
             programOfferingId,
             publicId,
             isActive,
             rowVersion,
             cancellationToken);
-        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? (isActive ? "Belge koşulu aktifleştirildi." : "Belge koşulu pasifleştirildi; geçmiş snapshot kayıtları korundu.")
-            : result.Error ?? "Belge koşulu güncellenemedi.";
+        if (result.IsSuccess && result.Value is not null)
+        {
+            TempData["SuccessMessage"] = result.Value.IsActive
+                ? "Belge koşulu aktifleştirildi."
+                : "Belge koşulu pasifleştirildi.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Belge koşulu güncellenemedi.";
+        }
+
         return RedirectToAction(nameof(Offerings), new { requirementOfferingId = programOfferingId });
     }
 

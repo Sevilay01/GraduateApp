@@ -3,6 +3,8 @@ using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
 using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace GraduateApp.Tests;
 
@@ -39,6 +41,52 @@ public sealed class ApplicationServiceTests
         Assert.True(application.UsesDocumentWorkflow);
         Assert.Equal("Transkript", Assert.Single(db.ApplicationDocumentRequirementSnapshots).DisplayName);
         Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "DocumentDraftCreated");
+    }
+
+    [Fact]
+    public async Task Activating_requirement_preserves_existing_draft_and_applies_to_new_drafts()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        AddRequirement(offering, isRequired: true);
+        var requirement = offering.DocumentRequirements.Single();
+        requirement.IsActive = false;
+        await db.SaveChangesAsync();
+        var offeringId = offering.ProgramOfferingId;
+        var requirementPublicId = requirement.PublicId;
+        var rowVersion = Convert.ToBase64String(requirement.RowVersion);
+        db.ChangeTracker.Clear();
+        var applicationService = CreateService(db);
+
+        var existingDraft = await applicationService.CreateAsync("10000000146", offeringId, CancellationToken.None);
+        var requirementService = new OfferingDocumentRequirementService(
+            db,
+            new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)),
+            Options.Create(new DocumentUploadOptions { MaximumBytes = 2 * 1024 * 1024 }));
+        var activated = await requirementService.SetActiveAsync(
+            offeringId,
+            requirementPublicId,
+            1,
+            new DocumentRequirementActiveDto { IsActive = true, RowVersion = rowVersion },
+            CancellationToken.None);
+        db.ChangeTracker.Clear();
+        var newDraft = await applicationService.CreateAsync("10000000154", offeringId, CancellationToken.None);
+
+        Assert.True(existingDraft.IsSuccess);
+        Assert.True(activated.IsSuccess);
+        Assert.True(activated.Value!.IsActive);
+        Assert.True(activated.Value.IsRequired);
+        Assert.True(newDraft.IsSuccess);
+        var existingSnapshots = await db.ApplicationDocumentRequirementSnapshots.AsNoTracking()
+            .Where(item => item.Application.PublicId == existingDraft.Value!.PublicId)
+            .ToListAsync();
+        var newSnapshots = await db.ApplicationDocumentRequirementSnapshots.AsNoTracking()
+            .Where(item => item.Application.PublicId == newDraft.Value!.PublicId)
+            .ToListAsync();
+        Assert.Empty(existingSnapshots);
+        var newSnapshot = Assert.Single(newSnapshots);
+        Assert.True(newSnapshot.IsRequired);
+        Assert.Equal("TRANSCRIPT", newSnapshot.DocumentCode);
     }
 
     [Fact]

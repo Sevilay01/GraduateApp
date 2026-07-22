@@ -3,6 +3,7 @@ using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
 using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace GraduateApp.Tests;
@@ -65,6 +66,76 @@ public sealed class OfferingDocumentRequirementServiceTests
         Assert.True(result.IsSuccess);
         Assert.False(db.ProgramOfferingDocumentRequirements.Single().IsActive);
         Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "OfferingDocumentRequirementDeactivated");
+    }
+
+    [Fact]
+    public async Task Inactive_requirement_can_be_reactivated_without_creating_a_duplicate()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        var service = CreateService(db);
+        var created = await service.CreateAsync(offering.ProgramOfferingId, 1, Request("TRANSCRIPT"), CancellationToken.None);
+        var deactivated = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            created.Value!.PublicId,
+            1,
+            new DocumentRequirementActiveDto { IsActive = false, RowVersion = created.Value.RowVersion },
+            CancellationToken.None);
+
+        var activated = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            created.Value.PublicId,
+            1,
+            new DocumentRequirementActiveDto { IsActive = true, RowVersion = deactivated.Value!.RowVersion },
+            CancellationToken.None);
+
+        Assert.True(deactivated.IsSuccess);
+        Assert.False(deactivated.Value!.IsActive);
+        Assert.True(activated.IsSuccess);
+        Assert.True(activated.Value!.IsActive);
+        var persisted = await db.ProgramOfferingDocumentRequirements.AsNoTracking().SingleAsync();
+        Assert.True(persisted.IsActive);
+        Assert.Equal("TRANSCRIPT", persisted.NormalizedDocumentCode);
+        Assert.Single(db.ProgramOfferingDocumentRequirements);
+        Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "OfferingDocumentRequirementActivated");
+    }
+
+    [Fact]
+    public async Task Stale_rowversion_cannot_reactivate_or_overwrite_an_inactive_requirement()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        var service = CreateService(db);
+        var created = await service.CreateAsync(offering.ProgramOfferingId, 1, Request("TRANSCRIPT"), CancellationToken.None);
+        var deactivated = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            created.Value!.PublicId,
+            1,
+            new DocumentRequirementActiveDto { IsActive = false, RowVersion = created.Value.RowVersion },
+            CancellationToken.None);
+        Assert.True(deactivated.IsSuccess);
+        var requirement = db.ProgramOfferingDocumentRequirements.Single();
+        requirement.DisplayName = "Başka yönetici güncelledi";
+        await db.SaveChangesAsync();
+
+        var stale = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            created.Value.PublicId,
+            1,
+            new DocumentRequirementActiveDto
+            {
+                IsActive = true,
+                RowVersion = Convert.ToBase64String([1])
+            },
+            CancellationToken.None);
+
+        Assert.False(stale.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, stale.StatusCode);
+        Assert.Contains("başka bir yönetici", stale.Error, StringComparison.OrdinalIgnoreCase);
+        var persisted = await db.ProgramOfferingDocumentRequirements.AsNoTracking().SingleAsync();
+        Assert.False(persisted.IsActive);
+        Assert.Equal("Başka yönetici güncelledi", persisted.DisplayName);
+        Assert.Single(db.ProgramOfferingDocumentRequirements);
     }
 
     private static OfferingDocumentRequirementService CreateService(GraduateAppDbContext db) => new(

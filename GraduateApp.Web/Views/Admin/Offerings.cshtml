@@ -210,7 +210,7 @@
                                         <form asp-action="SetDocumentRequirementActive" method="post">
                                             <input type="hidden" name="programOfferingId" value="@offering.ProgramOfferingId" />
                                             <input type="hidden" name="publicId" value="@requirement.PublicId" />
-                                            <input type="hidden" name="isActive" value="@(!requirement.IsActive)" />
+                                            <input type="hidden" name="isActive" value="@((!requirement.IsActive).ToString().ToLowerInvariant())" />
                                             <input type="hidden" name="rowVersion" value="@requirement.RowVersion" />
                                             <button type="submit" class="btn btn-sm btn-outline-secondary">@(requirement.IsActive ? "Pasifleştir" : "Aktifleştir")</button>
                                         </form>
