@@ -1,7 +1,10 @@
+using System.Data;
 using System.Text.Json;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 
 namespace GraduateApp.API.Services;
@@ -50,10 +53,25 @@ public sealed class OfferingDocumentRequirementService(
         OfferingDocumentRequirementCreateDto request,
         CancellationToken cancellationToken)
     {
-        var validation = await ValidateAsync(offeringId, null, request, cancellationToken);
+        await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
+        var offering = await LoadOfferingAggregateAsync(offeringId, cancellationToken);
+        if (offering is null)
+        {
+            return ServiceResult<OfferingDocumentRequirementDto>.Failure("İlan bulunamadı.", StatusCodes.Status404NotFound);
+        }
+
+        var validation = Validate(offering, null, request);
         if (validation is not null)
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(validation.Value.Message, validation.Value.StatusCode);
+        }
+
+        if (offering.IsOpen
+            && !offering.IsArchived
+            && !request.IsRequired
+            && !offering.DocumentRequirements.Any(item => item.IsActive && item.IsRequired))
+        {
+            return LastActiveRequiredConflict();
         }
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
@@ -73,12 +91,26 @@ public sealed class OfferingDocumentRequirementService(
             UpdatedAtUtc = now
         };
         dbContext.ProgramOfferingDocumentRequirements.Add(requirement);
+        TouchOffering(offering, now);
         AddAudit(adminId, "OfferingDocumentRequirementCreated", requirement.PublicId, requirement, now);
 
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
             return ServiceResult<OfferingDocumentRequirementDto>.Success(Map(requirement), StatusCodes.Status201Created);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return ConfigurationConcurrencyConflict();
+        }
+        catch (Exception exception) when (IsSqlServerDeadlock(exception))
+        {
+            return ConfigurationConcurrencyConflict();
         }
         catch (DbUpdateException)
         {
@@ -95,18 +127,25 @@ public sealed class OfferingDocumentRequirementService(
         OfferingDocumentRequirementUpdateDto request,
         CancellationToken cancellationToken)
     {
-        var requirement = await dbContext.ProgramOfferingDocumentRequirements.SingleOrDefaultAsync(
-            item => item.ProgramOfferingId == offeringId && item.PublicId == publicId,
-            cancellationToken);
+        await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
+        var offering = await LoadOfferingAggregateAsync(offeringId, cancellationToken);
+        var requirement = offering?.DocumentRequirements.SingleOrDefault(item => item.PublicId == publicId);
         if (requirement is null)
         {
             return NotFound();
         }
 
-        var validation = await ValidateAsync(offeringId, requirement.RequirementId, request, cancellationToken);
+        var validation = Validate(offering!, requirement.RequirementId, request);
         if (validation is not null)
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(validation.Value.Message, validation.Value.StatusCode);
+        }
+
+        if (offering!.IsOpen
+            && !offering.IsArchived
+            && !HasActiveRequiredAfterChange(offering, requirement, requirement.IsActive, request.IsRequired))
+        {
+            return LastActiveRequiredConflict();
         }
 
         if (!TrySetConcurrency(requirement, request.RowVersion, out var concurrencyError))
@@ -122,9 +161,10 @@ public sealed class OfferingDocumentRequirementService(
         requirement.AllowedContentCategory = request.AllowedContentCategory;
         requirement.MaximumBytes = request.MaximumBytes;
         requirement.UpdatedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+        TouchOffering(offering, requirement.UpdatedAtUtc);
         AddAudit(adminId, "OfferingDocumentRequirementUpdated", publicId, requirement, requirement.UpdatedAtUtc);
 
-        return await SaveUpdateAsync(requirement, cancellationToken);
+        return await SaveUpdateAsync(requirement, transaction, cancellationToken);
     }
 
     public async Task<ServiceResult<OfferingDocumentRequirementDto>> SetActiveAsync(
@@ -134,12 +174,19 @@ public sealed class OfferingDocumentRequirementService(
         DocumentRequirementActiveDto request,
         CancellationToken cancellationToken)
     {
-        var requirement = await dbContext.ProgramOfferingDocumentRequirements.SingleOrDefaultAsync(
-            item => item.ProgramOfferingId == offeringId && item.PublicId == publicId,
-            cancellationToken);
+        await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
+        var offering = await LoadOfferingAggregateAsync(offeringId, cancellationToken);
+        var requirement = offering?.DocumentRequirements.SingleOrDefault(item => item.PublicId == publicId);
         if (requirement is null)
         {
             return NotFound();
+        }
+
+        if (offering!.IsOpen
+            && !offering.IsArchived
+            && !HasActiveRequiredAfterChange(offering, requirement, request.IsActive, requirement.IsRequired))
+        {
+            return LastActiveRequiredConflict();
         }
 
         if (!TrySetConcurrency(requirement, request.RowVersion, out var concurrencyError))
@@ -149,26 +196,21 @@ public sealed class OfferingDocumentRequirementService(
 
         requirement.IsActive = request.IsActive;
         requirement.UpdatedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+        TouchOffering(offering, requirement.UpdatedAtUtc);
         AddAudit(
             adminId,
             request.IsActive ? "OfferingDocumentRequirementActivated" : "OfferingDocumentRequirementDeactivated",
             publicId,
             requirement,
             requirement.UpdatedAtUtc);
-        return await SaveUpdateAsync(requirement, cancellationToken);
+        return await SaveUpdateAsync(requirement, transaction, cancellationToken);
     }
 
-    private async Task<(string Message, int StatusCode)?> ValidateAsync(
-        int offeringId,
+    private (string Message, int StatusCode)? Validate(
+        ProgramOffering offering,
         int? currentRequirementId,
-        OfferingDocumentRequirementCreateDto request,
-        CancellationToken cancellationToken)
+        OfferingDocumentRequirementCreateDto request)
     {
-        if (!await dbContext.ProgramOfferings.AnyAsync(item => item.ProgramOfferingId == offeringId, cancellationToken))
-        {
-            return ("İlan bulunamadı.", StatusCodes.Status404NotFound);
-        }
-
         if (request.MaximumBytes <= 0 || request.MaximumBytes > uploadOptions.Value.MaximumBytes)
         {
             return ("Belge boyutu sınırı global yükleme sınırını aşamaz.", StatusCodes.Status400BadRequest);
@@ -181,11 +223,10 @@ public sealed class OfferingDocumentRequirementService(
             return ("Belge kodu geçersiz.", StatusCodes.Status400BadRequest);
         }
 
-        if (await dbContext.ProgramOfferingDocumentRequirements.AnyAsync(
-            item => item.ProgramOfferingId == offeringId
+        if (offering.DocumentRequirements.Any(
+            item => item.ProgramOfferingId == offering.ProgramOfferingId
                 && item.RequirementId != currentRequirementId
-                && item.NormalizedDocumentCode == normalizedCode,
-            cancellationToken))
+                && item.NormalizedDocumentCode == normalizedCode))
         {
             return ("Bu ilan için aynı belge kodu zaten bulunuyor.", StatusCodes.Status409Conflict);
         }
@@ -213,19 +254,27 @@ public sealed class OfferingDocumentRequirementService(
 
     private async Task<ServiceResult<OfferingDocumentRequirementDto>> SaveUpdateAsync(
         ProgramOfferingDocumentRequirement requirement,
+        IDbContextTransaction? transaction,
         CancellationToken cancellationToken)
     {
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
             await dbContext.Entry(requirement).ReloadAsync(cancellationToken);
             return ServiceResult<OfferingDocumentRequirementDto>.Success(Map(requirement));
         }
         catch (DbUpdateConcurrencyException)
         {
-            return ServiceResult<OfferingDocumentRequirementDto>.Failure(
-                "Belge koşulu başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
-                StatusCodes.Status409Conflict);
+            return ConfigurationConcurrencyConflict();
+        }
+        catch (Exception exception) when (IsSqlServerDeadlock(exception))
+        {
+            return ConfigurationConcurrencyConflict();
         }
         catch (DbUpdateException)
         {
@@ -234,6 +283,49 @@ public sealed class OfferingDocumentRequirementService(
                 StatusCodes.Status409Conflict);
         }
     }
+
+    private Task<ProgramOffering?> LoadOfferingAggregateAsync(
+        int offeringId,
+        CancellationToken cancellationToken) =>
+        dbContext.ProgramOfferings
+            .Include(item => item.DocumentRequirements)
+            .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
+
+    private void TouchOffering(ProgramOffering offering, DateTime now)
+    {
+        offering.UpdatedAtUtc = now;
+        dbContext.Entry(offering).Property(item => item.UpdatedAtUtc).IsModified = true;
+    }
+
+    private static bool HasActiveRequiredAfterChange(
+        ProgramOffering offering,
+        ProgramOfferingDocumentRequirement changedRequirement,
+        bool changedIsActive,
+        bool changedIsRequired) =>
+        offering.DocumentRequirements.Any(item =>
+            item.RequirementId == changedRequirement.RequirementId
+                ? changedIsActive && changedIsRequired
+                : item.IsActive && item.IsRequired);
+
+    private async Task<IDbContextTransaction?> BeginConfigurationTransactionIfSupportedAsync(
+        CancellationToken cancellationToken) =>
+        dbContext.Database.IsRelational()
+            ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
+
+    private static ServiceResult<OfferingDocumentRequirementDto> LastActiveRequiredConflict() =>
+        ServiceResult<OfferingDocumentRequirementDto>.Failure(
+            "Açık bir ilanın son aktif zorunlu belge koşulu kaldırılamaz. Önce ilanı kapatın.",
+            StatusCodes.Status409Conflict);
+
+    private static ServiceResult<OfferingDocumentRequirementDto> ConfigurationConcurrencyConflict() =>
+        ServiceResult<OfferingDocumentRequirementDto>.Failure(
+            "Belge koşulu veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+            StatusCodes.Status409Conflict);
+
+    private static bool IsSqlServerDeadlock(Exception exception) =>
+        exception is SqlException { Number: 1205 }
+        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 
     private void AddAudit(
         int adminId,

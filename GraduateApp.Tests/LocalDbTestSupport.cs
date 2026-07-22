@@ -165,6 +165,19 @@ internal sealed class LocalDbTestDatabase(string databaseName, string? databaseC
         await migrator.MigrateAsync(targetMigration);
     }
 
+    public async Task CreateCurrentModelSchemaAsync()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+        await using var dbContext = new GraduateAppDbContext(options);
+        var created = await dbContext.Database.EnsureCreatedAsync();
+        if (!created)
+        {
+            _ = await dbContext.ProgramOfferings.AsNoTracking().AnyAsync();
+        }
+    }
+
     public async Task<int> ExecuteAsync(string sql)
     {
         await using var connection = new SqlConnection(ConnectionString);

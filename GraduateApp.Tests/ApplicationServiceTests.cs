@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
@@ -15,20 +16,6 @@ public sealed class ApplicationServiceTests
     {
         await using var db = TestDb.Create();
         var offering = await SeedAsync(db);
-        offering.DocumentRequirements.Add(new ProgramOfferingDocumentRequirement
-        {
-            PublicId = Guid.NewGuid(),
-            DocumentCode = "transcript",
-            NormalizedDocumentCode = "TRANSCRIPT",
-            DisplayName = "Transkript",
-            IsRequired = true,
-            IsActive = true,
-            AllowedContentCategory = DocumentContentCategory.PdfOnly,
-            MaximumBytes = 1024,
-            CreatedAtUtc = DateTime.UtcNow,
-            UpdatedAtUtc = DateTime.UtcNow
-        });
-        await db.SaveChangesAsync();
         var service = CreateService(db);
 
         var result = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
@@ -48,8 +35,8 @@ public sealed class ApplicationServiceTests
     {
         await using var db = TestDb.Create();
         var offering = await SeedAsync(db);
-        AddRequirement(offering, isRequired: true);
-        var requirement = offering.DocumentRequirements.Single();
+        AddRequirement(offering, isRequired: true, code: "DIPLOMA");
+        var requirement = offering.DocumentRequirements.Single(item => item.NormalizedDocumentCode == "DIPLOMA");
         requirement.IsActive = false;
         await db.SaveChangesAsync();
         var offeringId = offering.ProgramOfferingId;
@@ -83,10 +70,44 @@ public sealed class ApplicationServiceTests
         var newSnapshots = await db.ApplicationDocumentRequirementSnapshots.AsNoTracking()
             .Where(item => item.Application.PublicId == newDraft.Value!.PublicId)
             .ToListAsync();
-        Assert.Empty(existingSnapshots);
-        var newSnapshot = Assert.Single(newSnapshots);
-        Assert.True(newSnapshot.IsRequired);
-        Assert.Equal("TRANSCRIPT", newSnapshot.DocumentCode);
+        Assert.Equal(["TRANSCRIPT"], existingSnapshots.Select(item => item.DocumentCode));
+        Assert.Equal(["DIPLOMA", "TRANSCRIPT"], newSnapshots.Select(item => item.DocumentCode).OrderBy(item => item));
+        Assert.All(newSnapshots, item => Assert.True(item.IsRequired));
+    }
+
+    [Fact]
+    public async Task Create_rejects_offering_without_active_requirements_without_side_effects()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        offering.DocumentRequirements.Single().IsActive = false;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await CreateService(db).CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Empty(db.Applications);
+        Assert.Empty(db.ApplicationStatusHistories);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "DocumentDraftCreated");
+    }
+
+    [Fact]
+    public async Task Create_rejects_offering_with_only_optional_active_requirements_without_side_effects()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        offering.DocumentRequirements.Single().IsRequired = false;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await CreateService(db).CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Empty(db.Applications);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "DocumentDraftCreated");
     }
 
     [Fact]
@@ -94,17 +115,51 @@ public sealed class ApplicationServiceTests
     {
         await using var db = TestDb.Create();
         var offering = await SeedAsync(db);
-        AddRequirement(offering, isRequired: true);
-        await db.SaveChangesAsync();
         var service = CreateService(db);
         var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
 
         var result = await service.SubmitAsync("10000000146", draft.Value!.PublicId, CancellationToken.None);
 
         Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
         Assert.Contains("Zorunlu belgeler eksik", result.Error, StringComparison.Ordinal);
-        Assert.Equal(ApplicationStatus.Draft.ToString(), db.Applications.Single().CurrentStatus);
-        Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "DocumentSubmissionBlocked");
+        AssertSubmissionBlocked(db, db.Applications.Single(), "MissingRequiredDocuments");
+    }
+
+    [Fact]
+    public async Task Submit_is_blocked_when_workflow_draft_has_no_requirement_snapshots()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var application = AddWorkflowApplication(db, offering, "10000000146", ApplicationStatus.Draft, null);
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).SubmitAsync(
+            application.Tc,
+            application.PublicId,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        AssertSubmissionBlocked(db, application, "NoRequirementSnapshots");
+    }
+
+    [Fact]
+    public async Task Submit_is_blocked_when_workflow_draft_has_only_optional_snapshots()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var application = AddWorkflowApplication(db, offering, "10000000146", ApplicationStatus.Draft, false);
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).SubmitAsync(
+            application.Tc,
+            application.PublicId,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        AssertSubmissionBlocked(db, application, "NoRequiredRequirementSnapshots");
     }
 
     [Fact]
@@ -130,6 +185,7 @@ public sealed class ApplicationServiceTests
         await db.SaveChangesAsync();
         var service = CreateService(db);
         var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        AddCurrentDocument(db.Applications.Single());
         db.StudentExamScores.Single().Score = 80;
         await db.SaveChangesAsync();
 
@@ -152,6 +208,12 @@ public sealed class ApplicationServiceTests
 
         var first = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
         var second = await service.CreateAsync("10000000154", offering.ProgramOfferingId, CancellationToken.None);
+        foreach (var application in db.Applications)
+        {
+            AddCurrentDocument(application);
+        }
+
+        await db.SaveChangesAsync();
         var beforeSubmit = await service.GetForAdminAsync(null, null, null, null, 1, 20, CancellationToken.None);
         var firstSubmit = await service.SubmitAsync("10000000146", first.Value!.PublicId, CancellationToken.None);
         var secondSubmit = await service.SubmitAsync("10000000154", second.Value!.PublicId, CancellationToken.None);
@@ -178,6 +240,8 @@ public sealed class ApplicationServiceTests
         await db.SaveChangesAsync();
         var service = CreateService(db);
         var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        AddCurrentDocument(db.Applications.Single());
+        await db.SaveChangesAsync();
 
         var result = await service.SubmitAsync("10000000146", draft.Value!.PublicId, CancellationToken.None);
 
@@ -192,6 +256,7 @@ public sealed class ApplicationServiceTests
         var offering = await SeedAsync(db);
         var service = CreateService(db);
         var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        AddCurrentDocument(db.Applications.Single());
         offering.ApplicationDeadlineUtc = new DateTime(2026, 7, 16, 23, 59, 0, DateTimeKind.Utc);
         offering.Program.Institute.IsActive = false;
         await db.SaveChangesAsync();
@@ -225,6 +290,8 @@ public sealed class ApplicationServiceTests
         var offering = await SeedAsync(db);
         var service = CreateService(db);
         var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        AddCurrentDocument(db.Applications.Single());
+        await db.SaveChangesAsync();
 
         Assert.Null(await service.GetDetailForAdminAsync(draft.Value!.PublicId, CancellationToken.None));
         Assert.True((await service.SubmitAsync("10000000146", draft.Value.PublicId, CancellationToken.None)).IsSuccess);
@@ -236,8 +303,6 @@ public sealed class ApplicationServiceTests
     {
         await using var db = TestDb.Create();
         var offering = await SeedAsync(db);
-        AddRequirement(offering, isRequired: true);
-        await db.SaveChangesAsync();
         var service = CreateService(db);
         var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
         AddCurrentDocument(db.Applications.Single());
@@ -303,13 +368,47 @@ public sealed class ApplicationServiceTests
         Assert.Equal(StatusCodes.Status409Conflict, duplicate.StatusCode);
     }
 
-    private static void AddRequirement(ProgramOffering offering, bool isRequired) =>
+    [Fact]
+    public async Task Read_only_invariant_audit_identifies_all_three_categories_and_excludes_valid_or_draft_records()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var noSnapshots = AddWorkflowApplication(db, offering, "10000000146", ApplicationStatus.Pending, null);
+        var noRequired = AddWorkflowApplication(db, offering, "10000000154", ApplicationStatus.UnderReview, false);
+        var missingDocumentStudent = CreateStudent("10000000162", "missing@example.test");
+        var validStudent = CreateStudent("10000000170", "valid@example.test");
+        var draftStudent = CreateStudent("10000000189", "draft@example.test");
+        var legacyStudent = CreateStudent("10000000197", "legacy@example.test");
+        db.Students.AddRange(missingDocumentStudent, validStudent, draftStudent, legacyStudent);
+        var missingDocument = AddWorkflowApplication(db, offering, missingDocumentStudent.Tc, ApplicationStatus.Approved, true);
+        var valid = AddWorkflowApplication(db, offering, validStudent.Tc, ApplicationStatus.Rejected, true);
+        AddCurrentDocument(valid);
+        AddWorkflowApplication(db, offering, draftStudent.Tc, ApplicationStatus.Draft, null);
+        AddWorkflowApplication(db, offering, legacyStudent.Tc, ApplicationStatus.Pending, null).UsesDocumentWorkflow = false;
+        await db.SaveChangesAsync();
+        var auditCount = db.SecurityAuditLogs.Count();
+        db.ChangeTracker.Clear();
+
+        var result = await CreateService(db).GetDocumentWorkflowInvariantViolationsAsync(CancellationToken.None);
+
+        Assert.Equal(3, result.Count);
+        Assert.Equal("NoRequirementSnapshots", result.Single(item => item.ApplicationPublicId == noSnapshots.PublicId).ViolationCategory);
+        Assert.Equal("NoRequiredRequirementSnapshots", result.Single(item => item.ApplicationPublicId == noRequired.PublicId).ViolationCategory);
+        Assert.Equal("MissingRequiredDocuments", result.Single(item => item.ApplicationPublicId == missingDocument.PublicId).ViolationCategory);
+        Assert.DoesNotContain(result, item => item.ApplicationPublicId == valid.PublicId);
+        Assert.Equal(auditCount, db.SecurityAuditLogs.Count());
+        Assert.Empty(db.ChangeTracker.Entries());
+    }
+
+    private static void AddRequirement(ProgramOffering offering, bool isRequired, string? code = null)
+    {
+        code ??= isRequired ? "TRANSCRIPT" : "PORTFOLIO";
         offering.DocumentRequirements.Add(new ProgramOfferingDocumentRequirement
         {
             PublicId = Guid.NewGuid(),
-            DocumentCode = isRequired ? "TRANSCRIPT" : "PORTFOLIO",
-            NormalizedDocumentCode = isRequired ? "TRANSCRIPT" : "PORTFOLIO",
-            DisplayName = isRequired ? "Transkript" : "Portfolyo",
+            DocumentCode = code,
+            NormalizedDocumentCode = code,
+            DisplayName = code == "TRANSCRIPT" ? "Transkript" : code,
             IsRequired = isRequired,
             IsActive = true,
             AllowedContentCategory = DocumentContentCategory.PdfOrImage,
@@ -317,10 +416,11 @@ public sealed class ApplicationServiceTests
             CreatedAtUtc = DateTime.UtcNow,
             UpdatedAtUtc = DateTime.UtcNow
         });
+    }
 
     private static void AddCurrentDocument(Application application)
     {
-        var requirement = application.DocumentRequirementSnapshots.Single();
+        var requirement = application.DocumentRequirementSnapshots.Single(item => item.IsRequired);
         application.Documents.Add(new ApplicationDocument
         {
             PublicId = Guid.NewGuid(),
@@ -335,6 +435,55 @@ public sealed class ApplicationServiceTests
             ReviewStatus = DocumentReviewStatus.Pending,
             UploadedAtUtc = DateTime.UtcNow
         });
+    }
+
+    private static Application AddWorkflowApplication(
+        GraduateAppDbContext db,
+        ProgramOffering offering,
+        string studentTc,
+        ApplicationStatus status,
+        bool? snapshotIsRequired)
+    {
+        var application = new Application
+        {
+            PublicId = Guid.NewGuid(),
+            Tc = studentTc,
+            ProgramOfferingId = offering.ProgramOfferingId,
+            ApplicationDate = DateTime.UtcNow,
+            CurrentStatus = status.ToString(),
+            UsesDocumentWorkflow = true
+        };
+        if (snapshotIsRequired.HasValue)
+        {
+            application.DocumentRequirementSnapshots.Add(new ApplicationDocumentRequirementSnapshot
+            {
+                PublicId = Guid.NewGuid(),
+                DocumentCode = snapshotIsRequired.Value ? "TRANSCRIPT" : "PORTFOLIO",
+                DisplayName = snapshotIsRequired.Value ? "Transkript" : "Portfolyo",
+                IsRequired = snapshotIsRequired.Value,
+                AllowedContentCategory = DocumentContentCategory.PdfOnly,
+                MaximumBytes = 1024
+            });
+        }
+
+        db.Applications.Add(application);
+        return application;
+    }
+
+    private static void AssertSubmissionBlocked(
+        GraduateAppDbContext db,
+        Application application,
+        string expectedReason)
+    {
+        Assert.Equal(ApplicationStatus.Draft.ToString(), application.CurrentStatus);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "ApplicationSubmitted");
+        var audit = Assert.Single(db.SecurityAuditLogs.Where(item =>
+            item.EventType == "DocumentSubmissionBlocked"
+            && item.TargetId == application.PublicId.ToString("D")));
+        using var details = JsonDocument.Parse(audit.Details!);
+        var property = Assert.Single(details.RootElement.EnumerateObject());
+        Assert.Equal("Reason", property.Name);
+        Assert.Equal(expectedReason, property.Value.GetString());
     }
 
     private static ApplicationService CreateService(GraduateAppDbContext db) =>
@@ -361,6 +510,7 @@ public sealed class ApplicationServiceTests
         };
         db.Students.Add(CreateStudent("10000000146", "student@example.test"));
         db.Students.Add(CreateStudent("10000000154", "other@example.test"));
+        AddRequirement(offering, isRequired: true);
         db.ProgramOfferings.Add(offering);
         await db.SaveChangesAsync();
         return offering;

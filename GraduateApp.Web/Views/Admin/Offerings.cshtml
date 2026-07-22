@@ -1,6 +1,10 @@
 @model ProgramOfferingPageViewModel
 @{
     ViewData["Title"] = "Dönemsel program ilanları";
+    var formRequirements = Model.DocumentRequirements.TryGetValue(Model.Form.ProgramOfferingId, out var selectedRequirements)
+        ? selectedRequirements
+        : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
+    var formOfferingHasActiveRequiredRequirement = formRequirements.Any(item => item.IsActive && item.IsRequired);
 }
 
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
@@ -48,6 +52,10 @@
                 <tbody>
                     @foreach (var offering in Model.Offerings)
                     {
+                        var offeringRequirements = Model.DocumentRequirements.TryGetValue(offering.ProgramOfferingId, out var listedRequirements)
+                            ? listedRequirements
+                            : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
+                        var hasActiveRequiredRequirement = offeringRequirements.Any(item => item.IsActive && item.IsRequired);
                         <tr>
                             <td>@offering.ProgramName</td>
                             <td>@offering.AcademicYear · @offering.TermName</td>
@@ -64,7 +72,13 @@
                                 }
                             </td>
                             <td>@offering.Quota</td>
-                            <td>@(offering.IsArchived ? "Arşivli" : offering.IsOpen ? "Açık" : "Kapalı")</td>
+                            <td>
+                                <div>@(offering.IsArchived ? "Arşivli" : offering.IsOpen ? "Açık" : "Kapalı")</div>
+                                @if (!hasActiveRequiredRequirement)
+                                {
+                                    <div class="small text-warning">İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</div>
+                                }
+                            </td>
                             <td><a asp-action="Offerings" asp-route-editId="@offering.ProgramOfferingId" class="btn btn-sm btn-outline-primary">Düzenle</a></td>
                         </tr>
                     }
@@ -151,10 +165,25 @@
                         }
                     </fieldset>
 
-                    <div class="form-check mt-3">
-                        <input asp-for="Form.IsOpen" class="form-check-input" />
-                        <label asp-for="Form.IsOpen" class="form-check-label"></label>
-                    </div>
+                    @if (Model.Form.ProgramOfferingId == 0)
+                    {
+                        <div class="form-check mt-3">
+                            <input asp-for="Form.IsOpen" class="form-check-input" disabled />
+                            <label asp-for="Form.IsOpen" class="form-check-label"></label>
+                        </div>
+                        <p class="small text-muted">Yeni ilan önce kapalı oluşturulur. En az bir aktif ve zorunlu belge koşulu tanımladıktan sonra ilanı düzenleyerek açabilirsiniz.</p>
+                    }
+                    else
+                    {
+                        <div class="form-check mt-3">
+                            <input asp-for="Form.IsOpen" class="form-check-input" disabled="@(!formOfferingHasActiveRequiredRequirement)" />
+                            <label asp-for="Form.IsOpen" class="form-check-label"></label>
+                        </div>
+                        @if (!formOfferingHasActiveRequiredRequirement)
+                        {
+                            <p class="small text-warning">İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</p>
+                        }
+                    }
                     @if (Model.Form.ProgramOfferingId > 0)
                     {
                         <div class="form-check">

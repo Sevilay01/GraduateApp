@@ -58,6 +58,7 @@ public sealed class DownloadResponseSecurityTests
         public Task<ServiceResult<StudentApplicationDto>> CreateAsync(string studentTc, int programOfferingId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<AdminApplicationDetailDto?> GetDetailForAdminAsync(Guid publicId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<StudentApplicationDetailDto?> GetDetailForStudentAsync(string studentTc, Guid publicId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyList<DocumentWorkflowInvariantViolationDto>> GetDocumentWorkflowInvariantViolationsAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<PagedResult<AdminApplicationListItemDto>> GetForAdminAsync(string? search, ApplicationStatus? status, int? academicYearStart, AcademicTerm? term, int page, int pageSize, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IReadOnlyList<StudentApplicationDto>> GetForStudentAsync(string studentTc, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<ServiceResult> SubmitAsync(string studentTc, Guid publicId, CancellationToken cancellationToken) => throw new NotSupportedException();

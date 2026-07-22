@@ -1,7 +1,10 @@
+using System.Data;
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GraduateApp.API.Services;
 
@@ -91,6 +94,13 @@ public sealed class ProgramOfferingService(
         ProgramOfferingCreateDto request,
         CancellationToken cancellationToken)
     {
+        if (request.IsOpen)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Yeni ilan önce kapalı oluşturulmalıdır. En az bir zorunlu belge koşulu tanımlandıktan sonra ilanı açabilirsiniz.",
+                StatusCodes.Status409Conflict);
+        }
+
         var validationError = await ValidateRequestAsync(request, null, cancellationToken);
         if (validationError is not null)
         {
@@ -113,7 +123,7 @@ public sealed class ProgramOfferingService(
             ApplicationStartUtc = EnsureUtc(request.ApplicationStartUtc),
             ApplicationDeadlineUtc = EnsureUtc(request.ApplicationDeadlineUtc),
             Quota = request.Quota,
-            IsOpen = request.IsOpen,
+            IsOpen = false,
             IsArchived = false,
             CreatedAtUtc = now,
             UpdatedAtUtc = now,
@@ -147,9 +157,11 @@ public sealed class ProgramOfferingService(
         ProgramOfferingUpdateDto request,
         CancellationToken cancellationToken)
     {
+        await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
         var offering = await dbContext.ProgramOfferings
             .Include(item => item.Program)
             .Include(item => item.Applications)
+            .Include(item => item.DocumentRequirements)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
         if (offering is null)
@@ -182,6 +194,14 @@ public sealed class ProgramOfferingService(
             return ServiceResult<ProgramOfferingAdminDto>.Failure("Süresi geçmiş bir ilan yeniden açılamaz.", StatusCodes.Status409Conflict);
         }
 
+        if (request.IsOpen
+            && !offering.DocumentRequirements.Any(item => item.IsActive && item.IsRequired))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan açılmadan önce en az bir aktif ve zorunlu belge koşulu tanımlayın.",
+                StatusCodes.Status409Conflict);
+        }
+
         byte[] rowVersion;
         try
         {
@@ -212,8 +232,18 @@ public sealed class ProgramOfferingService(
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
         }
         catch (DbUpdateConcurrencyException)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status409Conflict);
+        }
+        catch (Exception exception) when (IsSqlServerDeadlock(exception))
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
                 "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
@@ -226,8 +256,9 @@ public sealed class ProgramOfferingService(
                 StatusCodes.Status409Conflict);
         }
 
-        dbContext.Entry(offering).Reference(item => item.Program).IsLoaded = false;
-        await dbContext.Entry(offering).Reference(item => item.Program).LoadAsync(cancellationToken);
+        offering.Program = await dbContext.Programs.SingleAsync(
+            item => item.ProgramId == offering.ProgramId,
+            cancellationToken);
 
         foreach (var requirement in offering.ExamRequirements)
         {
@@ -332,6 +363,16 @@ public sealed class ProgramOfferingService(
     private static DateTime EnsureUtc(DateTime value) => value.Kind == DateTimeKind.Utc
         ? value
         : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+
+    private async Task<IDbContextTransaction?> BeginConfigurationTransactionIfSupportedAsync(
+        CancellationToken cancellationToken) =>
+        dbContext.Database.IsRelational()
+            ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
+
+    private static bool IsSqlServerDeadlock(Exception exception) =>
+        exception is SqlException { Number: 1205 }
+        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 
     private static ProgramOfferingAdminDto Map(ProgramOffering offering) => new(
         offering.ProgramOfferingId,
