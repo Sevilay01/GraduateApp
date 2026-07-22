@@ -73,7 +73,7 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead>
-                    <tr><th>Program</th><th>Akademik dönem</th><th>Başvuru tarihi</th><th>Durum</th></tr>
+                    <tr><th>Program</th><th>Akademik dönem</th><th>Başvuru tarihi</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
                 </thead>
                 <tbody>
                     @foreach (var application in Model.Applications)
@@ -83,6 +83,7 @@
                             <td>@application.AcademicYear · @application.TermName</td>
                             <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")</time> (İstanbul)</td>
                             <td><span class="badge text-bg-secondary">@application.CurrentStatus.DisplayName()</span></td>
+                            <td><a asp-action="ApplicationDetail" asp-route-publicId="@application.PublicId" class="btn btn-sm btn-outline-primary">Belgeler ve detay</a></td>
                         </tr>
                     }
                 </tbody>

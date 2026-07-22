@@ -71,8 +71,46 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult<IReadOnlyList<PanelApplicationViewModel>>> GetMyApplicationsAsync(CancellationToken cancellationToken) =>
         GetAsync<IReadOnlyList<PanelApplicationViewModel>>("api/applications/mine", cancellationToken);
 
-    public Task<ApiResult> CreateApplicationAsync(int programOfferingId, CancellationToken cancellationToken) =>
-        PostAsync("api/applications", new { programOfferingId }, cancellationToken);
+    public Task<ApiResult<PanelApplicationViewModel>> CreateApplicationAsync(int programOfferingId, CancellationToken cancellationToken) =>
+        PostAsync<PanelApplicationViewModel>("api/applications", new { programOfferingId }, cancellationToken);
+
+    public Task<ApiResult<StudentApplicationDetailViewModel>> GetMyApplicationAsync(
+        Guid publicId,
+        CancellationToken cancellationToken) =>
+        GetAsync<StudentApplicationDetailViewModel>($"api/applications/mine/{publicId:D}", cancellationToken);
+
+    public Task<ApiResult> SubmitApplicationAsync(Guid publicId, CancellationToken cancellationToken) =>
+        PostAsync($"api/applications/mine/{publicId:D}/submit", new { }, cancellationToken);
+
+    public async Task<ApiResult<ApplicationDocumentViewModel>> UploadApplicationDocumentAsync(
+        Guid applicationPublicId,
+        Guid requirementPublicId,
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"api/applications/mine/{applicationPublicId:D}/document-requirements/{requirementPublicId:D}/upload");
+        using var multipart = new MultipartFormDataContent();
+        await using var input = file.OpenReadStream();
+        using var fileContent = new StreamContent(input);
+        if (System.Net.Http.Headers.MediaTypeHeaderValue.TryParse(file.ContentType, out var contentType))
+        {
+            fileContent.Headers.ContentType = contentType;
+        }
+
+        multipart.Add(fileContent, "file", Path.GetFileName(file.FileName));
+        request.Content = multipart;
+        return await SendAsync<ApplicationDocumentViewModel>(request, cancellationToken);
+    }
+
+    public Task<ApiDownloadResult> DownloadMyDocumentAsync(
+        Guid applicationPublicId,
+        Guid documentPublicId,
+        CancellationToken cancellationToken) =>
+        DownloadAsync(
+            $"api/applications/mine/{applicationPublicId:D}/documents/{documentPublicId:D}/download",
+            cancellationToken);
 
     public Task<ApiResult<IReadOnlyList<StudentExamScoreViewModel>>> GetMyExamScoresAsync(
         CancellationToken cancellationToken) =>
@@ -182,10 +220,44 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             MapOfferingRequest(model, includeConcurrency: true),
             cancellationToken);
 
-    public Task<ApiResult<AdminApplicationDetailViewModel>> GetAdminApplicationDetailAsync(
-        int applicationId,
+    public Task<ApiResult<IReadOnlyList<OfferingDocumentRequirementViewModel>>> GetOfferingDocumentRequirementsAsync(
+        int offeringId,
         CancellationToken cancellationToken) =>
-        GetAsync<AdminApplicationDetailViewModel>($"api/applications/admin/{applicationId}", cancellationToken);
+        GetAsync<IReadOnlyList<OfferingDocumentRequirementViewModel>>(
+            $"api/program-offerings/{offeringId}/document-requirements",
+            cancellationToken);
+
+    public Task<ApiResult<OfferingDocumentRequirementViewModel>> CreateOfferingDocumentRequirementAsync(
+        OfferingDocumentRequirementFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<OfferingDocumentRequirementViewModel>(
+            $"api/program-offerings/{model.ProgramOfferingId}/document-requirements",
+            MapDocumentRequirement(model, includeConcurrency: false),
+            cancellationToken);
+
+    public Task<ApiResult<OfferingDocumentRequirementViewModel>> UpdateOfferingDocumentRequirementAsync(
+        OfferingDocumentRequirementFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PutAsync<OfferingDocumentRequirementViewModel>(
+            $"api/program-offerings/{model.ProgramOfferingId}/document-requirements/{model.PublicId:D}",
+            MapDocumentRequirement(model, includeConcurrency: true),
+            cancellationToken);
+
+    public Task<ApiResult<OfferingDocumentRequirementViewModel>> SetOfferingDocumentRequirementActiveAsync(
+        int offeringId,
+        Guid publicId,
+        bool isActive,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<OfferingDocumentRequirementViewModel>(
+            $"api/program-offerings/{offeringId}/document-requirements/{publicId:D}/active",
+            new { isActive, rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult<AdminApplicationDetailViewModel>> GetAdminApplicationDetailAsync(
+        Guid applicationPublicId,
+        CancellationToken cancellationToken) =>
+        GetAsync<AdminApplicationDetailViewModel>($"api/applications/admin/{applicationPublicId:D}", cancellationToken);
 
     public Task<ApiResult<PagedResultViewModel<AdminStudentListItemViewModel>>> GetAdminStudentsAsync(
         string? search,
@@ -430,12 +502,28 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult> UpdateApplicationStatusAsync(
         UpdateApplicationStatusViewModel model,
         CancellationToken cancellationToken) =>
-        PutAsync($"api/applications/admin/{model.ApplicationId}/status", new
+        PostAsync($"api/applications/admin/{model.PublicId:D}/status", new
         {
             model.NewStatus,
             model.RowVersion,
             model.Notes
         }, cancellationToken);
+
+    public Task<ApiResult<ApplicationDocumentViewModel>> ReviewApplicationDocumentAsync(
+        ReviewApplicationDocumentViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<ApplicationDocumentViewModel>(
+            $"api/applications/admin/{model.ApplicationPublicId:D}/documents/{model.DocumentPublicId:D}/review",
+            new { model.ReviewStatus, model.RejectionReason, model.RowVersion },
+            cancellationToken);
+
+    public Task<ApiDownloadResult> DownloadAdminDocumentAsync(
+        Guid applicationPublicId,
+        Guid documentPublicId,
+        CancellationToken cancellationToken) =>
+        DownloadAsync(
+            $"api/applications/admin/{applicationPublicId:D}/documents/{documentPublicId:D}/download",
+            cancellationToken);
 
     public Task<ApiResult<StudentProfileApiModel>> GetProfileAsync(CancellationToken cancellationToken) =>
         GetAsync<StudentProfileApiModel>("api/students/me", cancellationToken);
@@ -469,6 +557,46 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         return await SendAsync<T>(request, cancellationToken);
+    }
+
+    private async Task<ApiDownloadResult> DownloadAsync(string path, CancellationToken cancellationToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, path);
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            request.Dispose();
+            return ApiDownloadResult.Failure("Servis yanıt vermedi. Lütfen tekrar deneyin.");
+        }
+        catch (HttpRequestException)
+        {
+            request.Dispose();
+            return ApiDownloadResult.Failure("Servise şu anda ulaşılamıyor. Lütfen daha sonra tekrar deneyin.");
+        }
+
+        request.Dispose();
+        if (!response.IsSuccessStatusCode)
+        {
+            using (response)
+            {
+                return ApiDownloadResult.Failure(await ReadErrorAsync(response, cancellationToken), response.StatusCode);
+            }
+        }
+
+        var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var suppliedName = response.Content.Headers.ContentDisposition?.FileNameStar
+            ?? response.Content.Headers.ContentDisposition?.FileName
+            ?? "belge";
+        var safeName = Path.GetFileName(suppliedName.Trim('"').Replace('\\', '/'));
+        return ApiDownloadResult.Success(
+            new ResponseOwnedStream(stream, response),
+            response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream",
+            string.IsNullOrWhiteSpace(safeName) ? "belge" : safeName,
+            response.StatusCode);
     }
 
     private async Task<ApiResult<T>> PostAsync<T>(string path, object body, CancellationToken cancellationToken)
@@ -629,4 +757,17 @@ public sealed class GraduateApiClient(HttpClient httpClient)
                 requirement.IsRequired
             })
     };
+
+    private static object MapDocumentRequirement(
+        OfferingDocumentRequirementFormViewModel model,
+        bool includeConcurrency) => new
+        {
+            model.DocumentCode,
+            model.DisplayName,
+            model.Description,
+            model.IsRequired,
+            model.AllowedContentCategory,
+            model.MaximumBytes,
+            RowVersion = includeConcurrency ? model.RowVersion : null
+        };
 }

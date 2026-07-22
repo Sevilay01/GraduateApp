@@ -65,7 +65,7 @@ else
                         <td>@application.AcademicYear · @application.TermName</td>
                         <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")</time></td>
                         <td>@application.CurrentStatus.DisplayName()</td>
-                        <td><a asp-action="Detail" asp-route-id="@application.ApplicationId" class="btn btn-sm btn-outline-primary">Detay</a></td>
+                        <td><a asp-action="Detail" asp-route-id="@application.PublicId" class="btn btn-sm btn-outline-primary">Detay</a></td>
                     </tr>
                 }
             </tbody>

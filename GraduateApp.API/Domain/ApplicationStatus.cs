@@ -2,6 +2,7 @@ namespace GraduateApp.API.Domain;
 
 public enum ApplicationStatus
 {
+    Draft,
     Pending,
     UnderReview,
     Approved,
@@ -14,6 +15,7 @@ public static class ApplicationStatusRules
     private static readonly IReadOnlyDictionary<ApplicationStatus, ApplicationStatus[]> AllowedTransitions =
         new Dictionary<ApplicationStatus, ApplicationStatus[]>
         {
+            [ApplicationStatus.Draft] = [ApplicationStatus.Pending],
             [ApplicationStatus.Pending] = [ApplicationStatus.UnderReview],
             [ApplicationStatus.UnderReview] = [ApplicationStatus.Approved, ApplicationStatus.Rejected],
             [ApplicationStatus.Approved] = [],

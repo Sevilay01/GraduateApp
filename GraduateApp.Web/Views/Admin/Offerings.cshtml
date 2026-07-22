@@ -170,4 +170,107 @@
     </div>
 </div>
 
+<section class="card mt-4" aria-labelledby="document-requirements-heading">
+    <div class="card-body">
+        <h2 id="document-requirements-heading" class="h4">İlan belge koşulları</h2>
+        <div class="alert alert-info">
+            Belge koşulu değişiklikleri yalnızca değişiklikten sonra oluşturulan taslakları etkiler. Mevcut taslak ve başvuruların snapshot koşulları değişmez.
+        </div>
+
+        @foreach (var offering in Model.Offerings)
+        {
+            var requirements = Model.DocumentRequirements.TryGetValue(offering.ProgramOfferingId, out var items)
+                ? items
+                : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
+            <div class="border rounded p-3 mb-3">
+                <h3 class="h6">@offering.ProgramName · @offering.AcademicYear · @offering.TermName</h3>
+                @if (requirements.Count == 0)
+                {
+                    <p class="text-muted">Belge koşulu tanımlanmamış.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead><tr><th>Kod</th><th>Ad</th><th>Tür / sınır</th><th>Durum</th><th>İşlem</th></tr></thead>
+                            <tbody>
+                            @foreach (var requirement in requirements)
+                            {
+                                <tr>
+                                    <td><code>@requirement.DocumentCode</code></td>
+                                    <td>@requirement.DisplayName · @(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")</td>
+                                    <td>@requirement.AllowedContentCategory.CategoryName() · @DocumentPresentation.FileSize(requirement.MaximumBytes)</td>
+                                    <td>@(requirement.IsActive ? "Aktif" : "Pasif")</td>
+                                    <td class="d-flex gap-1">
+                                        <a asp-action="Offerings"
+                                           asp-route-requirementOfferingId="@offering.ProgramOfferingId"
+                                           asp-route-editRequirementId="@requirement.PublicId"
+                                           asp-route-includeArchived="true"
+                                           class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                        <form asp-action="SetDocumentRequirementActive" method="post">
+                                            <input type="hidden" name="programOfferingId" value="@offering.ProgramOfferingId" />
+                                            <input type="hidden" name="publicId" value="@requirement.PublicId" />
+                                            <input type="hidden" name="isActive" value="@(!requirement.IsActive)" />
+                                            <input type="hidden" name="rowVersion" value="@requirement.RowVersion" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">@(requirement.IsActive ? "Pasifleştir" : "Aktifleştir")</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        <h3 class="h5">@(Model.DocumentRequirementForm.PublicId == Guid.Empty ? "Yeni belge koşulu" : "Belge koşulunu düzenle")</h3>
+        <form asp-action="SaveDocumentRequirement" method="post" novalidate>
+            <input asp-for="DocumentRequirementForm.PublicId" type="hidden" />
+            <input asp-for="DocumentRequirementForm.RowVersion" type="hidden" />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label asp-for="DocumentRequirementForm.ProgramOfferingId" class="form-label">İlan</label>
+                    <select asp-for="DocumentRequirementForm.ProgramOfferingId" class="form-select">
+                        @foreach (var offering in Model.Offerings)
+                        {
+                            <option value="@offering.ProgramOfferingId">@offering.ProgramName · @offering.AcademicYear · @offering.TermName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="DocumentRequirementForm.DocumentCode" class="form-label">Belge kodu</label>
+                    <input asp-for="DocumentRequirementForm.DocumentCode" class="form-control" placeholder="TRANSCRIPT" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="DocumentRequirementForm.DisplayName" class="form-label">Türkçe görünen ad</label>
+                    <input asp-for="DocumentRequirementForm.DisplayName" class="form-control" placeholder="Transkript" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="DocumentRequirementForm.Description" class="form-label">Açıklama</label>
+                    <textarea asp-for="DocumentRequirementForm.Description" class="form-control" maxlength="500"></textarea>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-label">İzin verilen tür</label>
+                    <select asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-select">
+                        <option value="PdfOnly">PDF</option>
+                        <option value="ImageOnly">JPEG veya PNG</option>
+                        <option value="PdfOrImage">PDF, JPEG veya PNG</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label asp-for="DocumentRequirementForm.MaximumBytes" class="form-label">Maksimum boyut (bayt)</label>
+                    <input asp-for="DocumentRequirementForm.MaximumBytes" type="number" min="1" max="104857600" class="form-control" />
+                </div>
+                <div class="col-12 col-md-4 form-check align-self-end mb-2 ms-2">
+                    <input asp-for="DocumentRequirementForm.IsRequired" class="form-check-input" />
+                    <label asp-for="DocumentRequirementForm.IsRequired" class="form-check-label">Zorunlu belge</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Belge koşulunu kaydet</button>
+        </form>
+    </div>
+</section>
+
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

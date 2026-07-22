@@ -42,6 +42,7 @@ secrets.json
 
 # Development-only password reset outbox
 .dev-emails/
+.dev-storage/
 
 # Generated migration scripts at repository root
 /migration.sql
@@ -51,6 +52,7 @@ secrets.json
 /migration-registration-fix.sql
 /migration-academic-period.sql
 /remove-trigger-migration.sql
+/document-workflow.sql
 
 # Publish and package output
 [Pp]ublish/

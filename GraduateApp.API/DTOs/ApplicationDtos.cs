@@ -25,7 +25,7 @@ public sealed record ExamRequirementDto(
     bool IsRequired);
 
 public sealed record StudentApplicationDto(
-    int ApplicationId,
+    Guid PublicId,
     int ProgramOfferingId,
     int ProgramId,
     string ProgramName,
@@ -38,7 +38,7 @@ public sealed record StudentApplicationDto(
     string RowVersion);
 
 public sealed record AdminApplicationListItemDto(
-    int ApplicationId,
+    Guid PublicId,
     string StudentFullName,
     string MaskedTc,
     string ProgramName,
@@ -57,7 +57,7 @@ public sealed record ApplicationStatusHistoryDto(
     string? Notes);
 
 public sealed record AdminApplicationDetailDto(
-    int ApplicationId,
+    Guid PublicId,
     string MaskedTc,
     string StudentFullName,
     string Email,
@@ -71,7 +71,9 @@ public sealed record AdminApplicationDetailDto(
     ApplicationStatus CurrentStatus,
     string RowVersion,
     IReadOnlyList<ApplicationStatusHistoryDto> History,
-    IReadOnlyList<ApplicationScoreSnapshotDto> ScoreSnapshots);
+    IReadOnlyList<ApplicationScoreSnapshotDto> ScoreSnapshots,
+    bool UsesDocumentWorkflow,
+    IReadOnlyList<ApplicationDocumentRequirementDto> DocumentRequirements);
 
 public sealed record ApplicationScoreSnapshotDto(
     int ExamId,

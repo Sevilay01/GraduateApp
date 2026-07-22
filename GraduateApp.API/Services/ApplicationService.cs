@@ -13,6 +13,8 @@ public interface IApplicationService
 {
     Task<ServiceResult<StudentApplicationDto>> CreateAsync(string studentTc, int programOfferingId, CancellationToken cancellationToken);
     Task<IReadOnlyList<StudentApplicationDto>> GetForStudentAsync(string studentTc, CancellationToken cancellationToken);
+    Task<StudentApplicationDetailDto?> GetDetailForStudentAsync(string studentTc, Guid publicId, CancellationToken cancellationToken);
+    Task<ServiceResult> SubmitAsync(string studentTc, Guid publicId, CancellationToken cancellationToken);
     Task<PagedResult<AdminApplicationListItemDto>> GetForAdminAsync(
         string? search,
         ApplicationStatus? status,
@@ -21,8 +23,8 @@ public interface IApplicationService
         int page,
         int pageSize,
         CancellationToken cancellationToken);
-    Task<AdminApplicationDetailDto?> GetDetailForAdminAsync(int applicationId, CancellationToken cancellationToken);
-    Task<ServiceResult> UpdateStatusAsync(int applicationId, int adminId, ApplicationStatusUpdateDto request, CancellationToken cancellationToken);
+    Task<AdminApplicationDetailDto?> GetDetailForAdminAsync(Guid publicId, CancellationToken cancellationToken);
+    Task<ServiceResult> UpdateStatusAsync(Guid publicId, int adminId, ApplicationStatusUpdateDto request, CancellationToken cancellationToken);
 }
 
 public sealed class ApplicationService(
@@ -37,37 +39,19 @@ public sealed class ApplicationService(
         var now = timeProvider.GetUtcNow().UtcDateTime;
         await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
         var offering = await dbContext.ProgramOfferings
-            .Include(item => item.Program)
-                .ThenInclude(item => item.Institute)
-            .Include(item => item.ExamRequirements)
-                .ThenInclude(item => item.Exam)
+            .Include(item => item.Program).ThenInclude(item => item.Institute)
+            .Include(item => item.DocumentRequirements.Where(requirement => requirement.IsActive))
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == programOfferingId, cancellationToken);
         if (offering is null)
         {
             return ServiceResult<StudentApplicationDto>.Failure("Dönemsel program ilanı bulunamadı.", StatusCodes.Status404NotFound);
         }
 
-        if (!offering.Program.IsActive
-            || !offering.Program.Institute.IsActive
-            || offering.IsArchived
-            || !offering.IsOpen
-            || !offering.ApplicationStartUtc.HasValue
-            || !offering.ApplicationDeadlineUtc.HasValue
-            || now < offering.ApplicationStartUtc.Value
-            || now > offering.ApplicationDeadlineUtc.Value)
+        if (!IsOfferingOpen(offering, now))
         {
             return ServiceResult<StudentApplicationDto>.Failure(
                 "Bu ilan şu anda başvuruya açık değil.",
                 StatusCodes.Status409Conflict);
-        }
-
-        if (offering.Quota <= 0
-            || await dbContext.Applications.CountAsync(
-                item => item.ProgramOfferingId == programOfferingId
-                    && item.CurrentStatus != ApplicationStatus.Withdrawn.ToString(),
-                cancellationToken) >= offering.Quota)
-        {
-            return ServiceResult<StudentApplicationDto>.Failure("İlan kontenjanı dolmuştur.", StatusCodes.Status409Conflict);
         }
 
         if (await dbContext.Applications.AnyAsync(
@@ -75,80 +59,46 @@ public sealed class ApplicationService(
             cancellationToken))
         {
             return ServiceResult<StudentApplicationDto>.Failure(
-                "Bu dönemsel ilana daha önce başvuru yapılmış.",
+                "Bu dönemsel ilan için daha önce başvuru veya taslak oluşturulmuş.",
                 StatusCodes.Status409Conflict);
-        }
-
-        var scores = await dbContext.StudentExamScores
-            .Where(item => item.Tc == studentTc)
-            .Include(item => item.Exam)
-            .ToDictionaryAsync(item => item.ExamId, cancellationToken);
-        var snapshots = new List<ApplicationScoreSnapshot>();
-        foreach (var requirement in offering.ExamRequirements)
-        {
-            if (!scores.TryGetValue(requirement.ExamId, out var score))
-            {
-                if (requirement.IsRequired)
-                {
-                    return ServiceResult<StudentApplicationDto>.Failure(
-                        $"Başvuru için gerekli {requirement.Exam.ExamName} sınav sonucunuz bulunmuyor. Sınav sonuçlarım ekranından ekleyiniz.",
-                        StatusCodes.Status409Conflict);
-                }
-
-                continue;
-            }
-
-            if (score.Score < requirement.MinimumScore)
-            {
-                if (requirement.IsRequired)
-                {
-                    return ServiceResult<StudentApplicationDto>.Failure(
-                        $"{requirement.Exam.ExamName} puanınız yetersiz. Başvuru için en az {FormatScore(requirement.MinimumScore)} puan gereklidir.",
-                        StatusCodes.Status409Conflict);
-                }
-
-                continue;
-            }
-
-            if (requirement.MinimumValidityDate.HasValue
-                && (!score.ExamDate.HasValue || score.ExamDate.Value < requirement.MinimumValidityDate.Value))
-            {
-                if (requirement.IsRequired)
-                {
-                    return ServiceResult<StudentApplicationDto>.Failure(
-                        $"{requirement.Exam.ExamName} sınav tarihiniz ilan koşulunu sağlamıyor. En erken {requirement.MinimumValidityDate.Value:dd.MM.yyyy} tarihli sonuç gereklidir.",
-                        StatusCodes.Status409Conflict);
-                }
-
-                continue;
-            }
-
-            snapshots.Add(new ApplicationScoreSnapshot
-            {
-                ExamId = score.ExamId,
-                ExamNameSnapshot = score.Exam.ExamName,
-                ScoreSnapshot = score.Score,
-                ExamDateSnapshot = score.ExamDate,
-                CapturedAtUtc = now
-            });
         }
 
         var application = new Application
         {
+            PublicId = Guid.NewGuid(),
             Tc = studentTc,
             ProgramOfferingId = programOfferingId,
             ApplicationDate = now,
-            CurrentStatus = ApplicationStatus.Pending.ToString(),
-            ScoreSnapshots = snapshots
+            CurrentStatus = ApplicationStatus.Draft.ToString(),
+            UsesDocumentWorkflow = true,
+            DocumentRequirementSnapshots = offering.DocumentRequirements
+                .OrderBy(item => item.RequirementId)
+                .Select(item => new ApplicationDocumentRequirementSnapshot
+                {
+                    PublicId = Guid.NewGuid(),
+                    SourceRequirementId = item.RequirementId,
+                    DocumentCode = item.NormalizedDocumentCode,
+                    DisplayName = item.DisplayName,
+                    Description = item.Description,
+                    IsRequired = item.IsRequired,
+                    AllowedContentCategory = item.AllowedContentCategory,
+                    MaximumBytes = item.MaximumBytes
+                })
+                .ToList()
         };
         application.ApplicationStatusHistories.Add(new ApplicationStatusHistory
         {
             PreviousStatus = null,
-            StatusName = ApplicationStatus.Pending.ToString(),
+            StatusName = ApplicationStatus.Draft.ToString(),
             ChangeDate = now,
-            Notes = "Başvuru oluşturuldu."
+            Notes = "Belge hazırlığı için taslak oluşturuldu."
         });
         dbContext.Applications.Add(application);
+        AddAudit(null, "DocumentDraftCreated", "Application", application.PublicId, new
+        {
+            application.ProgramOfferingId,
+            RequirementCount = application.DocumentRequirementSnapshots.Count
+        }, now);
 
         try
         {
@@ -157,17 +107,22 @@ public sealed class ApplicationService(
             {
                 await transaction.CommitAsync(cancellationToken);
             }
+
+            return ServiceResult<StudentApplicationDto>.Success(
+                MapStudentApplication(application, offering),
+                StatusCodes.Status201Created);
         }
         catch (DbUpdateException)
         {
+            if (transaction is not null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
             return ServiceResult<StudentApplicationDto>.Failure(
-                "Başvuru oluşturulamadı; ilan veya sınav koşullarını yeniden kontrol edin.",
+                "Taslak oluşturulamadı; ilan koşullarını yeniden kontrol edin.",
                 StatusCodes.Status409Conflict);
         }
-
-        return ServiceResult<StudentApplicationDto>.Success(
-            MapStudentApplication(application, offering),
-            StatusCodes.Status201Created);
     }
 
     public async Task<IReadOnlyList<StudentApplicationDto>> GetForStudentAsync(
@@ -176,12 +131,163 @@ public sealed class ApplicationService(
     {
         var applications = await dbContext.Applications.AsNoTracking()
             .Where(item => item.Tc == studentTc)
-            .Include(item => item.ProgramOffering)
-                .ThenInclude(item => item.Program)
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.Program)
             .OrderByDescending(item => item.ApplicationDate)
             .ToListAsync(cancellationToken);
 
         return applications.Select(item => MapStudentApplication(item, item.ProgramOffering)).ToArray();
+    }
+
+    public async Task<StudentApplicationDetailDto?> GetDetailForStudentAsync(
+        string studentTc,
+        Guid publicId,
+        CancellationToken cancellationToken)
+    {
+        var application = await dbContext.Applications.AsNoTracking()
+            .Where(item => item.Tc == studentTc && item.PublicId == publicId)
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.Program).ThenInclude(item => item.Institute)
+            .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
+            .SingleOrDefaultAsync(cancellationToken);
+        return application is null ? null : MapStudentDetail(application);
+    }
+
+    public async Task<ServiceResult> SubmitAsync(
+        string studentTc,
+        Guid publicId,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
+        var application = await dbContext.Applications
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.Program).ThenInclude(item => item.Institute)
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.ExamRequirements).ThenInclude(item => item.Exam)
+            .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
+            .Include(item => item.ScoreSnapshots)
+            .SingleOrDefaultAsync(item => item.PublicId == publicId && item.Tc == studentTc, cancellationToken);
+        if (application is null)
+        {
+            return ServiceResult.Failure("Başvuru bulunamadı.", StatusCodes.Status404NotFound);
+        }
+
+        if (!ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var status)
+            || status != ApplicationStatus.Draft
+            || !application.UsesDocumentWorkflow)
+        {
+            return ServiceResult.Failure("Yalnızca taslak başvurular gönderilebilir.", StatusCodes.Status409Conflict);
+        }
+
+        var missing = application.DocumentRequirementSnapshots
+            .Where(item => item.IsRequired && !item.Documents.Any(document => document.IsCurrent))
+            .Select(item => item.DisplayName)
+            .OrderBy(item => item)
+            .ToArray();
+        if (missing.Length > 0)
+        {
+            return await BlockSubmissionAsync(
+                application,
+                $"Zorunlu belgeler eksik: {string.Join(", ", missing)}.",
+                "MissingRequiredDocuments",
+                transaction,
+                cancellationToken);
+        }
+
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var offering = application.ProgramOffering;
+        if (!IsOfferingOpen(offering, now))
+        {
+            return await BlockSubmissionAsync(
+                application,
+                "İlan artık başvuruya açık değil.",
+                "OfferingClosed",
+                transaction,
+                cancellationToken);
+        }
+
+        var draft = ApplicationStatus.Draft.ToString();
+        var withdrawn = ApplicationStatus.Withdrawn.ToString();
+        if (offering.Quota <= 0
+            || await dbContext.Applications.CountAsync(
+                item => item.ProgramOfferingId == offering.ProgramOfferingId
+                    && item.ApplicationId != application.ApplicationId
+                    && item.CurrentStatus != draft
+                    && item.CurrentStatus != withdrawn,
+                cancellationToken) >= offering.Quota)
+        {
+            return await BlockSubmissionAsync(
+                application,
+                "İlan kontenjanı dolmuştur.",
+                "QuotaFull",
+                transaction,
+                cancellationToken);
+        }
+
+        if (await dbContext.Applications.AnyAsync(
+            item => item.ApplicationId != application.ApplicationId
+                && item.Tc == studentTc
+                && item.ProgramOfferingId == offering.ProgramOfferingId,
+            cancellationToken))
+        {
+            return await BlockSubmissionAsync(
+                application,
+                "Bu dönemsel ilana daha önce başvuru yapılmış.",
+                "DuplicateApplication",
+                transaction,
+                cancellationToken);
+        }
+
+        var scoreResult = await BuildScoreSnapshotsAsync(studentTc, offering, now, cancellationToken);
+        if (!scoreResult.IsSuccess)
+        {
+            return await BlockSubmissionAsync(
+                application,
+                scoreResult.Error!,
+                "ExamRequirements",
+                transaction,
+                cancellationToken);
+        }
+
+        application.ScoreSnapshots.Clear();
+        foreach (var snapshot in scoreResult.Value!)
+        {
+            application.ScoreSnapshots.Add(snapshot);
+        }
+
+        application.ApplicationDate = now;
+        application.CurrentStatus = ApplicationStatus.Pending.ToString();
+        dbContext.ApplicationStatusHistories.Add(new ApplicationStatusHistory
+        {
+            ApplicationId = application.ApplicationId,
+            PreviousStatus = ApplicationStatus.Draft.ToString(),
+            StatusName = ApplicationStatus.Pending.ToString(),
+            ChangeDate = now,
+            Notes = "Başvuru öğrenci tarafından gönderildi."
+        });
+        AddAudit(null, "ApplicationSubmitted", "Application", application.PublicId, new
+        {
+            application.ProgramOfferingId,
+            ScoreSnapshotCount = scoreResult.Value!.Count
+        }, now);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return ServiceResult.Success();
+        }
+        catch (DbUpdateException)
+        {
+            if (transaction is not null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            return ServiceResult.Failure(
+                "Başvuru gönderilemedi; ilan koşullarını yeniden kontrol edin.",
+                StatusCodes.Status409Conflict);
+        }
     }
 
     public async Task<PagedResult<AdminApplicationListItemDto>> GetForAdminAsync(
@@ -196,9 +302,10 @@ public sealed class ApplicationService(
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 10, 100);
 
+        var draft = ApplicationStatus.Draft.ToString();
         var query = dbContext.Applications.AsNoTracking()
-            .Include(item => item.ProgramOffering)
-                .ThenInclude(item => item.Program)
+            .Where(item => item.CurrentStatus != draft)
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.Program)
             .Include(item => item.TcNavigation)
             .AsQueryable();
 
@@ -214,6 +321,11 @@ public sealed class ApplicationService(
 
         if (status.HasValue)
         {
+            if (status.Value == ApplicationStatus.Draft)
+            {
+                return new PagedResult<AdminApplicationListItemDto>([], page, pageSize, 0);
+            }
+
             var storedStatus = status.Value.ToString();
             query = query.Where(item => item.CurrentStatus == storedStatus);
         }
@@ -236,7 +348,7 @@ public sealed class ApplicationService(
             .ToListAsync(cancellationToken);
 
         var items = applications.Select(item => new AdminApplicationListItemDto(
-            item.ApplicationId,
+            item.PublicId,
             $"{item.TcNavigation.StudentName} {item.TcNavigation.StudentSurname}".Trim(),
             MaskTc(item.Tc),
             item.ProgramOffering.Program.ProgramName,
@@ -252,15 +364,17 @@ public sealed class ApplicationService(
     }
 
     public async Task<AdminApplicationDetailDto?> GetDetailForAdminAsync(
-        int applicationId,
+        Guid publicId,
         CancellationToken cancellationToken)
     {
         var application = await dbContext.Applications.AsNoTracking()
+            .Where(item => item.PublicId == publicId && item.CurrentStatus != ApplicationStatus.Draft.ToString())
             .Include(item => item.ProgramOffering).ThenInclude(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.TcNavigation)
             .Include(item => item.ApplicationStatusHistories)
             .Include(item => item.ScoreSnapshots)
-            .SingleOrDefaultAsync(item => item.ApplicationId == applicationId, cancellationToken);
+            .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
+            .SingleOrDefaultAsync(cancellationToken);
         if (application is null)
         {
             return null;
@@ -286,7 +400,7 @@ public sealed class ApplicationService(
         var offering = application.ProgramOffering;
 
         return new AdminApplicationDetailDto(
-            application.ApplicationId,
+            application.PublicId,
             MaskTc(application.Tc),
             $"{application.TcNavigation.StudentName} {application.TcNavigation.StudentSurname}".Trim(),
             application.TcNavigation.Email,
@@ -300,28 +414,44 @@ public sealed class ApplicationService(
             ParseStatus(application.CurrentStatus),
             Convert.ToBase64String(application.RowVersion),
             history,
-            snapshots);
+            snapshots,
+            application.UsesDocumentWorkflow,
+            application.DocumentRequirementSnapshots.OrderBy(item => item.DisplayName).Select(MapAdminRequirement).ToArray());
     }
 
     public async Task<ServiceResult> UpdateStatusAsync(
-        int applicationId,
+        Guid publicId,
         int adminId,
         ApplicationStatusUpdateDto request,
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
-        var application = await dbContext.Applications.SingleOrDefaultAsync(
-            item => item.ApplicationId == applicationId,
-            cancellationToken);
-        if (application is null)
+        var application = await dbContext.Applications
+            .SingleOrDefaultAsync(item => item.PublicId == publicId, cancellationToken);
+        if (application is null || application.CurrentStatus == ApplicationStatus.Draft.ToString())
         {
             return ServiceResult.Failure("Başvuru bulunamadı.", StatusCodes.Status404NotFound);
         }
 
         if (!ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var currentStatus)
+            || request.NewStatus == ApplicationStatus.Draft
             || !ApplicationStatusRules.CanTransition(currentStatus, request.NewStatus))
         {
             return ServiceResult.Failure("Bu durum geçişine izin verilmiyor.", StatusCodes.Status409Conflict);
+        }
+
+        if (request.NewStatus == ApplicationStatus.Approved
+            && application.UsesDocumentWorkflow
+            && await dbContext.ApplicationDocumentRequirementSnapshots.AnyAsync(requirement =>
+                requirement.ApplicationId == application.ApplicationId
+                && requirement.IsRequired
+                && !requirement.Documents.Any(document =>
+                    document.IsCurrent && document.ReviewStatus == DocumentReviewStatus.Approved),
+                cancellationToken))
+        {
+            return ServiceResult.Failure(
+                "Tüm zorunlu güncel belgeler onaylanmadan başvuru onaylanamaz.",
+                StatusCodes.Status409Conflict);
         }
 
         byte[] rowVersion;
@@ -346,20 +476,15 @@ public sealed class ApplicationService(
             ChangeDate = now,
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim()
         });
-        dbContext.SecurityAuditLogs.Add(new SecurityAuditLog
+        AddAudit(adminId, "ApplicationStatusChanged", "Application", application.PublicId, new
         {
-            ActorAdminId = adminId,
-            EventType = "ApplicationStatusChanged",
-            TargetType = "Application",
-            TargetId = application.ApplicationId.ToString(),
-            Details = JsonSerializer.Serialize(new { Previous = currentStatus, Current = request.NewStatus }),
-            CreatedAtUtc = now
-        });
+            Previous = currentStatus,
+            Current = request.NewStatus
+        }, now);
 
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            await dbContext.Entry(application).ReloadAsync(cancellationToken);
             if (transaction is not null)
             {
                 await transaction.CommitAsync(cancellationToken);
@@ -380,24 +505,182 @@ public sealed class ApplicationService(
         }
     }
 
+    private async Task<ServiceResult<IReadOnlyList<ApplicationScoreSnapshot>>> BuildScoreSnapshotsAsync(
+        string studentTc,
+        ProgramOffering offering,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var scores = await dbContext.StudentExamScores
+            .Where(item => item.Tc == studentTc)
+            .Include(item => item.Exam)
+            .ToDictionaryAsync(item => item.ExamId, cancellationToken);
+        var snapshots = new List<ApplicationScoreSnapshot>();
+        foreach (var requirement in offering.ExamRequirements)
+        {
+            if (!scores.TryGetValue(requirement.ExamId, out var score))
+            {
+                if (requirement.IsRequired)
+                {
+                    return ServiceResult<IReadOnlyList<ApplicationScoreSnapshot>>.Failure(
+                        $"Başvuru için gerekli {requirement.Exam.ExamName} sınav sonucunuz bulunmuyor. Sınav Sonuçlarım ekranından ekleyiniz.",
+                        StatusCodes.Status409Conflict);
+                }
+
+                continue;
+            }
+
+            if (score.Score < requirement.MinimumScore)
+            {
+                if (requirement.IsRequired)
+                {
+                    return ServiceResult<IReadOnlyList<ApplicationScoreSnapshot>>.Failure(
+                        $"{requirement.Exam.ExamName} puanınız yetersiz. Başvuru için en az {FormatScore(requirement.MinimumScore)} puan gereklidir.",
+                        StatusCodes.Status409Conflict);
+                }
+
+                continue;
+            }
+
+            if (requirement.MinimumValidityDate.HasValue
+                && (!score.ExamDate.HasValue || score.ExamDate.Value < requirement.MinimumValidityDate.Value))
+            {
+                if (requirement.IsRequired)
+                {
+                    return ServiceResult<IReadOnlyList<ApplicationScoreSnapshot>>.Failure(
+                        $"{requirement.Exam.ExamName} sınav tarihiniz ilan koşulunu sağlamıyor. En erken {requirement.MinimumValidityDate.Value:dd.MM.yyyy} tarihli sonuç gereklidir.",
+                        StatusCodes.Status409Conflict);
+                }
+
+                continue;
+            }
+
+            snapshots.Add(new ApplicationScoreSnapshot
+            {
+                ExamId = score.ExamId,
+                ExamNameSnapshot = score.Exam.ExamName,
+                ScoreSnapshot = score.Score,
+                ExamDateSnapshot = score.ExamDate,
+                CapturedAtUtc = now
+            });
+        }
+
+        return ServiceResult<IReadOnlyList<ApplicationScoreSnapshot>>.Success(snapshots);
+    }
+
+    private async Task<ServiceResult> BlockSubmissionAsync(
+        Application application,
+        string message,
+        string reason,
+        IDbContextTransaction? transaction,
+        CancellationToken cancellationToken)
+    {
+        AddAudit(null, "DocumentSubmissionBlocked", "Application", application.PublicId, new { Reason = reason }, timeProvider.GetUtcNow().UtcDateTime);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        return ServiceResult.Failure(message, StatusCodes.Status409Conflict);
+    }
+
     private async Task<IDbContextTransaction?> BeginTransactionIfSupportedAsync(CancellationToken cancellationToken) =>
         dbContext.Database.IsRelational()
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
-    private static StudentApplicationDto MapStudentApplication(Application application, ProgramOffering offering) =>
-        new(
-            application.ApplicationId,
-            offering.ProgramOfferingId,
-            offering.ProgramId,
-            offering.Program.ProgramName,
-            offering.AcademicYearStart,
-            AcademicPeriodFormatter.FormatAcademicYear(offering.AcademicYearStart),
-            offering.Term,
-            AcademicPeriodFormatter.FormatTerm(offering.Term),
+    private static bool IsOfferingOpen(ProgramOffering offering, DateTime now) =>
+        offering.Program.IsActive
+        && offering.Program.Institute.IsActive
+        && !offering.IsArchived
+        && offering.IsOpen
+        && offering.ApplicationStartUtc.HasValue
+        && offering.ApplicationDeadlineUtc.HasValue
+        && now >= offering.ApplicationStartUtc.Value
+        && now <= offering.ApplicationDeadlineUtc.Value;
+
+    private static StudentApplicationDto MapStudentApplication(Application application, ProgramOffering offering) => new(
+        application.PublicId,
+        offering.ProgramOfferingId,
+        offering.ProgramId,
+        offering.Program.ProgramName,
+        offering.AcademicYearStart,
+        AcademicPeriodFormatter.FormatAcademicYear(offering.AcademicYearStart),
+        offering.Term,
+        AcademicPeriodFormatter.FormatTerm(offering.Term),
+        DateTime.SpecifyKind(application.ApplicationDate, DateTimeKind.Utc),
+        ParseStatus(application.CurrentStatus),
+        Convert.ToBase64String(application.RowVersion));
+
+    private static StudentApplicationDetailDto MapStudentDetail(Application application)
+    {
+        var requirements = application.DocumentRequirementSnapshots
+            .OrderBy(item => item.DisplayName)
+            .Select(item => new ApplicationDocumentRequirementDto(
+                item.PublicId,
+                item.DocumentCode,
+                item.DisplayName,
+                item.Description,
+                item.IsRequired,
+                item.AllowedContentCategory,
+                item.MaximumBytes,
+                item.Documents.Where(document => document.IsCurrent).Select(MapDocument).SingleOrDefault(),
+                []))
+            .ToArray();
+        return new StudentApplicationDetailDto(
+            application.PublicId,
+            application.ProgramOffering.Program.ProgramName,
+            application.ProgramOffering.Program.Institute.InstituteName,
+            application.ProgramOffering.AcademicYearStart,
+            AcademicPeriodFormatter.FormatAcademicYear(application.ProgramOffering.AcademicYearStart),
+            application.ProgramOffering.Term,
+            AcademicPeriodFormatter.FormatTerm(application.ProgramOffering.Term),
             DateTime.SpecifyKind(application.ApplicationDate, DateTimeKind.Utc),
             ParseStatus(application.CurrentStatus),
-            Convert.ToBase64String(application.RowVersion));
+            application.UsesDocumentWorkflow,
+            requirements,
+            requirements.Where(item => item.IsRequired && item.CurrentDocument is null).Select(item => item.DisplayName).ToArray());
+    }
+
+    private static ApplicationDocumentRequirementDto MapAdminRequirement(ApplicationDocumentRequirementSnapshot requirement)
+    {
+        var versions = requirement.Documents.OrderByDescending(item => item.VersionNumber).Select(MapDocument).ToArray();
+        return new ApplicationDocumentRequirementDto(
+            requirement.PublicId,
+            requirement.DocumentCode,
+            requirement.DisplayName,
+            requirement.Description,
+            requirement.IsRequired,
+            requirement.AllowedContentCategory,
+            requirement.MaximumBytes,
+            versions.SingleOrDefault(item => item.IsCurrent),
+            versions);
+    }
+
+    private static ApplicationDocumentDto MapDocument(ApplicationDocument document) => new(
+        document.PublicId,
+        document.VersionNumber,
+        document.IsCurrent,
+        document.OriginalFileName,
+        document.VerifiedContentType,
+        document.FileSize,
+        document.ReviewStatus,
+        document.RejectionReason,
+        DateTime.SpecifyKind(document.UploadedAtUtc, DateTimeKind.Utc),
+        document.ReviewedAtUtc.HasValue ? DateTime.SpecifyKind(document.ReviewedAtUtc.Value, DateTimeKind.Utc) : null,
+        Convert.ToBase64String(document.RowVersion));
+
+    private void AddAudit(int? adminId, string eventType, string targetType, Guid targetId, object details, DateTime now) =>
+        dbContext.SecurityAuditLogs.Add(new SecurityAuditLog
+        {
+            ActorAdminId = adminId,
+            EventType = eventType,
+            TargetType = targetType,
+            TargetId = targetId.ToString("D"),
+            Details = JsonSerializer.Serialize(details),
+            CreatedAtUtc = now
+        });
 
     private static ApplicationStatus ParseStatus(string value) =>
         ApplicationStatusRules.TryParseStoredValue(value, out var status) ? status : ApplicationStatus.Pending;

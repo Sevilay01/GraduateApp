@@ -16,6 +16,7 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
     public async Task<ActionResult<IReadOnlyList<OpenProgramDto>>> GetOpen(CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
+        var draft = ApplicationStatus.Draft.ToString();
         var withdrawn = ApplicationStatus.Withdrawn.ToString();
         var offerings = await dbContext.ProgramOfferings.AsNoTracking()
             .Where(item => item.Program.IsActive
@@ -27,7 +28,7 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
                 && item.ApplicationDeadlineUtc.HasValue
                 && item.ApplicationDeadlineUtc.Value >= now
                 && item.Quota > 0
-                && item.Applications.Count(application => application.CurrentStatus != withdrawn) < item.Quota)
+                && item.Applications.Count(application => application.CurrentStatus != withdrawn && application.CurrentStatus != draft) < item.Quota)
             .OrderBy(item => item.Program.Institute.InstituteName)
             .ThenBy(item => item.Program.ProgramName)
             .ThenBy(item => item.Program.DegreeType)

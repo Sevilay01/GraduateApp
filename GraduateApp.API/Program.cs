@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using GraduateApp.API.Domain;
 using GraduateApp.API.Models;
 using GraduateApp.API.Security;
 using GraduateApp.API.Services;
@@ -7,6 +8,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -23,6 +25,18 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<GraduateAppDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDataProtection().SetApplicationName("GraduateApp.API");
 builder.Services.AddProblemDetails();
+var configuredUploadMaximum = builder.Configuration.GetValue<long?>(
+    $"{DocumentUploadOptions.SectionName}:MaximumBytes") ?? DocumentWorkflowCatalog.DefaultMaximumUploadBytes;
+builder.Services.AddOptions<DocumentUploadOptions>()
+    .Bind(builder.Configuration.GetSection(DocumentUploadOptions.SectionName))
+    .Validate(
+        options => options.MaximumBytes is > 0 and <= DocumentWorkflowCatalog.AbsoluteMaximumUploadBytes,
+        "DocumentUpload:MaximumBytes 1 bayt ile 100 MB arasında olmalıdır.")
+    .ValidateOnStart();
+builder.Services.AddOptions<DocumentStorageOptions>()
+    .Bind(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
+builder.Services.Configure<FormOptions>(options =>
+    options.MultipartBodyLengthLimit = checked(configuredUploadMaximum + 64 * 1024));
 builder.Services.AddControllers(options =>
     {
         var messages = options.ModelBindingMessageProvider;
@@ -82,11 +96,14 @@ builder.Services.AddScoped<IPasswordHasher<Admin>, PasswordHasher<Admin>>();
 builder.Services.AddScoped<IAccessTokenService, AccessTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<IApplicationDocumentService, ApplicationDocumentService>();
+builder.Services.AddScoped<IDocumentFileValidator, DocumentFileValidator>();
 builder.Services.AddScoped<IAdminStudentService, AdminStudentService>();
 builder.Services.AddScoped<IAdminAccountService, AdminAccountService>();
 builder.Services.AddScoped<IInstituteAdminService, InstituteAdminService>();
 builder.Services.AddScoped<IProgramAdminService, ProgramAdminService>();
 builder.Services.AddScoped<IProgramOfferingService, ProgramOfferingService>();
+builder.Services.AddScoped<IOfferingDocumentRequirementService, OfferingDocumentRequirementService>();
 builder.Services.AddScoped<IStudentExamScoreService, StudentExamScoreService>();
 builder.Services.AddScoped<IStudentProfileService, StudentProfileService>();
 builder.Services.AddHostedService<AdminBootstrapHostedService>();
@@ -95,11 +112,15 @@ if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddSingleton<IPasswordResetEmailSender, DevelopmentFilePasswordResetEmailSender>();
     builder.Services.AddSingleton<IAdminInvitationEmailSender, DevelopmentFileAdminInvitationEmailSender>();
+    builder.Services.AddSingleton<IPrivateFileStorage, DevelopmentPrivateFileStorage>();
+    builder.Services.AddSingleton<IFileMalwareScanner, DevelopmentNoOpFileMalwareScanner>();
 }
 else
 {
     builder.Services.AddSingleton<IPasswordResetEmailSender, UnavailablePasswordResetEmailSender>();
     builder.Services.AddSingleton<IAdminInvitationEmailSender, UnavailableAdminInvitationEmailSender>();
+    builder.Services.AddSingleton<IPrivateFileStorage, UnavailablePrivateFileStorage>();
+    builder.Services.AddSingleton<IFileMalwareScanner, UnavailableFileMalwareScanner>();
 }
 
 builder.Services.AddRateLimiter(options =>

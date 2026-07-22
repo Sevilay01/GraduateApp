@@ -2,10 +2,13 @@
 @{
     ViewData["Title"] = "Başvuru detayı";
     var transitions = Model.CurrentStatus.AllowedAdminTransitions();
+    var allRequiredDocumentsApproved = !Model.UsesDocumentWorkflow || Model.DocumentRequirements
+        .Where(item => item.IsRequired)
+        .All(item => item.CurrentDocument?.ReviewStatus == DocumentReviewStatus.Approved);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h2 mb-0">Başvuru #@Model.ApplicationId</h1>
+    <h1 class="h2 mb-0">Başvuru detayı</h1>
     <a asp-action="Index" class="btn btn-outline-secondary">Listeye dön</a>
 </div>
 
@@ -78,6 +81,91 @@
                 }
             </div>
         </section>
+
+        @if (Model.UsesDocumentWorkflow)
+        {
+            <section class="card shadow-sm mt-4" aria-labelledby="documents-heading">
+                <div class="card-body">
+                    <h2 id="documents-heading" class="h4">Başvuru belgeleri</h2>
+                    @foreach (var requirement in Model.DocumentRequirements)
+                    {
+                        var current = requirement.CurrentDocument;
+                        <article class="border rounded p-3 mb-3">
+                            <div class="d-flex justify-content-between gap-2">
+                                <h3 class="h6">@requirement.DisplayName</h3>
+                                <span class="badge @(requirement.IsRequired ? "text-bg-danger" : "text-bg-light")">@(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")</span>
+                            </div>
+                            @if (current is null)
+                            {
+                                <p class="text-muted mb-0">Güncel belge bulunmuyor.</p>
+                            }
+                            else
+                            {
+                                <div class="small mb-2">
+                                    <span>@current.OriginalFileName</span> ·
+                                    <span>Sürüm @current.VersionNumber</span> ·
+                                    <span>@current.ReviewStatus.ReviewName()</span> ·
+                                    <time datetime="@current.UploadedAtUtc.ToString("O")">@IstanbulTime.FromUtc(current.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</time>
+                                </div>
+                                @if (current.ReviewStatus == DocumentReviewStatus.Rejected)
+                                {
+                                    <div class="alert alert-danger py-2"><strong>Ret gerekçesi:</strong> @current.RejectionReason</div>
+                                }
+                                <a asp-action="DownloadDocument"
+                                   asp-route-applicationPublicId="@Model.PublicId"
+                                   asp-route-documentPublicId="@current.PublicId"
+                                   class="btn btn-sm btn-outline-secondary">Güncel belgeyi indir</a>
+
+                                @if (Model.CurrentStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview)
+                                {
+                                    <div class="row g-2 mt-2">
+                                        <div class="col-auto">
+                                            <form asp-action="ReviewDocument" method="post">
+                                                <input type="hidden" name="ApplicationPublicId" value="@Model.PublicId" />
+                                                <input type="hidden" name="DocumentPublicId" value="@current.PublicId" />
+                                                <input type="hidden" name="ReviewStatus" value="Approved" />
+                                                <input type="hidden" name="RowVersion" value="@current.RowVersion" />
+                                                <button type="submit" class="btn btn-sm btn-success">Onayla</button>
+                                            </form>
+                                        </div>
+                                        <div class="col-12 col-md">
+                                            <form asp-action="ReviewDocument" method="post" class="d-flex gap-2">
+                                                <input type="hidden" name="ApplicationPublicId" value="@Model.PublicId" />
+                                                <input type="hidden" name="DocumentPublicId" value="@current.PublicId" />
+                                                <input type="hidden" name="ReviewStatus" value="Rejected" />
+                                                <input type="hidden" name="RowVersion" value="@current.RowVersion" />
+                                                <input name="RejectionReason" class="form-control form-control-sm" maxlength="500" placeholder="Türkçe ret gerekçesi" required />
+                                                <button type="submit" class="btn btn-sm btn-danger">Reddet</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                }
+                            }
+
+                            @if (requirement.Versions.Count > 1)
+                            {
+                                <details class="mt-3">
+                                    <summary>Geçmiş sürümler</summary>
+                                    <ul class="list-group list-group-flush mt-2">
+                                        @foreach (var version in requirement.Versions.Where(item => !item.IsCurrent))
+                                        {
+                                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                                <span>Sürüm @version.VersionNumber · @version.ReviewStatus.ReviewName() · @IstanbulTime.FromUtc(version.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</span>
+                                                <a asp-action="DownloadDocument" asp-route-applicationPublicId="@Model.PublicId" asp-route-documentPublicId="@version.PublicId" class="btn btn-sm btn-outline-secondary">İndir</a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </details>
+                            }
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+        else
+        {
+            <div class="alert alert-info mt-4">Bu legacy başvuru yeni belge onay koşullarından muaftır.</div>
+        }
     </div>
 
     <div class="col-12 col-lg-5">
@@ -91,14 +179,17 @@
                 else
                 {
                     <form asp-action="UpdateStatus" method="post" novalidate>
-                        <input type="hidden" name="ApplicationId" value="@Model.ApplicationId" />
+                        <input type="hidden" name="PublicId" value="@Model.PublicId" />
                         <input type="hidden" name="RowVersion" value="@Model.RowVersion" />
                         <div class="mb-3">
                             <label for="NewStatus" class="form-label">Yeni durum</label>
                             <select id="NewStatus" name="NewStatus" class="form-select" required>
                                 @foreach (var status in transitions)
                                 {
-                                    <option value="@status">@status.DisplayName()</option>
+                                    if (status != ApplicationStatus.Approved || allRequiredDocumentsApproved)
+                                    {
+                                        <option value="@status">@status.DisplayName()</option>
+                                    }
                                 }
                             </select>
                         </div>
@@ -107,6 +198,10 @@
                             <textarea id="Notes" name="Notes" class="form-control" rows="4" maxlength="500"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Durumu güncelle</button>
+                        @if (transitions.Contains(ApplicationStatus.Approved) && !allRequiredDocumentsApproved)
+                        {
+                            <p class="small text-warning mt-2 mb-0">Tüm zorunlu güncel belgeler onaylanmadan başvuru onaylanamaz.</p>
+                        }
                     </form>
                 }
             </div>

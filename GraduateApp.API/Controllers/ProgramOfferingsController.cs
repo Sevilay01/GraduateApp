@@ -11,7 +11,9 @@ namespace GraduateApp.API.Controllers;
 [ApiController]
 [Route("api/program-offerings")]
 [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.AdminRole)]
-public sealed class ProgramOfferingsController(IProgramOfferingService offeringService) : ControllerBase
+public sealed class ProgramOfferingsController(
+    IProgramOfferingService offeringService,
+    IOfferingDocumentRequirementService documentRequirementService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get(
@@ -51,6 +53,63 @@ public sealed class ProgramOfferingsController(IProgramOfferingService offeringS
         }
 
         var result = await offeringService.UpdateAsync(id, adminId, request, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpGet("{id:int}/document-requirements")]
+    public async Task<IActionResult> GetDocumentRequirements(int id, CancellationToken cancellationToken) =>
+        Ok(await documentRequirementService.GetAsync(id, cancellationToken));
+
+    [HttpPost("{id:int}/document-requirements")]
+    public async Task<IActionResult> CreateDocumentRequirement(
+        int id,
+        OfferingDocumentRequirementCreateDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await documentRequirementService.CreateAsync(id, adminId, request, cancellationToken);
+        return result.IsSuccess
+            ? StatusCode(result.StatusCode, result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpPut("{id:int}/document-requirements/{publicId:guid}")]
+    public async Task<IActionResult> UpdateDocumentRequirement(
+        int id,
+        Guid publicId,
+        OfferingDocumentRequirementUpdateDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await documentRequirementService.UpdateAsync(id, publicId, adminId, request, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpPost("{id:int}/document-requirements/{publicId:guid}/active")]
+    public async Task<IActionResult> SetDocumentRequirementActive(
+        int id,
+        Guid publicId,
+        DocumentRequirementActiveDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await documentRequirementService.SetActiveAsync(id, publicId, adminId, request, cancellationToken);
         return result.IsSuccess
             ? Ok(result.Value)
             : Problem(statusCode: result.StatusCode, detail: result.Error);
