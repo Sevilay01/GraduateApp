@@ -6,6 +6,8 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
 {
     public DbSet<Admin> Admins => Set<Admin>();
     public DbSet<Application> Applications => Set<Application>();
+    public DbSet<ApplicationDocument> ApplicationDocuments => Set<ApplicationDocument>();
+    public DbSet<ApplicationDocumentRequirementSnapshot> ApplicationDocumentRequirementSnapshots => Set<ApplicationDocumentRequirementSnapshot>();
     public DbSet<ApplicationScoreSnapshot> ApplicationScoreSnapshots => Set<ApplicationScoreSnapshot>();
     public DbSet<ApplicationStatusHistory> ApplicationStatusHistories => Set<ApplicationStatusHistory>();
     public DbSet<EducationInfo> EducationInfos => Set<EducationInfo>();
@@ -16,6 +18,7 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
     public DbSet<Program> Programs => Set<Program>();
     public DbSet<ProgramOffering> ProgramOfferings => Set<ProgramOffering>();
     public DbSet<ProgramOfferingExamRequirement> ProgramOfferingExamRequirements => Set<ProgramOfferingExamRequirement>();
+    public DbSet<ProgramOfferingDocumentRequirement> ProgramOfferingDocumentRequirements => Set<ProgramOfferingDocumentRequirement>();
     public DbSet<ReferenceLetter> ReferenceLetters => Set<ReferenceLetter>();
     public DbSet<SecurityAuditLog> SecurityAuditLogs => Set<SecurityAuditLog>();
     public DbSet<Student> Students => Set<Student>();
@@ -48,13 +51,16 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
         modelBuilder.Entity<Application>(entity =>
         {
             entity.HasKey(e => e.ApplicationId);
+            entity.HasIndex(e => e.PublicId).IsUnique();
             entity.HasIndex(e => new { e.Tc, e.ProgramOfferingId }).IsUnique();
             entity.ToTable("Applications", table => table.HasCheckConstraint(
                 "CK_Applications_CurrentStatus",
-                "[CurrentStatus] IN (N'Pending',N'UnderReview',N'Approved',N'Rejected',N'Withdrawn')"));
+                "[CurrentStatus] IN (N'Draft',N'Pending',N'UnderReview',N'Approved',N'Rejected',N'Withdrawn')"));
             entity.Property(e => e.ApplicationId).HasColumnName("ApplicationID");
+            entity.Property(e => e.PublicId).HasColumnName("PublicID").HasDefaultValueSql("NEWID()");
             entity.Property(e => e.ApplicationDate).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(e => e.CurrentStatus).HasMaxLength(50).HasDefaultValue("Pending").IsRequired();
+            entity.Property(e => e.UsesDocumentWorkflow).HasDefaultValue(false);
             entity.Property(e => e.ProgramOfferingId).HasColumnName("ProgramOfferingID");
             entity.Property(e => e.Tc).HasMaxLength(11).IsUnicode(false).IsFixedLength().HasColumnName("TC").IsRequired();
             entity.Property(e => e.RowVersion).IsRowVersion();
@@ -63,6 +69,70 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
                 .HasForeignKey(e => e.ProgramOfferingId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.TcNavigation).WithMany(e => e.Applications)
                 .HasForeignKey(e => e.Tc).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ApplicationDocumentRequirementSnapshot>(entity =>
+        {
+            entity.HasKey(e => e.SnapshotId);
+            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => new { e.ApplicationId, e.DocumentCode }).IsUnique();
+            entity.Property(e => e.SnapshotId).HasColumnName("SnapshotID");
+            entity.Property(e => e.PublicId).HasColumnName("PublicID").HasDefaultValueSql("NEWID()");
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationID");
+            entity.Property(e => e.SourceRequirementId).HasColumnName("SourceRequirementID");
+            entity.Property(e => e.DocumentCode).HasMaxLength(64).IsUnicode(false).IsRequired();
+            entity.Property(e => e.DisplayName).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.AllowedContentCategory).HasConversion<string>().HasMaxLength(32).IsUnicode(false).IsRequired();
+            entity.Property(e => e.RowVersion).IsRowVersion();
+            entity.ToTable("ApplicationDocumentRequirementSnapshots", table =>
+            {
+                table.HasCheckConstraint("CK_ApplicationDocumentRequirementSnapshots_MaximumBytes", "[MaximumBytes] BETWEEN 1 AND 104857600");
+                table.HasCheckConstraint("CK_ApplicationDocumentRequirementSnapshots_ContentCategory", "[AllowedContentCategory] IN ('PdfOnly','ImageOnly','PdfOrImage')");
+            });
+            entity.HasOne(e => e.Application).WithMany(e => e.DocumentRequirementSnapshots)
+                .HasForeignKey(e => e.ApplicationId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.SourceRequirement).WithMany(e => e.Snapshots)
+                .HasForeignKey(e => e.SourceRequirementId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ApplicationDocument>(entity =>
+        {
+            entity.HasKey(e => e.DocumentId);
+            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => new { e.RequirementSnapshotId, e.VersionNumber }).IsUnique();
+            entity.HasIndex(e => e.ApplicationId);
+            entity.HasIndex(e => e.RequirementSnapshotId).IsUnique().HasFilter("[IsCurrent] = CAST(1 AS bit)");
+            entity.HasIndex(e => e.ObjectKey).IsUnique();
+            entity.Property(e => e.DocumentId).HasColumnName("DocumentID");
+            entity.Property(e => e.PublicId).HasColumnName("PublicID").HasDefaultValueSql("NEWID()");
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationID");
+            entity.Property(e => e.RequirementSnapshotId).HasColumnName("RequirementSnapshotID");
+            entity.Property(e => e.OriginalFileName).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.ObjectKey).HasMaxLength(80).IsUnicode(false).IsRequired();
+            entity.Property(e => e.VerifiedContentType).HasMaxLength(50).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Sha256).HasMaxLength(64).IsUnicode(false).IsFixedLength().IsRequired();
+            entity.Property(e => e.ReviewStatus).HasConversion<string>().HasMaxLength(20).IsUnicode(false).IsRequired();
+            entity.Property(e => e.RejectionReason).HasMaxLength(500);
+            entity.Property(e => e.UploadedAtUtc).HasColumnType("datetime2");
+            entity.Property(e => e.ReviewedAtUtc).HasColumnType("datetime2");
+            entity.Property(e => e.ReviewedByAdminId).HasColumnName("ReviewedByAdminID");
+            entity.Property(e => e.RowVersion).IsRowVersion();
+            entity.ToTable("ApplicationDocuments", table =>
+            {
+                table.HasCheckConstraint("CK_ApplicationDocuments_VersionNumber", "[VersionNumber] > 0");
+                table.HasCheckConstraint("CK_ApplicationDocuments_FileSize", "[FileSize] > 0");
+                table.HasCheckConstraint("CK_ApplicationDocuments_Review", "([ReviewStatus] = 'Rejected' AND [RejectionReason] IS NOT NULL AND LEN(LTRIM(RTRIM([RejectionReason]))) > 0) OR ([ReviewStatus] IN ('Pending','Approved') AND [RejectionReason] IS NULL)");
+                table.HasCheckConstraint("CK_ApplicationDocuments_ContentType", "[VerifiedContentType] IN ('application/pdf','image/jpeg','image/png')");
+                table.HasCheckConstraint("CK_ApplicationDocuments_Sha256", "LEN([Sha256]) = 64 AND [Sha256] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^0-9a-f]%'");
+                table.HasCheckConstraint("CK_ApplicationDocuments_ObjectKey", "LEN([ObjectKey]) = 32 AND [ObjectKey] COLLATE Latin1_General_100_BIN2 NOT LIKE '%[^0-9a-f]%'");
+            });
+            entity.HasOne(e => e.Application).WithMany(e => e.Documents)
+                .HasForeignKey(e => e.ApplicationId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.RequirementSnapshot).WithMany(e => e.Documents)
+                .HasForeignKey(e => e.RequirementSnapshotId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.ReviewedByAdmin).WithMany(e => e.ReviewedApplicationDocuments)
+                .HasForeignKey(e => e.ReviewedByAdminId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ApplicationScoreSnapshot>(entity =>
@@ -261,6 +331,31 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
                 .HasForeignKey(e => e.ProgramOfferingId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.Exam).WithMany(e => e.ProgramOfferingExamRequirements)
                 .HasForeignKey(e => e.ExamId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProgramOfferingDocumentRequirement>(entity =>
+        {
+            entity.HasKey(e => e.RequirementId);
+            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => new { e.ProgramOfferingId, e.NormalizedDocumentCode }).IsUnique();
+            entity.Property(e => e.RequirementId).HasColumnName("RequirementID");
+            entity.Property(e => e.PublicId).HasColumnName("PublicID").HasDefaultValueSql("NEWID()");
+            entity.Property(e => e.ProgramOfferingId).HasColumnName("ProgramOfferingID");
+            entity.Property(e => e.DocumentCode).HasMaxLength(64).IsUnicode(false).IsRequired();
+            entity.Property(e => e.NormalizedDocumentCode).HasMaxLength(64).IsUnicode(false).IsRequired();
+            entity.Property(e => e.DisplayName).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.AllowedContentCategory).HasConversion<string>().HasMaxLength(32).IsUnicode(false).IsRequired();
+            entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.UpdatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.RowVersion).IsRowVersion();
+            entity.ToTable("ProgramOfferingDocumentRequirements", table =>
+            {
+                table.HasCheckConstraint("CK_ProgramOfferingDocumentRequirements_MaximumBytes", "[MaximumBytes] BETWEEN 1 AND 104857600");
+                table.HasCheckConstraint("CK_ProgramOfferingDocumentRequirements_ContentCategory", "[AllowedContentCategory] IN ('PdfOnly','ImageOnly','PdfOrImage')");
+            });
+            entity.HasOne(e => e.ProgramOffering).WithMany(e => e.DocumentRequirements)
+                .HasForeignKey(e => e.ProgramOfferingId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ReferenceLetter>(entity =>

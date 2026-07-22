@@ -1,0 +1,119 @@
+@model StudentApplicationDetailViewModel
+@{
+    ViewData["Title"] = "Başvuru belgeleri";
+    var canSubmit = Model.CurrentStatus == ApplicationStatus.Draft && Model.MissingRequiredDocuments.Count == 0;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Başvuru belgeleri</h1>
+        <p class="text-muted mb-0">@Model.InstituteName · @Model.ProgramName · @Model.AcademicYear · @Model.TermName</p>
+    </div>
+    <span class="badge text-bg-secondary fs-6">@Model.CurrentStatus.DisplayName()</span>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+@if (!Model.UsesDocumentWorkflow)
+{
+    <div class="alert alert-info">Bu başvuru legacy belge iş akışını kullanıyor. Mevcut erişim ve durum kuralları korunur.</div>
+}
+else
+{
+    @if (Model.MissingRequiredDocuments.Count > 0)
+    {
+        <div class="alert alert-warning" role="alert">
+            <strong>Eksik zorunlu belgeler:</strong> @string.Join(", ", Model.MissingRequiredDocuments)
+        </div>
+    }
+
+    <div class="row g-3">
+        @foreach (var requirement in Model.DocumentRequirements)
+        {
+            var document = requirement.CurrentDocument;
+            var canUpload = Model.CurrentStatus == ApplicationStatus.Draft
+                || (Model.CurrentStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview
+                    && document?.ReviewStatus == DocumentReviewStatus.Rejected);
+            <div class="col-12">
+                <section class="card">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <div>
+                                <h2 class="h5 mb-1">@requirement.DisplayName</h2>
+                                <span class="badge @(requirement.IsRequired ? "text-bg-danger" : "text-bg-light")">
+                                    @(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")
+                                </span>
+                            </div>
+                            <div class="small text-muted text-end">
+                                <div>Tür: @requirement.AllowedContentCategory.CategoryName()</div>
+                                <div>Maksimum: @DocumentPresentation.FileSize(requirement.MaximumBytes)</div>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(requirement.Description))
+                        {
+                            <p class="mt-2 mb-2">@requirement.Description</p>
+                        }
+
+                        @if (document is not null)
+                        {
+                            <div class="border rounded p-3 mt-3">
+                                <div><strong>Dosya:</strong> @document.OriginalFileName</div>
+                                <div><strong>Sürüm:</strong> @document.VersionNumber</div>
+                                <div><strong>Yükleme:</strong> @IstanbulTime.FromUtc(document.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</div>
+                                <div><strong>İnceleme:</strong> @document.ReviewStatus.ReviewName()</div>
+                                @if (document.ReviewStatus == DocumentReviewStatus.Rejected)
+                                {
+                                    <div class="alert alert-danger mt-2 mb-0"><strong>Ret gerekçesi:</strong> @document.RejectionReason</div>
+                                }
+                                <a asp-action="DownloadDocument"
+                                   asp-route-publicId="@Model.PublicId"
+                                   asp-route-documentPublicId="@document.PublicId"
+                                   class="btn btn-sm btn-outline-secondary mt-2">Belgeyi indir</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mt-3 mb-0">Henüz belge yüklenmedi.</p>
+                        }
+
+                        @if (canUpload)
+                        {
+                            <form asp-action="UploadDocument"
+                                  asp-route-publicId="@Model.PublicId"
+                                  asp-route-requirementPublicId="@requirement.PublicId"
+                                  method="post"
+                                  enctype="multipart/form-data"
+                                  class="mt-3">
+                                <label class="form-label" for="file-@requirement.PublicId">@(document is null ? "Belge yükle" : "Yeni sürüm yükle")</label>
+                                <div class="input-group">
+                                    <input id="file-@requirement.PublicId" name="file" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required />
+                                    <button type="submit" class="btn btn-primary">Yükle</button>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                </section>
+            </div>
+        }
+    </div>
+
+    @if (Model.CurrentStatus == ApplicationStatus.Draft)
+    {
+        <form asp-action="SubmitApplication" asp-route-publicId="@Model.PublicId" method="post" class="mt-4">
+            <button type="submit" class="btn btn-success" disabled="@(!canSubmit)">Başvuruyu gönder</button>
+            @if (!canSubmit)
+            {
+                <span class="text-muted ms-2">Önce tüm zorunlu belgeleri yükleyin.</span>
+            }
+        </form>
+    }
+}
+
+<a asp-action="Index" class="btn btn-link mt-3">Panele dön</a>

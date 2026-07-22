@@ -39,9 +39,76 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
 
         var result = await apiClient.CreateApplicationAsync(programOfferingId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Başvurunuz başarıyla alındı."
+            ? "Başvuru taslağınız oluşturuldu. Zorunlu belgeleri yükledikten sonra başvuruyu gönderin."
             : result.Error ?? "Başvuru oluşturulamadı.";
-        return RedirectToAction(nameof(Index));
+        return result.IsSuccess && result.Value is not null
+            ? RedirectToAction(nameof(ApplicationDetail), new { publicId = result.Value.PublicId })
+            : RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet("Panel/Applications/{publicId:guid}")]
+    public async Task<IActionResult> ApplicationDetail(Guid publicId, CancellationToken cancellationToken)
+    {
+        var result = await apiClient.GetMyApplicationAsync(publicId, cancellationToken);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Başvuru bulunamadı.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(result.Value);
+    }
+
+    [HttpPost("Panel/Applications/{publicId:guid}/Documents/{requirementPublicId:guid}/Upload")]
+    [ValidateAntiForgeryToken]
+    [RequestFormLimits(MultipartBodyLengthLimit = 104923136)]
+    [RequestSizeLimit(104923136)]
+    public async Task<IActionResult> UploadDocument(
+        Guid publicId,
+        Guid requirementPublicId,
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length <= 0)
+        {
+            TempData["ErrorMessage"] = "Yüklenecek dosyayı seçiniz.";
+            return RedirectToAction(nameof(ApplicationDetail), new { publicId });
+        }
+
+        var result = await apiClient.UploadApplicationDocumentAsync(publicId, requirementPublicId, file, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Belge güvenli biçimde yüklendi ve inceleme bekliyor."
+            : result.Error ?? "Belge yüklenemedi.";
+        return RedirectToAction(nameof(ApplicationDetail), new { publicId });
+    }
+
+    [HttpPost("Panel/Applications/{publicId:guid}/Submit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitApplication(Guid publicId, CancellationToken cancellationToken)
+    {
+        var result = await apiClient.SubmitApplicationAsync(publicId, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Başvurunuz başarıyla gönderildi."
+            : result.Error ?? "Başvuru gönderilemedi.";
+        return RedirectToAction(nameof(ApplicationDetail), new { publicId });
+    }
+
+    [HttpGet("Panel/Applications/{publicId:guid}/Documents/{documentPublicId:guid}/Download")]
+    public async Task<IActionResult> DownloadDocument(
+        Guid publicId,
+        Guid documentPublicId,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.DownloadMyDocumentAsync(publicId, documentPublicId, cancellationToken);
+        if (!result.IsSuccess || result.Content is null)
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Belge indirilemedi.";
+            return RedirectToAction(nameof(ApplicationDetail), new { publicId });
+        }
+
+        Response.Headers.XContentTypeOptions = "nosniff";
+        Response.Headers.CacheControl = "no-store";
+        return File(result.Content, result.ContentType!, result.FileName!, enableRangeProcessing: false);
     }
 
     [HttpGet]

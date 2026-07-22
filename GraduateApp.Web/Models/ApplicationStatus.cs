@@ -4,6 +4,9 @@ namespace GraduateApp.Web.Models;
 
 public enum ApplicationStatus
 {
+    [Display(Name = "Taslak")]
+    Draft,
+
     [Display(Name = "Beklemede")]
     Pending,
 
@@ -24,6 +27,7 @@ public static class ApplicationStatusExtensions
 {
     public static string DisplayName(this ApplicationStatus status) => status switch
     {
+        ApplicationStatus.Draft => "Taslak",
         ApplicationStatus.Pending => "Beklemede",
         ApplicationStatus.UnderReview => "İnceleniyor",
         ApplicationStatus.Approved => "Onaylandı",
@@ -34,6 +38,7 @@ public static class ApplicationStatusExtensions
 
     public static IReadOnlyList<ApplicationStatus> AllowedAdminTransitions(this ApplicationStatus status) => status switch
     {
+        ApplicationStatus.Draft => [],
         ApplicationStatus.Pending => [ApplicationStatus.UnderReview],
         ApplicationStatus.UnderReview => [ApplicationStatus.Approved, ApplicationStatus.Rejected],
         _ => []

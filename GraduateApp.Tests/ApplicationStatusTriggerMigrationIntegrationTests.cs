@@ -56,6 +56,13 @@ public sealed class ApplicationStatusTriggerMigrationIntegrationTests
             await database.ExecuteSqlServerScriptAsync(script);
         }
 
+        await database.ExecuteAsync(
+            """
+            ALTER TABLE [dbo].[Applications]
+                ADD [PublicID] uniqueidentifier NOT NULL CONSTRAINT [DF_TestApplications_PublicID] DEFAULT (NEWID()),
+                    [UsesDocumentWorkflow] bit NOT NULL CONSTRAINT [DF_TestApplications_UsesDocumentWorkflow] DEFAULT (0);
+            """);
+
         Assert.Equal(
             0,
             await database.ScalarAsync<int>(
@@ -72,7 +79,7 @@ public sealed class ApplicationStatusTriggerMigrationIntegrationTests
             var service = CreateService(updateContext);
 
             var result = await service.UpdateStatusAsync(
-                application.ApplicationId,
+                application.PublicId,
                 adminId: 1,
                 new ApplicationStatusUpdateDto
                 {
@@ -99,7 +106,7 @@ public sealed class ApplicationStatusTriggerMigrationIntegrationTests
         await using (var staleUpdateContext = CreateContext(database.ConnectionString))
         {
             var staleResult = await CreateService(staleUpdateContext).UpdateStatusAsync(
-                applicationId: 1,
+                publicId: (await staleUpdateContext.Applications.AsNoTracking().SingleAsync()).PublicId,
                 adminId: 1,
                 new ApplicationStatusUpdateDto
                 {

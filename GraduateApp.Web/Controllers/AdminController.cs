@@ -218,6 +218,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         AcademicTerm? term,
         bool includeArchived = false,
         int? editId = null,
+        int? requirementOfferingId = null,
+        Guid? editRequirementId = null,
         CancellationToken cancellationToken = default)
     {
         var offeringsTask = apiClient.GetProgramOfferingsAsync(academicYearStart, term, includeArchived, cancellationToken);
@@ -229,6 +231,13 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var selected = editId.HasValue
             ? offerings.Value?.SingleOrDefault(item => item.ProgramOfferingId == editId.Value)
             : null;
+        var requirementResults = await LoadDocumentRequirementsAsync(offerings.Value ?? [], cancellationToken);
+        OfferingDocumentRequirementViewModel? selectedRequirement = null;
+        if (requirementOfferingId.HasValue && editRequirementId.HasValue
+            && requirementResults.TryGetValue(requirementOfferingId.Value, out var offeringRequirements))
+        {
+            selectedRequirement = offeringRequirements.SingleOrDefault(item => item.PublicId == editRequirementId.Value);
+        }
 
         return View(new ProgramOfferingPageViewModel
         {
@@ -237,6 +246,22 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Term = term,
             IncludeArchived = includeArchived,
             Form = CreateOfferingForm(selected, catalogValue),
+            DocumentRequirements = requirementResults,
+            DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
+            {
+                ProgramOfferingId = requirementOfferingId
+                    ?? selected?.ProgramOfferingId
+                    ?? offerings.Value?.FirstOrDefault()?.ProgramOfferingId
+                    ?? 0,
+                PublicId = selectedRequirement?.PublicId ?? Guid.Empty,
+                DocumentCode = selectedRequirement?.DocumentCode ?? string.Empty,
+                DisplayName = selectedRequirement?.DisplayName ?? string.Empty,
+                Description = selectedRequirement?.Description,
+                IsRequired = selectedRequirement?.IsRequired ?? true,
+                AllowedContentCategory = selectedRequirement?.AllowedContentCategory ?? DocumentContentCategory.PdfOrImage,
+                MaximumBytes = selectedRequirement?.MaximumBytes ?? 10485760,
+                RowVersion = selectedRequirement?.RowVersion
+            },
             ErrorMessage = offerings.IsSuccess && catalog.IsSuccess
                 ? null
                 : offerings.Error ?? catalog.Error ?? "İlan bilgileri yüklenemedi."
@@ -285,6 +310,58 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
         TempData["SuccessMessage"] = "Dönemsel ilan kaydedildi.";
         return RedirectToAction(nameof(Offerings));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveDocumentRequirement(
+        [Bind(Prefix = "DocumentRequirementForm")] OfferingDocumentRequirementFormViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (model.ProgramOfferingId <= 0)
+        {
+            ModelState.AddModelError("DocumentRequirementForm.ProgramOfferingId", "Geçerli bir ilan seçiniz.");
+        }
+
+        if (model.PublicId != Guid.Empty && string.IsNullOrWhiteSpace(model.RowVersion))
+        {
+            ModelState.AddModelError("DocumentRequirementForm.RowVersion", "Eşzamanlılık bilgisi eksik. Sayfayı yenileyin.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Belge koşulu bilgileri doğrulanamadı.";
+            return RedirectToAction(nameof(Offerings), new { requirementOfferingId = model.ProgramOfferingId });
+        }
+
+        var result = model.PublicId == Guid.Empty
+            ? await apiClient.CreateOfferingDocumentRequirementAsync(model, cancellationToken)
+            : await apiClient.UpdateOfferingDocumentRequirementAsync(model, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Belge koşulu kaydedildi. Değişiklik yalnızca bundan sonra oluşturulan taslakları etkiler."
+            : result.Error ?? "Belge koşulu kaydedilemedi.";
+        return RedirectToAction(nameof(Offerings), new { requirementOfferingId = model.ProgramOfferingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetDocumentRequirementActive(
+        int programOfferingId,
+        Guid publicId,
+        bool isActive,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.SetOfferingDocumentRequirementActiveAsync(
+            programOfferingId,
+            publicId,
+            isActive,
+            rowVersion,
+            cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? (isActive ? "Belge koşulu aktifleştirildi." : "Belge koşulu pasifleştirildi; geçmiş snapshot kayıtları korundu.")
+            : result.Error ?? "Belge koşulu güncellenemedi.";
+        return RedirectToAction(nameof(Offerings), new { requirementOfferingId = programOfferingId });
     }
 
     [HttpGet]
@@ -597,7 +674,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Detail(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Detail(Guid id, CancellationToken cancellationToken)
     {
         var result = await apiClient.GetAdminApplicationDetailAsync(id, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
@@ -616,14 +693,51 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         if (!ModelState.IsValid)
         {
             TempData["ErrorMessage"] = "Durum güncelleme bilgileri geçersiz.";
-            return RedirectToAction(nameof(Detail), new { id = model.ApplicationId });
+            return RedirectToAction(nameof(Detail), new { id = model.PublicId });
         }
 
         var result = await apiClient.UpdateApplicationStatusAsync(model, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Başvuru durumu güncellendi."
             : result.Error ?? "Başvuru durumu güncellenemedi.";
-        return RedirectToAction(nameof(Detail), new { id = model.ApplicationId });
+        return RedirectToAction(nameof(Detail), new { id = model.PublicId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReviewDocument(
+        ReviewApplicationDocumentViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Belge inceleme bilgileri geçersiz.";
+            return RedirectToAction(nameof(Detail), new { id = model.ApplicationPublicId });
+        }
+
+        var result = await apiClient.ReviewApplicationDocumentAsync(model, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? (model.ReviewStatus == DocumentReviewStatus.Approved ? "Belge onaylandı." : "Belge gerekçeyle reddedildi.")
+            : result.Error ?? "Belge incelemesi kaydedilemedi.";
+        return RedirectToAction(nameof(Detail), new { id = model.ApplicationPublicId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadDocument(
+        Guid applicationPublicId,
+        Guid documentPublicId,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.DownloadAdminDocumentAsync(applicationPublicId, documentPublicId, cancellationToken);
+        if (!result.IsSuccess || result.Content is null)
+        {
+            TempData["ErrorMessage"] = result.Error ?? "Belge indirilemedi.";
+            return RedirectToAction(nameof(Detail), new { id = applicationPublicId });
+        }
+
+        Response.Headers.XContentTypeOptions = "nosniff";
+        Response.Headers.CacheControl = "no-store";
+        return File(result.Content, result.ContentType!, result.FileName!, enableRangeProcessing: false);
     }
 
     private static ProgramOfferingFormViewModel CreateOfferingForm(
@@ -698,6 +812,19 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 ?? offerings.Error
                 ?? catalog.Error
         });
+    }
+
+    private async Task<IReadOnlyDictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>> LoadDocumentRequirementsAsync(
+        IReadOnlyList<ProgramOfferingAdminViewModel> offerings,
+        CancellationToken cancellationToken)
+    {
+        var tasks = offerings.ToDictionary(
+            item => item.ProgramOfferingId,
+            item => apiClient.GetOfferingDocumentRequirementsAsync(item.ProgramOfferingId, cancellationToken));
+        await Task.WhenAll(tasks.Values);
+        return tasks.ToDictionary(
+            item => item.Key,
+            item => item.Value.Result.Value ?? (IReadOnlyList<OfferingDocumentRequirementViewModel>)[]);
     }
 
     private async Task<IActionResult> RenderInstituteFormAsync(

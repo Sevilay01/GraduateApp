@@ -30,7 +30,7 @@ public sealed class ExamRequirementViewModel
 
 public sealed class PanelApplicationViewModel
 {
-    public int ApplicationId { get; set; }
+    public Guid PublicId { get; set; }
     public int ProgramOfferingId { get; set; }
     public int ProgramId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
@@ -41,6 +41,87 @@ public sealed class PanelApplicationViewModel
     public DateTime ApplicationDateUtc { get; set; }
     public ApplicationStatus CurrentStatus { get; set; }
     public string RowVersion { get; set; } = string.Empty;
+}
+
+public enum DocumentContentCategory
+{
+    PdfOnly,
+    ImageOnly,
+    PdfOrImage
+}
+
+public enum DocumentReviewStatus
+{
+    Pending,
+    Approved,
+    Rejected
+}
+
+public sealed class ApplicationDocumentViewModel
+{
+    public Guid PublicId { get; set; }
+    public int VersionNumber { get; set; }
+    public bool IsCurrent { get; set; }
+    public string OriginalFileName { get; set; } = string.Empty;
+    public string VerifiedContentType { get; set; } = string.Empty;
+    public long FileSize { get; set; }
+    public DocumentReviewStatus ReviewStatus { get; set; }
+    public string? RejectionReason { get; set; }
+    public DateTime UploadedAtUtc { get; set; }
+    public DateTime? ReviewedAtUtc { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
+}
+
+public sealed class ApplicationDocumentRequirementViewModel
+{
+    public Guid PublicId { get; set; }
+    public string DocumentCode { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsRequired { get; set; }
+    public DocumentContentCategory AllowedContentCategory { get; set; }
+    public long MaximumBytes { get; set; }
+    public ApplicationDocumentViewModel? CurrentDocument { get; set; }
+    public IReadOnlyList<ApplicationDocumentViewModel> Versions { get; set; } = [];
+}
+
+public sealed class StudentApplicationDetailViewModel
+{
+    public Guid PublicId { get; set; }
+    public string ProgramName { get; set; } = string.Empty;
+    public string InstituteName { get; set; } = string.Empty;
+    public int AcademicYearStart { get; set; }
+    public string AcademicYear { get; set; } = string.Empty;
+    public AcademicTerm Term { get; set; }
+    public string TermName { get; set; } = string.Empty;
+    public DateTime ApplicationDateUtc { get; set; }
+    public ApplicationStatus CurrentStatus { get; set; }
+    public bool UsesDocumentWorkflow { get; set; }
+    public IReadOnlyList<ApplicationDocumentRequirementViewModel> DocumentRequirements { get; set; } = [];
+    public IReadOnlyList<string> MissingRequiredDocuments { get; set; } = [];
+}
+
+public static class DocumentPresentation
+{
+    public static string CategoryName(this DocumentContentCategory category) => category switch
+    {
+        DocumentContentCategory.PdfOnly => "PDF",
+        DocumentContentCategory.ImageOnly => "JPEG veya PNG",
+        DocumentContentCategory.PdfOrImage => "PDF, JPEG veya PNG",
+        _ => "Bilinmiyor"
+    };
+
+    public static string ReviewName(this DocumentReviewStatus status) => status switch
+    {
+        DocumentReviewStatus.Pending => "İnceleme bekliyor",
+        DocumentReviewStatus.Approved => "Onaylandı",
+        DocumentReviewStatus.Rejected => "Reddedildi",
+        _ => "Bilinmiyor"
+    };
+
+    public static string FileSize(long bytes) => bytes >= 1024 * 1024
+        ? $"{bytes / (1024d * 1024d):0.##} MB"
+        : $"{bytes / 1024d:0.##} KB";
 }
 
 public sealed class PanelDashboardViewModel

@@ -70,6 +70,33 @@ Migration aşağıdaki durumlarda veri silmek yerine hata verip transaction'ı d
 
 Bu kayıtlar DBA/ürün sahibi kararıyla çözülmeden migration'ı zorlamayın. Migration `Down` metodu da veri kaybı riski nedeniyle otomatik tablo/kolon silmez.
 
+### Güvenli başvuru belgeleri migration'ı
+
+`SecureApplicationDocuments` ileri migration'ı yeni belge tablolarını, başvuru `PublicID` alanını, `UsesDocumentWorkflow` grandfather bayrağını, rowversion alanlarını, filtered/unique indexleri ve Draft durumunu ekler. Mevcut başvuruların durumu değiştirilmez ve tamamı `UsesDocumentWorkflow = 0` olarak kalır. Başvuru `PublicID` değerleri nullable kolon aşamasıyla eklenir, `NEWID()` ile doldurulur, null/duplicate kontrolünden sonra `NOT NULL` ve unique yapılır.
+
+Migration; beklenen temel tablo/kolon veya durum constraint'i bulunmazsa, hedef belge nesneleri migration geçmişi dışında önceden varsa, tanımsız durum ya da aynı öğrenci/ilan için duplicate başvuru bulunursa Türkçe `THROW` ile transaction'ı durdurur. Çalıştırmadan önce tam yedek alın, idempotent script'i inceleyin ve en az tablo/kolon/constraint adlarını, duplicate başvuruları, durum dağılımını ve `__EFMigrationsHistory` zincirini doğrulayın. Bu migration'ın `Down` işlemi belge geçmişini yok edeceği için desteklenmez; geri dönüş uygulama binary'si ve restore edilmiş veritabanı yedeğiyle planlanmalıdır.
+
+`EducationInfo.DiplomaPath`, `EducationInfo.TranscriptPath` ve `ReferenceLetter.FilePath` alanları legacy kabul edilir. Sahiplikleri ve dosya içerikleri doğrulanamadığı için silinmez, migration ile taşınmaz ve yeni güvenli belge kayıtlarıyla otomatik birleştirilmez.
+
+## Güvenli belge depolama
+
+Development ortamında belgeler API projesinin `GraduateApp.API/.dev-storage/` dizininde, `wwwroot` dışında ve Git tarafından izlenmeden tutulur. Kullanıcının dosya adı depolama anahtarı yapılmaz; tahmin edilemez opaque anahtar kullanılır ve metadata dışında fiziksel yol veya erişilebilir URL veritabanına yazılmaz. Geçici dosyalar doğrulama sonunda temizlenir; depolama yazımı geçici dosya + atomik taşıma kullanır ve mevcut anahtarın üzerine yazmaz.
+
+Başlangıçta yalnızca PDF, JPEG ve PNG kabul edilir. Uzantı ile bildirilen Content-Type yeterli sayılmaz; PDF/JPEG/PNG imzası doğrulanır ve üç değer birbiriyle eşleşmelidir. Varsayılan global sınır 10 MB'dir ve `DocumentUpload__MaximumBytes` ile en fazla 100 MB olacak şekilde yapılandırılabilir. İlan belge koşulu sınırı global sınırı aşamaz. Boş dosya, executable içeriğe sahip sahte PDF, desteklenmeyen arşiv/ofis/SVG/HTML türleri ve aynı requirement'ın güncel sürümüyle birebir aynı SHA-256 içeriği reddedilir. Hash streaming sırasında hesaplanır; hash, ObjectKey ve fiziksel yol DTO'lara dönmez.
+
+Development scanner'ı açıkça development-only no-op implementasyondur ve "virüs tarandı" garantisi vermez. Production ortamında gerçek `IPrivateFileStorage` ve `IFileMalwareScanner` implementasyonları DI üzerinden bağlanmadan yükleme fail closed reddedilir. Production sağlayıcısı atomic create/no-overwrite, path traversal koruması, erişim kontrolü, encryption-at-rest, yedekleme ve felaket kurtarma beklentilerini karşılamalıdır. Dosya retention, hukuki saklama süresi ve orphan/expired draft temizliği için henüz ürün ve operasyon politikası gerekir; fiziksel geçmiş otomatik silinmez.
+
+### Belge iş akışı smoke testi
+
+1. Admin olarak açık bir dönemsel ilana zorunlu PDF ve isteğe bağlı görsel belge koşulu ekleyin; aynı kodun ikinci kez ve global sınır üstünde boyutun reddedildiğini doğrulayın.
+2. Öğrenci olarak taslak oluşturun; requirement adlarının snapshot olarak göründüğünü ve Draft'ın admin listesinde/kontenjan sayımında olmadığını doğrulayın.
+3. Sahte `.pdf`, yanlış Content-Type, boş ve limit üstü dosyaların reddedildiğini; geçerli PDF/JPEG/PNG'nin yüklendiğini kontrol edin.
+4. Zorunlu belge eksikken submit'in eksik adlarıyla reddedildiğini, isteğe bağlı belge eksikken submit'in başarılı olduğunu doğrulayın.
+5. Başka bir öğrenci oturumuyla başvuru/belge PublicID'sini deneyin ve kaynak varlığını açıklamayan 404 alın.
+6. Admin olarak güncel belgeyi güvenli indirin; `Content-Disposition: attachment`, `X-Content-Type-Options: nosniff` ve `Cache-Control: no-store` header'larını doğrulayın.
+7. Belgeyi gerekçeyle reddedin, öğrenci yeniden yüklesin; eski sürümün geçmişte kaldığını, yeni sürümün `Pending` ve tek current kayıt olduğunu doğrulayın.
+8. Stale RowVersion ile requirement/review güncellemesinin Türkçe 409 verdiğini ve tüm zorunlu belgeler onaylanmadan başvurunun Approved yapılamadığını doğrulayın.
+
 Merkezi `LoginIdentities` migration'ı daha önce uygulanmış olabileceğinden geçmiş migration dosyası değiştirilmez. İleri doğrulama migration'ı; kaynak e-postaların null/boş olmamasını, canonical normalize değerleri, roller arası çakışmaları ve her hesabın tam olarak bir doğru merkezi kimliğe bağlı olmasını veri değiştirmeden denetler.
 
 ### Birden fazla yönetici kaydı

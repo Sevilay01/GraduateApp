@@ -47,6 +47,20 @@ public sealed class AuthorizationTests
     }
 
     [Fact]
+    public void Document_upload_is_student_only_and_review_is_admin_only()
+    {
+        var upload = typeof(ApplicationsController).GetMethod(nameof(ApplicationsController.Upload));
+        var review = typeof(ApplicationsController).GetMethod(nameof(ApplicationsController.ReviewDocument));
+
+        var uploadAuthorize = upload!.GetCustomAttribute<AuthorizeAttribute>()!;
+        var reviewAuthorize = review!.GetCustomAttribute<AuthorizeAttribute>()!;
+        Assert.Equal("Student", uploadAuthorize.Roles);
+        Assert.DoesNotContain("Admin", uploadAuthorize.Roles, StringComparison.Ordinal);
+        Assert.Equal("Admin", reviewAuthorize.Roles);
+        Assert.DoesNotContain("Student", reviewAuthorize.Roles, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ApiStudentExamScoreEndpoints_RequireStudentRole_AndDoNotAcceptTc()
     {
         var authorize = typeof(StudentsController).GetCustomAttribute<AuthorizeAttribute>();
@@ -184,5 +198,24 @@ public sealed class AuthorizationTests
             Assert.NotNull(method!.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
             Assert.NotNull(method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
         }
+    }
+
+    [Fact]
+    public void Web_document_mutations_use_post_and_antiforgery()
+    {
+        var methods = new MethodInfo[]
+        {
+            typeof(PanelController).GetMethod(nameof(PanelController.UploadDocument))!,
+            typeof(PanelController).GetMethod(nameof(PanelController.SubmitApplication))!,
+            typeof(AdminController).GetMethod(nameof(AdminController.SaveDocumentRequirement))!,
+            typeof(AdminController).GetMethod(nameof(AdminController.SetDocumentRequirementActive))!,
+            typeof(AdminController).GetMethod(nameof(AdminController.ReviewDocument))!
+        };
+
+        Assert.All(methods, method =>
+        {
+            Assert.NotNull(method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
+            Assert.NotNull(method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
+        });
     }
 }

@@ -19,5 +19,6 @@ public sealed class ProgramOffering
 
     public Program Program { get; set; } = null!;
     public ICollection<Application> Applications { get; set; } = new List<Application>();
+    public ICollection<ProgramOfferingDocumentRequirement> DocumentRequirements { get; set; } = new List<ProgramOfferingDocumentRequirement>();
     public ICollection<ProgramOfferingExamRequirement> ExamRequirements { get; set; } = new List<ProgramOfferingExamRequirement>();
 }

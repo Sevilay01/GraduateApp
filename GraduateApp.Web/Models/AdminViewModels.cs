@@ -4,7 +4,7 @@ namespace GraduateApp.Web.Models;
 
 public sealed class AdminApplicationListItemViewModel
 {
-    public int ApplicationId { get; set; }
+    public Guid PublicId { get; set; }
     public string StudentFullName { get; set; } = string.Empty;
     public string MaskedTc { get; set; } = string.Empty;
     public string ProgramName { get; set; } = string.Empty;
@@ -46,7 +46,7 @@ public sealed class ApplicationStatusHistoryViewModel
 
 public sealed class AdminApplicationDetailViewModel
 {
-    public int ApplicationId { get; set; }
+    public Guid PublicId { get; set; }
     public string MaskedTc { get; set; } = string.Empty;
     public string StudentFullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -61,6 +61,8 @@ public sealed class AdminApplicationDetailViewModel
     public string RowVersion { get; set; } = string.Empty;
     public IReadOnlyList<ApplicationStatusHistoryViewModel> History { get; set; } = [];
     public IReadOnlyList<ApplicationScoreSnapshotViewModel> ScoreSnapshots { get; set; } = [];
+    public bool UsesDocumentWorkflow { get; set; }
+    public IReadOnlyList<ApplicationDocumentRequirementViewModel> DocumentRequirements { get; set; } = [];
 }
 
 public sealed class ApplicationScoreSnapshotViewModel
@@ -181,12 +183,14 @@ public sealed class ProgramOfferingPageViewModel
     public AcademicTerm? Term { get; set; }
     public bool IncludeArchived { get; set; }
     public string? ErrorMessage { get; set; }
+    public IReadOnlyDictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>> DocumentRequirements { get; set; }
+        = new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>();
+    public OfferingDocumentRequirementFormViewModel DocumentRequirementForm { get; set; } = new();
 }
 
 public sealed class UpdateApplicationStatusViewModel
 {
-    [Range(1, int.MaxValue)]
-    public int ApplicationId { get; set; }
+    public Guid PublicId { get; set; }
 
     [EnumDataType(typeof(ApplicationStatus))]
     [Display(Name = "Yeni durum")]
@@ -198,6 +202,53 @@ public sealed class UpdateApplicationStatusViewModel
     [StringLength(500)]
     [Display(Name = "Not")]
     public string? Notes { get; set; }
+}
+
+public sealed class OfferingDocumentRequirementViewModel
+{
+    public Guid PublicId { get; set; }
+    public string DocumentCode { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsRequired { get; set; }
+    public bool IsActive { get; set; }
+    public DocumentContentCategory AllowedContentCategory { get; set; }
+    public long MaximumBytes { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
+}
+
+public sealed class OfferingDocumentRequirementFormViewModel
+{
+    public int ProgramOfferingId { get; set; }
+    public Guid PublicId { get; set; }
+
+    [Required(ErrorMessage = "Belge kodu zorunludur.")]
+    [StringLength(64, MinimumLength = 2)]
+    public string DocumentCode { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Görünen ad zorunludur.")]
+    [StringLength(150, MinimumLength = 2)]
+    public string DisplayName { get; set; } = string.Empty;
+
+    [StringLength(500)]
+    public string? Description { get; set; }
+    public bool IsRequired { get; set; }
+    public DocumentContentCategory AllowedContentCategory { get; set; } = DocumentContentCategory.PdfOrImage;
+
+    [Range(1, 104857600, ErrorMessage = "Maksimum boyut geçersiz.")]
+    public long MaximumBytes { get; set; } = 10485760;
+    public string? RowVersion { get; set; }
+}
+
+public sealed class ReviewApplicationDocumentViewModel
+{
+    public Guid ApplicationPublicId { get; set; }
+    public Guid DocumentPublicId { get; set; }
+    public DocumentReviewStatus ReviewStatus { get; set; }
+    [StringLength(500)]
+    public string? RejectionReason { get; set; }
+    [Required]
+    public string RowVersion { get; set; } = string.Empty;
 }
 
 public sealed class AdminStudentListItemViewModel
