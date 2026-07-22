@@ -43,4 +43,10 @@ public static class ApplicationStatusExtensions
         ApplicationStatus.UnderReview => [ApplicationStatus.Approved, ApplicationStatus.Rejected],
         _ => []
     };
+
+    public static bool CanReviewDocument(
+        this ApplicationStatus applicationStatus,
+        DocumentReviewStatus reviewStatus) =>
+        applicationStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview
+        && reviewStatus == DocumentReviewStatus.Pending;
 }

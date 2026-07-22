@@ -30,6 +30,34 @@ public sealed class AdminApplicationDetailPresentationTests
         Assert.Empty(status.AllowedAdminTransitions());
     }
 
+    [Theory]
+    [InlineData(DocumentReviewStatus.Approved)]
+    [InlineData(DocumentReviewStatus.Rejected)]
+    public void Approved_or_rejected_documents_hide_review_forms_for_active_applications(
+        DocumentReviewStatus reviewStatus)
+    {
+        Assert.False(ApplicationStatus.Pending.CanReviewDocument(reviewStatus));
+        Assert.False(ApplicationStatus.UnderReview.CanReviewDocument(reviewStatus));
+    }
+
+    [Theory]
+    [InlineData(ApplicationStatus.Pending)]
+    [InlineData(ApplicationStatus.UnderReview)]
+    public void Pending_documents_show_review_forms_for_active_applications(ApplicationStatus applicationStatus)
+    {
+        Assert.True(applicationStatus.CanReviewDocument(DocumentReviewStatus.Pending));
+    }
+
+    [Theory]
+    [InlineData(ApplicationStatus.Draft)]
+    [InlineData(ApplicationStatus.Approved)]
+    [InlineData(ApplicationStatus.Rejected)]
+    [InlineData(ApplicationStatus.Withdrawn)]
+    public void Pending_documents_hide_review_forms_for_inactive_applications(ApplicationStatus applicationStatus)
+    {
+        Assert.False(applicationStatus.CanReviewDocument(DocumentReviewStatus.Pending));
+    }
+
     [Fact]
     public void Admin_detail_contracts_expose_masked_tc_instead_of_raw_tc()
     {
@@ -50,6 +78,10 @@ public sealed class AdminApplicationDetailPresentationTests
         Assert.Contains("Başvuru anındaki sınav sonuçları", view, StringComparison.Ordinal);
         Assert.Contains("@Model.MaskedTc", view, StringComparison.Ordinal);
         Assert.DoesNotContain("@Model.Tc", view, StringComparison.Ordinal);
+        Assert.Contains(
+            "@if (Model.CurrentStatus.CanReviewDocument(current.ReviewStatus))",
+            view,
+            StringComparison.Ordinal);
     }
 
     private static string ReadDetailView()
