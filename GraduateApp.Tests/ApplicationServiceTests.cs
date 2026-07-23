@@ -82,7 +82,7 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
-    public async Task Evaluation_workflow_submission_does_not_consume_quota_while_legacy_behavior_is_preserved()
+    public async Task Evaluation_workflow_allows_second_student_to_create_and_submit_after_quota_is_reached()
     {
         await using var db = TestDb.Create();
         var offering = await SeedAsync(db);
@@ -93,7 +93,7 @@ public sealed class ApplicationServiceTests
             PublicId = Guid.NewGuid(),
             Tc = "10000000146",
             ApplicationDate = DateTime.UtcNow,
-            CurrentStatus = ApplicationStatus.UnderReview.ToString(),
+            CurrentStatus = ApplicationStatus.Pending.ToString(),
             UsesDocumentWorkflow = true,
             UsesEvaluationWorkflow = true
         });
@@ -105,8 +105,11 @@ public sealed class ApplicationServiceTests
 
         var result = await service.SubmitAsync("10000000154", draft.Value!.PublicId, CancellationToken.None);
 
+        Assert.True(draft.IsSuccess);
+        Assert.True(db.Applications.Single(item => item.PublicId == draft.Value.PublicId).UsesEvaluationWorkflow);
         Assert.True(result.IsSuccess);
         Assert.Equal(ApplicationStatus.Pending.ToString(), db.Applications.Single(item => item.PublicId == draft.Value.PublicId).CurrentStatus);
+        Assert.Equal(2, db.Applications.Count(item => item.CurrentStatus == ApplicationStatus.Pending.ToString()));
     }
 
     [Fact]
