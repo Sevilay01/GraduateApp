@@ -129,7 +129,8 @@ public sealed record AdminEvaluationPageDto(
     DateTime? ResultsPublishedAtUtc,
     string OfferingRowVersion,
     IReadOnlyList<ProgramOfferingEvaluationCriterionDto> Criteria,
-    IReadOnlyList<AdminEvaluationApplicationDto> Applications);
+    IReadOnlyList<AdminEvaluationApplicationDto> Applications,
+    IReadOnlyList<ExamRequirementDto> EligibleExamRequirements);
 
 public sealed record EvaluationRankingRowDto(
     Guid ApplicationPublicId,

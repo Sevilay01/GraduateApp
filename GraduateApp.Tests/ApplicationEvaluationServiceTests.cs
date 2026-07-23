@@ -11,6 +11,35 @@ namespace GraduateApp.Tests;
 public sealed class ApplicationEvaluationServiceTests
 {
     [Fact]
+    public async Task Admin_page_exposes_only_required_offering_exams_as_criterion_options()
+    {
+        await using var db = TestDb.Create();
+        var (offering, _) = await SeedAsync(db);
+        offering.ExamRequirements.Add(new ProgramOfferingExamRequirement
+        {
+            Exam = new Exam { ExamName = "ALES" },
+            MinimumScore = 55.5m,
+            IsRequired = true
+        });
+        offering.ExamRequirements.Add(new ProgramOfferingExamRequirement
+        {
+            Exam = new Exam { ExamName = "YDS" },
+            MinimumScore = 70m,
+            IsRequired = false
+        });
+        await db.SaveChangesAsync();
+
+        var page = await Service(db).GetAdminPageAsync(
+            offering.ProgramOfferingId,
+            CancellationToken.None);
+
+        var option = Assert.Single(Assert.IsType<AdminEvaluationPageDto>(page).EligibleExamRequirements);
+        Assert.Equal("ALES", option.ExamName);
+        Assert.Equal(55.5m, option.MinimumScore);
+        Assert.True(option.IsRequired);
+    }
+
+    [Fact]
     public async Task Eligibility_can_be_marked_eligible_only_after_required_documents_are_approved()
     {
         await using var db = TestDb.Create();

@@ -1,4 +1,5 @@
 using System.Globalization;
+using GraduateApp.Web.ModelBinding;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
@@ -27,6 +28,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews(options =>
 {
+    options.ModelBinderProviders.Insert(0, new SafeDecimalModelBinderProvider());
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
     var messages = options.ModelBindingMessageProvider;
     messages.SetMissingBindRequiredValueAccessor(_ => "Bu alan zorunludur.");

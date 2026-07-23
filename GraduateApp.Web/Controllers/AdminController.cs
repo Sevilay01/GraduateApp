@@ -692,11 +692,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         var evaluationTask = apiClient.GetEvaluationAsync(id, cancellationToken);
         var previewTask = apiClient.GetEvaluationPreviewAsync(id, cancellationToken);
-        var catalogTask = apiClient.GetProgramOfferingCatalogAsync(cancellationToken);
-        await Task.WhenAll(evaluationTask, previewTask, catalogTask);
+        await Task.WhenAll(evaluationTask, previewTask);
         var evaluation = await evaluationTask;
         var preview = await previewTask;
-        var catalog = await catalogTask;
         if (!evaluation.IsSuccess || evaluation.Value is null)
         {
             TempData["ErrorMessage"] = evaluation.Error ?? "Değerlendirme ilanı bulunamadı.";
@@ -707,7 +705,6 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             Evaluation = evaluation.Value,
             Preview = preview.Value ?? new EvaluationRankingPreviewViewModel(),
-            Exams = catalog.Value?.Exams ?? [],
             CriterionForm = new EvaluationCriterionFormViewModel
             {
                 ProgramOfferingId = id,
@@ -715,7 +712,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 MaximumRawScore = 100m,
                 TieBreakPriority = evaluation.Value.Criteria.Count + 1
             },
-            ErrorMessage = preview.IsSuccess && catalog.IsSuccess ? null : preview.Error ?? catalog.Error
+            ErrorMessage = preview.IsSuccess ? null : preview.Error
         });
     }
 

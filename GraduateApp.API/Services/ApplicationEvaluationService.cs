@@ -52,6 +52,7 @@ public sealed class ApplicationEvaluationService(
         CancellationToken cancellationToken)
     {
         var offering = await AdminPageQuery(asTracking: false)
+            .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
         return offering is null || !offering.UsesEvaluationWorkflow ? null : MapAdminPage(offering);
     }
@@ -660,6 +661,7 @@ public sealed class ApplicationEvaluationService(
         offering.Applications
             .Where(item => item.CurrentStatus != ApplicationStatus.Draft.ToString())
             .OrderBy(item => item.ApplicationDate)
+            .ThenBy(item => item.PublicId)
             .Select(item => new AdminEvaluationApplicationDto(
                 item.PublicId,
                 $"{item.TcNavigation.StudentName} {item.TcNavigation.StudentSurname}".Trim(),
@@ -673,6 +675,17 @@ public sealed class ApplicationEvaluationService(
                 item.Evaluation?.Outcome,
                 item.Evaluation is null ? string.Empty : Convert.ToBase64String(item.Evaluation.RowVersion),
                 item.Evaluation?.Components.OrderBy(component => component.TieBreakPrioritySnapshot).Select(MapComponent).ToArray() ?? []))
+            .ToArray(),
+        offering.ExamRequirements
+            .Where(item => item.IsRequired)
+            .OrderBy(item => item.Exam.ExamName)
+            .ThenBy(item => item.ExamId)
+            .Select(item => new ExamRequirementDto(
+                item.ExamId,
+                item.Exam.ExamName,
+                item.MinimumScore,
+                item.MinimumValidityDate,
+                item.IsRequired))
             .ToArray());
 
     private static ProgramOfferingEvaluationCriterionDto MapCriterion(ProgramOfferingEvaluationCriterion item) => new(

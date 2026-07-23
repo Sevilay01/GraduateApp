@@ -70,6 +70,66 @@ public sealed class EvaluationPolicyServiceTests
     }
 
     [Fact]
+    public async Task Exam_criterion_rejects_exam_that_does_not_belong_to_offering()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+
+        var result = await Service(db).CreateAsync(
+            offering.ProgramOfferingId,
+            7,
+            Criterion("ales", EvaluationCriterionSourceType.ExamScore, 10000, 100m, 1, examId: 999),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Empty(db.ProgramOfferingEvaluationCriteria);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Theory]
+    [InlineData(EvaluationCriterionSourceType.UndergraduateGpa, 4)]
+    [InlineData(EvaluationCriterionSourceType.ManualScore, 100)]
+    public async Task Non_exam_criterion_rejects_non_null_exam_id(
+        EvaluationCriterionSourceType sourceType,
+        int maximumRawScore)
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var examId = offering.ExamRequirements.Single().ExamId;
+
+        var result = await Service(db).CreateAsync(
+            offering.ProgramOfferingId,
+            7,
+            Criterion("criterion", sourceType, 10000, maximumRawScore, 1, examId),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+        Assert.Empty(db.ProgramOfferingEvaluationCriteria);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Exam_criterion_accepts_required_offering_exam()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var examId = offering.ExamRequirements.Single().ExamId;
+
+        var result = await Service(db).CreateAsync(
+            offering.ProgramOfferingId,
+            7,
+            Criterion("ales", EvaluationCriterionSourceType.ExamScore, 10000, 100m, 1, examId),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var stored = Assert.Single(db.ProgramOfferingEvaluationCriteria);
+        Assert.Equal(EvaluationCriterionSourceType.ExamScore, stored.SourceType);
+        Assert.Equal(examId, stored.ExamId);
+    }
+
+    [Fact]
     public async Task Weight_total_cannot_exceed_ten_thousand_basis_points()
     {
         await using var db = TestDb.Create();

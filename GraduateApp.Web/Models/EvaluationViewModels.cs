@@ -32,6 +32,14 @@ public enum OfferingEvaluationState
 
 public static class EvaluationPresentation
 {
+    public static string DisplayName(this EvaluationCriterionSourceType sourceType) => sourceType switch
+    {
+        EvaluationCriterionSourceType.ExamScore => "Sınav puanı",
+        EvaluationCriterionSourceType.UndergraduateGpa => "Lisans GNO",
+        EvaluationCriterionSourceType.ManualScore => "Manuel puan",
+        _ => "Bilinmiyor"
+    };
+
     public static string DisplayName(this EvaluationOutcome outcome) => outcome switch
     {
         EvaluationOutcome.Admitted => "Kabul",
@@ -135,6 +143,7 @@ public sealed class AdminEvaluationViewModel
     public string OfferingRowVersion { get; set; } = string.Empty;
     public IReadOnlyList<EvaluationCriterionViewModel> Criteria { get; set; } = [];
     public IReadOnlyList<AdminEvaluationApplicationViewModel> Applications { get; set; } = [];
+    public IReadOnlyList<ExamRequirementViewModel> EligibleExamRequirements { get; set; } = [];
 }
 
 public sealed class EvaluationRankingRowViewModel
@@ -160,7 +169,6 @@ public sealed class EvaluationPageViewModel
     public AdminEvaluationViewModel Evaluation { get; set; } = new();
     public EvaluationRankingPreviewViewModel Preview { get; set; } = new();
     public EvaluationCriterionFormViewModel CriterionForm { get; set; } = new();
-    public IReadOnlyList<ExamCatalogItemViewModel> Exams { get; set; } = [];
     public string? ErrorMessage { get; set; }
 }
 

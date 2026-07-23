@@ -311,11 +311,15 @@ public sealed class EvaluationPolicyService(
     }
 
     private Task<ProgramOffering?> LoadAggregateAsync(int offeringId, CancellationToken cancellationToken) =>
+        PolicyAggregateQuery()
+            .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
+
+    private IQueryable<ProgramOffering> PolicyAggregateQuery() =>
         dbContext.ProgramOfferings
             .Include(item => item.Applications)
             .Include(item => item.ExamRequirements)
             .Include(item => item.EvaluationCriteria).ThenInclude(item => item.Exam)
-            .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
+            .AsSplitQuery();
 
     private bool TrySetRowVersion(
         ProgramOfferingEvaluationCriterion criterion,
