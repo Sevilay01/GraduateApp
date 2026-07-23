@@ -66,15 +66,15 @@
         {
             <form asp-action="SaveEvaluationCriterion" method="post" class="border rounded p-3 mt-3">
                 <h3 class="h6">Yeni kriter</h3>
-                <input asp-for="CriterionForm.ProgramOfferingId" type="hidden" />
+                <input asp-for="CriterionForm.ProgramOfferingId" name="ProgramOfferingId" type="hidden" />
                 <div class="row g-2">
-                    <div class="col-md-2"><input asp-for="CriterionForm.Code" class="form-control" placeholder="Kod" /></div>
-                    <div class="col-md-3"><input asp-for="CriterionForm.DisplayName" class="form-control" placeholder="Görünen ad" /></div>
-                    <div class="col-md-2"><select asp-for="CriterionForm.SourceType" class="form-select" asp-items="Html.GetEnumSelectList<EvaluationCriterionSourceType>()"></select></div>
-                    <div class="col-md-1"><input asp-for="CriterionForm.ExamId" class="form-control" placeholder="Sınav ID" /></div>
-                    <div class="col-md-1"><input asp-for="CriterionForm.WeightBasisPoints" class="form-control" placeholder="bp" /></div>
-                    <div class="col-md-1"><input asp-for="CriterionForm.MaximumRawScore" class="form-control" step="0.0001" /></div>
-                    <div class="col-md-1"><input asp-for="CriterionForm.TieBreakPriority" class="form-control" /></div>
+                    <div class="col-md-2"><input asp-for="CriterionForm.Code" name="Code" class="form-control" placeholder="Kod" /></div>
+                    <div class="col-md-3"><input asp-for="CriterionForm.DisplayName" name="DisplayName" class="form-control" placeholder="Görünen ad" /></div>
+                    <div class="col-md-2"><select asp-for="CriterionForm.SourceType" name="SourceType" class="form-select" asp-items="Html.GetEnumSelectList<EvaluationCriterionSourceType>()"></select></div>
+                    <div class="col-md-1"><input asp-for="CriterionForm.ExamId" name="ExamId" class="form-control" placeholder="Sınav ID" /></div>
+                    <div class="col-md-1"><input asp-for="CriterionForm.WeightBasisPoints" name="WeightBasisPoints" class="form-control" placeholder="bp" /></div>
+                    <div class="col-md-1"><input asp-for="CriterionForm.MaximumRawScore" name="MaximumRawScore" class="form-control" step="0.0001" /></div>
+                    <div class="col-md-1"><input asp-for="CriterionForm.TieBreakPriority" name="TieBreakPriority" class="form-control" /></div>
                     <div class="col-md-1"><button class="btn btn-primary">Ekle</button></div>
                 </div>
                 <div class="small text-muted mt-2">Zorunlu sınav kimlikleri: @string.Join(", ", Model.Exams.Select(item => $"{item.ExamId}={item.ExamName}"))</div>
