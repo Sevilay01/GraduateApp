@@ -72,7 +72,12 @@ public sealed class EvaluationCriterionFormViewModel
     [Range(1, 10000)]
     public int WeightBasisPoints { get; set; }
 
-    [Range(typeof(decimal), "0.0001", "99999")]
+    [Range(
+        typeof(decimal),
+        "0.0001",
+        "99999",
+        ParseLimitsInInvariantCulture = true,
+        ErrorMessage = "Maksimum ham puan 0,0001 ile 99999 arasında olmalıdır.")]
     public decimal MaximumRawScore { get; set; }
 
     [Range(1, int.MaxValue)]
