@@ -229,6 +229,24 @@ public sealed class ApplicationEvaluationService(
         OfferingEvaluationCommandDto request,
         CancellationToken cancellationToken)
     {
+        try
+        {
+            return await FinalizeCoreAsync(offeringId, adminId, request, cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is not OperationCanceledException
+            && IsSqlServerDeadlock(exception))
+        {
+            return ConcurrencyConflict();
+        }
+    }
+
+    private async Task<ServiceResult> FinalizeCoreAsync(
+        int offeringId,
+        int adminId,
+        OfferingEvaluationCommandDto request,
+        CancellationToken cancellationToken)
+    {
         await using var transaction = await BeginTransactionAsync(cancellationToken);
         var offering = await AdminPageQuery(asTracking: true)
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);

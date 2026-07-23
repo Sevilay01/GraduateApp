@@ -95,11 +95,23 @@ public sealed class ApplicationEvaluationConcurrencyIntegrationTests
         var results = await Task.WhenAll(FinalizeAsync(), FinalizeAsync());
 
         Assert.Single(results, item => item.IsSuccess);
-        Assert.Single(results, item => !item.IsSuccess && item.StatusCode == StatusCodes.Status409Conflict);
+        var conflict = Assert.Single(results, item => !item.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, conflict.StatusCode);
+        Assert.Equal(
+            "Değerlendirme veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+            conflict.Error);
+        Assert.DoesNotContain("deadlock", conflict.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("1205", conflict.Error, StringComparison.Ordinal);
         await using var verification = Context(database.ConnectionString);
+        Assert.Equal(
+            OfferingEvaluationState.Finalized,
+            (await verification.ProgramOfferings.AsNoTracking().SingleAsync()).EvaluationState);
         Assert.Single((await verification.SecurityAuditLogs.AsNoTracking().ToListAsync()), item =>
             item.EventType == "OfferingEvaluationFinalized");
-        Assert.Equal(1, (await verification.ApplicationEvaluations.AsNoTracking().SingleAsync()).Rank);
+        var evaluation = await verification.ApplicationEvaluations.AsNoTracking().SingleAsync();
+        Assert.Equal(1, evaluation.Rank);
+        Assert.Equal(EvaluationOutcome.Admitted, evaluation.Outcome);
+        Assert.NotNull(evaluation.FinalizedAtUtc);
     }
 
     [LocalDbFact]
@@ -159,6 +171,9 @@ public sealed class ApplicationEvaluationConcurrencyIntegrationTests
 
             Assert.False(result.IsSuccess);
             Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+            Assert.Equal(
+                "Değerlendirme veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                result.Error);
         }
 
         await using var verification = Context(database.ConnectionString);

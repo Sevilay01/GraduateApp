@@ -1,8 +1,10 @@
+using System.Linq.Expressions;
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
 using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace GraduateApp.Tests;
 
@@ -490,6 +492,36 @@ public sealed class ApplicationEvaluationServiceTests
         Assert.Null(withdrawn.Evaluation!.Outcome);
     }
 
+    [Fact]
+    public async Task Finalize_does_not_convert_request_cancellation_to_concurrency_conflict()
+    {
+        await using var db = TestDb.Create(new ThrowingQueryExpressionInterceptor(
+            () => new OperationCanceledException("İstek iptal edildi.")));
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            Service(db).FinalizeAsync(
+                1,
+                7,
+                new OfferingEvaluationCommandDto { RowVersion = "AQ==" },
+                CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Finalize_does_not_hide_non_deadlock_query_exception_as_concurrency_conflict()
+    {
+        await using var db = TestDb.Create(new ThrowingQueryExpressionInterceptor(
+            () => new InvalidOperationException("Beklenmeyen sorgu hatası.")));
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            Service(db).FinalizeAsync(
+                1,
+                7,
+                new OfferingEvaluationCommandDto { RowVersion = "AQ==" },
+                CancellationToken.None));
+
+        Assert.Equal("Beklenmeyen sorgu hatası.", exception.Message);
+    }
+
     private static ApplicationEvaluationService Service(GraduateAppDbContext db) =>
         new(db, new TestTimeProvider(new DateTimeOffset(2026, 8, 2, 9, 0, 0, TimeSpan.Zero)));
 
@@ -660,5 +692,14 @@ public sealed class ApplicationEvaluationServiceTests
     {
         evaluation.TotalScore = EvaluationScoring.Total(
             evaluation.Components.Select(item => item.WeightedScore!.Value));
+    }
+
+    private sealed class ThrowingQueryExpressionInterceptor(Func<Exception> exceptionFactory)
+        : IQueryExpressionInterceptor
+    {
+        public Expression QueryCompilationStarting(
+            Expression queryExpression,
+            QueryExpressionEventData eventData) =>
+            throw exceptionFactory();
     }
 }
