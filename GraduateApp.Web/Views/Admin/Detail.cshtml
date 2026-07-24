@@ -1,7 +1,9 @@
 @model AdminApplicationDetailViewModel
 @{
     ViewData["Title"] = "Başvuru detayı";
-    var transitions = Model.CurrentStatus.AllowedAdminTransitions();
+    var transitions = Model.UsesEvaluationWorkflow
+        ? Model.CurrentStatus.AllowedAdminTransitions().Where(item => item == ApplicationStatus.UnderReview).ToArray()
+        : Model.CurrentStatus.AllowedAdminTransitions();
     var allRequiredDocumentsApproved = !Model.UsesDocumentWorkflow || Model.DocumentRequirements
         .Where(item => item.IsRequired)
         .All(item => item.CurrentDocument?.ReviewStatus == DocumentReviewStatus.Approved);
@@ -172,6 +174,10 @@
         <section class="card shadow-sm" aria-labelledby="update-heading">
             <div class="card-body">
                 <h2 id="update-heading" class="h4">Durumu güncelle</h2>
+                @if (Model.UsesEvaluationWorkflow)
+                {
+                    <p class="small text-muted">Onay ve ret kararı ilan değerlendirmesi kesinleştirilip yayımlandığında atomik olarak uygulanır.</p>
+                }
                 @if (transitions.Count == 0)
                 {
                     <p class="text-muted mb-0">Bu durumdan izin verilen başka bir geçiş yok.</p>

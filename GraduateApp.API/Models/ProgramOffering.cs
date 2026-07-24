@@ -13,6 +13,10 @@ public sealed class ProgramOffering
     public int Quota { get; set; }
     public bool IsOpen { get; set; }
     public bool IsArchived { get; set; }
+    public bool UsesEvaluationWorkflow { get; set; }
+    public OfferingEvaluationState EvaluationState { get; set; } = OfferingEvaluationState.Configuring;
+    public DateTime? EvaluationFinalizedAtUtc { get; set; }
+    public DateTime? ResultsPublishedAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
     public byte[] RowVersion { get; set; } = [];
@@ -21,4 +25,5 @@ public sealed class ProgramOffering
     public ICollection<Application> Applications { get; set; } = new List<Application>();
     public ICollection<ProgramOfferingDocumentRequirement> DocumentRequirements { get; set; } = new List<ProgramOfferingDocumentRequirement>();
     public ICollection<ProgramOfferingExamRequirement> ExamRequirements { get; set; } = new List<ProgramOfferingExamRequirement>();
+    public ICollection<ProgramOfferingEvaluationCriterion> EvaluationCriteria { get; set; } = new List<ProgramOfferingEvaluationCriterion>();
 }

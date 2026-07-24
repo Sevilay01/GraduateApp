@@ -11,7 +11,7 @@ public sealed class SecureApplicationDocumentsMigrationIntegrationTests
         await database.CreateAsync();
         await CreatePreMigrationSchemaAsync(database, includeStatusConstraint: true);
 
-        await database.MigrateAsync();
+        await database.MigrateAsync("20260722064425_SecureApplicationDocuments");
 
         Assert.Equal(1, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[Applications];"));
         Assert.Equal(0, await database.ScalarAsync<int>("SELECT CONVERT(int, [UsesDocumentWorkflow]) FROM [dbo].[Applications];"));
@@ -29,7 +29,8 @@ public sealed class SecureApplicationDocumentsMigrationIntegrationTests
         await database.CreateAsync();
         await CreatePreMigrationSchemaAsync(database, includeStatusConstraint: false);
 
-        var exception = await Assert.ThrowsAsync<SqlException>(() => database.MigrateAsync());
+        var exception = await Assert.ThrowsAsync<SqlException>(() =>
+            database.MigrateAsync("20260722064425_SecureApplicationDocuments"));
 
         Assert.Contains("durum constraint", exception.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(0, await database.ScalarAsync<int>(

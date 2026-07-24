@@ -56,6 +56,15 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        if (result.Value.UsesEvaluationWorkflow)
+        {
+            var published = await apiClient.GetMyPublishedEvaluationAsync(publicId, cancellationToken);
+            if (published.IsSuccess)
+            {
+                result.Value.PublishedEvaluation = published.Value;
+            }
+        }
+
         return View(result.Value);
     }
 
@@ -126,7 +135,9 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        return View(MapProfile(profile.Value, universities.Value ?? []));
+        var model = MapProfile(profile.Value, universities.Value ?? []);
+        ApplyUniversityCatalogResult(model, universities);
+        return View(model);
     }
 
     [HttpPost]
@@ -135,7 +146,9 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         if (!ModelState.IsValid)
         {
-            model.Universities = (await apiClient.GetUniversitiesAsync(cancellationToken)).Value ?? [];
+            ApplyUniversityCatalogResult(
+                model,
+                await apiClient.GetUniversitiesAsync(cancellationToken));
             return View(model);
         }
 
@@ -143,7 +156,9 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         if (!result.IsSuccess || result.Value is null)
         {
             ModelState.AddModelError(string.Empty, result.Error ?? "Profil güncellenemedi.");
-            model.Universities = (await apiClient.GetUniversitiesAsync(cancellationToken)).Value ?? [];
+            ApplyUniversityCatalogResult(
+                model,
+                await apiClient.GetUniversitiesAsync(cancellationToken));
             return View(model);
         }
 
@@ -244,6 +259,17 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             Gno = profile.Education?.Gno,
             Universities = universities
         };
+
+    private static void ApplyUniversityCatalogResult(
+        StudentProfileViewModel model,
+        ApiResult<IReadOnlyList<UniversityViewModel>> universities)
+    {
+        model.Universities = universities.Value ?? [];
+        model.UniversityCatalogLoadSucceeded = universities.IsSuccess;
+        model.UniversityCatalogErrorMessage = universities.IsSuccess
+            ? null
+            : universities.Error ?? "Üniversite kataloğu yüklenemedi.";
+    }
 
     private async Task<IActionResult> RenderExamScoresAsync(
         StudentExamScoreInputViewModel form,

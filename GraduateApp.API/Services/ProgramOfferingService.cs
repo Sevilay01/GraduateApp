@@ -125,6 +125,8 @@ public sealed class ProgramOfferingService(
             Quota = request.Quota,
             IsOpen = false,
             IsArchived = false,
+            UsesEvaluationWorkflow = true,
+            EvaluationState = OfferingEvaluationState.Configuring,
             CreatedAtUtc = now,
             UpdatedAtUtc = now,
             ExamRequirements = request.ExamRequirements.Select(MapRequirement).ToList()
@@ -163,6 +165,8 @@ public sealed class ProgramOfferingService(
             .Include(item => item.Applications)
             .Include(item => item.DocumentRequirements)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
+            .Include(item => item.EvaluationCriteria).ThenInclude(item => item.Exam)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
         if (offering is null)
         {
@@ -176,6 +180,21 @@ public sealed class ProgramOfferingService(
         }
 
         var requirementsChanged = !RequirementsAreEquivalent(offering.ExamRequirements, request.ExamRequirements);
+        var enablingEvaluationWorkflow = !offering.UsesEvaluationWorkflow && request.UsesEvaluationWorkflow;
+        if (offering.UsesEvaluationWorkflow && !request.UsesEvaluationWorkflow)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Değerlendirme iş akışı etkinleştirildikten sonra kapatılamaz.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (offering.Applications.Count > 0 && enablingEvaluationWorkflow)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Taslak dâhil başvurusu bulunan mevcut ilan değerlendirme iş akışına geçirilemez.",
+                StatusCodes.Status409Conflict);
+        }
+
         if (offering.Applications.Count > 0
             && offering.Term != AcademicTerm.LegacyUnspecified
             && (offering.ProgramId != request.ProgramId
@@ -188,6 +207,15 @@ public sealed class ProgramOfferingService(
                 StatusCodes.Status409Conflict);
         }
 
+        if (offering.UsesEvaluationWorkflow
+            && offering.EvaluationState != OfferingEvaluationState.Configuring)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Kesinleştirilmiş veya yayımlanmış bir değerlendirme ilanı değiştirilemez.",
+                StatusCodes.Status409Conflict);
+        }
+
+        var proposedIsOpen = request.IsOpen && !request.IsArchived;
         var now = timeProvider.GetUtcNow().UtcDateTime;
         if (request.IsOpen && request.ApplicationDeadlineUtc <= now)
         {
@@ -200,6 +228,22 @@ public sealed class ProgramOfferingService(
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
                 "İlan açılmadan önce en az bir aktif ve zorunlu belge koşulu tanımlayın.",
                 StatusCodes.Status409Conflict);
+        }
+
+        if (proposedIsOpen
+            && (offering.UsesEvaluationWorkflow || enablingEvaluationWorkflow))
+        {
+            var policyValidation = EvaluationPolicyInvariant.Validate(
+                offering.EvaluationCriteria,
+                request.ExamRequirements
+                    .Where(item => item.IsRequired)
+                    .Select(item => item.ExamId));
+            if (!policyValidation.IsValid)
+            {
+                return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                    EvaluationPolicyInvariant.OpeningError(policyValidation),
+                    StatusCodes.Status409Conflict);
+            }
         }
 
         byte[] rowVersion;
@@ -219,8 +263,9 @@ public sealed class ProgramOfferingService(
         offering.ApplicationStartUtc = EnsureUtc(request.ApplicationStartUtc);
         offering.ApplicationDeadlineUtc = EnsureUtc(request.ApplicationDeadlineUtc);
         offering.Quota = request.Quota;
-        offering.IsOpen = request.IsOpen && !request.IsArchived;
+        offering.IsOpen = proposedIsOpen;
         offering.IsArchived = request.IsArchived;
+        offering.UsesEvaluationWorkflow = offering.UsesEvaluationWorkflow || request.UsesEvaluationWorkflow;
         offering.UpdatedAtUtc = now;
         if (requirementsChanged)
         {
@@ -292,6 +337,14 @@ public sealed class ProgramOfferingService(
             return InvalidRequest("Aktif program bulunamadı.");
         }
 
+        if (request.ExamRequirements is null
+            || request.ExamRequirements.Any(item =>
+                item.ExamId <= 0
+                || item.MinimumScore is < 0m or > 999.99m))
+        {
+            return InvalidRequest("Sınav koşullarından biri geçersiz.");
+        }
+
         if (request.ExamRequirements.GroupBy(item => item.ExamId).Any(group => group.Count() > 1))
         {
             return InvalidRequest("Aynı sınav koşulu birden fazla kez eklenemez.");
@@ -345,7 +398,8 @@ public sealed class ProgramOfferingService(
                 offering.AcademicYearStart,
                 offering.Term,
                 offering.IsOpen,
-                offering.IsArchived
+                offering.IsArchived,
+                offering.UsesEvaluationWorkflow
             }),
             CreatedAtUtc = now
         });
@@ -387,6 +441,14 @@ public sealed class ProgramOfferingService(
         offering.Quota,
         offering.IsOpen,
         offering.IsArchived,
+        offering.UsesEvaluationWorkflow,
+        offering.EvaluationState,
+        offering.EvaluationFinalizedAtUtc.HasValue
+            ? DateTime.SpecifyKind(offering.EvaluationFinalizedAtUtc.Value, DateTimeKind.Utc)
+            : null,
+        offering.ResultsPublishedAtUtc.HasValue
+            ? DateTime.SpecifyKind(offering.ResultsPublishedAtUtc.Value, DateTimeKind.Utc)
+            : null,
         Convert.ToBase64String(offering.RowVersion),
         offering.ExamRequirements.Select(requirement => new ExamRequirementDto(
             requirement.ExamId,

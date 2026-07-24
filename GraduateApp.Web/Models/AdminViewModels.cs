@@ -62,6 +62,7 @@ public sealed class AdminApplicationDetailViewModel
     public IReadOnlyList<ApplicationStatusHistoryViewModel> History { get; set; } = [];
     public IReadOnlyList<ApplicationScoreSnapshotViewModel> ScoreSnapshots { get; set; } = [];
     public bool UsesDocumentWorkflow { get; set; }
+    public bool UsesEvaluationWorkflow { get; set; }
     public IReadOnlyList<ApplicationDocumentRequirementViewModel> DocumentRequirements { get; set; } = [];
 }
 
@@ -88,6 +89,10 @@ public sealed class ProgramOfferingAdminViewModel
     public int Quota { get; set; }
     public bool IsOpen { get; set; }
     public bool IsArchived { get; set; }
+    public bool UsesEvaluationWorkflow { get; set; }
+    public OfferingEvaluationState EvaluationState { get; set; }
+    public DateTime? EvaluationFinalizedAtUtc { get; set; }
+    public DateTime? ResultsPublishedAtUtc { get; set; }
     public string RowVersion { get; set; } = string.Empty;
     public IReadOnlyList<ExamRequirementViewModel> ExamRequirements { get; set; } = [];
 }
@@ -165,6 +170,9 @@ public sealed class ProgramOfferingFormViewModel
 
     [Display(Name = "Arşivle")]
     public bool IsArchived { get; set; }
+
+    [Display(Name = "Sıralamalı değerlendirme iş akışı")]
+    public bool UsesEvaluationWorkflow { get; set; } = true;
 
     [StringLength(
         64,
@@ -330,6 +338,21 @@ public sealed class InstituteAdminViewModel
     public DateTime UpdatedAtUtc { get; set; }
     public string RowVersion { get; set; } = string.Empty;
     public int ProgramCount { get; set; }
+}
+
+public sealed class UniversityFormViewModel
+{
+    [Required(ErrorMessage = "Üniversite adı zorunludur.")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Üniversite adı 2 ile 100 karakter arasında olmalıdır.")]
+    [Display(Name = "Üniversite adı")]
+    public string UniversityName { get; set; } = string.Empty;
+}
+
+public sealed class UniversityPageViewModel
+{
+    public IReadOnlyList<UniversityViewModel> Universities { get; set; } = [];
+    public UniversityFormViewModel Form { get; set; } = new();
+    public string? ErrorMessage { get; set; }
 }
 
 public sealed class InstituteFormViewModel

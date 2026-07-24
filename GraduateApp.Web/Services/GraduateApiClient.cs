@@ -79,6 +79,13 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         CancellationToken cancellationToken) =>
         GetAsync<StudentApplicationDetailViewModel>($"api/applications/mine/{publicId:D}", cancellationToken);
 
+    public Task<ApiResult<PublishedApplicationEvaluationViewModel>> GetMyPublishedEvaluationAsync(
+        Guid publicId,
+        CancellationToken cancellationToken) =>
+        GetAsync<PublishedApplicationEvaluationViewModel>(
+            $"api/applications/mine/{publicId:D}/evaluation-result",
+            cancellationToken);
+
     public Task<ApiResult> SubmitApplicationAsync(Guid publicId, CancellationToken cancellationToken) =>
         PostAsync($"api/applications/mine/{publicId:D}/submit", new { }, cancellationToken);
 
@@ -253,6 +260,87 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             $"api/program-offerings/{offeringId}/document-requirements/{publicId:D}/active",
             new { isActive, rowVersion },
             cancellationToken);
+
+    public Task<ApiResult<AdminEvaluationViewModel>> GetEvaluationAsync(
+        int offeringId,
+        CancellationToken cancellationToken) =>
+        GetAsync<AdminEvaluationViewModel>($"api/evaluations/offerings/{offeringId}", cancellationToken);
+
+    public Task<ApiResult<EvaluationRankingPreviewViewModel>> GetEvaluationPreviewAsync(
+        int offeringId,
+        CancellationToken cancellationToken) =>
+        GetAsync<EvaluationRankingPreviewViewModel>(
+            $"api/evaluations/offerings/{offeringId}/preview",
+            cancellationToken);
+
+    public Task<ApiResult<EvaluationCriterionViewModel>> CreateEvaluationCriterionAsync(
+        EvaluationCriterionFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<EvaluationCriterionViewModel>(
+            $"api/program-offerings/{model.ProgramOfferingId}/evaluation-criteria",
+            MapEvaluationCriterion(model, includeConcurrency: false),
+            cancellationToken);
+
+    public Task<ApiResult<EvaluationCriterionViewModel>> UpdateEvaluationCriterionAsync(
+        EvaluationCriterionFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PutAsync<EvaluationCriterionViewModel>(
+            $"api/program-offerings/{model.ProgramOfferingId}/evaluation-criteria/{model.PublicId:D}",
+            MapEvaluationCriterion(model, includeConcurrency: true),
+            cancellationToken);
+
+    public Task<ApiResult> DeleteEvaluationCriterionAsync(
+        int offeringId,
+        Guid publicId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        DeleteAsync(
+            $"api/program-offerings/{offeringId}/evaluation-criteria/{publicId:D}",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult> DecideEvaluationEligibilityAsync(
+        Guid applicationPublicId,
+        EvaluationEligibilityStatus eligibilityStatus,
+        string? ineligibilityReason,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync($"api/evaluations/applications/{applicationPublicId:D}/eligibility", new
+        {
+            eligibilityStatus,
+            ineligibilityReason,
+            rowVersion
+        }, cancellationToken);
+
+    public Task<ApiResult> SetManualEvaluationScoreAsync(
+        Guid applicationPublicId,
+        Guid criterionPublicId,
+        decimal rawScore,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync(
+            $"api/evaluations/applications/{applicationPublicId:D}/criteria/{criterionPublicId:D}/score",
+            new { rawScore, rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult> FinalizeEvaluationAsync(
+        int offeringId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync($"api/evaluations/offerings/{offeringId}/finalize", new { rowVersion }, cancellationToken);
+
+    public Task<ApiResult<EvaluationPublicationSummaryViewModel>> GetEvaluationPublicationSummaryAsync(
+        int offeringId,
+        CancellationToken cancellationToken) =>
+        GetAsync<EvaluationPublicationSummaryViewModel>(
+            $"api/evaluations/offerings/{offeringId}/publication-summary",
+            cancellationToken);
+
+    public Task<ApiResult> PublishEvaluationAsync(
+        int offeringId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync($"api/evaluations/offerings/{offeringId}/publish", new { rowVersion }, cancellationToken);
 
     public Task<ApiResult<AdminApplicationDetailViewModel>> GetAdminApplicationDetailAsync(
         Guid applicationPublicId,
@@ -531,6 +619,18 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult<IReadOnlyList<UniversityViewModel>>> GetUniversitiesAsync(CancellationToken cancellationToken) =>
         GetAsync<IReadOnlyList<UniversityViewModel>>("api/students/universities", cancellationToken);
 
+    public Task<ApiResult<IReadOnlyList<UniversityViewModel>>> GetAdminUniversitiesAsync(
+        CancellationToken cancellationToken) =>
+        GetAsync<IReadOnlyList<UniversityViewModel>>("api/admin/universities", cancellationToken);
+
+    public Task<ApiResult<UniversityViewModel>> CreateUniversityAsync(
+        UniversityFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<UniversityViewModel>(
+            "api/admin/universities",
+            new { model.UniversityName },
+            cancellationToken);
+
     public Task<ApiResult<StudentProfileApiModel>> UpdateProfileAsync(
         StudentProfileViewModel model,
         CancellationToken cancellationToken) =>
@@ -641,6 +741,15 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         return await SendAsync(request, cancellationToken);
     }
 
+    private async Task<ApiResult> DeleteAsync(string path, object body, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, path)
+        {
+            Content = JsonContent.Create(body, options: JsonOptions)
+        };
+        return await SendAsync(request, cancellationToken);
+    }
+
     private async Task<ApiResult<T>> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         HttpResponseMessage response;
@@ -746,6 +855,7 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         model.Quota,
         model.IsOpen,
         model.IsArchived,
+        model.UsesEvaluationWorkflow,
         RowVersion = includeConcurrency ? model.RowVersion : null,
         ExamRequirements = model.ExamRequirements
             .Where(requirement => requirement.IsConfigured)
@@ -768,6 +878,20 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             model.IsRequired,
             model.AllowedContentCategory,
             model.MaximumBytes,
+            RowVersion = includeConcurrency ? model.RowVersion : null
+        };
+
+    private static object MapEvaluationCriterion(
+        EvaluationCriterionFormViewModel model,
+        bool includeConcurrency) => new
+        {
+            model.Code,
+            model.DisplayName,
+            model.SourceType,
+            model.ExamId,
+            model.WeightBasisPoints,
+            model.MaximumRawScore,
+            model.TieBreakPriority,
             RowVersion = includeConcurrency ? model.RowVersion : null
         };
 }

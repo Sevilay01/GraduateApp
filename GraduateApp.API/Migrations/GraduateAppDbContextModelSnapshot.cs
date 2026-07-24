@@ -153,6 +153,11 @@ namespace GraduateApp.API.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("UsesEvaluationWorkflow")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.HasKey("ApplicationId");
 
                     b.HasIndex("ProgramOfferingId");
@@ -357,6 +362,196 @@ namespace GraduateApp.API.Migrations
                             t.HasCheckConstraint("CK_ApplicationDocumentRequirementSnapshots_ContentCategory", "[AllowedContentCategory] IN ('PdfOnly','ImageOnly','PdfOrImage')");
 
                             t.HasCheckConstraint("CK_ApplicationDocumentRequirementSnapshots_MaximumBytes", "[MaximumBytes] BETWEEN 1 AND 104857600");
+                        });
+                });
+
+            modelBuilder.Entity("GraduateApp.API.Models.ApplicationEvaluation", b =>
+                {
+                    b.Property<int>("ApplicationEvaluationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ApplicationEvaluationID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationEvaluationId"));
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("int")
+                        .HasColumnName("ApplicationID");
+
+                    b.Property<DateTime?>("EligibilityDecidedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EligibilityDecidedByAdminId")
+                        .HasColumnType("int")
+                        .HasColumnName("EligibilityDecidedByAdminID");
+
+                    b.Property<string>("EligibilityStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime?>("FinalizedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IneligibilityReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("ProgramOfferingId")
+                        .HasColumnType("int")
+                        .HasColumnName("ProgramOfferingID");
+
+                    b.Property<int?>("Rank")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<decimal?>("TotalScore")
+                        .HasColumnType("decimal(7, 4)");
+
+                    b.HasKey("ApplicationEvaluationId");
+
+                    b.HasIndex("ApplicationId")
+                        .IsUnique();
+
+                    b.HasIndex("EligibilityDecidedByAdminId");
+
+                    b.HasIndex("ProgramOfferingId", "Rank")
+                        .IsUnique()
+                        .HasFilter("[Rank] IS NOT NULL");
+
+                    b.ToTable("ApplicationEvaluations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ApplicationEvaluations_EligibilityStatus", "[EligibilityStatus] IN ('Pending','Eligible','Ineligible')");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluations_EligibilityDecision", "([EligibilityStatus] = 'Pending' AND [EligibilityDecidedByAdminID] IS NULL AND [EligibilityDecidedAtUtc] IS NULL) OR ([EligibilityStatus] IN ('Eligible','Ineligible') AND [EligibilityDecidedByAdminID] IS NOT NULL AND [EligibilityDecidedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluations_FinalResult", "([Outcome] IS NULL AND [Rank] IS NULL AND [FinalizedAtUtc] IS NULL) OR ([Outcome] IN ('Admitted','NotAdmitted') AND [Rank] IS NOT NULL AND [TotalScore] IS NOT NULL AND [FinalizedAtUtc] IS NOT NULL) OR ([Outcome] = 'Ineligible' AND [Rank] IS NULL AND [TotalScore] IS NULL AND [FinalizedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluations_IneligibilityReason", "([EligibilityStatus] = 'Ineligible' AND [IneligibilityReason] IS NOT NULL AND LEN(LTRIM(RTRIM([IneligibilityReason]))) > 0) OR ([EligibilityStatus] IN ('Pending','Eligible') AND [IneligibilityReason] IS NULL)");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluations_Outcome", "[Outcome] IS NULL OR [Outcome] IN ('Admitted','NotAdmitted','Ineligible')");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluations_Rank", "[Rank] IS NULL OR [Rank] > 0");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluations_TotalScore", "[TotalScore] IS NULL OR [TotalScore] BETWEEN 0 AND 100");
+                        });
+                });
+
+            modelBuilder.Entity("GraduateApp.API.Models.ApplicationEvaluationComponent", b =>
+                {
+                    b.Property<int>("ComponentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ComponentID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ComponentId"));
+
+                    b.Property<int>("ApplicationEvaluationId")
+                        .HasColumnType("int")
+                        .HasColumnName("ApplicationEvaluationID");
+
+                    b.Property<string>("CodeSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid>("CriterionPublicIdSnapshot")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CriterionPublicIDSnapshot");
+
+                    b.Property<string>("DisplayNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ExamId")
+                        .HasColumnType("int")
+                        .HasColumnName("ExamID");
+
+                    b.Property<DateTime?>("ManualScoredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ManualScoredByAdminId")
+                        .HasColumnType("int")
+                        .HasColumnName("ManualScoredByAdminID");
+
+                    b.Property<decimal>("MaximumRawScoreSnapshot")
+                        .HasColumnType("decimal(9, 4)");
+
+                    b.Property<decimal?>("NormalizedScore")
+                        .HasColumnType("decimal(7, 4)");
+
+                    b.Property<decimal?>("RawScore")
+                        .HasColumnType("decimal(9, 4)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("SourceCriterionId")
+                        .HasColumnType("int")
+                        .HasColumnName("SourceCriterionID");
+
+                    b.Property<string>("SourceTypeSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<int>("TieBreakPrioritySnapshot")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeightBasisPointsSnapshot")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("WeightedScore")
+                        .HasColumnType("decimal(7, 4)");
+
+                    b.HasKey("ComponentId");
+
+                    b.HasIndex("ManualScoredByAdminId");
+
+                    b.HasIndex("SourceCriterionId");
+
+                    b.HasIndex("ApplicationEvaluationId", "CodeSnapshot")
+                        .IsUnique();
+
+                    b.HasIndex("ApplicationEvaluationId", "TieBreakPrioritySnapshot")
+                        .IsUnique();
+
+                    b.ToTable("ApplicationEvaluationComponents", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_NormalizedScore", "[NormalizedScore] IS NULL OR [NormalizedScore] BETWEEN 0 AND 100");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_ManualAudit", "([ManualScoredByAdminID] IS NULL AND [ManualScoredAtUtc] IS NULL) OR ([SourceTypeSnapshot] = 'ManualScore' AND [ManualScoredByAdminID] IS NOT NULL AND [ManualScoredAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_RawScore", "[RawScore] IS NULL OR ([RawScore] >= 0 AND [RawScore] <= [MaximumRawScoreSnapshot])");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_SourceType", "[SourceTypeSnapshot] IN ('UndergraduateGpa','ExamScore','ManualScore')");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_SourceConfiguration", "([SourceTypeSnapshot] = 'UndergraduateGpa' AND [ExamID] IS NULL AND [MaximumRawScoreSnapshot] = 4) OR ([SourceTypeSnapshot] = 'ExamScore' AND [ExamID] IS NOT NULL AND [MaximumRawScoreSnapshot] > 0) OR ([SourceTypeSnapshot] = 'ManualScore' AND [ExamID] IS NULL AND [MaximumRawScoreSnapshot] = 100)");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_ScoreCompleteness", "([RawScore] IS NULL AND [NormalizedScore] IS NULL AND [WeightedScore] IS NULL) OR ([RawScore] IS NOT NULL AND [NormalizedScore] IS NOT NULL AND [WeightedScore] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_TieBreak", "[TieBreakPrioritySnapshot] > 0");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_Weight", "[WeightBasisPointsSnapshot] BETWEEN 1 AND 10000");
+
+                            t.HasCheckConstraint("CK_ApplicationEvaluationComponents_WeightedScore", "[WeightedScore] IS NULL OR [WeightedScore] BETWEEN 0 AND 100");
                         });
                 });
 
@@ -774,6 +969,17 @@ namespace GraduateApp.API.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
+                    b.Property<DateTime?>("EvaluationFinalizedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EvaluationState")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("Configuring");
+
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
 
@@ -786,6 +992,9 @@ namespace GraduateApp.API.Migrations
 
                     b.Property<int>("Quota")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("ResultsPublishedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -801,6 +1010,11 @@ namespace GraduateApp.API.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
+                    b.Property<bool>("UsesEvaluationWorkflow")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.HasKey("ProgramOfferingId");
 
                     b.HasIndex("ProgramId", "AcademicYearStart", "Term")
@@ -811,6 +1025,10 @@ namespace GraduateApp.API.Migrations
                             t.HasCheckConstraint("CK_ProgramOfferings_AcademicPeriod", "([AcademicYearStart] = 0 AND [Term] = 0) OR ([AcademicYearStart] BETWEEN 2000 AND 2200 AND [Term] IN (1,2,3))");
 
                             t.HasCheckConstraint("CK_ProgramOfferings_DateRange", "[ApplicationStartUtc] IS NULL OR [ApplicationDeadlineUtc] IS NULL OR [ApplicationStartUtc] < [ApplicationDeadlineUtc]");
+
+                            t.HasCheckConstraint("CK_ProgramOfferings_EvaluationState", "[EvaluationState] IN ('Configuring','Finalized','Published')");
+
+                            t.HasCheckConstraint("CK_ProgramOfferings_EvaluationLifecycle", "([EvaluationState] = 'Configuring' AND [EvaluationFinalizedAtUtc] IS NULL AND [ResultsPublishedAtUtc] IS NULL) OR ([EvaluationState] = 'Finalized' AND [EvaluationFinalizedAtUtc] IS NOT NULL AND [ResultsPublishedAtUtc] IS NULL) OR ([EvaluationState] = 'Published' AND [EvaluationFinalizedAtUtc] IS NOT NULL AND [ResultsPublishedAtUtc] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_ProgramOfferings_Quota", "[Quota] >= 0");
                         });
@@ -900,6 +1118,112 @@ namespace GraduateApp.API.Migrations
                             t.HasCheckConstraint("CK_ProgramOfferingDocumentRequirements_ContentCategory", "[AllowedContentCategory] IN ('PdfOnly','ImageOnly','PdfOrImage')");
 
                             t.HasCheckConstraint("CK_ProgramOfferingDocumentRequirements_MaximumBytes", "[MaximumBytes] BETWEEN 1 AND 104857600");
+                        });
+                });
+
+            modelBuilder.Entity("GraduateApp.API.Models.ProgramOfferingEvaluationCriterion", b =>
+                {
+                    b.Property<int>("CriterionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("CriterionID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CriterionId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ExamId")
+                        .HasColumnType("int")
+                        .HasColumnName("ExamID");
+
+                    b.Property<decimal>("MaximumRawScore")
+                        .HasColumnType("decimal(9, 4)");
+
+                    b.Property<string>("NormalizedCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<int>("ProgramOfferingId")
+                        .HasColumnType("int")
+                        .HasColumnName("ProgramOfferingID");
+
+                    b.Property<Guid>("PublicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("PublicID")
+                        .HasDefaultValueSql("NEWID()");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<int>("TieBreakPriority")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<int>("WeightBasisPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("CriterionId");
+
+                    b.HasIndex("ExamId");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique();
+
+                    b.HasIndex("ProgramOfferingId", "ExamId")
+                        .IsUnique()
+                        .HasFilter("[ExamID] IS NOT NULL");
+
+                    b.HasIndex("ProgramOfferingId", "NormalizedCode")
+                        .IsUnique();
+
+                    b.HasIndex("ProgramOfferingId", "SourceType")
+                        .IsUnique()
+                        .HasFilter("[SourceType] = 'UndergraduateGpa'");
+
+                    b.HasIndex("ProgramOfferingId", "TieBreakPriority")
+                        .IsUnique();
+
+                    b.ToTable("ProgramOfferingEvaluationCriteria", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProgramOfferingEvaluationCriteria_Code", "[Code] = LTRIM(RTRIM([Code])) AND LEN([Code]) BETWEEN 2 AND 64");
+
+                            t.HasCheckConstraint("CK_ProgramOfferingEvaluationCriteria_SourceConfiguration", "([SourceType] = 'UndergraduateGpa' AND [ExamID] IS NULL AND [MaximumRawScore] = 4) OR ([SourceType] = 'ExamScore' AND [ExamID] IS NOT NULL AND [MaximumRawScore] > 0) OR ([SourceType] = 'ManualScore' AND [ExamID] IS NULL AND [MaximumRawScore] = 100)");
+
+                            t.HasCheckConstraint("CK_ProgramOfferingEvaluationCriteria_SourceType", "[SourceType] IN ('UndergraduateGpa','ExamScore','ManualScore')");
+
+                            t.HasCheckConstraint("CK_ProgramOfferingEvaluationCriteria_TieBreak", "[TieBreakPriority] > 0");
+
+                            t.HasCheckConstraint("CK_ProgramOfferingEvaluationCriteria_Weight", "[WeightBasisPoints] BETWEEN 1 AND 10000");
                         });
                 });
 
@@ -1331,6 +1655,57 @@ namespace GraduateApp.API.Migrations
                     b.Navigation("SourceRequirement");
                 });
 
+            modelBuilder.Entity("GraduateApp.API.Models.ApplicationEvaluation", b =>
+                {
+                    b.HasOne("GraduateApp.API.Models.Application", "Application")
+                        .WithOne("Evaluation")
+                        .HasForeignKey("GraduateApp.API.Models.ApplicationEvaluation", "ApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GraduateApp.API.Models.Admin", "EligibilityDecidedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("EligibilityDecidedByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GraduateApp.API.Models.ProgramOffering", "ProgramOffering")
+                        .WithMany()
+                        .HasForeignKey("ProgramOfferingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+
+                    b.Navigation("EligibilityDecidedByAdmin");
+
+                    b.Navigation("ProgramOffering");
+                });
+
+            modelBuilder.Entity("GraduateApp.API.Models.ApplicationEvaluationComponent", b =>
+                {
+                    b.HasOne("GraduateApp.API.Models.ApplicationEvaluation", "ApplicationEvaluation")
+                        .WithMany("Components")
+                        .HasForeignKey("ApplicationEvaluationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GraduateApp.API.Models.Admin", "ManualScoredByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ManualScoredByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GraduateApp.API.Models.ProgramOfferingEvaluationCriterion", "SourceCriterion")
+                        .WithMany("Components")
+                        .HasForeignKey("SourceCriterionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ApplicationEvaluation");
+
+                    b.Navigation("ManualScoredByAdmin");
+
+                    b.Navigation("SourceCriterion");
+                });
+
             modelBuilder.Entity("GraduateApp.API.Models.ApplicationScoreSnapshot", b =>
                 {
                     b.HasOne("GraduateApp.API.Models.Application", "Application")
@@ -1454,6 +1829,24 @@ namespace GraduateApp.API.Migrations
                     b.Navigation("ProgramOffering");
                 });
 
+            modelBuilder.Entity("GraduateApp.API.Models.ProgramOfferingEvaluationCriterion", b =>
+                {
+                    b.HasOne("GraduateApp.API.Models.Exam", "Exam")
+                        .WithMany()
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GraduateApp.API.Models.ProgramOffering", "ProgramOffering")
+                        .WithMany("EvaluationCriteria")
+                        .HasForeignKey("ProgramOfferingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+
+                    b.Navigation("ProgramOffering");
+                });
+
             modelBuilder.Entity("GraduateApp.API.Models.ProgramOfferingExamRequirement", b =>
                 {
                     b.HasOne("GraduateApp.API.Models.Exam", "Exam")
@@ -1541,6 +1934,8 @@ namespace GraduateApp.API.Migrations
 
                     b.Navigation("Documents");
 
+                    b.Navigation("Evaluation");
+
                     b.Navigation("ReferenceLetters");
 
                     b.Navigation("ScoreSnapshots");
@@ -1549,6 +1944,11 @@ namespace GraduateApp.API.Migrations
             modelBuilder.Entity("GraduateApp.API.Models.ApplicationDocumentRequirementSnapshot", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("GraduateApp.API.Models.ApplicationEvaluation", b =>
+                {
+                    b.Navigation("Components");
                 });
 
             modelBuilder.Entity("GraduateApp.API.Models.Exam", b =>
@@ -1576,12 +1976,19 @@ namespace GraduateApp.API.Migrations
 
                     b.Navigation("DocumentRequirements");
 
+                    b.Navigation("EvaluationCriteria");
+
                     b.Navigation("ExamRequirements");
                 });
 
             modelBuilder.Entity("GraduateApp.API.Models.ProgramOfferingDocumentRequirement", b =>
                 {
                     b.Navigation("Snapshots");
+                });
+
+            modelBuilder.Entity("GraduateApp.API.Models.ProgramOfferingEvaluationCriterion", b =>
+                {
+                    b.Navigation("Components");
                 });
 
             modelBuilder.Entity("GraduateApp.API.Models.Student", b =>

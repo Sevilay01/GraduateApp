@@ -13,7 +13,8 @@ namespace GraduateApp.API.Controllers;
 [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.AdminRole)]
 public sealed class ProgramOfferingsController(
     IProgramOfferingService offeringService,
-    IOfferingDocumentRequirementService documentRequirementService) : ControllerBase
+    IOfferingDocumentRequirementService documentRequirementService,
+    IEvaluationPolicyService evaluationPolicyService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get(
@@ -112,6 +113,63 @@ public sealed class ProgramOfferingsController(
         var result = await documentRequirementService.SetActiveAsync(id, publicId, adminId, request, cancellationToken);
         return result.IsSuccess
             ? Ok(result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpGet("{id:int}/evaluation-criteria")]
+    public async Task<IActionResult> GetEvaluationCriteria(int id, CancellationToken cancellationToken) =>
+        Ok(await evaluationPolicyService.GetAsync(id, cancellationToken));
+
+    [HttpPost("{id:int}/evaluation-criteria")]
+    public async Task<IActionResult> CreateEvaluationCriterion(
+        int id,
+        EvaluationCriterionCreateDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await evaluationPolicyService.CreateAsync(id, adminId, request, cancellationToken);
+        return result.IsSuccess
+            ? StatusCode(result.StatusCode, result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpPut("{id:int}/evaluation-criteria/{publicId:guid}")]
+    public async Task<IActionResult> UpdateEvaluationCriterion(
+        int id,
+        Guid publicId,
+        EvaluationCriterionUpdateDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await evaluationPolicyService.UpdateAsync(id, publicId, adminId, request, cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpDelete("{id:int}/evaluation-criteria/{publicId:guid}")]
+    public async Task<IActionResult> DeleteEvaluationCriterion(
+        int id,
+        Guid publicId,
+        EvaluationCriterionDeleteDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await evaluationPolicyService.DeleteAsync(id, publicId, adminId, request, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
             : Problem(statusCode: result.StatusCode, detail: result.Error);
     }
 

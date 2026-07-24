@@ -1,0 +1,69 @@
+@model UniversityPageViewModel
+@{
+    ViewData["Title"] = "Üniversite kataloğu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h2 mb-1">Üniversite kataloğu</h1>
+        <p class="text-muted mb-0">Öğrencilerin profilinde seçebileceği üniversiteleri yönetin.</p>
+    </div>
+</div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+<div class="row g-4">
+    <div class="col-12 col-lg-7">
+        <section aria-labelledby="university-list-title">
+            <h2 id="university-list-title" class="h4">Tanımlı üniversiteler</h2>
+            @if (Model.Universities.Count == 0)
+            {
+                <p class="text-muted">Üniversite kataloğu henüz tanımlanmamış.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th scope="col">Üniversite adı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var university in Model.Universities)
+                            {
+                                <tr>
+                                    <td>@university.UniversityName</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <section class="card shadow-sm" aria-labelledby="university-form-title">
+            <div class="card-body">
+                <h2 id="university-form-title" class="h4">Yeni üniversite ekle</h2>
+                <form asp-action="CreateUniversity" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Form.UniversityName" class="form-label"></label>
+                        <input asp-for="Form.UniversityName" class="form-control" maxlength="100" autocomplete="off" />
+                        <span asp-validation-for="Form.UniversityName" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Üniversite ekle</button>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

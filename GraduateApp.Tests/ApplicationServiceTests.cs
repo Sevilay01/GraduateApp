@@ -12,6 +12,136 @@ namespace GraduateApp.Tests;
 public sealed class ApplicationServiceTests
 {
     [Fact]
+    public async Task Evaluation_workflow_submit_freezes_gpa_exam_and_manual_component_policy()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        await ConfigureEvaluationAsync(db, offering, "10000000146");
+        var service = CreateService(db);
+        var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        Assert.True(db.Applications.Single().UsesEvaluationWorkflow);
+        AddCurrentDocument(db.Applications.Single());
+        await db.SaveChangesAsync();
+
+        var result = await service.SubmitAsync("10000000146", draft.Value!.PublicId, CancellationToken.None);
+        db.EducationInfos.Single().Gno = 1m;
+        db.StudentExamScores.Single().Score = 20m;
+        await db.SaveChangesAsync();
+
+        Assert.True(result.IsSuccess);
+        var evaluation = Assert.Single(db.ApplicationEvaluations);
+        Assert.Equal(EvaluationEligibilityStatus.Pending, evaluation.EligibilityStatus);
+        Assert.Null(evaluation.TotalScore);
+        Assert.Equal(3, evaluation.Components.Count);
+        var gpa = evaluation.Components.Single(item => item.SourceTypeSnapshot == EvaluationCriterionSourceType.UndergraduateGpa);
+        var exam = evaluation.Components.Single(item => item.SourceTypeSnapshot == EvaluationCriterionSourceType.ExamScore);
+        var manual = evaluation.Components.Single(item => item.SourceTypeSnapshot == EvaluationCriterionSourceType.ManualScore);
+        Assert.Equal(3.25m, gpa.RawScore);
+        Assert.Equal(80m, exam.RawScore);
+        Assert.Null(manual.RawScore);
+        Assert.Null(manual.WeightedScore);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Invalid_automatic_evaluation_input_leaves_draft_without_partial_snapshot_or_submitted_audit(
+        bool removeGpa)
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        await ConfigureEvaluationAsync(db, offering, "10000000146");
+        if (removeGpa)
+        {
+            db.EducationInfos.Single().Gno = null;
+        }
+        else
+        {
+            offering.EvaluationCriteria.Single(item =>
+                item.SourceType == EvaluationCriterionSourceType.ExamScore).MaximumRawScore = 50m;
+        }
+
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+        var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        var application = db.Applications.Single();
+        AddCurrentDocument(application);
+        await db.SaveChangesAsync();
+
+        var result = await service.SubmitAsync("10000000146", draft.Value!.PublicId, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal(ApplicationStatus.Draft.ToString(), application.CurrentStatus);
+        Assert.Empty(db.ApplicationEvaluations);
+        Assert.Empty(db.ApplicationEvaluationComponents);
+        Assert.Empty(db.ApplicationScoreSnapshots);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "ApplicationSubmitted");
+        Assert.Contains(db.SecurityAuditLogs, item =>
+            item.EventType == "DocumentSubmissionBlocked" && item.Details!.Contains("EvaluationPolicy"));
+    }
+
+    [Fact]
+    public async Task Evaluation_workflow_allows_second_student_to_create_and_submit_after_quota_is_reached()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        offering.Quota = 1;
+        await ConfigureEvaluationAsync(db, offering, "10000000154");
+        offering.Applications.Add(new Application
+        {
+            PublicId = Guid.NewGuid(),
+            Tc = "10000000146",
+            ApplicationDate = DateTime.UtcNow,
+            CurrentStatus = ApplicationStatus.Pending.ToString(),
+            UsesDocumentWorkflow = true,
+            UsesEvaluationWorkflow = true
+        });
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+        var draft = await service.CreateAsync("10000000154", offering.ProgramOfferingId, CancellationToken.None);
+        AddCurrentDocument(db.Applications.Single(item => item.PublicId == draft.Value!.PublicId));
+        await db.SaveChangesAsync();
+
+        var result = await service.SubmitAsync("10000000154", draft.Value!.PublicId, CancellationToken.None);
+
+        Assert.True(draft.IsSuccess);
+        Assert.True(db.Applications.Single(item => item.PublicId == draft.Value.PublicId).UsesEvaluationWorkflow);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(ApplicationStatus.Pending.ToString(), db.Applications.Single(item => item.PublicId == draft.Value.PublicId).CurrentStatus);
+        Assert.Equal(2, db.Applications.Count(item => item.CurrentStatus == ApplicationStatus.Pending.ToString()));
+    }
+
+    [Fact]
+    public async Task Evaluation_workflow_application_cannot_be_manually_approved_or_rejected()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var application = AddWorkflowApplication(db, offering, "10000000146", ApplicationStatus.UnderReview, true);
+        application.UsesEvaluationWorkflow = true;
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        foreach (var next in new[] { ApplicationStatus.Approved, ApplicationStatus.Rejected })
+        {
+            var result = await service.UpdateStatusAsync(
+                application.PublicId,
+                7,
+                new ApplicationStatusUpdateDto
+                {
+                    NewStatus = next,
+                    RowVersion = Convert.ToBase64String(application.RowVersion)
+                },
+                CancellationToken.None);
+            Assert.False(result.IsSuccess);
+            Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        }
+
+        Assert.Equal(ApplicationStatus.UnderReview.ToString(), application.CurrentStatus);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "ApplicationStatusChanged");
+    }
+
+    [Fact]
     public async Task Create_builds_document_workflow_draft_and_immutable_requirement_snapshot()
     {
         await using var db = TestDb.Create();
@@ -107,6 +237,33 @@ public sealed class ApplicationServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
         Assert.Empty(db.Applications);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "DocumentDraftCreated");
+    }
+
+    [Fact]
+    public async Task Create_rejects_orphaned_open_evaluation_policy_before_draft_snapshot_or_audit()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        await ConfigureEvaluationAsync(db, offering, "10000000146");
+        offering.ExamRequirements.Single().IsRequired = false;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await CreateService(db).CreateAsync(
+            "10000000146",
+            offering.ProgramOfferingId,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Contains("ALES", result.Error, StringComparison.Ordinal);
+        Assert.Empty(db.Applications);
+        Assert.Empty(db.ApplicationStatusHistories);
+        Assert.Empty(db.ApplicationDocumentRequirementSnapshots);
+        Assert.Empty(db.ApplicationScoreSnapshots);
+        Assert.Empty(db.ApplicationEvaluations);
+        Assert.Empty(db.ApplicationEvaluationComponents);
         Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "DocumentDraftCreated");
     }
 
@@ -514,6 +671,69 @@ public sealed class ApplicationServiceTests
         db.ProgramOfferings.Add(offering);
         await db.SaveChangesAsync();
         return offering;
+    }
+
+    private static async Task ConfigureEvaluationAsync(
+        GraduateAppDbContext db,
+        ProgramOffering offering,
+        string studentTc)
+    {
+        offering.UsesEvaluationWorkflow = true;
+        var exam = new Exam { ExamName = "ALES" };
+        offering.ExamRequirements.Add(new ProgramOfferingExamRequirement
+        {
+            Exam = exam,
+            MinimumScore = 0m,
+            IsRequired = true
+        });
+        offering.EvaluationCriteria.Add(new ProgramOfferingEvaluationCriterion
+        {
+            PublicId = Guid.NewGuid(),
+            Code = "GPA",
+            NormalizedCode = "GPA",
+            DisplayName = "Lisans GNO",
+            SourceType = EvaluationCriterionSourceType.UndergraduateGpa,
+            WeightBasisPoints = 4000,
+            MaximumRawScore = 4m,
+            TieBreakPriority = 1
+        });
+        offering.EvaluationCriteria.Add(new ProgramOfferingEvaluationCriterion
+        {
+            PublicId = Guid.NewGuid(),
+            Code = "ALES",
+            NormalizedCode = "ALES",
+            DisplayName = "ALES",
+            SourceType = EvaluationCriterionSourceType.ExamScore,
+            Exam = exam,
+            WeightBasisPoints = 4000,
+            MaximumRawScore = 100m,
+            TieBreakPriority = 2
+        });
+        offering.EvaluationCriteria.Add(new ProgramOfferingEvaluationCriterion
+        {
+            PublicId = Guid.NewGuid(),
+            Code = "INTERVIEW",
+            NormalizedCode = "INTERVIEW",
+            DisplayName = "Mülakat",
+            SourceType = EvaluationCriterionSourceType.ManualScore,
+            WeightBasisPoints = 2000,
+            MaximumRawScore = 100m,
+            TieBreakPriority = 3
+        });
+        var student = await db.Students.FindAsync(studentTc);
+        student!.EducationInfos.Add(new EducationInfo
+        {
+            University = new University { UniversityName = "Test Üniversitesi" },
+            Gno = 3.25m
+        });
+        db.StudentExamScores.Add(new StudentExamScore
+        {
+            Tc = studentTc,
+            Exam = exam,
+            Score = 80m,
+            ExamDate = new DateOnly(2026, 1, 1)
+        });
+        await db.SaveChangesAsync();
     }
 
     private static Student CreateStudent(string tc, string email) => new()

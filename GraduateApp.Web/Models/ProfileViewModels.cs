@@ -46,6 +46,10 @@ public sealed class StudentProfileViewModel
     public decimal? Gno { get; set; }
 
     public IReadOnlyList<UniversityViewModel> Universities { get; set; } = [];
+    public bool UniversityCatalogLoadSucceeded { get; set; } = true;
+    public string? UniversityCatalogErrorMessage { get; set; }
+    public bool CanEditEducation =>
+        UniversityCatalogLoadSucceeded && Universities.Count > 0;
 }
 
 public sealed class StudentProfileApiModel

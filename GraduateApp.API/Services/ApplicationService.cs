@@ -43,6 +43,9 @@ public sealed class ApplicationService(
         var offering = await dbContext.ProgramOfferings
             .Include(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.DocumentRequirements.Where(requirement => requirement.IsActive))
+            .Include(item => item.ExamRequirements)
+            .Include(item => item.EvaluationCriteria).ThenInclude(item => item.Exam)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == programOfferingId, cancellationToken);
         if (offering is null)
         {
@@ -64,6 +67,21 @@ public sealed class ApplicationService(
                 StatusCodes.Status409Conflict);
         }
 
+        if (offering.UsesEvaluationWorkflow)
+        {
+            var policyValidation = EvaluationPolicyInvariant.Validate(
+                offering.EvaluationCriteria,
+                offering.ExamRequirements
+                    .Where(item => item.IsRequired)
+                    .Select(item => item.ExamId));
+            if (!policyValidation.IsValid)
+            {
+                return ServiceResult<StudentApplicationDto>.Failure(
+                    EvaluationPolicyInvariant.DraftCreationError(policyValidation),
+                    StatusCodes.Status409Conflict);
+            }
+        }
+
         if (await dbContext.Applications.AnyAsync(
             item => item.Tc == studentTc && item.ProgramOfferingId == programOfferingId,
             cancellationToken))
@@ -81,6 +99,7 @@ public sealed class ApplicationService(
             ApplicationDate = now,
             CurrentStatus = ApplicationStatus.Draft.ToString(),
             UsesDocumentWorkflow = true,
+            UsesEvaluationWorkflow = offering.UsesEvaluationWorkflow,
             DocumentRequirementSnapshots = offering.DocumentRequirements
                 .OrderBy(item => item.RequirementId)
                 .Select(item => new ApplicationDocumentRequirementSnapshot
@@ -170,6 +189,7 @@ public sealed class ApplicationService(
         var application = await dbContext.Applications
             .Include(item => item.ProgramOffering).ThenInclude(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.ProgramOffering).ThenInclude(item => item.ExamRequirements).ThenInclude(item => item.Exam)
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.EvaluationCriteria)
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
             .Include(item => item.ScoreSnapshots)
             .SingleOrDefaultAsync(item => item.PublicId == publicId && item.Tc == studentTc, cancellationToken);
@@ -234,13 +254,14 @@ public sealed class ApplicationService(
 
         var draft = ApplicationStatus.Draft.ToString();
         var withdrawn = ApplicationStatus.Withdrawn.ToString();
-        if (offering.Quota <= 0
+        if (!offering.UsesEvaluationWorkflow
+            && (offering.Quota <= 0
             || await dbContext.Applications.CountAsync(
                 item => item.ProgramOfferingId == offering.ProgramOfferingId
                     && item.ApplicationId != application.ApplicationId
                     && item.CurrentStatus != draft
                     && item.CurrentStatus != withdrawn,
-                cancellationToken) >= offering.Quota)
+                cancellationToken) >= offering.Quota))
         {
             return await BlockSubmissionAsync(
                 application,
@@ -275,11 +296,34 @@ public sealed class ApplicationService(
                 cancellationToken);
         }
 
+        ApplicationEvaluation? evaluation = null;
+        if (application.UsesEvaluationWorkflow)
+        {
+            var evaluationResult = await BuildEvaluationSnapshotAsync(
+                application,
+                offering,
+                scoreResult.Value!,
+                cancellationToken);
+            if (!evaluationResult.IsSuccess)
+            {
+                return await BlockSubmissionAsync(
+                    application,
+                    evaluationResult.Error!,
+                    "EvaluationPolicy",
+                    transaction,
+                    cancellationToken);
+            }
+
+            evaluation = evaluationResult.Value;
+        }
+
         application.ScoreSnapshots.Clear();
         foreach (var snapshot in scoreResult.Value!)
         {
             application.ScoreSnapshots.Add(snapshot);
         }
+
+        application.Evaluation = evaluation;
 
         application.ApplicationDate = now;
         application.CurrentStatus = ApplicationStatus.Pending.ToString();
@@ -294,7 +338,8 @@ public sealed class ApplicationService(
         AddAudit(null, "ApplicationSubmitted", "Application", application.PublicId, new
         {
             application.ProgramOfferingId,
-            ScoreSnapshotCount = scoreResult.Value!.Count
+            ScoreSnapshotCount = scoreResult.Value!.Count,
+            EvaluationComponentCount = application.Evaluation?.Components.Count ?? 0
         }, now);
 
         try
@@ -480,6 +525,7 @@ public sealed class ApplicationService(
             history,
             snapshots,
             application.UsesDocumentWorkflow,
+            application.UsesEvaluationWorkflow,
             application.DocumentRequirementSnapshots.OrderBy(item => item.DisplayName).Select(MapAdminRequirement).ToArray());
     }
 
@@ -502,6 +548,14 @@ public sealed class ApplicationService(
             || !ApplicationStatusRules.CanTransition(currentStatus, request.NewStatus))
         {
             return ServiceResult.Failure("Bu durum geçişine izin verilmiyor.", StatusCodes.Status409Conflict);
+        }
+
+        if (application.UsesEvaluationWorkflow
+            && request.NewStatus is ApplicationStatus.Approved or ApplicationStatus.Rejected)
+        {
+            return ServiceResult.Failure(
+                "Değerlendirme iş akışındaki başvuru sonucu yalnızca kesinleştirme ve yayımlama işlemiyle belirlenebilir.",
+                StatusCodes.Status409Conflict);
         }
 
         if (request.NewStatus == ApplicationStatus.Approved
@@ -632,6 +686,93 @@ public sealed class ApplicationService(
         return ServiceResult<IReadOnlyList<ApplicationScoreSnapshot>>.Success(snapshots);
     }
 
+    private async Task<ServiceResult<ApplicationEvaluation>> BuildEvaluationSnapshotAsync(
+        Application application,
+        ProgramOffering offering,
+        IReadOnlyList<ApplicationScoreSnapshot> examSnapshots,
+        CancellationToken cancellationToken)
+    {
+        var criteria = offering.EvaluationCriteria
+            .OrderBy(item => item.TieBreakPriority)
+            .ThenBy(item => item.CriterionId)
+            .ToArray();
+        if (criteria.Length == 0
+            || criteria.Sum(item => item.WeightBasisPoints) != EvaluationScoring.TotalWeightBasisPoints
+            || criteria.Any(item => item.WeightBasisPoints <= 0
+                || item.MaximumRawScore <= 0m
+                || item.TieBreakPriority <= 0)
+            || criteria.Select(item => item.NormalizedCode).Distinct(StringComparer.Ordinal).Count() != criteria.Length
+            || criteria.Select(item => item.TieBreakPriority).Distinct().Count() != criteria.Length)
+        {
+            return ServiceResult<ApplicationEvaluation>.Failure(
+                "İlanın değerlendirme politikası geçerli değil; ilan yöneticisiyle iletişime geçin.",
+                StatusCodes.Status409Conflict);
+        }
+
+        var gpa = criteria.Any(item => item.SourceType == EvaluationCriterionSourceType.UndergraduateGpa)
+            ? await dbContext.EducationInfos.AsNoTracking()
+                .Where(item => item.Tc == application.Tc)
+                .OrderBy(item => item.EducationId)
+                .Select(item => item.Gno)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+        var evaluation = new ApplicationEvaluation
+        {
+            ProgramOfferingId = offering.ProgramOfferingId,
+            EligibilityStatus = EvaluationEligibilityStatus.Pending,
+            Components = new List<ApplicationEvaluationComponent>()
+        };
+
+        foreach (var criterion in criteria)
+        {
+            decimal? rawScore = criterion.SourceType switch
+            {
+                EvaluationCriterionSourceType.UndergraduateGpa => gpa,
+                EvaluationCriterionSourceType.ExamScore => examSnapshots
+                    .SingleOrDefault(item => item.ExamId == criterion.ExamId)?.ScoreSnapshot,
+                EvaluationCriterionSourceType.ManualScore => null,
+                _ => null
+            };
+            if (criterion.SourceType != EvaluationCriterionSourceType.ManualScore && !rawScore.HasValue)
+            {
+                return ServiceResult<ApplicationEvaluation>.Failure(
+                    $"{criterion.DisplayName} için başvuru anında dondurulacak puan bulunamadı.",
+                    StatusCodes.Status409Conflict);
+            }
+
+            if (rawScore.HasValue && (rawScore.Value < 0m || rawScore.Value > criterion.MaximumRawScore))
+            {
+                return ServiceResult<ApplicationEvaluation>.Failure(
+                    $"{criterion.DisplayName} puanı kriterin 0-{criterion.MaximumRawScore} aralığında değil.",
+                    StatusCodes.Status409Conflict);
+            }
+
+            var score = rawScore.HasValue
+                ? EvaluationScoring.CalculateComponent(
+                    rawScore.Value,
+                    criterion.MaximumRawScore,
+                    criterion.WeightBasisPoints)
+                : (EvaluationComponentScore?)null;
+            evaluation.Components.Add(new ApplicationEvaluationComponent
+            {
+                SourceCriterionId = criterion.CriterionId,
+                CriterionPublicIdSnapshot = criterion.PublicId,
+                CodeSnapshot = criterion.Code,
+                DisplayNameSnapshot = criterion.DisplayName,
+                SourceTypeSnapshot = criterion.SourceType,
+                ExamId = criterion.ExamId,
+                RawScore = rawScore,
+                MaximumRawScoreSnapshot = criterion.MaximumRawScore,
+                NormalizedScore = score?.NormalizedScore,
+                WeightBasisPointsSnapshot = criterion.WeightBasisPoints,
+                WeightedScore = score?.WeightedScore,
+                TieBreakPrioritySnapshot = criterion.TieBreakPriority
+            });
+        }
+
+        return ServiceResult<ApplicationEvaluation>.Success(evaluation);
+    }
+
     private async Task<ServiceResult> BlockSubmissionAsync(
         Application application,
         string message,
@@ -703,6 +844,7 @@ public sealed class ApplicationService(
             DateTime.SpecifyKind(application.ApplicationDate, DateTimeKind.Utc),
             ParseStatus(application.CurrentStatus),
             application.UsesDocumentWorkflow,
+            application.UsesEvaluationWorkflow,
             requirements,
             requirements.Where(item => item.IsRequired && item.CurrentDocument is null).Select(item => item.DisplayName).ToArray());
     }

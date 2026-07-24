@@ -8,6 +8,29 @@ namespace GraduateApp.Tests;
 public sealed class MigrationSafetyTests
 {
     [Fact]
+    public void AddApplicationEvaluationAndResults_is_forward_only_guarded_and_preserves_legacy_opt_in_defaults()
+    {
+        var options = new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=GraduateAppMigrationScriptTest;Integrated Security=true")
+            .Options;
+
+        using var dbContext = new GraduateAppDbContext(options);
+        var script = dbContext.GetService<IMigrator>().GenerateScript(
+            fromMigration: "20260722064425_SecureApplicationDocuments",
+            toMigration: "20260722170322_AddApplicationEvaluationAndResults");
+
+        Assert.Contains("THROW 51600", script, StringComparison.Ordinal);
+        Assert.Contains("THROW 51602", script, StringComparison.Ordinal);
+        Assert.Contains("[UsesEvaluationWorkflow] bit NOT NULL DEFAULT CAST(0 AS bit)", script, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE [ApplicationEvaluations]", script, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE [ApplicationEvaluationComponents]", script, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE [ProgramOfferingEvaluationCriteria]", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("DELETE FROM", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("UPDATE [dbo].[Applications]", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("UPDATE [dbo].[ProgramOfferings]", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void HardenExistingSchema_orders_dependency_teardown_before_alter_and_defaults_after_alter()
     {
         var options = new DbContextOptionsBuilder<GraduateAppDbContext>()

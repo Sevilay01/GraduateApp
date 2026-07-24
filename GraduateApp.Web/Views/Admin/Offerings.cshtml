@@ -79,7 +79,15 @@
                                     <div class="small text-warning">İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</div>
                                 }
                             </td>
-                            <td><a asp-action="Offerings" asp-route-editId="@offering.ProgramOfferingId" class="btn btn-sm btn-outline-primary">Düzenle</a></td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a asp-action="Offerings" asp-route-editId="@offering.ProgramOfferingId" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                    @if (offering.UsesEvaluationWorkflow)
+                                    {
+                                        <a asp-action="Evaluation" asp-route-id="@offering.ProgramOfferingId" class="btn btn-sm btn-outline-dark">Değerlendirme</a>
+                                    }
+                                </div>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -139,6 +147,11 @@
                         <label asp-for="Form.Quota" class="form-label"></label>
                         <input asp-for="Form.Quota" type="number" min="1" class="form-control" />
                         <span asp-validation-for="Form.Quota" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input asp-for="Form.UsesEvaluationWorkflow" class="form-check-input" />
+                        <label asp-for="Form.UsesEvaluationWorkflow" class="form-check-label"></label>
+                        <div class="form-text">Etkinleştirildikten sonra kapatılamaz; mevcut ilan yalnızca taslak dâhil hiç başvurusu yoksa bu akışa geçirilebilir.</div>
                     </div>
 
                     <fieldset class="mt-3">

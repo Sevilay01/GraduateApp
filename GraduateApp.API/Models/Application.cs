@@ -9,6 +9,7 @@ public sealed class Application
     public DateTime ApplicationDate { get; set; }
     public string CurrentStatus { get; set; } = Domain.ApplicationStatus.Pending.ToString();
     public bool UsesDocumentWorkflow { get; set; }
+    public bool UsesEvaluationWorkflow { get; set; }
     public byte[] RowVersion { get; set; } = [];
 
     public ICollection<ApplicationStatusHistory> ApplicationStatusHistories { get; set; } = new List<ApplicationStatusHistory>();
@@ -17,5 +18,6 @@ public sealed class Application
     public ProgramOffering ProgramOffering { get; set; } = null!;
     public ICollection<ReferenceLetter> ReferenceLetters { get; set; } = new List<ReferenceLetter>();
     public ICollection<ApplicationScoreSnapshot> ScoreSnapshots { get; set; } = new List<ApplicationScoreSnapshot>();
+    public ApplicationEvaluation? Evaluation { get; set; }
     public Student TcNavigation { get; set; } = null!;
 }

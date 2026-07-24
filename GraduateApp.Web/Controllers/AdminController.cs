@@ -379,6 +379,44 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Universities(CancellationToken cancellationToken)
+    {
+        var result = await apiClient.GetAdminUniversitiesAsync(cancellationToken);
+        return View(new UniversityPageViewModel
+        {
+            Universities = result.Value ?? [],
+            ErrorMessage = result.IsSuccess
+                ? null
+                : result.Error ?? "Üniversite kataloğu yüklenemedi."
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateUniversity(
+        [Bind(Prefix = "Form")] UniversityFormViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return await RenderUniversityFormAsync(
+                model,
+                "Üniversite bilgileri doğrulanamadı.",
+                cancellationToken);
+        }
+
+        var result = await apiClient.CreateUniversityAsync(model, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Üniversite oluşturulamadı.");
+            return await RenderUniversityFormAsync(model, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = "Üniversite kataloğa eklendi.";
+        return RedirectToAction(nameof(Universities));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Institutes(
         string? search,
         bool? isActive,
@@ -688,6 +726,184 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Evaluation(int id, CancellationToken cancellationToken)
+    {
+        var evaluationTask = apiClient.GetEvaluationAsync(id, cancellationToken);
+        var previewTask = apiClient.GetEvaluationPreviewAsync(id, cancellationToken);
+        await Task.WhenAll(evaluationTask, previewTask);
+        var evaluation = await evaluationTask;
+        var preview = await previewTask;
+        if (!evaluation.IsSuccess || evaluation.Value is null)
+        {
+            TempData["ErrorMessage"] = evaluation.Error ?? "Değerlendirme ilanı bulunamadı.";
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        return View(new EvaluationPageViewModel
+        {
+            Evaluation = evaluation.Value,
+            Preview = preview.Value ?? new EvaluationRankingPreviewViewModel(),
+            CriterionForm = new EvaluationCriterionFormViewModel
+            {
+                ProgramOfferingId = id,
+                SourceType = EvaluationCriterionSourceType.ManualScore,
+                MaximumRawScore = 100m,
+                TieBreakPriority = evaluation.Value.Criteria.Count + 1
+            },
+            ErrorMessage = preview.IsSuccess ? null : preview.Error
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveEvaluationCriterion(
+        EvaluationCriterionFormViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (model.ProgramOfferingId <= 0
+            || (model.PublicId != Guid.Empty && string.IsNullOrWhiteSpace(model.RowVersion))
+            || !ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Değerlendirme kriteri bilgileri geçersiz.";
+            return RedirectToAction(nameof(Evaluation), new { id = model.ProgramOfferingId });
+        }
+
+        var result = model.PublicId == Guid.Empty
+            ? await apiClient.CreateEvaluationCriterionAsync(model, cancellationToken)
+            : await apiClient.UpdateEvaluationCriterionAsync(model, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Değerlendirme kriteri kaydedildi."
+            : result.Error ?? "Değerlendirme kriteri kaydedilemedi.";
+        return RedirectToAction(nameof(Evaluation), new { id = model.ProgramOfferingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteEvaluationCriterion(
+        int programOfferingId,
+        Guid publicId,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        if (programOfferingId <= 0 || publicId == Guid.Empty || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "Değerlendirme kriteri silme bilgileri geçersiz.";
+            return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+        }
+
+        var result = await apiClient.DeleteEvaluationCriterionAsync(
+            programOfferingId,
+            publicId,
+            rowVersion,
+            cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Değerlendirme kriteri kaldırıldı."
+            : result.Error ?? "Değerlendirme kriteri kaldırılamadı.";
+        return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DecideEligibility(
+        int programOfferingId,
+        Guid applicationPublicId,
+        EvaluationEligibilityStatus eligibilityStatus,
+        string? ineligibilityReason,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.DecideEvaluationEligibilityAsync(
+            applicationPublicId,
+            eligibilityStatus,
+            ineligibilityReason,
+            rowVersion,
+            cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Aday uygunluk kararı kaydedildi."
+            : result.Error ?? "Aday uygunluk kararı kaydedilemedi.";
+        return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetManualScore(
+        int programOfferingId,
+        Guid applicationPublicId,
+        Guid criterionPublicId,
+        decimal? rawScore,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        if (!rawScore.HasValue)
+        {
+            TempData["ErrorMessage"] = "Manuel puan zorunludur.";
+            return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+        }
+
+        var result = await apiClient.SetManualEvaluationScoreAsync(
+            applicationPublicId,
+            criterionPublicId,
+            rawScore.Value,
+            rowVersion,
+            cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Manuel puan kaydedildi."
+            : result.Error ?? "Manuel puan kaydedilemedi.";
+        return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> FinalizeEvaluation(
+        int programOfferingId,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.FinalizeEvaluationAsync(programOfferingId, rowVersion, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Değerlendirme sonuçları kesinleştirildi; henüz öğrencilere yayımlanmadı."
+            : result.Error ?? "Değerlendirme kesinleştirilemedi.";
+        return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> PublishEvaluation(int id, CancellationToken cancellationToken)
+    {
+        var evaluationTask = apiClient.GetEvaluationAsync(id, cancellationToken);
+        var summaryTask = apiClient.GetEvaluationPublicationSummaryAsync(id, cancellationToken);
+        await Task.WhenAll(evaluationTask, summaryTask);
+        var evaluation = await evaluationTask;
+        var summary = await summaryTask;
+        if (!evaluation.IsSuccess || evaluation.Value is null || !summary.IsSuccess || summary.Value is null)
+        {
+            TempData["ErrorMessage"] = summary.Error ?? evaluation.Error ?? "Yayımlanabilir sonuç bulunamadı.";
+            return RedirectToAction(nameof(Evaluation), new { id });
+        }
+
+        return View(new EvaluationPublishPageViewModel
+        {
+            ProgramOfferingId = id,
+            ProgramName = $"{evaluation.Value.ProgramName} · {evaluation.Value.AcademicYear} · {evaluation.Value.TermName}",
+            Summary = summary.Value
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [ActionName(nameof(PublishEvaluation))]
+    public async Task<IActionResult> PublishEvaluationConfirmed(
+        int programOfferingId,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.PublishEvaluationAsync(programOfferingId, rowVersion, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Değerlendirme sonuçları öğrencilere yayımlandı."
+            : result.Error ?? "Sonuçlar yayımlanamadı.";
+        return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Detail(Guid id, CancellationToken cancellationToken)
     {
         var result = await apiClient.GetAdminApplicationDetailAsync(id, cancellationToken);
@@ -788,6 +1004,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Quota = offering?.Quota > 0 ? offering.Quota : 1,
             IsOpen = offering?.IsOpen ?? false,
             IsArchived = offering?.IsArchived ?? false,
+            UsesEvaluationWorkflow = offering?.UsesEvaluationWorkflow ?? true,
             RowVersion = offering?.RowVersion,
             ExamRequirements = requirements,
             Programs = catalog.Programs,
@@ -850,6 +1067,20 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         return View(nameof(Institutes), new InstitutePageViewModel
         {
             Result = list.Value ?? new PagedResultViewModel<InstituteAdminViewModel> { Page = 1, PageSize = 20 },
+            Form = form,
+            ErrorMessage = errorMessage ?? list.Error
+        });
+    }
+
+    private async Task<IActionResult> RenderUniversityFormAsync(
+        UniversityFormViewModel form,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var list = await apiClient.GetAdminUniversitiesAsync(cancellationToken);
+        return View(nameof(Universities), new UniversityPageViewModel
+        {
+            Universities = list.Value ?? [],
             Form = form,
             ErrorMessage = errorMessage ?? list.Error
         });

@@ -97,6 +97,8 @@ public sealed class StudentApplicationDetailViewModel
     public DateTime ApplicationDateUtc { get; set; }
     public ApplicationStatus CurrentStatus { get; set; }
     public bool UsesDocumentWorkflow { get; set; }
+    public bool UsesEvaluationWorkflow { get; set; }
+    public PublishedApplicationEvaluationViewModel? PublishedEvaluation { get; set; }
     public IReadOnlyList<ApplicationDocumentRequirementViewModel> DocumentRequirements { get; set; } = [];
     public IReadOnlyList<string> MissingRequiredDocuments { get; set; } = [];
 }

@@ -13,7 +13,10 @@ public sealed class DownloadResponseSecurityTests
     [Fact]
     public async Task Admin_download_uses_attachment_verified_type_nosniff_and_no_store()
     {
-        var controller = new ApplicationsController(new UnusedApplicationService(), new DownloadDocumentService())
+        var controller = new ApplicationsController(
+            new UnusedApplicationService(),
+            new DownloadDocumentService(),
+            new UnusedEvaluationService())
         {
             ControllerContext = new ControllerContext
             {
@@ -63,5 +66,17 @@ public sealed class DownloadResponseSecurityTests
         public Task<IReadOnlyList<StudentApplicationDto>> GetForStudentAsync(string studentTc, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<ServiceResult> SubmitAsync(string studentTc, Guid publicId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<ServiceResult> UpdateStatusAsync(Guid publicId, int adminId, ApplicationStatusUpdateDto request, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private sealed class UnusedEvaluationService : IApplicationEvaluationService
+    {
+        public Task<ServiceResult> DecideEligibilityAsync(Guid applicationPublicId, int adminId, EligibilityDecisionDto request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ServiceResult> FinalizeAsync(int offeringId, int adminId, OfferingEvaluationCommandDto request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AdminEvaluationPageDto?> GetAdminPageAsync(int offeringId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ServiceResult<EvaluationPublicationSummaryDto>> GetPublicationSummaryAsync(int offeringId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<PublishedApplicationEvaluationDto?> GetPublishedForStudentAsync(string studentTc, Guid applicationPublicId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ServiceResult<EvaluationRankingPreviewDto>> PreviewAsync(int offeringId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ServiceResult> PublishAsync(int offeringId, int adminId, OfferingEvaluationCommandDto request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ServiceResult> SetManualScoreAsync(Guid applicationPublicId, Guid criterionPublicId, int adminId, ManualEvaluationScoreDto request, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }
