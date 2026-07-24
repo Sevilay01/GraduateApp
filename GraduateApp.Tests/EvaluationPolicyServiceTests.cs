@@ -209,17 +209,63 @@ public sealed class EvaluationPolicyServiceTests
     {
         await using var db = TestDb.Create();
         var offering = await SeedAsync(db);
+        var criterion = new ProgramOfferingEvaluationCriterion
+        {
+            PublicId = Guid.NewGuid(),
+            Code = "MANUAL",
+            NormalizedCode = "MANUAL",
+            DisplayName = "Mülakat",
+            SourceType = EvaluationCriterionSourceType.ManualScore,
+            WeightBasisPoints = 10000,
+            MaximumRawScore = 100m,
+            TieBreakPriority = 1
+        };
+        offering.EvaluationCriteria.Add(criterion);
         offering.EvaluationState = state;
         await db.SaveChangesAsync();
+        var service = Service(db);
+        var originalDisplayName = criterion.DisplayName;
+        var originalAuditCount = db.SecurityAuditLogs.Count();
 
-        var result = await Service(db).CreateAsync(
+        var create = await service.CreateAsync(
             offering.ProgramOfferingId,
             7,
-            Criterion("manual", EvaluationCriterionSourceType.ManualScore, 10000, 100m, 1),
+            Criterion("other", EvaluationCriterionSourceType.ManualScore, 10000, 100m, 2),
+            CancellationToken.None);
+        var update = await service.UpdateAsync(
+            offering.ProgramOfferingId,
+            criterion.PublicId,
+            7,
+            new EvaluationCriterionUpdateDto
+            {
+                Code = criterion.Code,
+                DisplayName = "Değiştirildi",
+                SourceType = criterion.SourceType,
+                WeightBasisPoints = criterion.WeightBasisPoints,
+                MaximumRawScore = criterion.MaximumRawScore,
+                TieBreakPriority = criterion.TieBreakPriority,
+                RowVersion = Convert.ToBase64String(criterion.RowVersion)
+            },
+            CancellationToken.None);
+        var delete = await service.DeleteAsync(
+            offering.ProgramOfferingId,
+            criterion.PublicId,
+            7,
+            new EvaluationCriterionDeleteDto
+            {
+                RowVersion = Convert.ToBase64String(criterion.RowVersion)
+            },
             CancellationToken.None);
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.False(create.IsSuccess);
+        Assert.False(update.IsSuccess);
+        Assert.False(delete.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, create.StatusCode);
+        Assert.Equal(StatusCodes.Status409Conflict, update.StatusCode);
+        Assert.Equal(StatusCodes.Status409Conflict, delete.StatusCode);
+        Assert.Equal(originalDisplayName, criterion.DisplayName);
+        Assert.Same(criterion, Assert.Single(db.ProgramOfferingEvaluationCriteria));
+        Assert.Equal(originalAuditCount, db.SecurityAuditLogs.Count());
     }
 
     [Fact]

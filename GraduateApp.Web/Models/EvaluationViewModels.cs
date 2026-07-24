@@ -124,6 +124,15 @@ public sealed class AdminEvaluationApplicationViewModel
     public IReadOnlyList<EvaluationComponentViewModel> Components { get; set; } = [];
 }
 
+public sealed class EvaluationCapabilitiesViewModel
+{
+    public bool CanEditPolicy { get; set; }
+    public bool CanDecideEligibility { get; set; }
+    public bool CanEditManualScore { get; set; }
+    public bool CanFinalize { get; set; }
+    public bool CanPublish { get; set; }
+}
+
 public sealed class AdminEvaluationViewModel
 {
     public int ProgramOfferingId { get; set; }
@@ -141,6 +150,7 @@ public sealed class AdminEvaluationViewModel
     public DateTime? EvaluationFinalizedAtUtc { get; set; }
     public DateTime? ResultsPublishedAtUtc { get; set; }
     public string OfferingRowVersion { get; set; } = string.Empty;
+    public EvaluationCapabilitiesViewModel Capabilities { get; set; } = new();
     public IReadOnlyList<EvaluationCriterionViewModel> Criteria { get; set; } = [];
     public IReadOnlyList<AdminEvaluationApplicationViewModel> Applications { get; set; } = [];
     public IReadOnlyList<ExamRequirementViewModel> EligibleExamRequirements { get; set; } = [];

@@ -2,9 +2,8 @@
 @{
     ViewData["Title"] = "Başvuru değerlendirmesi";
     var evaluation = Model.Evaluation;
+    var capabilities = evaluation.Capabilities;
     var eligibleExamRequirements = evaluation.EligibleExamRequirements;
-    var canConfigurePolicy = evaluation.EvaluationState == OfferingEvaluationState.Configuring
-        && evaluation.Applications.Count == 0;
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -23,6 +22,19 @@
     <div class="alert alert-warning">@Model.ErrorMessage</div>
 }
 
+@if (evaluation.EvaluationState == OfferingEvaluationState.Finalized)
+{
+    <div class="alert alert-info" role="status">
+        Sonuçlar kesinleştirildi; değerlendirme verileri değiştirilemez.
+    </div>
+}
+else if (evaluation.EvaluationState == OfferingEvaluationState.Published)
+{
+    <div class="alert alert-success" role="status">
+        Sonuçlar yayımlandı; değerlendirme verileri değiştirilemez.
+    </div>
+}
+
 <section class="card mb-4" aria-labelledby="policy-heading">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
@@ -33,49 +45,71 @@
         @foreach (var criterion in evaluation.Criteria)
         {
             var usesExam = criterion.SourceType == EvaluationCriterionSourceType.ExamScore;
-            <form asp-action="SaveEvaluationCriterion" method="post" class="border rounded p-3 mb-2" data-evaluation-criterion-form>
-                <input type="hidden" name="ProgramOfferingId" value="@evaluation.ProgramOfferingId" />
-                <input type="hidden" name="PublicId" value="@criterion.PublicId" />
-                <input type="hidden" name="RowVersion" value="@criterion.RowVersion" />
-                <div class="row g-2">
-                    <div class="col-md-2"><label class="form-label">Kod</label><input name="Code" value="@criterion.Code" class="form-control" required /></div>
-                    <div class="col-md-3"><label class="form-label">Ad</label><input name="DisplayName" value="@criterion.DisplayName" class="form-control" required /></div>
-                    <div class="col-md-2">
-                        <label class="form-label">Kaynak</label>
-                        <select name="SourceType" class="form-select" data-source-type>
-                            @foreach (var source in Enum.GetValues<EvaluationCriterionSourceType>())
-                            {
-                                <option value="@source" selected="@(criterion.SourceType == source)">@(source.DisplayName())</option>
-                            }
-                        </select>
+            @if (capabilities.CanEditPolicy)
+            {
+                <form asp-action="SaveEvaluationCriterion" method="post" class="border rounded p-3 mb-2" data-evaluation-criterion-form>
+                    <input type="hidden" name="ProgramOfferingId" value="@evaluation.ProgramOfferingId" />
+                    <input type="hidden" name="PublicId" value="@criterion.PublicId" />
+                    <input type="hidden" name="RowVersion" value="@criterion.RowVersion" />
+                    <div class="row g-2">
+                        <div class="col-md-2"><label class="form-label">Kod</label><input name="Code" value="@criterion.Code" class="form-control" required /></div>
+                        <div class="col-md-3"><label class="form-label">Ad</label><input name="DisplayName" value="@criterion.DisplayName" class="form-control" required /></div>
+                        <div class="col-md-2">
+                            <label class="form-label">Kaynak</label>
+                            <select name="SourceType" class="form-select" data-source-type>
+                                @foreach (var source in Enum.GetValues<EvaluationCriterionSourceType>())
+                                {
+                                    <option value="@source" selected="@(criterion.SourceType == source)">@(source.DisplayName())</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" data-exam-field hidden="@(!usesExam)">
+                            <label class="form-label">Sınav</label>
+                            <select name="ExamId" class="form-select" data-exam-id required="@usesExam" disabled="@(!usesExam)">
+                                <option value="">Sınav seçiniz</option>
+                                @foreach (var requirement in eligibleExamRequirements)
+                                {
+                                    <option value="@requirement.ExamId" selected="@(criterion.ExamId == requirement.ExamId)">
+                                        @requirement.ExamName · En az @requirement.MinimumScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-1"><label class="form-label">bp</label><input name="WeightBasisPoints" value="@criterion.WeightBasisPoints" class="form-control" type="number" min="1" max="10000" /></div>
+                        <div class="col-md-1"><label class="form-label">Maks.</label><input name="MaximumRawScore" value="@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" class="form-control" type="number" step="0.0001" /></div>
+                        <div class="col-md-1"><label class="form-label">Öncelik</label><input name="TieBreakPriority" value="@criterion.TieBreakPriority" class="form-control" type="number" min="1" /></div>
+                        <div class="col-md-1 d-flex align-items-end"><button class="btn btn-outline-primary">Kaydet</button></div>
                     </div>
-                    <div class="col-md-2" data-exam-field hidden="@(!usesExam)">
-                        <label class="form-label">Sınav</label>
-                        <select name="ExamId" class="form-select" data-exam-id required="@usesExam" disabled="@(!usesExam)">
-                            <option value="">Sınav seçiniz</option>
-                            @foreach (var requirement in eligibleExamRequirements)
-                            {
-                                <option value="@requirement.ExamId" selected="@(criterion.ExamId == requirement.ExamId)">
-                                    @requirement.ExamName · En az @requirement.MinimumScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture)
-                                </option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-1"><label class="form-label">bp</label><input name="WeightBasisPoints" value="@criterion.WeightBasisPoints" class="form-control" type="number" min="1" max="10000" /></div>
-                    <div class="col-md-1"><label class="form-label">Maks.</label><input name="MaximumRawScore" value="@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" class="form-control" type="number" step="0.0001" /></div>
-                    <div class="col-md-1"><label class="form-label">Öncelik</label><input name="TieBreakPriority" value="@criterion.TieBreakPriority" class="form-control" type="number" min="1" /></div>
-                    <div class="col-md-1 d-flex align-items-end"><button class="btn btn-outline-primary" disabled="@(!canConfigurePolicy)">Kaydet</button></div>
-                </div>
-            </form>
-            <form asp-action="DeleteEvaluationCriterion" method="post" class="mb-3">
-                <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
-                <input type="hidden" name="publicId" value="@criterion.PublicId" />
-                <input type="hidden" name="rowVersion" value="@criterion.RowVersion" />
-                <button class="btn btn-sm btn-outline-danger" disabled="@(!canConfigurePolicy)">Kriteri kaldır</button>
-            </form>
+                </form>
+                <form asp-action="DeleteEvaluationCriterion" method="post" class="mb-3">
+                    <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
+                    <input type="hidden" name="publicId" value="@criterion.PublicId" />
+                    <input type="hidden" name="rowVersion" value="@criterion.RowVersion" />
+                    <button class="btn btn-sm btn-outline-danger">Kriteri kaldır</button>
+                </form>
+            }
+            else
+            {
+                <dl class="row border rounded p-3 mb-2" data-readonly-evaluation-criterion>
+                    <dt class="col-sm-2">Kod</dt>
+                    <dd class="col-sm-2"><output>@criterion.Code</output></dd>
+                    <dt class="col-sm-2">Ad</dt>
+                    <dd class="col-sm-6"><output>@criterion.DisplayName</output></dd>
+                    <dt class="col-sm-2">Kaynak</dt>
+                    <dd class="col-sm-2"><output>@criterion.SourceType.DisplayName()</output></dd>
+                    <dt class="col-sm-2">Sınav</dt>
+                    <dd class="col-sm-2"><output>@(criterion.ExamName ?? "-")</output></dd>
+                    <dt class="col-sm-2">Ağırlık</dt>
+                    <dd class="col-sm-2"><output>@criterion.WeightBasisPoints bp</output></dd>
+                    <dt class="col-sm-2">Maksimum</dt>
+                    <dd class="col-sm-2"><output>@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture)</output></dd>
+                    <dt class="col-sm-2">Öncelik</dt>
+                    <dd class="col-sm-2 mb-0"><output>@criterion.TieBreakPriority</output></dd>
+                </dl>
+            }
         }
 
-        @if (canConfigurePolicy)
+        @if (capabilities.CanEditPolicy)
         {
             var newCriterionUsesExam = Model.CriterionForm.SourceType == EvaluationCriterionSourceType.ExamScore;
             <form asp-action="SaveEvaluationCriterion" method="post" class="border rounded p-3 mt-3" data-evaluation-criterion-form>
@@ -153,33 +187,73 @@
                     <a asp-action="Detail" asp-route-id="@application.ApplicationPublicId">Başvuruyu aç</a>
                 </div>
                 <div class="small text-muted">@application.DocumentReviewSummary · Uygunluk: @application.EligibilityStatus · Toplam: @(application.TotalScore?.ToString("0.0000") ?? "-")</div>
-                @if (evaluation.EvaluationState == OfferingEvaluationState.Configuring && application.CurrentStatus == ApplicationStatus.UnderReview)
+                @if (application.CurrentStatus == ApplicationStatus.UnderReview
+                    && (capabilities.CanDecideEligibility || capabilities.CanEditManualScore))
                 {
                     <div class="row g-3 mt-1">
-                        <div class="col-md-6">
-                            <form asp-action="DecideEligibility" method="post" class="d-flex gap-2">
-                                <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
-                                <input type="hidden" name="applicationPublicId" value="@application.ApplicationPublicId" />
-                                <input type="hidden" name="rowVersion" value="@application.EvaluationRowVersion" />
-                                <select name="eligibilityStatus" class="form-select"><option value="Eligible">Uygun</option><option value="Ineligible">Uygun değil</option></select>
-                                <input name="ineligibilityReason" class="form-control" maxlength="500" placeholder="Uygun değilse gerekçe" />
-                                <button class="btn btn-outline-primary">Kaydet</button>
-                            </form>
-                        </div>
-                        @foreach (var component in application.Components.Where(item => item.SourceType == EvaluationCriterionSourceType.ManualScore))
+                        @if (capabilities.CanDecideEligibility)
                         {
                             <div class="col-md-6">
-                                <form asp-action="SetManualScore" method="post" class="d-flex gap-2">
+                                <form asp-action="DecideEligibility" method="post" class="d-flex gap-2">
                                     <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
                                     <input type="hidden" name="applicationPublicId" value="@application.ApplicationPublicId" />
-                                    <input type="hidden" name="criterionPublicId" value="@component.CriterionPublicId" />
-                                    <input type="hidden" name="rowVersion" value="@component.RowVersion" />
-                                    <label class="form-label text-nowrap align-self-center">@component.DisplayName</label>
-                                    <input name="rawScore" value="@component.RawScore?.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" type="number" min="0" max="100" step="0.0001" class="form-control" required />
-                                    <button class="btn btn-outline-primary">Puanla</button>
+                                    <input type="hidden" name="rowVersion" value="@application.EvaluationRowVersion" />
+                                    <select name="eligibilityStatus" class="form-select"><option value="Eligible">Uygun</option><option value="Ineligible">Uygun değil</option></select>
+                                    <input name="ineligibilityReason" class="form-control" maxlength="500" placeholder="Uygun değilse gerekçe" />
+                                    <button class="btn btn-outline-primary">Kaydet</button>
                                 </form>
                             </div>
                         }
+                        @if (capabilities.CanEditManualScore)
+                        {
+                            @foreach (var component in application.Components.Where(item => item.SourceType == EvaluationCriterionSourceType.ManualScore))
+                            {
+                                <div class="col-md-6">
+                                    <form asp-action="SetManualScore" method="post" class="d-flex gap-2">
+                                        <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
+                                        <input type="hidden" name="applicationPublicId" value="@application.ApplicationPublicId" />
+                                        <input type="hidden" name="criterionPublicId" value="@component.CriterionPublicId" />
+                                        <input type="hidden" name="rowVersion" value="@component.RowVersion" />
+                                        <label class="form-label text-nowrap align-self-center">@component.DisplayName</label>
+                                        <input name="rawScore" value="@component.RawScore?.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" type="number" min="0" max="100" step="0.0001" class="form-control" required />
+                                        <button class="btn btn-outline-primary">Puanla</button>
+                                    </form>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+                @if (!capabilities.CanDecideEligibility)
+                {
+                    <div class="mt-2" data-readonly-eligibility>
+                        <span class="fw-semibold">Uygunluk kararı:</span>
+                        <output>@application.EligibilityStatus</output>
+                        @if (!string.IsNullOrWhiteSpace(application.IneligibilityReason))
+                        {
+                            <span> · @application.IneligibilityReason</span>
+                        }
+                    </div>
+                }
+                @if (!capabilities.CanEditManualScore)
+                {
+                    <div class="table-responsive mt-2" data-readonly-evaluation-components>
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr><th>Bileşen</th><th>Kaynak</th><th>Ham puan</th><th>Normalize</th><th>Ağırlıklı puan</th></tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var component in application.Components)
+                            {
+                                <tr>
+                                    <td>@component.DisplayName</td>
+                                    <td>@component.SourceType.DisplayName()</td>
+                                    <td><output>@(component.RawScore?.ToString("G29", System.Globalization.CultureInfo.CurrentCulture) ?? "-")</output></td>
+                                    <td><output>@(component.NormalizedScore?.ToString("0.0000") ?? "-")</output></td>
+                                    <td><output>@(component.WeightedScore?.ToString("0.0000") ?? "-")</output></td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
                     </div>
                 }
             </article>
@@ -205,7 +279,7 @@
                 </tbody>
             </table>
         </div>
-        @if (evaluation.EvaluationState == OfferingEvaluationState.Configuring)
+        @if (capabilities.CanFinalize)
         {
             <form asp-action="FinalizeEvaluation" method="post">
                 <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
@@ -214,11 +288,11 @@
                 <span class="small text-muted ms-2">Bu işlem sıralama ve kararları dondurur; öğrenciye henüz göstermez.</span>
             </form>
         }
-        else if (evaluation.EvaluationState == OfferingEvaluationState.Finalized)
+        else if (capabilities.CanPublish)
         {
             <a asp-action="PublishEvaluation" asp-route-id="@evaluation.ProgramOfferingId" class="btn btn-danger">Yayımlama onayına geç</a>
         }
-        else
+        else if (evaluation.EvaluationState == OfferingEvaluationState.Published)
         {
             <div class="alert alert-success mb-0">Sonuçlar yayımlandı.</div>
         }

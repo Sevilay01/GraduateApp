@@ -482,6 +482,12 @@ public sealed class UniversityCatalogTests
         Assert.Contains("&lt;script&gt;", populatedHtml, StringComparison.Ordinal);
         var optionTag = OpeningTagContaining(populatedHtml, "&lt;script&gt;", "option");
         Assert.Contains("selected", optionTag, StringComparison.OrdinalIgnoreCase);
+        var gnoInput = OpeningTagContaining(populatedHtml, "name=\"Gno\"", "input");
+        Assert.DoesNotContain("disabled", gnoInput, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "Değişiklikler mevcut başvuruların değerlendirme verilerini etkilemez.",
+            WebUtility.HtmlDecode(populatedHtml),
+            StringComparison.Ordinal);
 
         var adminHtml = await RenderViewAsync(
             host.Services,

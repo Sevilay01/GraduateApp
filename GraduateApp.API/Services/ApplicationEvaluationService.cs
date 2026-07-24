@@ -657,6 +657,14 @@ public sealed class ApplicationEvaluationService(
         offering.EvaluationFinalizedAtUtc.HasValue ? DateTime.SpecifyKind(offering.EvaluationFinalizedAtUtc.Value, DateTimeKind.Utc) : null,
         offering.ResultsPublishedAtUtc.HasValue ? DateTime.SpecifyKind(offering.ResultsPublishedAtUtc.Value, DateTimeKind.Utc) : null,
         Convert.ToBase64String(offering.RowVersion),
+        new EvaluationCapabilitiesDto(
+            offering.EvaluationState == OfferingEvaluationState.Configuring
+                && !offering.IsOpen
+                && offering.Applications.Count == 0,
+            offering.EvaluationState == OfferingEvaluationState.Configuring,
+            offering.EvaluationState == OfferingEvaluationState.Configuring,
+            offering.EvaluationState == OfferingEvaluationState.Configuring,
+            offering.EvaluationState == OfferingEvaluationState.Finalized),
         offering.EvaluationCriteria.OrderBy(item => item.TieBreakPriority).Select(MapCriterion).ToArray(),
         offering.Applications
             .Where(item => item.CurrentStatus != ApplicationStatus.Draft.ToString())

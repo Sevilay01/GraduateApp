@@ -112,6 +112,13 @@ public sealed record AdminEvaluationApplicationDto(
     string EvaluationRowVersion,
     IReadOnlyList<EvaluationComponentDto> Components);
 
+public sealed record EvaluationCapabilitiesDto(
+    bool CanEditPolicy,
+    bool CanDecideEligibility,
+    bool CanEditManualScore,
+    bool CanFinalize,
+    bool CanPublish);
+
 public sealed record AdminEvaluationPageDto(
     int ProgramOfferingId,
     string ProgramName,
@@ -128,6 +135,7 @@ public sealed record AdminEvaluationPageDto(
     DateTime? EvaluationFinalizedAtUtc,
     DateTime? ResultsPublishedAtUtc,
     string OfferingRowVersion,
+    EvaluationCapabilitiesDto Capabilities,
     IReadOnlyList<ProgramOfferingEvaluationCriterionDto> Criteria,
     IReadOnlyList<AdminEvaluationApplicationDto> Applications,
     IReadOnlyList<ExamRequirementDto> EligibleExamRequirements);

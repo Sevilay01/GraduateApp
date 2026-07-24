@@ -143,6 +143,45 @@ public sealed class EvaluationCriterionBindingTests
                 StringComparison.Ordinal);
         });
 
+    [Theory]
+    [InlineData(OfferingEvaluationState.Finalized, "Sonuçlar kesinleştirildi; değerlendirme verileri değiştirilemez.")]
+    [InlineData(OfferingEvaluationState.Published, "Sonuçlar yayımlandı; değerlendirme verileri değiştirilemez.")]
+    public Task Locked_lifecycle_renders_values_without_any_evaluation_mutation_surface(
+        OfferingEvaluationState state,
+        string expectedMessage) =>
+        ExecuteInTurkishCultureAsync(async () =>
+        {
+            using var host = CreateWebHost();
+
+            var html = await RenderEvaluationViewAsync(host.Services, LockedPageModel(state));
+            var decodedHtml = WebUtility.HtmlDecode(html);
+
+            Assert.Contains(expectedMessage, decodedHtml, StringComparison.Ordinal);
+            Assert.Contains("data-readonly-evaluation-criterion", html, StringComparison.Ordinal);
+            Assert.Contains("data-readonly-eligibility", html, StringComparison.Ordinal);
+            Assert.Contains("data-readonly-evaluation-components", html, StringComparison.Ordinal);
+            Assert.Contains("ALES", decodedHtml, StringComparison.Ordinal);
+            Assert.Contains("Lisans GNO", decodedHtml, StringComparison.Ordinal);
+            Assert.Contains("Mülakat", decodedHtml, StringComparison.Ordinal);
+            Assert.Contains("87,5", decodedHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("<input", html, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("<select", html, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("SaveEvaluationCriterion", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("DeleteEvaluationCriterion", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("DecideEligibility", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("SetManualScore", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("FinalizeEvaluation", html, StringComparison.Ordinal);
+
+            if (state == OfferingEvaluationState.Finalized)
+            {
+                Assert.Contains("PublishEvaluation", html, StringComparison.Ordinal);
+            }
+            else
+            {
+                Assert.DoesNotContain("PublishEvaluation", html, StringComparison.Ordinal);
+            }
+        });
+
     [Fact]
     public Task Invalid_new_criterion_binds_real_offering_id_redirects_back_and_does_not_call_api() =>
         ExecuteInTurkishCultureAsync(async () =>
@@ -397,6 +436,13 @@ public sealed class EvaluationCriterionBindingTests
                 AcademicYear = "2026-2027",
                 TermName = "Güz",
                 EvaluationState = OfferingEvaluationState.Configuring,
+                Capabilities = new EvaluationCapabilitiesViewModel
+                {
+                    CanEditPolicy = true,
+                    CanDecideEligibility = true,
+                    CanEditManualScore = true,
+                    CanFinalize = true
+                },
                 EligibleExamRequirements =
                 [
                     new ExamRequirementViewModel
@@ -457,6 +503,73 @@ public sealed class EvaluationCriterionBindingTests
                         RowVersion = "EBESExQVFhc="
                     }
                 ]
+            }
+        ];
+        return model;
+    }
+
+    private static EvaluationPageViewModel LockedPageModel(OfferingEvaluationState state)
+    {
+        var model = ExistingCriterionPageModel();
+        model.Evaluation.EvaluationState = state;
+        model.Evaluation.Capabilities = new EvaluationCapabilitiesViewModel
+        {
+            CanPublish = state == OfferingEvaluationState.Finalized
+        };
+        model.Evaluation.Criteria =
+        [
+            .. model.Evaluation.Criteria,
+            new EvaluationCriterionViewModel
+            {
+                PublicId = Guid.Parse("21111111-2222-3333-4444-555555555555"),
+                Code = "GPA",
+                DisplayName = "Lisans GNO",
+                SourceType = EvaluationCriterionSourceType.UndergraduateGpa,
+                WeightBasisPoints = 2500,
+                MaximumRawScore = 4m,
+                TieBreakPriority = 2
+            },
+            new EvaluationCriterionViewModel
+            {
+                PublicId = Guid.Parse("31111111-2222-3333-4444-555555555555"),
+                Code = "INTERVIEW",
+                DisplayName = "Mülakat",
+                SourceType = EvaluationCriterionSourceType.ManualScore,
+                WeightBasisPoints = 2500,
+                MaximumRawScore = 100m,
+                TieBreakPriority = 3
+            }
+        ];
+        var application = model.Evaluation.Applications.Single();
+        application.EligibilityStatus = EvaluationEligibilityStatus.Eligible;
+        application.Components =
+        [
+            new EvaluationComponentViewModel
+            {
+                CriterionPublicId = CriterionPublicId,
+                DisplayName = "ALES",
+                SourceType = EvaluationCriterionSourceType.ExamScore,
+                RawScore = 75m,
+                NormalizedScore = 75m,
+                WeightedScore = 41.25m
+            },
+            new EvaluationComponentViewModel
+            {
+                CriterionPublicId = Guid.Parse("21111111-2222-3333-4444-555555555555"),
+                DisplayName = "Lisans GNO",
+                SourceType = EvaluationCriterionSourceType.UndergraduateGpa,
+                RawScore = 3.5m,
+                NormalizedScore = 87.5m,
+                WeightedScore = 21.875m
+            },
+            new EvaluationComponentViewModel
+            {
+                CriterionPublicId = Guid.Parse("31111111-2222-3333-4444-555555555555"),
+                DisplayName = "Mülakat",
+                SourceType = EvaluationCriterionSourceType.ManualScore,
+                RawScore = 87.5m,
+                NormalizedScore = 87.5m,
+                WeightedScore = 21.875m
             }
         ];
         return model;

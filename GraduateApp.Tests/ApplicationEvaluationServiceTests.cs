@@ -39,6 +39,34 @@ public sealed class ApplicationEvaluationServiceTests
         Assert.True(option.IsRequired);
     }
 
+    [Theory]
+    [InlineData(OfferingEvaluationState.Configuring, false, true, true, true, false)]
+    [InlineData(OfferingEvaluationState.Finalized, false, false, false, false, true)]
+    [InlineData(OfferingEvaluationState.Published, false, false, false, false, false)]
+    public async Task Admin_page_derives_capabilities_from_persisted_lifecycle(
+        OfferingEvaluationState state,
+        bool canEditPolicy,
+        bool canDecideEligibility,
+        bool canEditManualScore,
+        bool canFinalize,
+        bool canPublish)
+    {
+        await using var db = TestDb.Create();
+        var (offering, _) = await SeedAsync(db);
+        offering.EvaluationState = state;
+        await db.SaveChangesAsync();
+
+        var page = Assert.IsType<AdminEvaluationPageDto>(await Service(db).GetAdminPageAsync(
+            offering.ProgramOfferingId,
+            CancellationToken.None));
+
+        Assert.Equal(canEditPolicy, page.Capabilities.CanEditPolicy);
+        Assert.Equal(canDecideEligibility, page.Capabilities.CanDecideEligibility);
+        Assert.Equal(canEditManualScore, page.Capabilities.CanEditManualScore);
+        Assert.Equal(canFinalize, page.Capabilities.CanFinalize);
+        Assert.Equal(canPublish, page.Capabilities.CanPublish);
+    }
+
     [Fact]
     public async Task Eligibility_can_be_marked_eligible_only_after_required_documents_are_approved()
     {
@@ -436,6 +464,55 @@ public sealed class ApplicationEvaluationServiceTests
         Assert.Equal(EvaluationEligibilityStatus.Eligible, application.Evaluation.EligibilityStatus);
         Assert.Equal(90m, manual.RawScore);
         Assert.Equal(auditCount, db.SecurityAuditLogs.Count());
+    }
+
+    [Theory]
+    [InlineData(OfferingEvaluationState.Finalized)]
+    [InlineData(OfferingEvaluationState.Published)]
+    public async Task Locked_lifecycle_rejects_eligibility_and_manual_score_without_data_history_or_audit(
+        OfferingEvaluationState state)
+    {
+        await using var db = TestDb.Create();
+        var (offering, application) = await SeedAsync(db, manualRawScore: 90m);
+        application.Evaluation!.EligibilityStatus = EvaluationEligibilityStatus.Eligible;
+        Recalculate(application.Evaluation);
+        offering.EvaluationState = state;
+        await db.SaveChangesAsync();
+        var service = Service(db);
+        var manual = application.Evaluation.Components.Single(item =>
+            item.SourceTypeSnapshot == EvaluationCriterionSourceType.ManualScore);
+        var originalEligibility = application.Evaluation.EligibilityStatus;
+        var originalTotal = application.Evaluation.TotalScore;
+        var originalScore = manual.RawScore;
+        var originalHistoryCount = db.ApplicationStatusHistories.Count();
+        var originalAuditCount = db.SecurityAuditLogs.Count();
+
+        var eligibility = await service.DecideEligibilityAsync(
+            application.PublicId,
+            7,
+            new EligibilityDecisionDto
+            {
+                EligibilityStatus = EvaluationEligibilityStatus.Ineligible,
+                IneligibilityReason = "Lifecycle kilidi.",
+                RowVersion = Token(application.Evaluation.RowVersion)
+            },
+            CancellationToken.None);
+        var score = await service.SetManualScoreAsync(
+            application.PublicId,
+            manual.CriterionPublicIdSnapshot,
+            7,
+            new ManualEvaluationScoreDto { RawScore = 10m, RowVersion = Token(manual.RowVersion) },
+            CancellationToken.None);
+
+        Assert.False(eligibility.IsSuccess);
+        Assert.False(score.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, eligibility.StatusCode);
+        Assert.Equal(StatusCodes.Status409Conflict, score.StatusCode);
+        Assert.Equal(originalEligibility, application.Evaluation.EligibilityStatus);
+        Assert.Equal(originalTotal, application.Evaluation.TotalScore);
+        Assert.Equal(originalScore, manual.RawScore);
+        Assert.Equal(originalHistoryCount, db.ApplicationStatusHistories.Count());
+        Assert.Equal(originalAuditCount, db.SecurityAuditLogs.Count());
     }
 
     [Fact]
