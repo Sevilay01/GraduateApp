@@ -3,16 +3,18 @@
     ViewData["Title"] = "Enstitü yönetimi";
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+<header class="page-heading">
     <div>
-        <h1 class="h2 mb-1">Enstitü yönetimi</h1>
-        <p class="text-muted mb-0">Enstitüleri oluşturun, düzenleyin veya yeni seçimlere kapatın.</p>
+        <span class="eyebrow">Akademik katalog</span>
+        <h1 class="page-heading__title">Enstitüler ve programlar</h1>
+        <p class="page-heading__description">Enstitüleri oluşturun, düzenleyin veya yeni seçimlere kapatın.</p>
     </div>
-    <div class="d-flex gap-2">
-        <a asp-action="Programs" class="btn btn-primary">Programları yönet</a>
-        <a asp-action="Offerings" class="btn btn-outline-secondary">Dönemsel ilanlar</a>
+    <div class="page-heading__actions admin-tab-links">
+        <a asp-action="Institutes" class="btn btn-outline-primary" aria-current="page">Enstitüler</a>
+        <a asp-action="Programs" class="btn btn-outline-primary">Programlar</a>
+        <a asp-action="Universities" class="btn btn-outline-primary">Üniversiteler</a>
     </div>
-</div>
+</header>
 
 @if (Model.ErrorMessage is not null)
 {
@@ -23,7 +25,8 @@
     Kullanılmış bir enstitüyü silmek yerine pasifleştirin. Pasif enstitülerin programları yeni ilan ve başvuru seçimlerinde gösterilmez; geçmiş kayıtlar korunur.
 </div>
 
-<form method="get" class="card card-body mb-4">
+<form method="get" class="admin-filter-panel mb-4" aria-labelledby="institute-filter-heading">
+    <h2 id="institute-filter-heading" class="admin-filter-panel__heading">Enstitüleri filtrele</h2>
     <div class="row g-3 align-items-end">
         <div class="col-12 col-md-6">
             <label asp-for="Search" class="form-label">Enstitü adı</label>
@@ -46,24 +49,31 @@
 
 <div class="row g-4">
     <div class="col-12 col-xl-8">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
+        @if (Model.Result.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <h2>Enstitü bulunamadı</h2>
+                <p>Filtreleri değiştirin veya yeni enstitü formunu kullanın.</p>
+            </div>
+        }
+        else
+        {
+        <div class="table-shell">
+            <div class="table-responsive">
+            <table class="table table-hover align-middle responsive-table">
+                <caption class="visually-hidden">Filtrelenmiş enstitü kayıtları</caption>
                 <thead>
-                    <tr><th>Enstitü</th><th>Program</th><th>Durum</th><th class="text-end">İşlemler</th></tr>
+                    <tr><th scope="col">Enstitü</th><th scope="col">Program</th><th scope="col">Durum</th><th scope="col" class="text-end">İşlemler</th></tr>
                 </thead>
                 <tbody>
-                    @if (Model.Result.Items.Count == 0)
-                    {
-                        <tr><td colspan="4" class="text-muted text-center py-4">Filtreye uygun enstitü bulunamadı.</td></tr>
-                    }
                     @foreach (var institute in Model.Result.Items)
                     {
                         <tr>
-                            <td>@institute.InstituteName</td>
-                            <td>@institute.ProgramCount</td>
-                            <td><span class="badge @(institute.IsActive ? "text-bg-success" : "text-bg-secondary")">@(institute.IsActive ? "Aktif" : "Pasif")</span></td>
-                            <td>
-                                <div class="d-flex justify-content-end flex-wrap gap-2">
+                            <td data-label="Enstitü">@institute.InstituteName</td>
+                            <td data-label="Program">@institute.ProgramCount</td>
+                            <td data-label="Durum"><span class="admin-state @(institute.IsActive ? "admin-state--success" : null)">@(institute.IsActive ? "Aktif" : "Pasif")</span></td>
+                            <td data-label="">
+                                <div class="admin-action-stack">
                                     <a asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@institute.InstituteId" class="btn btn-sm btn-outline-primary">Düzenle</a>
                                     @if (institute.IsActive)
                                     {
@@ -71,7 +81,7 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@institute.InstituteId" />
                                             <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-warning" type="submit">Pasifleştir</button>
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Enstitüyü pasifleştir</button>
                                         </form>
                                     }
                                     else
@@ -80,17 +90,19 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@institute.InstituteId" />
                                             <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-success" type="submit">Aktifleştir</button>
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Enstitüyü aktifleştir</button>
                                         </form>
                                     }
-                                    <a asp-action="DeleteInstitute" asp-route-id="@institute.InstituteId" class="btn btn-sm btn-outline-danger">Sil</a>
+                                    <a asp-action="DeleteInstitute" asp-route-id="@institute.InstituteId" class="btn btn-sm btn-outline-danger">Kalıcı silme ayrıntısı</a>
                                 </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+            </div>
         </div>
+        }
 
         @if (Model.Result.TotalPages > 1)
         {
@@ -105,8 +117,7 @@
     </div>
 
     <div class="col-12 col-xl-4">
-        <section class="card">
-            <div class="card-body">
+        <section class="admin-section">
                 <h2 class="h4">@(Model.Form.InstituteId > 0 ? "Enstitüyü düzenle" : "Yeni enstitü")</h2>
                 <form asp-action="SaveInstitute" method="post" novalidate>
                     @Html.AntiForgeryToken()
@@ -129,7 +140,6 @@
                         }
                     </div>
                 </form>
-            </div>
         </section>
     </div>
 </div>

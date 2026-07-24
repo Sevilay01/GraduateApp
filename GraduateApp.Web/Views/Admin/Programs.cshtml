@@ -3,16 +3,18 @@
     ViewData["Title"] = "Program yönetimi";
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+<header class="page-heading">
     <div>
-        <h1 class="h2 mb-1">Program yönetimi</h1>
-        <p class="text-muted mb-0">Lisansüstü programları enstitü ve derece türüyle birlikte yönetin.</p>
+        <span class="eyebrow">Akademik katalog</span>
+        <h1 class="page-heading__title">Enstitüler ve programlar</h1>
+        <p class="page-heading__description">Lisansüstü programları enstitü ve derece türüyle birlikte yönetin.</p>
     </div>
-    <div class="d-flex gap-2">
-        <a asp-action="Institutes" class="btn btn-outline-primary">Enstitüleri yönet</a>
-        <a asp-action="Offerings" class="btn btn-outline-secondary">Dönemsel ilanlar</a>
+    <div class="page-heading__actions admin-tab-links">
+        <a asp-action="Institutes" class="btn btn-outline-primary">Enstitüler</a>
+        <a asp-action="Programs" class="btn btn-outline-primary" aria-current="page">Programlar</a>
+        <a asp-action="Universities" class="btn btn-outline-primary">Üniversiteler</a>
     </div>
-</div>
+</header>
 
 @if (Model.ErrorMessage is not null)
 {
@@ -23,7 +25,8 @@
     İlanı veya geçmiş kaydı olan programı silmek yerine pasifleştirin. Bir program kendi kaydı aktif olsa bile bağlı enstitüsü pasifse yeni seçimlerde etkili olarak pasiftir.
 </div>
 
-<form method="get" class="card card-body mb-4">
+<form method="get" class="admin-filter-panel mb-4" aria-labelledby="program-filter-heading">
+    <h2 id="program-filter-heading" class="admin-filter-panel__heading">Programları filtrele</h2>
     <div class="row g-3 align-items-end">
         <div class="col-12 col-lg-3">
             <label asp-for="Search" class="form-label">Program adı</label>
@@ -66,39 +69,46 @@
 
 <div class="row g-4">
     <div class="col-12 col-xxl-8">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
+        @if (Model.Result.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <h2>Program bulunamadı</h2>
+                <p>Filtreleri değiştirin veya yeni program formunu kullanın.</p>
+            </div>
+        }
+        else
+        {
+        <div class="table-shell">
+            <div class="table-responsive">
+            <table class="table table-hover align-middle responsive-table">
+                <caption class="visually-hidden">Filtrelenmiş lisansüstü programları</caption>
                 <thead>
-                    <tr><th>Enstitü</th><th>Program</th><th>Derece</th><th>İlan</th><th>Durum</th><th class="text-end">İşlemler</th></tr>
+                    <tr><th scope="col">Enstitü</th><th scope="col">Program</th><th scope="col">Derece</th><th scope="col">İlan</th><th scope="col">Durum</th><th scope="col" class="text-end">İşlemler</th></tr>
                 </thead>
                 <tbody>
-                    @if (Model.Result.Items.Count == 0)
-                    {
-                        <tr><td colspan="6" class="text-muted text-center py-4">Filtreye uygun program bulunamadı.</td></tr>
-                    }
                     @foreach (var program in Model.Result.Items)
                     {
                         <tr>
-                            <td>@program.InstituteName</td>
-                            <td>@program.ProgramName</td>
-                            <td>@program.DegreeType</td>
-                            <td>@program.OfferingCount</td>
-                            <td>
+                            <td data-label="Enstitü">@program.InstituteName</td>
+                            <td data-label="Program">@program.ProgramName</td>
+                            <td data-label="Derece">@program.DegreeType</td>
+                            <td data-label="İlan">@program.OfferingCount</td>
+                            <td data-label="Durum">
                                 @if (program.IsEffectivelyActive)
                                 {
-                                    <span class="badge text-bg-success">Aktif</span>
+                                    <span class="admin-state admin-state--success">Aktif</span>
                                 }
                                 else if (program.IsActive)
                                 {
-                                    <span class="badge text-bg-warning">Enstitü pasif</span>
+                                    <span class="admin-state admin-state--warning">Enstitü pasif</span>
                                 }
                                 else
                                 {
-                                    <span class="badge text-bg-secondary">Pasif</span>
+                                    <span class="admin-state">Pasif</span>
                                 }
                             </td>
-                            <td>
-                                <div class="d-flex justify-content-end flex-wrap gap-2">
+                            <td data-label="">
+                                <div class="admin-action-stack">
                                     <a asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@program.ProgramId" class="btn btn-sm btn-outline-primary">Düzenle</a>
                                     @if (program.IsActive)
                                     {
@@ -106,7 +116,7 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@program.ProgramId" />
                                             <input type="hidden" name="rowVersion" value="@program.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-warning" type="submit">Pasifleştir</button>
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Programı pasifleştir</button>
                                         </form>
                                     }
                                     else
@@ -115,17 +125,19 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@program.ProgramId" />
                                             <input type="hidden" name="rowVersion" value="@program.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-success" type="submit">Aktifleştir</button>
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Programı aktifleştir</button>
                                         </form>
                                     }
-                                    <a asp-action="DeleteProgram" asp-route-id="@program.ProgramId" class="btn btn-sm btn-outline-danger">Sil</a>
+                                    <a asp-action="DeleteProgram" asp-route-id="@program.ProgramId" class="btn btn-sm btn-outline-danger">Kalıcı silme ayrıntısı</a>
                                 </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+            </div>
         </div>
+        }
 
         @if (Model.Result.TotalPages > 1)
         {
@@ -140,8 +152,7 @@
     </div>
 
     <div class="col-12 col-xxl-4">
-        <section class="card">
-            <div class="card-body">
+        <section class="admin-section">
                 <h2 class="h4">@(Model.Form.ProgramId > 0 ? "Programı düzenle" : "Yeni program")</h2>
                 <form asp-action="SaveProgram" method="post" novalidate>
                     @Html.AntiForgeryToken()
@@ -184,7 +195,6 @@
                         }
                     </div>
                 </form>
-            </div>
         </section>
     </div>
 </div>

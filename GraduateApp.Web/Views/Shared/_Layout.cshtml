@@ -6,14 +6,16 @@
     var isStudentPanel = currentController == "Panel" && currentAction is "Index" or "ApplicationDetail";
     var isExamScores = currentController == "Panel" && currentAction == "ExamScores";
     var isProfile = currentController == "Panel" && currentAction == "Profile";
-    var isAdminHome = currentController == "Admin" && currentAction == "Index";
-    var isAdminCatalog = currentController == "Admin"
-        && currentAction is "Institutes" or "Programs" or "Universities";
     var isAdminApplications = currentController == "Admin"
-        && currentAction is "Offerings" or "Detail" or "Evaluation" or "PublishEvaluation";
+        && currentAction is "Index" or "Detail";
+    var isAdminOfferings = currentController == "Admin"
+        && currentAction is "Offerings" or "Evaluation" or "PublishEvaluation";
+    var isAdminCatalog = currentController == "Admin"
+        && currentAction is "Institutes" or "Programs" or "Universities" or "DeleteInstitute" or "DeleteProgram";
     var isAdminStudents = currentController == "Admin"
         && currentAction is "Students" or "ActivateStudent" or "DeactivateStudent";
     var isAdminAccounts = currentController == "Admin" && currentAction == "Accounts";
+    var isAdminAccountManagement = isAdminStudents || isAdminAccounts;
     var roleDisplay = User.IsInRole("Admin") ? "Yönetici" : "Öğrenci";
 }
 <!DOCTYPE html>
@@ -84,29 +86,56 @@
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link @(isAdminHome ? "active" : null)"
-                                   aria-current="@(isAdminHome ? "page" : null)"
-                                   asp-controller="Admin" asp-action="Index">Yönetim paneli</a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link @(isAdminApplications ? "active" : null)"
                                    aria-current="@(isAdminApplications ? "page" : null)"
-                                   asp-controller="Admin" asp-action="Offerings">İlanlar ve başvurular</a>
+                                   asp-controller="Admin" asp-action="Index">Başvurular</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(isAdminCatalog ? "active" : null)"
-                                   aria-current="@(isAdminCatalog ? "page" : null)"
-                                   asp-controller="Admin" asp-action="Institutes">Akademik katalog</a>
+                                <a class="nav-link @(isAdminOfferings ? "active" : null)"
+                                   aria-current="@(isAdminOfferings ? "page" : null)"
+                                   asp-controller="Admin" asp-action="Offerings">İlanlar ve değerlendirme</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link @(isAdminStudents ? "active" : null)"
-                                   aria-current="@(isAdminStudents ? "page" : null)"
-                                   asp-controller="Admin" asp-action="Students">Öğrenciler</a>
+                            <li class="nav-item dropdown">
+                                <button class="nav-link dropdown-toggle @(isAdminCatalog ? "active" : null)"
+                                        id="adminCatalogMenu"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Akademik katalog
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="adminCatalogMenu">
+                                    <li>
+                                        <a class="dropdown-item @(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "active" : null)"
+                                           aria-current="@(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "page" : null)"
+                                           asp-controller="Admin" asp-action="Institutes">Enstitüler ve programlar</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item @(currentAction == "Universities" ? "active" : null)"
+                                           aria-current="@(currentAction == "Universities" ? "page" : null)"
+                                           asp-controller="Admin" asp-action="Universities">Üniversiteler</a>
+                                    </li>
+                                </ul>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link @(isAdminAccounts ? "active" : null)"
-                                   aria-current="@(isAdminAccounts ? "page" : null)"
-                                   asp-controller="Admin" asp-action="Accounts">Yönetici hesapları</a>
+                            <li class="nav-item dropdown">
+                                <button class="nav-link dropdown-toggle @(isAdminAccountManagement ? "active" : null)"
+                                        id="adminAccountsMenu"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Hesap yönetimi
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="adminAccountsMenu">
+                                    <li>
+                                        <a class="dropdown-item @(isAdminStudents ? "active" : null)"
+                                           aria-current="@(isAdminStudents ? "page" : null)"
+                                           asp-controller="Admin" asp-action="Students">Öğrenciler</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item @(isAdminAccounts ? "active" : null)"
+                                           aria-current="@(isAdminAccounts ? "page" : null)"
+                                           asp-controller="Admin" asp-action="Accounts">Yöneticiler</a>
+                                    </li>
+                                </ul>
                             </li>
                         }
                     </ul>

@@ -3,11 +3,19 @@
     ViewData["Title"] = "Öğrenciyi aktifleştir";
 }
 
+<header class="page-heading">
+    <div>
+        <span class="eyebrow">Hesap yönetimi</span>
+        <h1 class="page-heading__title">Öğrenci hesabını aktifleştir</h1>
+        <p class="page-heading__description">Hesap erişimini geri vermeden önce maskelenmiş öğrenci bilgilerini doğrulayın.</p>
+    </div>
+</header>
+
 <div class="row justify-content-center">
     <div class="col-12 col-lg-7">
-        <section class="card border-success" aria-labelledby="confirmation-heading">
+        <section class="admin-section border-success" aria-labelledby="confirmation-heading">
             <div class="card-body">
-                <h1 id="confirmation-heading" class="h3 text-success">Öğrenciyi aktifleştirmeyi onaylayın</h1>
+                <h2 id="confirmation-heading" class="h3 text-success">Aktifleştirme özeti</h2>
                 <p>
                     <strong>@Model.FullName</strong> (@Model.MaskedTc) öğrencisinin hesabı yeniden aktifleştirilecek.
                     Güvenlik damgası yenileneceği için önceki oturumlar geçerli olmayacak.
@@ -19,7 +27,7 @@
                 </dl>
                 <form asp-action="ConfirmActivateStudent" method="post">
                     <input type="hidden" name="publicId" value="@Model.PublicId" />
-                    <button type="submit" class="btn btn-success">Evet, öğrenciyi aktifleştir</button>
+                    <button type="submit" class="btn btn-success">Öğrenci hesabını aktifleştir</button>
                     <a asp-action="Students" class="btn btn-outline-secondary">Vazgeç</a>
                 </form>
             </div>

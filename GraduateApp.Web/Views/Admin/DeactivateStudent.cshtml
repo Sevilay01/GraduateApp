@@ -3,11 +3,19 @@
     ViewData["Title"] = "Öğrenciyi pasifleştir";
 }
 
+<header class="page-heading">
+    <div>
+        <span class="eyebrow">Hesap yönetimi</span>
+        <h1 class="page-heading__title">Öğrenci hesabını pasifleştir</h1>
+        <p class="page-heading__description">Bu güvenlik eylemi öğrencinin mevcut oturumlarını geçersiz kılar; geçmiş verileri silmez.</p>
+    </div>
+</header>
+
 <div class="row justify-content-center">
     <div class="col-12 col-lg-7">
-        <section class="card border-danger" aria-labelledby="confirmation-heading">
+        <section class="danger-zone" aria-labelledby="confirmation-heading">
             <div class="card-body">
-                <h1 id="confirmation-heading" class="h3 text-danger">Öğrenciyi pasifleştirmeyi onaylayın</h1>
+                <h2 id="confirmation-heading" class="h3 text-danger">Pasifleştirme özeti</h2>
                 <p>
                     <strong>@Model.FullName</strong> (@Model.MaskedTc) öğrencisinin hesabı pasifleştirilecek.
                     Mevcut API tokenları ve Web oturumu güvenlik damgası yenilenerek geçersiz kılınacak.
@@ -22,7 +30,7 @@
                 </div>
                 <form asp-action="ConfirmDeactivateStudent" method="post">
                     <input type="hidden" name="publicId" value="@Model.PublicId" />
-                    <button type="submit" class="btn btn-danger">Evet, öğrenciyi pasifleştir</button>
+                    <button type="submit" class="btn btn-danger">Öğrenci hesabını pasifleştir</button>
                     <a asp-action="Students" class="btn btn-outline-secondary">Vazgeç</a>
                 </form>
             </div>

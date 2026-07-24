@@ -884,6 +884,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             ProgramOfferingId = id,
             ProgramName = $"{evaluation.Value.ProgramName} · {evaluation.Value.AcademicYear} · {evaluation.Value.TermName}",
+            Evaluation = evaluation.Value,
             Summary = summary.Value
         });
     }

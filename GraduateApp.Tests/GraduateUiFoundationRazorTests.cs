@@ -163,13 +163,409 @@ public sealed class GraduateUiFoundationRazorTests
             new HomeViewModel(),
             AuthenticatedUser("Admin", "Yetkili Kullanıcı"));
 
-        Assert.Contains("Yönetim paneli", html, StringComparison.Ordinal);
-        Assert.Contains("İlanlar ve başvurular", html, StringComparison.Ordinal);
+        Assert.Contains("Başvurular", html, StringComparison.Ordinal);
+        Assert.Contains("İlanlar ve değerlendirme", html, StringComparison.Ordinal);
         Assert.Contains("Akademik katalog", html, StringComparison.Ordinal);
+        Assert.Contains("Hesap yönetimi", html, StringComparison.Ordinal);
         Assert.Contains("Öğrenciler", html, StringComparison.Ordinal);
-        Assert.Contains("Yönetici hesapları", html, StringComparison.Ordinal);
+        Assert.Contains("Yöneticiler", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Sınav sonuçlarım", html, StringComparison.Ordinal);
         Assert.Contains("Yönetici hesabı", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Admin_application_list_renders_grouped_navigation_filters_pagination_and_responsive_statuses()
+    {
+        using var host = CreateWebHost();
+        var applicationPublicId = Guid.Parse("58A31172-EE1E-4A77-8CB2-D0E88E049317");
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Index",
+            new AdminApplicationListViewModel
+            {
+                Search = "tez adayı",
+                Status = ApplicationStatus.Pending,
+                AcademicYearStart = 2026,
+                Term = AcademicTerm.Fall,
+                Result = new PagedResultViewModel<AdminApplicationListItemViewModel>
+                {
+                    Page = 2,
+                    PageSize = 20,
+                    TotalCount = 41,
+                    TotalPages = 3,
+                    Items =
+                    [
+                        new AdminApplicationListItemViewModel
+                        {
+                            PublicId = applicationPublicId,
+                            StudentFullName = "<script>alert('student')</script>",
+                            MaskedTc = "123******90",
+                            ProgramName = "Bilgisayar Mühendisliği",
+                            AcademicYear = "2026–2027",
+                            TermName = "Güz",
+                            ApplicationDateUtc = new DateTime(
+                                2026,
+                                7,
+                                24,
+                                9,
+                                30,
+                                0,
+                                DateTimeKind.Utc),
+                            CurrentStatus = ApplicationStatus.Pending
+                        }
+                    ]
+                }
+            },
+            AuthenticatedUser("Admin", "Test Yönetici"));
+
+        var decoded = WebUtility.HtmlDecode(html);
+        Assert.Contains(
+            "aria-current=\"page\"",
+            OpeningTagForLinkText(html, "Başvurular"),
+            StringComparison.Ordinal);
+        Assert.Contains("İlanlar ve değerlendirme", decoded, StringComparison.Ordinal);
+        Assert.Contains("Akademik katalog", decoded, StringComparison.Ordinal);
+        Assert.Contains("Hesap yönetimi", decoded, StringComparison.Ordinal);
+        Assert.Contains("Aktif filtreler", decoded, StringComparison.Ordinal);
+        Assert.Contains("41 başvuru bulundu", decoded, StringComparison.Ordinal);
+        Assert.Contains("responsive-table", html, StringComparison.Ordinal);
+        Assert.Contains("data-label=\"Maskelenmiş TC\"", html, StringComparison.Ordinal);
+        Assert.Contains("status-badge--pending", html, StringComparison.Ordinal);
+        Assert.Contains("page=3", decoded, StringComparison.Ordinal);
+        Assert.Contains("pageSize=20", decoded, StringComparison.Ordinal);
+        Assert.Contains("search=tez%20aday%C4%B1", decoded, StringComparison.Ordinal);
+        Assert.Contains("status=Pending", decoded, StringComparison.Ordinal);
+        Assert.Contains("academicYearStart=2026", decoded, StringComparison.Ordinal);
+        Assert.Contains("term=Fall", decoded, StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("&lt;script&gt;", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Admin_document_review_forms_render_only_for_pending_documents_and_keep_concurrency_contract()
+    {
+        using var host = CreateWebHost();
+        var pendingModel = AdminApplicationDetailModel(DocumentReviewStatus.Pending);
+        var pendingHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Detail",
+            pendingModel,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+
+        Assert.Contains("data-document-review-actions", pendingHtml, StringComparison.Ordinal);
+        Assert.Contains("Belgeyi onayla", pendingHtml, StringComparison.Ordinal);
+        Assert.Contains("Belgeyi reddet", pendingHtml, StringComparison.Ordinal);
+        Assert.Contains("name=\"RowVersion\" value=\"ZG9jdW1lbnQtcm93LXZlcnNpb24=\"", pendingHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", pendingHtml, StringComparison.Ordinal);
+        Assert.Contains("Güncel belgeyi güvenli indir", WebUtility.HtmlDecode(pendingHtml), StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert", pendingHtml, StringComparison.OrdinalIgnoreCase);
+
+        var approvedModel = AdminApplicationDetailModel(DocumentReviewStatus.Approved);
+        var approvedHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Detail",
+            approvedModel,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+
+        Assert.DoesNotContain("data-document-review-actions", approvedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("name=\"ReviewStatus\" value=\"Approved\"", approvedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("name=\"ReviewStatus\" value=\"Rejected\"", approvedHtml, StringComparison.Ordinal);
+        Assert.Contains("data-document-review-readonly", approvedHtml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Offering_management_renders_closed_creation_readiness_concurrency_and_safe_requirement_actions()
+    {
+        using var host = CreateWebHost();
+        var requirementPublicId = Guid.Parse("D7A5DF16-0A47-4B17-AEC4-655A24052277");
+        var model = new ProgramOfferingPageViewModel
+        {
+            Offerings =
+            [
+                new ProgramOfferingAdminViewModel
+                {
+                    ProgramOfferingId = 7,
+                    ProgramId = 11,
+                    ProgramName = "<img src=x onerror=alert(1)>",
+                    AcademicYear = "2026–2027",
+                    TermName = "Güz",
+                    ApplicationStartUtc = new DateTime(2026, 8, 1, 7, 0, 0, DateTimeKind.Utc),
+                    ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
+                    Quota = 10,
+                    IsOpen = false,
+                    UsesEvaluationWorkflow = true,
+                    EvaluationState = OfferingEvaluationState.Configuring,
+                    RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24="
+                },
+                new ProgramOfferingAdminViewModel
+                {
+                    ProgramOfferingId = 8,
+                    ProgramId = 12,
+                    ProgramName = "İstatistik",
+                    AcademicYear = "2026–2027",
+                    TermName = "Bahar",
+                    Quota = 8,
+                    IsOpen = true,
+                    UsesEvaluationWorkflow = false,
+                    RowVersion = "c2Vjb25kLW9mZmVyaW5nLXJvdw=="
+                }
+            ],
+            Form = new ProgramOfferingFormViewModel
+            {
+                ProgramId = 11,
+                AcademicYearStart = 2026,
+                Term = AcademicTerm.Fall,
+                ApplicationStartLocal = new DateTime(2026, 8, 1, 10, 0, 0),
+                ApplicationDeadlineLocal = new DateTime(2026, 8, 24, 17, 0, 0),
+                Quota = 10,
+                Programs =
+                [
+                    new ProgramCatalogItemViewModel
+                    {
+                        ProgramId = 11,
+                        ProgramName = "Bilgisayar Mühendisliği",
+                        InstituteName = "Fen Bilimleri Enstitüsü",
+                        DegreeType = "Doktora"
+                    },
+                    new ProgramCatalogItemViewModel
+                    {
+                        ProgramId = 12,
+                        ProgramName = "İstatistik",
+                        InstituteName = "Fen Bilimleri Enstitüsü",
+                        DegreeType = "Tezli Yüksek Lisans"
+                    }
+                ],
+                Exams = [new ExamCatalogItemViewModel { ExamId = 3, ExamName = "ALES" }],
+                ExamRequirements = [new ProgramOfferingRequirementInputViewModel { ExamId = 3 }]
+            },
+            DocumentRequirements = new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
+            {
+                [7] = [],
+                [8] =
+                [
+                    new OfferingDocumentRequirementViewModel
+                    {
+                        PublicId = requirementPublicId,
+                        DocumentCode = "TRANSCRIPT",
+                        DisplayName = "Transkript",
+                        Description = "Onaylı transkript",
+                        IsRequired = true,
+                        IsActive = true,
+                        AllowedContentCategory = DocumentContentCategory.PdfOnly,
+                        MaximumBytes = 5 * 1024 * 1024,
+                        RowVersion = "cmVxdWlyZW1lbnQtcm93LXZlcnNpb24="
+                    }
+                ]
+            },
+            DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
+            {
+                ProgramOfferingId = 8,
+                MaximumBytes = 5 * 1024 * 1024
+            }
+        };
+
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Offerings",
+            model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var decoded = WebUtility.HtmlDecode(html);
+
+        Assert.Contains("data-new-offering-closed", html, StringComparison.Ordinal);
+        Assert.Contains("Yeni ilan kapalı oluşturulacak", decoded, StringComparison.Ordinal);
+        Assert.Contains("İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın", decoded, StringComparison.Ordinal);
+        Assert.Contains("Toplam ağırlık 10.000 bp", decoded, StringComparison.Ordinal);
+        Assert.Contains("Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler", decoded, StringComparison.Ordinal);
+        Assert.Contains("Koşulu pasifleştir", decoded, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"cmVxdWlyZW1lbnQtcm93LXZlcnNpb24=\"", html, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
+        Assert.Contains("responsive-table", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<img src=x", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Configuring_evaluation_renders_mutations_exam_invariants_quota_boundary_and_encoded_candidates()
+    {
+        using var host = CreateWebHost();
+        var model = EvaluationPageModel(OfferingEvaluationState.Configuring);
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Evaluation",
+            model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var decoded = WebUtility.HtmlDecode(html);
+
+        Assert.Contains("Yapılandırılıyor", decoded, StringComparison.Ordinal);
+        Assert.Contains("10.000 / 10.000 bp", decoded, StringComparison.Ordinal);
+        Assert.Contains("SaveEvaluationCriterion", html, StringComparison.Ordinal);
+        Assert.Contains("DeleteEvaluationCriterion", html, StringComparison.Ordinal);
+        Assert.Contains("DecideEligibility", html, StringComparison.Ordinal);
+        Assert.Contains("SetManualScore", html, StringComparison.Ordinal);
+        Assert.Contains("FinalizeEvaluation", html, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
+        Assert.Contains("ALES · En az 55,5", decoded, StringComparison.Ordinal);
+        Assert.DoesNotContain("İlan dışı sınav", decoded, StringComparison.Ordinal);
+
+        var gpaForm = FormContaining(html, "name=\"Code\" value=\"GPA\"");
+        Assert.Contains("data-exam-field hidden=\"hidden\"", gpaForm, StringComparison.Ordinal);
+        Assert.Contains("name=\"ExamId\"", gpaForm, StringComparison.Ordinal);
+        Assert.Contains("disabled=\"disabled\"", gpaForm, StringComparison.Ordinal);
+        Assert.DoesNotContain("required=\"required\"", gpaForm, StringComparison.Ordinal);
+        Assert.Contains("Kontenjan çizgisi", decoded, StringComparison.Ordinal);
+        Assert.Contains("responsive-table", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert('candidate')</script>", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("&lt;script&gt;", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(OfferingEvaluationState.Finalized)]
+    [InlineData(OfferingEvaluationState.Published)]
+    public async Task Locked_evaluation_lifecycle_omits_all_mutation_forms(OfferingEvaluationState state)
+    {
+        using var host = CreateWebHost();
+        var model = EvaluationPageModel(state);
+        model.Evaluation.Capabilities = new EvaluationCapabilitiesViewModel
+        {
+            CanPublish = state == OfferingEvaluationState.Finalized
+        };
+
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Evaluation",
+            model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var decoded = WebUtility.HtmlDecode(html);
+
+        Assert.Contains("data-readonly-evaluation-criterion", html, StringComparison.Ordinal);
+        Assert.Contains("data-readonly-eligibility", html, StringComparison.Ordinal);
+        Assert.Contains("data-readonly-evaluation-components", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("SaveEvaluationCriterion", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("DeleteEvaluationCriterion", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("DecideEligibility", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetManualScore", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("FinalizeEvaluation", html, StringComparison.Ordinal);
+
+        if (state == OfferingEvaluationState.Finalized)
+        {
+            Assert.Contains("Sonuçlar kesinleştirildi; değerlendirme verileri değiştirilemez.", decoded, StringComparison.Ordinal);
+            Assert.Contains("Yayımlama onayına geç", decoded, StringComparison.Ordinal);
+        }
+        else
+        {
+            Assert.Contains("Sonuçlar yayımlandı; değerlendirme verileri değiştirilemez.", decoded, StringComparison.Ordinal);
+            Assert.DoesNotContain("Yayımlama onayına geç", decoded, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public async Task Publish_confirmation_renders_final_ranking_atomic_warning_post_and_row_version()
+    {
+        using var host = CreateWebHost();
+        var model = EvaluationPageModel(OfferingEvaluationState.Finalized);
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "PublishEvaluation",
+            new EvaluationPublishPageViewModel
+            {
+                ProgramOfferingId = model.Evaluation.ProgramOfferingId,
+                ProgramName = model.Evaluation.ProgramName,
+                Evaluation = model.Evaluation,
+                Summary = new EvaluationPublicationSummaryViewModel
+                {
+                    Quota = 1,
+                    AdmittedCount = 1,
+                    NotAdmittedCount = 1,
+                    IneligibleCount = 0,
+                    OfferingRowVersion = "cHVibGlzaC1yb3ctdmVyc2lvbg=="
+                }
+            },
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var decoded = WebUtility.HtmlDecode(html);
+
+        Assert.Contains("data-publish-confirmation", html, StringComparison.Ordinal);
+        Assert.Contains("Kesinleştirilmiş sıralama", decoded, StringComparison.Ordinal);
+        Assert.Contains("Yayımlama öncesinde öğrenciler puan, sıra ve sonucu göremez", decoded, StringComparison.Ordinal);
+        Assert.Contains("history, audit ve sonuç snapshot", decoded, StringComparison.Ordinal);
+        Assert.Contains("İşlem geri alınamaz", decoded, StringComparison.Ordinal);
+        Assert.Contains("method=\"post\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaC1yb3ctdmVyc2lvbg==\"", html, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
+        Assert.Contains(">Sonuçları yayımla</button>", html, StringComparison.Ordinal);
+        Assert.Contains("responsive-table", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("window.confirm", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert('candidate')</script>", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Catalog_and_account_errors_render_encoded_responsive_and_specific_safe_actions()
+    {
+        using var host = CreateWebHost();
+        var universitiesHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Universities",
+            new UniversityPageViewModel
+            {
+                ErrorMessage = "409: Aynı ad kullanılıyor <script>alert('duplicate')</script>",
+                Universities =
+                [
+                    new UniversityViewModel
+                    {
+                        UniversityId = 4,
+                        UniversityName = "<img src=x onerror=alert(1)>"
+                    }
+                ]
+            },
+            AuthenticatedUser("Admin", "Test Yönetici"));
+
+        Assert.Contains("409: Aynı ad kullanılıyor", WebUtility.HtmlDecode(universitiesHtml), StringComparison.Ordinal);
+        Assert.Contains("responsive-table", universitiesHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert", universitiesHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("<img src=x", universitiesHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("&lt;script&gt;", universitiesHtml, StringComparison.Ordinal);
+        Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", universitiesHtml, StringComparison.Ordinal);
+
+        var accountsHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Accounts",
+            new AdminAccountPageViewModel
+            {
+                Result = new PagedResultViewModel<AdminAccountViewModel>
+                {
+                    Page = 1,
+                    PageSize = 20,
+                    TotalCount = 1,
+                    TotalPages = 1,
+                    Items =
+                    [
+                        new AdminAccountViewModel
+                        {
+                            PublicId = Guid.Parse("B6A0B01B-39FD-4D91-A99F-A23681C6FDD2"),
+                            Email = "admin@example.test",
+                            IsActive = true,
+                            CreatedAtUtc = DateTime.UtcNow,
+                            UpdatedAtUtc = DateTime.UtcNow,
+                            RowVersion = "YWRtaW4tcm93LXZlcnNpb24="
+                        }
+                    ]
+                }
+            },
+            AuthenticatedUser("Admin", "current-admin@example.test"));
+
+        Assert.Contains("Son aktif ve davetini tamamlamış yönetici pasifleştirilemez", WebUtility.HtmlDecode(accountsHtml), StringComparison.Ordinal);
+        Assert.Contains("Yöneticiyi pasifleştir", WebUtility.HtmlDecode(accountsHtml), StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"YWRtaW4tcm93LXZlcnNpb24=\"", accountsHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", accountsHtml, StringComparison.Ordinal);
+        Assert.Contains("responsive-table", accountsHtml, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -474,6 +870,275 @@ public sealed class GraduateUiFoundationRazorTests
         }
     }
 
+    private static AdminApplicationDetailViewModel AdminApplicationDetailModel(
+        DocumentReviewStatus reviewStatus)
+    {
+        var document = new ApplicationDocumentViewModel
+        {
+            PublicId = Guid.Parse("C9F0AFA6-778E-4580-A374-A167BB8212BD"),
+            VersionNumber = 2,
+            IsCurrent = true,
+            OriginalFileName = "<script>alert('document')</script>.pdf",
+            VerifiedContentType = "application/pdf",
+            FileSize = 1024,
+            ReviewStatus = reviewStatus,
+            RejectionReason = reviewStatus == DocumentReviewStatus.Rejected ? "Belge okunamıyor." : null,
+            UploadedAtUtc = new DateTime(2026, 7, 23, 8, 0, 0, DateTimeKind.Utc),
+            RowVersion = "ZG9jdW1lbnQtcm93LXZlcnNpb24="
+        };
+
+        return new AdminApplicationDetailViewModel
+        {
+            PublicId = Guid.Parse("E3D70BD7-7392-4138-928B-BD6D5D4F7E93"),
+            MaskedTc = "123******90",
+            StudentFullName = "<script>alert('student')</script>",
+            Email = "student@example.test",
+            ProgramName = "Bilgisayar Mühendisliği",
+            InstituteName = "Fen Bilimleri Enstitüsü",
+            AcademicYear = "2026–2027",
+            TermName = "Güz",
+            ApplicationDateUtc = new DateTime(2026, 7, 24, 9, 0, 0, DateTimeKind.Utc),
+            CurrentStatus = ApplicationStatus.Pending,
+            RowVersion = "YXBwbGljYXRpb24tcm93LXZlcnNpb24=",
+            UsesDocumentWorkflow = true,
+            History =
+            [
+                new ApplicationStatusHistoryViewModel
+                {
+                    CurrentStatus = ApplicationStatus.Pending,
+                    ChangedAtUtc = new DateTime(2026, 7, 24, 9, 0, 0, DateTimeKind.Utc),
+                    Notes = "Başvuru gönderildi."
+                }
+            ],
+            ScoreSnapshots =
+            [
+                new ApplicationScoreSnapshotViewModel
+                {
+                    ExamId = 6,
+                    ExamName = "ALES",
+                    Score = 82.5m,
+                    ExamDate = new DateOnly(2026, 5, 10)
+                }
+            ],
+            DocumentRequirements =
+            [
+                new ApplicationDocumentRequirementViewModel
+                {
+                    PublicId = Guid.Parse("7B1DAEA8-8F04-4901-9161-2FAB6904BF64"),
+                    DocumentCode = "TRANSCRIPT",
+                    DisplayName = "Transkript",
+                    Description = "Onaylı transkript",
+                    IsRequired = true,
+                    AllowedContentCategory = DocumentContentCategory.PdfOnly,
+                    MaximumBytes = 5 * 1024 * 1024,
+                    CurrentDocument = document,
+                    Versions = [document]
+                }
+            ]
+        };
+    }
+
+    private static EvaluationPageViewModel EvaluationPageModel(OfferingEvaluationState state)
+    {
+        var examCriterionPublicId = Guid.Parse("8E9705E1-93DA-4F88-A87F-CCEE0256BD98");
+        var gpaCriterionPublicId = Guid.Parse("A78C457B-9CEE-44D1-898C-A12B279DE4C1");
+        var manualCriterionPublicId = Guid.Parse("B52BA6B3-E29D-4DF2-B245-CFA27BD1C99F");
+        var firstApplicationPublicId = Guid.Parse("61F9339B-FFCE-46F1-9A02-BAA35E12C5B7");
+        var secondApplicationPublicId = Guid.Parse("F621BF25-B6B0-4E65-88FC-683239056C29");
+
+        IReadOnlyList<EvaluationComponentViewModel> Components(decimal manualScore) =>
+        [
+            new EvaluationComponentViewModel
+            {
+                CriterionPublicId = examCriterionPublicId,
+                Code = "ALES",
+                DisplayName = "ALES",
+                SourceType = EvaluationCriterionSourceType.ExamScore,
+                RawScore = 80m,
+                NormalizedScore = 80m,
+                WeightBasisPoints = 5000,
+                WeightedScore = 40m,
+                TieBreakPriority = 1,
+                RowVersion = "YWxlcy1yb3ctdmVyc2lvbg=="
+            },
+            new EvaluationComponentViewModel
+            {
+                CriterionPublicId = gpaCriterionPublicId,
+                Code = "GPA",
+                DisplayName = "Lisans GNO",
+                SourceType = EvaluationCriterionSourceType.UndergraduateGpa,
+                RawScore = 3.5m,
+                MaximumRawScore = 4m,
+                NormalizedScore = 87.5m,
+                WeightBasisPoints = 2500,
+                WeightedScore = 21.875m,
+                TieBreakPriority = 2,
+                RowVersion = "Z3BhLXJvdy12ZXJzaW9u"
+            },
+            new EvaluationComponentViewModel
+            {
+                CriterionPublicId = manualCriterionPublicId,
+                Code = "INTERVIEW",
+                DisplayName = "Mülakat",
+                SourceType = EvaluationCriterionSourceType.ManualScore,
+                RawScore = manualScore,
+                MaximumRawScore = 100m,
+                NormalizedScore = manualScore,
+                WeightBasisPoints = 2500,
+                WeightedScore = manualScore / 4m,
+                TieBreakPriority = 3,
+                RowVersion = "bWFudWFsLXJvdy12ZXJzaW9u"
+            }
+        ];
+
+        return new EvaluationPageViewModel
+        {
+            Evaluation = new AdminEvaluationViewModel
+            {
+                ProgramOfferingId = 44,
+                ProgramName = "Bilgisayar Mühendisliği",
+                AcademicYear = "2026–2027",
+                TermName = "Güz",
+                ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
+                Quota = 1,
+                IsOpen = false,
+                UsesEvaluationWorkflow = true,
+                EvaluationState = state,
+                OfferingRowVersion = "ZXZhbHVhdGlvbi1vZmZlcmluZy1yb3c=",
+                Capabilities = state == OfferingEvaluationState.Configuring
+                    ? new EvaluationCapabilitiesViewModel
+                    {
+                        CanEditPolicy = true,
+                        CanDecideEligibility = true,
+                        CanEditManualScore = true,
+                        CanFinalize = true
+                    }
+                    : new EvaluationCapabilitiesViewModel(),
+                EligibleExamRequirements =
+                [
+                    new ExamRequirementViewModel
+                    {
+                        ExamId = 6,
+                        ExamName = "ALES",
+                        MinimumScore = 55.5m,
+                        IsRequired = true
+                    }
+                ],
+                Criteria =
+                [
+                    new EvaluationCriterionViewModel
+                    {
+                        PublicId = examCriterionPublicId,
+                        Code = "ALES",
+                        DisplayName = "ALES",
+                        SourceType = EvaluationCriterionSourceType.ExamScore,
+                        ExamId = 6,
+                        ExamName = "ALES",
+                        WeightBasisPoints = 5000,
+                        MaximumRawScore = 100m,
+                        TieBreakPriority = 1,
+                        RowVersion = "YWxlcy1jcml0ZXJpb24tcm93"
+                    },
+                    new EvaluationCriterionViewModel
+                    {
+                        PublicId = gpaCriterionPublicId,
+                        Code = "GPA",
+                        DisplayName = "Lisans GNO",
+                        SourceType = EvaluationCriterionSourceType.UndergraduateGpa,
+                        WeightBasisPoints = 2500,
+                        MaximumRawScore = 4m,
+                        TieBreakPriority = 2,
+                        RowVersion = "Z3BhLWNyaXRlcmlvbi1yb3c="
+                    },
+                    new EvaluationCriterionViewModel
+                    {
+                        PublicId = manualCriterionPublicId,
+                        Code = "INTERVIEW",
+                        DisplayName = "Mülakat",
+                        SourceType = EvaluationCriterionSourceType.ManualScore,
+                        WeightBasisPoints = 2500,
+                        MaximumRawScore = 100m,
+                        TieBreakPriority = 3,
+                        RowVersion = "bWFudWFsLWNyaXRlcmlvbi1yb3c="
+                    }
+                ],
+                Applications =
+                [
+                    new AdminEvaluationApplicationViewModel
+                    {
+                        ApplicationPublicId = firstApplicationPublicId,
+                        StudentFullName = "<script>alert('candidate')</script>",
+                        MaskedTc = "123******90",
+                        CurrentStatus = ApplicationStatus.UnderReview,
+                        DocumentReviewSummary = "Belgeler onaylandı",
+                        EligibilityStatus = EvaluationEligibilityStatus.Eligible,
+                        TotalScore = 83.75m,
+                        Rank = 1,
+                        Outcome = EvaluationOutcome.Admitted,
+                        EvaluationRowVersion = "Zmlyc3QtYXBwbGljYXRpb24tcm93",
+                        Components = Components(87.5m)
+                    },
+                    new AdminEvaluationApplicationViewModel
+                    {
+                        ApplicationPublicId = secondApplicationPublicId,
+                        StudentFullName = "İkinci Aday",
+                        MaskedTc = "987******10",
+                        CurrentStatus = ApplicationStatus.UnderReview,
+                        DocumentReviewSummary = "Belgeler onaylandı",
+                        EligibilityStatus = EvaluationEligibilityStatus.Eligible,
+                        TotalScore = 79.375m,
+                        Rank = 2,
+                        Outcome = EvaluationOutcome.NotAdmitted,
+                        EvaluationRowVersion = "c2Vjb25kLWFwcGxpY2F0aW9uLXJvdw==",
+                        Components = Components(70m)
+                    }
+                ]
+            },
+            Preview = new EvaluationRankingPreviewViewModel
+            {
+                CanFinalize = true,
+                Rows =
+                [
+                    new EvaluationRankingRowViewModel
+                    {
+                        ApplicationPublicId = firstApplicationPublicId,
+                        StudentFullName = "<script>alert('candidate')</script>",
+                        MaskedTc = "123******90",
+                        TotalScore = 83.75m,
+                        Rank = 1,
+                        ProjectedOutcome = EvaluationOutcome.Admitted
+                    },
+                    new EvaluationRankingRowViewModel
+                    {
+                        ApplicationPublicId = secondApplicationPublicId,
+                        StudentFullName = "İkinci Aday",
+                        MaskedTc = "987******10",
+                        TotalScore = 79.375m,
+                        Rank = 2,
+                        ProjectedOutcome = EvaluationOutcome.NotAdmitted
+                    }
+                ]
+            },
+            CriterionForm = new EvaluationCriterionFormViewModel
+            {
+                ProgramOfferingId = 44,
+                SourceType = EvaluationCriterionSourceType.ManualScore,
+                MaximumRawScore = 100m,
+                TieBreakPriority = 4
+            }
+        };
+    }
+
+    private static string FormContaining(string html, string marker)
+    {
+        var markerIndex = html.IndexOf(marker, StringComparison.Ordinal);
+        Assert.True(markerIndex >= 0, $"Form işareti bulunamadı: {marker}");
+        var formStart = html.LastIndexOf("<form", markerIndex, StringComparison.Ordinal);
+        var formEnd = html.IndexOf("</form>", markerIndex, StringComparison.Ordinal);
+        Assert.True(formStart >= 0 && formEnd >= formStart, $"Form sınırları bulunamadı: {marker}");
+        return html[formStart..(formEnd + "</form>".Length)];
+    }
+
     private static string OpeningTagForLinkText(string html, string text)
     {
         var textIndex = html.IndexOf($">{text}</a>", StringComparison.Ordinal);
@@ -491,7 +1156,16 @@ public sealed class GraduateUiFoundationRazorTests
     {
         public Task RouteAsync(RouteContext context) => Task.CompletedTask;
 
-        public VirtualPathData GetVirtualPath(VirtualPathContext context) =>
-            new(this, $"/{context.Values["controller"]}/{context.Values["action"]}");
+        public VirtualPathData GetVirtualPath(VirtualPathContext context)
+        {
+            var path = $"/{context.Values["controller"]}/{context.Values["action"]}";
+            var query = context.Values
+                .Where(item => item.Key is not "controller" and not "action" && item.Value is not null)
+                .Select(item =>
+                    $"{Uri.EscapeDataString(item.Key)}="
+                    + Uri.EscapeDataString(Convert.ToString(item.Value, CultureInfo.InvariantCulture) ?? string.Empty));
+            var queryString = string.Join("&", query);
+            return new VirtualPathData(this, string.IsNullOrEmpty(queryString) ? path : $"{path}?{queryString}");
+        }
     }
 }

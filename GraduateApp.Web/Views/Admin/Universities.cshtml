@@ -3,64 +3,82 @@
     ViewData["Title"] = "Üniversite kataloğu";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h2 mb-1">Üniversite kataloğu</h1>
-        <p class="text-muted mb-0">Öğrencilerin profilinde seçebileceği üniversiteleri yönetin.</p>
-    </div>
-</div>
+<div class="admin-page">
+    <header class="page-heading">
+        <div>
+            <span class="eyebrow">Akademik katalog</span>
+            <h1 class="page-heading__title">Üniversiteler</h1>
+            <p class="page-heading__description">Öğrencilerin profilinde seçebileceği üniversiteleri güvenli ve encode edilmiş katalog kayıtları olarak yönetin.</p>
+        </div>
+        <div class="page-heading__actions admin-tab-links">
+            <a asp-action="Institutes" class="btn btn-outline-primary">Enstitüler</a>
+            <a asp-action="Programs" class="btn btn-outline-primary">Programlar</a>
+            <a asp-action="Universities" class="btn btn-outline-primary" aria-current="page">Üniversiteler</a>
+        </div>
+    </header>
 
-@if (Model.ErrorMessage is not null)
-{
-    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
-}
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+    }
 
-<div class="row g-4">
-    <div class="col-12 col-lg-7">
-        <section aria-labelledby="university-list-title">
-            <h2 id="university-list-title" class="h4">Tanımlı üniversiteler</h2>
-            @if (Model.Universities.Count == 0)
-            {
-                <p class="text-muted">Üniversite kataloğu henüz tanımlanmamış.</p>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th scope="col">Üniversite adı</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var university in Model.Universities)
-                            {
-                                <tr>
-                                    <td>@university.UniversityName</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+    <div class="row g-4">
+        <div class="col-12 col-lg-7">
+            <section class="admin-section" aria-labelledby="university-list-title">
+                <div class="admin-section-heading">
+                    <div>
+                        <h2 id="university-list-title">Tanımlı üniversiteler</h2>
+                        <p>@Model.Universities.Count katalog kaydı</p>
+                    </div>
                 </div>
-            }
-        </section>
-    </div>
+                @if (Model.Universities.Count == 0)
+                {
+                    <div class="empty-state">
+                        <h3>Üniversite kataloğu boş</h3>
+                        <p>İlk üniversite kaydını eklemek için formu kullanın.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-shell">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle responsive-table">
+                                <caption class="visually-hidden">Tanımlı üniversite kataloğu</caption>
+                                <thead>
+                                    <tr><th scope="col">Üniversite adı</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var university in Model.Universities)
+                                    {
+                                        <tr><td data-label="Üniversite">@university.UniversityName</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </section>
+        </div>
 
-    <div class="col-12 col-lg-5">
-        <section class="card shadow-sm" aria-labelledby="university-form-title">
-            <div class="card-body">
-                <h2 id="university-form-title" class="h4">Yeni üniversite ekle</h2>
-                <form asp-action="CreateUniversity" method="post" novalidate>
+        <div class="col-12 col-lg-5">
+            <section class="admin-section" aria-labelledby="university-form-title">
+                <div class="admin-section-heading">
+                    <div>
+                        <h2 id="university-form-title">Yeni üniversite ekle</h2>
+                        <p>Aynı adla ikinci kayıt oluşturma isteği güvenli bir hata mesajıyla gösterilir.</p>
+                    </div>
+                </div>
+                <form asp-action="CreateUniversity" method="post" novalidate data-disable-on-submit="true">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                     <div class="mb-3">
                         <label asp-for="Form.UniversityName" class="form-label"></label>
                         <input asp-for="Form.UniversityName" class="form-control" maxlength="100" autocomplete="off" />
                         <span asp-validation-for="Form.UniversityName" class="text-danger"></span>
                     </div>
-                    <button type="submit" class="btn btn-primary">Üniversite ekle</button>
+                    <button type="submit" class="btn btn-primary">Üniversiteyi kataloğa ekle</button>
                 </form>
-            </div>
-        </section>
+            </section>
+        </div>
     </div>
 </div>
 
