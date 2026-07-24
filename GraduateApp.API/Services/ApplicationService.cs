@@ -43,6 +43,9 @@ public sealed class ApplicationService(
         var offering = await dbContext.ProgramOfferings
             .Include(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.DocumentRequirements.Where(requirement => requirement.IsActive))
+            .Include(item => item.ExamRequirements)
+            .Include(item => item.EvaluationCriteria).ThenInclude(item => item.Exam)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == programOfferingId, cancellationToken);
         if (offering is null)
         {
@@ -62,6 +65,21 @@ public sealed class ApplicationService(
             return ServiceResult<StudentApplicationDto>.Failure(
                 "İlanda en az bir aktif ve zorunlu belge koşulu bulunmalıdır. Lütfen ilan yöneticisiyle iletişime geçin.",
                 StatusCodes.Status409Conflict);
+        }
+
+        if (offering.UsesEvaluationWorkflow)
+        {
+            var policyValidation = EvaluationPolicyInvariant.Validate(
+                offering.EvaluationCriteria,
+                offering.ExamRequirements
+                    .Where(item => item.IsRequired)
+                    .Select(item => item.ExamId));
+            if (!policyValidation.IsValid)
+            {
+                return ServiceResult<StudentApplicationDto>.Failure(
+                    EvaluationPolicyInvariant.DraftCreationError(policyValidation),
+                    StatusCodes.Status409Conflict);
+            }
         }
 
         if (await dbContext.Applications.AnyAsync(

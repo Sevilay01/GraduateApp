@@ -241,6 +241,33 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task Create_rejects_orphaned_open_evaluation_policy_before_draft_snapshot_or_audit()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        await ConfigureEvaluationAsync(db, offering, "10000000146");
+        offering.ExamRequirements.Single().IsRequired = false;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await CreateService(db).CreateAsync(
+            "10000000146",
+            offering.ProgramOfferingId,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Contains("ALES", result.Error, StringComparison.Ordinal);
+        Assert.Empty(db.Applications);
+        Assert.Empty(db.ApplicationStatusHistories);
+        Assert.Empty(db.ApplicationDocumentRequirementSnapshots);
+        Assert.Empty(db.ApplicationScoreSnapshots);
+        Assert.Empty(db.ApplicationEvaluations);
+        Assert.Empty(db.ApplicationEvaluationComponents);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "DocumentDraftCreated");
+    }
+
+    [Fact]
     public async Task Submit_is_blocked_when_required_document_is_missing()
     {
         await using var db = TestDb.Create();

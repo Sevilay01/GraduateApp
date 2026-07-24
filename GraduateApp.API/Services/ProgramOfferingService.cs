@@ -165,7 +165,8 @@ public sealed class ProgramOfferingService(
             .Include(item => item.Applications)
             .Include(item => item.DocumentRequirements)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
-            .Include(item => item.EvaluationCriteria)
+            .Include(item => item.EvaluationCriteria).ThenInclude(item => item.Exam)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
         if (offering is null)
         {
@@ -214,6 +215,7 @@ public sealed class ProgramOfferingService(
                 StatusCodes.Status409Conflict);
         }
 
+        var proposedIsOpen = request.IsOpen && !request.IsArchived;
         var now = timeProvider.GetUtcNow().UtcDateTime;
         if (request.IsOpen && request.ApplicationDeadlineUtc <= now)
         {
@@ -228,13 +230,20 @@ public sealed class ProgramOfferingService(
                 StatusCodes.Status409Conflict);
         }
 
-        if (request.IsOpen
-            && (offering.UsesEvaluationWorkflow || enablingEvaluationWorkflow)
-            && !EvaluationPolicyIsValid(offering.EvaluationCriteria))
+        if (proposedIsOpen
+            && (offering.UsesEvaluationWorkflow || enablingEvaluationWorkflow))
         {
-            return ServiceResult<ProgramOfferingAdminDto>.Failure(
-                "İlan açılmadan önce toplam ağırlığı 10000 basis point olan geçerli bir değerlendirme politikası tanımlayın.",
-                StatusCodes.Status409Conflict);
+            var policyValidation = EvaluationPolicyInvariant.Validate(
+                offering.EvaluationCriteria,
+                request.ExamRequirements
+                    .Where(item => item.IsRequired)
+                    .Select(item => item.ExamId));
+            if (!policyValidation.IsValid)
+            {
+                return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                    EvaluationPolicyInvariant.OpeningError(policyValidation),
+                    StatusCodes.Status409Conflict);
+            }
         }
 
         byte[] rowVersion;
@@ -254,7 +263,7 @@ public sealed class ProgramOfferingService(
         offering.ApplicationStartUtc = EnsureUtc(request.ApplicationStartUtc);
         offering.ApplicationDeadlineUtc = EnsureUtc(request.ApplicationDeadlineUtc);
         offering.Quota = request.Quota;
-        offering.IsOpen = request.IsOpen && !request.IsArchived;
+        offering.IsOpen = proposedIsOpen;
         offering.IsArchived = request.IsArchived;
         offering.UsesEvaluationWorkflow = offering.UsesEvaluationWorkflow || request.UsesEvaluationWorkflow;
         offering.UpdatedAtUtc = now;
@@ -328,6 +337,14 @@ public sealed class ProgramOfferingService(
             return InvalidRequest("Aktif program bulunamadı.");
         }
 
+        if (request.ExamRequirements is null
+            || request.ExamRequirements.Any(item =>
+                item.ExamId <= 0
+                || item.MinimumScore is < 0m or > 999.99m))
+        {
+            return InvalidRequest("Sınav koşullarından biri geçersiz.");
+        }
+
         if (request.ExamRequirements.GroupBy(item => item.ExamId).Any(group => group.Count() > 1))
         {
             return InvalidRequest("Aynı sınav koşulu birden fazla kez eklenemez.");
@@ -396,18 +413,6 @@ public sealed class ProgramOfferingService(
             .SequenceEqual(requested
                 .OrderBy(item => item.ExamId)
                 .Select(item => (item.ExamId, item.MinimumScore, item.MinimumValidityDate, item.IsRequired)));
-
-    private static bool EvaluationPolicyIsValid(IEnumerable<ProgramOfferingEvaluationCriterion> criteria)
-    {
-        var items = criteria.ToArray();
-        return items.Length > 0
-            && items.Sum(item => item.WeightBasisPoints) == EvaluationScoring.TotalWeightBasisPoints
-            && items.All(item => item.WeightBasisPoints > 0
-                && item.MaximumRawScore > 0m
-                && item.TieBreakPriority > 0)
-            && items.Select(item => item.NormalizedCode).Distinct(StringComparer.Ordinal).Count() == items.Length
-            && items.Select(item => item.TieBreakPriority).Distinct().Count() == items.Length;
-    }
 
     private static DateTime EnsureUtc(DateTime value) => value.Kind == DateTimeKind.Utc
         ? value

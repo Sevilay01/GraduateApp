@@ -257,6 +257,142 @@ public sealed class ProgramOfferingServiceTests
     }
 
     [Theory]
+    [InlineData(OrphanedExamRequirement.OptionalMatchingExam)]
+    [InlineData(OrphanedExamRequirement.MissingMatchingExam)]
+    [InlineData(OrphanedExamRequirement.DifferentRequiredExam)]
+    public async Task Evaluation_offering_cannot_open_when_proposed_requirements_orphan_exam_criterion(
+        OrphanedExamRequirement orphanedRequirement)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        var (ales, yds) = AddValidExamEvaluationPolicy(db, offering);
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        await db.SaveChangesAsync();
+        var originalRowVersion = offering.RowVersion.ToArray();
+        var originalAuditCount = db.SecurityAuditLogs.Count();
+        var proposedRequirements = orphanedRequirement switch
+        {
+            OrphanedExamRequirement.OptionalMatchingExam =>
+                new[] { Requirement(ales.ExamId, isRequired: false) },
+            OrphanedExamRequirement.MissingMatchingExam =>
+                [],
+            OrphanedExamRequirement.DifferentRequiredExam =>
+                new[] { Requirement(yds.ExamId, isRequired: true) },
+            _ => throw new ArgumentOutOfRangeException(nameof(orphanedRequirement))
+        };
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true, examRequirements: proposedRequirements),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal(
+            "İlan açılamaz: ALES değerlendirme kriteri için zorunlu sınav koşulu bulunmalıdır.",
+            result.Error);
+        Assert.False(offering.IsOpen);
+        var storedRequirement = Assert.Single(offering.ExamRequirements);
+        Assert.Equal(ales.ExamId, storedRequirement.ExamId);
+        Assert.True(storedRequirement.IsRequired);
+        Assert.Equal(originalRowVersion, offering.RowVersion);
+        Assert.Equal(originalAuditCount, db.SecurityAuditLogs.Count());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Evaluation_offering_can_open_with_required_matching_exam_and_optional_other_exams(
+        bool includeOptionalOtherExam)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        var (ales, yds) = AddValidExamEvaluationPolicy(db, offering);
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        await db.SaveChangesAsync();
+        var proposedRequirements = new List<ProgramOfferingRequirementInputDto>
+        {
+            Requirement(ales.ExamId, isRequired: true)
+        };
+        if (includeOptionalOtherExam)
+        {
+            proposedRequirements.Add(Requirement(yds.ExamId, isRequired: false));
+        }
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true, examRequirements: proposedRequirements),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Value!.IsOpen);
+        Assert.Contains(result.Value.ExamRequirements, item => item.ExamId == ales.ExamId && item.IsRequired);
+        if (includeOptionalOtherExam)
+        {
+            Assert.Contains(result.Value.ExamRequirements, item => item.ExamId == yds.ExamId && !item.IsRequired);
+        }
+    }
+
+    [Fact]
+    public async Task Closed_evaluation_offering_can_temporarily_store_orphaned_exam_criterion()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        var (ales, _) = AddValidExamEvaluationPolicy(db, offering);
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(
+                offering,
+                isOpen: false,
+                examRequirements: [Requirement(ales.ExamId, isRequired: false)]),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value!.IsOpen);
+        Assert.False(Assert.Single(result.Value.ExamRequirements).IsRequired);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Open_evaluation_offering_cannot_remove_or_make_criterion_exam_optional(bool removeRequirement)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        var (ales, _) = AddValidExamEvaluationPolicy(db, offering);
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        offering.IsOpen = true;
+        await db.SaveChangesAsync();
+        var originalRowVersion = offering.RowVersion.ToArray();
+        var originalAuditCount = db.SecurityAuditLogs.Count();
+        ProgramOfferingRequirementInputDto[] proposedRequirements = removeRequirement
+            ? []
+            : [Requirement(ales.ExamId, isRequired: false)];
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            1,
+            UpdateRequest(offering, isOpen: true, examRequirements: proposedRequirements),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.True(offering.IsOpen);
+        Assert.True(Assert.Single(offering.ExamRequirements).IsRequired);
+        Assert.Equal(originalRowVersion, offering.RowVersion);
+        Assert.Equal(originalAuditCount, db.SecurityAuditLogs.Count());
+    }
+
+    [Theory]
     [InlineData(OfferingEvaluationState.Finalized)]
     [InlineData(OfferingEvaluationState.Published)]
     public async Task Finalized_or_published_evaluation_offering_cannot_be_edited(OfferingEvaluationState state)
@@ -400,12 +536,49 @@ public sealed class ProgramOfferingServiceTests
         UpdatedAtUtc = DateTime.UtcNow
     };
 
+    private static (Exam Ales, Exam Yds) AddValidExamEvaluationPolicy(
+        GraduateAppDbContext db,
+        ProgramOffering offering)
+    {
+        offering.UsesEvaluationWorkflow = true;
+        var ales = new Exam { ExamName = "ALES" };
+        var yds = new Exam { ExamName = "YDS" };
+        db.Exams.Add(yds);
+        offering.ExamRequirements.Add(new ProgramOfferingExamRequirement
+        {
+            Exam = ales,
+            MinimumScore = 0m,
+            IsRequired = true
+        });
+        offering.EvaluationCriteria.Add(new ProgramOfferingEvaluationCriterion
+        {
+            PublicId = Guid.NewGuid(),
+            Code = "ALES",
+            NormalizedCode = "ALES",
+            DisplayName = "Kontrolsüz kullanıcı girdisi",
+            SourceType = EvaluationCriterionSourceType.ExamScore,
+            Exam = ales,
+            WeightBasisPoints = 10000,
+            MaximumRawScore = 100m,
+            TieBreakPriority = 1
+        });
+        return (ales, yds);
+    }
+
+    private static ProgramOfferingRequirementInputDto Requirement(int examId, bool isRequired) => new()
+    {
+        ExamId = examId,
+        MinimumScore = 0m,
+        IsRequired = isRequired
+    };
+
     private static ProgramOfferingUpdateDto UpdateRequest(
         ProgramOffering offering,
         bool isOpen,
         bool? usesEvaluationWorkflow = null,
         int? quota = null,
-        DateTime? applicationDeadlineUtc = null) => new()
+        DateTime? applicationDeadlineUtc = null,
+        IReadOnlyList<ProgramOfferingRequirementInputDto>? examRequirements = null) => new()
         {
             ProgramId = offering.ProgramId,
             AcademicYearStart = offering.AcademicYearStart,
@@ -415,8 +588,19 @@ public sealed class ProgramOfferingServiceTests
             Quota = quota ?? offering.Quota,
             IsOpen = isOpen,
             UsesEvaluationWorkflow = usesEvaluationWorkflow ?? offering.UsesEvaluationWorkflow,
+            ExamRequirements = examRequirements
+                ?? offering.ExamRequirements
+                    .Select(item => Requirement(item.ExamId, item.IsRequired))
+                    .ToArray(),
             RowVersion = Convert.ToBase64String(offering.RowVersion)
         };
+
+    public enum OrphanedExamRequirement
+    {
+        OptionalMatchingExam,
+        MissingMatchingExam,
+        DifferentRequiredExam
+    }
 
     private sealed class SwitchableConcurrencyInterceptor : SaveChangesInterceptor
     {

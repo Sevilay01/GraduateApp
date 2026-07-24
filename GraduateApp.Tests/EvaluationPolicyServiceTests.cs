@@ -223,6 +223,45 @@ public sealed class EvaluationPolicyServiceTests
     }
 
     [Fact]
+    public async Task Policy_is_locked_while_offering_is_open()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var criterion = new ProgramOfferingEvaluationCriterion
+        {
+            PublicId = Guid.NewGuid(),
+            Code = "MANUAL",
+            NormalizedCode = "MANUAL",
+            DisplayName = "Mülakat",
+            SourceType = EvaluationCriterionSourceType.ManualScore,
+            WeightBasisPoints = 10000,
+            MaximumRawScore = 100m,
+            TieBreakPriority = 1
+        };
+        offering.EvaluationCriteria.Add(criterion);
+        offering.IsOpen = true;
+        await db.SaveChangesAsync();
+
+        var result = await Service(db).DeleteAsync(
+            offering.ProgramOfferingId,
+            criterion.PublicId,
+            7,
+            new EvaluationCriterionDeleteDto
+            {
+                RowVersion = Convert.ToBase64String(criterion.RowVersion)
+            },
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal(
+            "Açık bir ilanın değerlendirme politikası değiştirilemez. Önce ilanı kapatın.",
+            result.Error);
+        Assert.Single(db.ProgramOfferingEvaluationCriteria);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item => item.EventType == "EvaluationCriterionDeleted");
+    }
+
+    [Fact]
     public async Task Legacy_offering_cannot_receive_evaluation_policy()
     {
         await using var db = TestDb.Create();

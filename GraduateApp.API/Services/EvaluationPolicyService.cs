@@ -264,6 +264,11 @@ public sealed class EvaluationPolicyService(
             return "Kesinleştirilmiş veya yayımlanmış değerlendirme politikası değiştirilemez.";
         }
 
+        if (offering.IsOpen)
+        {
+            return "Açık bir ilanın değerlendirme politikası değiştirilemez. Önce ilanı kapatın.";
+        }
+
         return offering.Applications.Count > 0
             ? "Taslak dâhil başvurusu bulunan bir ilanın değerlendirme politikası değiştirilemez."
             : null;
