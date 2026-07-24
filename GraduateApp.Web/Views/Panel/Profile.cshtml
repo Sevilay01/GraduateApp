@@ -44,12 +44,28 @@
         </div>
     </fieldset>
 
+    @if (!Model.UniversityCatalogLoadSucceeded)
+    {
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-1">Üniversite kataloğu yüklenemedi.</p>
+            <p class="mb-0">@Model.UniversityCatalogErrorMessage Eğitim alanları şu anda kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</p>
+        </div>
+    }
+    else if (Model.Universities.Count == 0)
+    {
+        <div class="alert alert-warning" role="alert">
+            <p class="mb-1">Üniversite kataloğu henüz tanımlanmamış. Lütfen yöneticiyle iletişime geçin.</p>
+            <p class="mb-0">Katalog tanımlanana kadar eğitim alanları kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</p>
+        </div>
+    }
+
     <fieldset class="mb-4">
         <legend class="h4">Eğitim</legend>
         <div class="row g-3">
             <div class="col-12">
                 <label asp-for="UniversityId" class="form-label"></label>
-                <select asp-for="UniversityId" class="form-select">
+                <select asp-for="UniversityId" class="form-select"
+                        disabled="@(Model.CanEditEducation ? null : "disabled")">
                     <option value="">Üniversite seçiniz</option>
                     @foreach (var university in Model.Universities)
                     {
@@ -60,17 +76,20 @@
             </div>
             <div class="col-md-6">
                 <label asp-for="Faculty" class="form-label"></label>
-                <input asp-for="Faculty" class="form-control" />
+                <input asp-for="Faculty" class="form-control"
+                       disabled="@(Model.CanEditEducation ? null : "disabled")" />
                 <span asp-validation-for="Faculty" class="text-danger"></span>
             </div>
             <div class="col-md-6">
                 <label asp-for="GraduatedProgram" class="form-label"></label>
-                <input asp-for="GraduatedProgram" class="form-control" />
+                <input asp-for="GraduatedProgram" class="form-control"
+                       disabled="@(Model.CanEditEducation ? null : "disabled")" />
                 <span asp-validation-for="GraduatedProgram" class="text-danger"></span>
             </div>
             <div class="col-md-4">
                 <label asp-for="Gno" class="form-label"></label>
-                <input asp-for="Gno" class="form-control" inputmode="decimal" />
+                <input asp-for="Gno" class="form-control" inputmode="decimal"
+                       disabled="@(Model.CanEditEducation ? null : "disabled")" />
                 <span asp-validation-for="Gno" class="text-danger"></span>
             </div>
         </div>

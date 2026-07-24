@@ -619,6 +619,18 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult<IReadOnlyList<UniversityViewModel>>> GetUniversitiesAsync(CancellationToken cancellationToken) =>
         GetAsync<IReadOnlyList<UniversityViewModel>>("api/students/universities", cancellationToken);
 
+    public Task<ApiResult<IReadOnlyList<UniversityViewModel>>> GetAdminUniversitiesAsync(
+        CancellationToken cancellationToken) =>
+        GetAsync<IReadOnlyList<UniversityViewModel>>("api/admin/universities", cancellationToken);
+
+    public Task<ApiResult<UniversityViewModel>> CreateUniversityAsync(
+        UniversityFormViewModel model,
+        CancellationToken cancellationToken) =>
+        PostAsync<UniversityViewModel>(
+            "api/admin/universities",
+            new { model.UniversityName },
+            cancellationToken);
+
     public Task<ApiResult<StudentProfileApiModel>> UpdateProfileAsync(
         StudentProfileViewModel model,
         CancellationToken cancellationToken) =>

@@ -340,6 +340,21 @@ public sealed class InstituteAdminViewModel
     public int ProgramCount { get; set; }
 }
 
+public sealed class UniversityFormViewModel
+{
+    [Required(ErrorMessage = "Üniversite adı zorunludur.")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Üniversite adı 2 ile 100 karakter arasında olmalıdır.")]
+    [Display(Name = "Üniversite adı")]
+    public string UniversityName { get; set; } = string.Empty;
+}
+
+public sealed class UniversityPageViewModel
+{
+    public IReadOnlyList<UniversityViewModel> Universities { get; set; } = [];
+    public UniversityFormViewModel Form { get; set; } = new();
+    public string? ErrorMessage { get; set; }
+}
+
 public sealed class InstituteFormViewModel
 {
     public int InstituteId { get; set; }

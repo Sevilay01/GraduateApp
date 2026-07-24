@@ -379,6 +379,44 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Universities(CancellationToken cancellationToken)
+    {
+        var result = await apiClient.GetAdminUniversitiesAsync(cancellationToken);
+        return View(new UniversityPageViewModel
+        {
+            Universities = result.Value ?? [],
+            ErrorMessage = result.IsSuccess
+                ? null
+                : result.Error ?? "Üniversite kataloğu yüklenemedi."
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateUniversity(
+        [Bind(Prefix = "Form")] UniversityFormViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return await RenderUniversityFormAsync(
+                model,
+                "Üniversite bilgileri doğrulanamadı.",
+                cancellationToken);
+        }
+
+        var result = await apiClient.CreateUniversityAsync(model, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Üniversite oluşturulamadı.");
+            return await RenderUniversityFormAsync(model, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = "Üniversite kataloğa eklendi.";
+        return RedirectToAction(nameof(Universities));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Institutes(
         string? search,
         bool? isActive,
@@ -1029,6 +1067,20 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         return View(nameof(Institutes), new InstitutePageViewModel
         {
             Result = list.Value ?? new PagedResultViewModel<InstituteAdminViewModel> { Page = 1, PageSize = 20 },
+            Form = form,
+            ErrorMessage = errorMessage ?? list.Error
+        });
+    }
+
+    private async Task<IActionResult> RenderUniversityFormAsync(
+        UniversityFormViewModel form,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var list = await apiClient.GetAdminUniversitiesAsync(cancellationToken);
+        return View(nameof(Universities), new UniversityPageViewModel
+        {
+            Universities = list.Value ?? [],
             Form = form,
             ErrorMessage = errorMessage ?? list.Error
         });

@@ -126,6 +126,7 @@ public sealed class StudentProfileService(
     public async Task<IReadOnlyList<UniversityDto>> GetUniversitiesAsync(CancellationToken cancellationToken) =>
         await dbContext.Universities.AsNoTracking()
             .OrderBy(item => item.UniversityName)
+            .ThenBy(item => item.UniversityId)
             .Select(item => new UniversityDto(item.UniversityId, item.UniversityName))
             .ToListAsync(cancellationToken);
 

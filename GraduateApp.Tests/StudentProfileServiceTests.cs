@@ -90,6 +90,35 @@ public sealed class StudentProfileServiceTests
         Assert.Equal("STUDENT@EXAMPLE.TEST", student.LoginIdentity!.NormalizedEmail);
     }
 
+    [Fact]
+    public async Task Update_with_unknown_university_keeps_the_existing_safe_bad_request_behavior()
+    {
+        await using var db = TestDb.Create();
+        var student = CreateStudent("10000000078", "student@example.test", null);
+        db.Students.Add(student);
+        await db.SaveChangesAsync();
+        var service = new StudentProfileService(db, TimeProvider.System, new InvariantEmailNormalizer());
+
+        var result = await service.UpdateAsync(student.Tc, new UpdateStudentProfileDto
+        {
+            FirstName = student.StudentName,
+            LastName = student.StudentSurname,
+            Email = student.Email,
+            Education = new EducationDto
+            {
+                UniversityId = int.MaxValue,
+                Faculty = "Test Fakültesi",
+                GraduatedProgram = "Test Programı",
+                Gno = 3.5m
+            }
+        }, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+        Assert.Equal("Üniversite bulunamadı.", result.Error);
+        Assert.Empty(student.EducationInfos);
+    }
+
     private static Student CreateStudent(string tc, string email, string? telephone)
     {
         var student = new Student

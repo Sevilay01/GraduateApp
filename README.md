@@ -43,6 +43,12 @@ GraduateApi__BaseAddress
 
 Web, API'yi varsayılan geliştirme adresi olan `https://localhost:7037/` üzerinden çağırır. Farklı bir adres için `GraduateApi__BaseAddress` kullanın. API'nin parola sıfırlama bağlantısında kullandığı Web adresi `Web__BaseUrl` ile yapılandırılır.
 
+### Üniversite kataloğunu güvenli kurma
+
+Öğrenci profilindeki üniversite seçimi mevcut `Universities` kataloğunu kullanır. Kataloğu doğrudan SQL ile doldurmayın ve development başlangıcına otomatik seed eklemeyin. Admin rolüyle Web uygulamasında **Üniversiteler** sayfasını açıp üniversite adlarını form üzerinden ekleyin. API, adı trim eder ve doğrular; veritabanı collation kurallarıyla yinelenen adları güvenli 409 yanıtıyla reddeder. Başarılı ekleme ile PII içermeyen `UniversityCreated` audit kaydı aynı transaction içinde yazılır.
+
+Bu akış yalnızca listeleme ve eklemeyi destekler. Mevcut `EducationInfo` yabancı anahtar geçmişini korumak için üniversite silme veya yeniden adlandırma işlemi sunulmaz. Katalog boşsa ya da yüklenemezse öğrenci profilinde eğitim alanları devre dışı kalır; profilin diğer alanları güncellenmeye devam edebilir.
+
 ## Veritabanı ve migration
 
 Bu depo database-first bir şemadan geldiği ve geçmiş EF migration kaydı içermediği için `HardenExistingSchema` migration'ı mevcut temel tabloları yeniden oluşturmaz. Migration:
