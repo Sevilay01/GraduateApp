@@ -47,6 +47,22 @@ public static class EvaluationPresentation
         EvaluationOutcome.Ineligible => "Uygun bulunmadı",
         _ => "Bilinmiyor"
     };
+
+    public static string DisplayName(this EvaluationEligibilityStatus status) => status switch
+    {
+        EvaluationEligibilityStatus.Pending => "Karar bekliyor",
+        EvaluationEligibilityStatus.Eligible => "Uygun",
+        EvaluationEligibilityStatus.Ineligible => "Uygun değil",
+        _ => "Bilinmiyor"
+    };
+
+    public static string DisplayName(this OfferingEvaluationState state) => state switch
+    {
+        OfferingEvaluationState.Configuring => "Yapılandırılıyor",
+        OfferingEvaluationState.Finalized => "Kesinleştirildi",
+        OfferingEvaluationState.Published => "Yayımlandı",
+        _ => "Bilinmiyor"
+    };
 }
 
 public sealed class EvaluationCriterionViewModel
@@ -195,6 +211,7 @@ public sealed class EvaluationPublishPageViewModel
 {
     public int ProgramOfferingId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public AdminEvaluationViewModel Evaluation { get; set; } = new();
     public EvaluationPublicationSummaryViewModel Summary { get; set; } = new();
 }
 

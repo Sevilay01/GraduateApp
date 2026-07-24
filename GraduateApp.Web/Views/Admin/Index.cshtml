@@ -1,89 +1,154 @@
 @model AdminApplicationListViewModel
 @{
     ViewData["Title"] = "Başvuru yönetimi";
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Search)
+        || Model.Status.HasValue
+        || Model.AcademicYearStart.HasValue
+        || Model.Term.HasValue;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h2 mb-1">Başvuru yönetimi</h1>
-        <p class="text-muted mb-0">Arama, durum filtresi ve sayfalama ile başvuruları inceleyin.</p>
-    </div>
-    <a asp-action="Offerings" class="btn btn-outline-primary">Dönemsel ilanlar</a>
-</div>
+<div class="admin-page">
+    <header class="page-heading">
+        <div>
+            <span class="eyebrow">Başvurular</span>
+            <h1 class="page-heading__title">Başvuru yönetimi</h1>
+            <p class="page-heading__description">Adayları güvenli filtrelerle bulun, başvuru yaşam döngüsünü ve belgeleri tek yerden inceleyin.</p>
+        </div>
+        <div class="page-heading__actions">
+            <a asp-action="Offerings" class="btn btn-outline-primary">İlanlar ve değerlendirme</a>
+        </div>
+    </header>
 
-<form method="get" class="card card-body mb-4" role="search">
-    <div class="row g-3 align-items-end">
-        <div class="col-12 col-md-6">
-            <label for="search" class="form-label">Ad, e-posta veya program</label>
-            <input id="search" name="search" value="@Model.Search" class="form-control" maxlength="100" />
+    <form method="get" class="admin-filter-panel" role="search" aria-labelledby="application-filters-heading">
+        <h2 id="application-filters-heading" class="admin-filter-panel__heading">Başvuruları filtrele</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-5">
+                <label for="search" class="form-label">Ad, e-posta veya program</label>
+                <input id="search" name="search" value="@Model.Search" class="form-control" maxlength="100" autocomplete="off" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label asp-for="Status" class="form-label">Başvuru durumu</label>
+                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<ApplicationStatus>()">
+                    <option value="">Tümü</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <label asp-for="AcademicYearStart" class="form-label">Akademik yıl</label>
+                <input asp-for="AcademicYearStart" class="form-control" min="2000" max="2200" placeholder="2026" />
+            </div>
+            <div class="col-12 col-sm-6 col-lg-2">
+                <label asp-for="Term" class="form-label">Dönem</label>
+                <select asp-for="Term" class="form-select" asp-items="Html.GetEnumSelectList<AcademicTerm>()">
+                    <option value="">Tümü</option>
+                </select>
+            </div>
+            <div class="col-12 admin-form-actions">
+                <button type="submit" class="btn btn-primary">Filtreleri uygula</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Filtreleri temizle</a>
+            </div>
         </div>
-        <div class="col-12 col-md-3">
-            <label asp-for="Status" class="form-label">Durum</label>
-            <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<ApplicationStatus>()">
-                <option value="">Tümü</option>
-            </select>
-        </div>
-        <div class="col-12 col-md-2">
-            <label asp-for="AcademicYearStart" class="form-label">Akademik yıl</label>
-            <input asp-for="AcademicYearStart" class="form-control" min="2000" max="2200" placeholder="2026" />
-        </div>
-        <div class="col-12 col-md-2">
-            <label asp-for="Term" class="form-label">Dönem</label>
-            <select asp-for="Term" class="form-select" asp-items="Html.GetEnumSelectList<AcademicTerm>()">
-                <option value="">Tümü</option>
-            </select>
-        </div>
-        <div class="col-12 col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Filtrele</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Temizle</a>
-        </div>
-    </div>
-</form>
 
-@if (Model.ErrorMessage is not null)
-{
-    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
-}
-else if (Model.Result.Items.Count == 0)
-{
-    <p class="text-muted">Filtrelere uygun başvuru bulunamadı.</p>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr><th>Öğrenci</th><th>TC</th><th>Program</th><th>Dönem</th><th>Tarih</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
-            </thead>
-            <tbody>
-                @foreach (var application in Model.Result.Items)
+        @if (hasActiveFilters)
+        {
+            <div class="active-filters" aria-label="Aktif filtreler">
+                <span class="active-filters__label">Aktif filtreler</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Search))
                 {
-                    <tr>
-                        <td>@application.StudentFullName</td>
-                        <td>@application.MaskedTc</td>
-                        <td>@application.ProgramName</td>
-                        <td>@application.AcademicYear · @application.TermName</td>
-                        <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")</time></td>
-                        <td>@application.CurrentStatus.DisplayName()</td>
-                        <td><a asp-action="Detail" asp-route-id="@application.PublicId" class="btn btn-sm btn-outline-primary">Detay</a></td>
-                    </tr>
+                    <span class="filter-chip">Arama: @Model.Search</span>
                 }
-            </tbody>
-        </table>
-    </div>
+                @if (Model.Status.HasValue)
+                {
+                    <span class="filter-chip">Durum: @Model.Status.Value.DisplayName()</span>
+                }
+                @if (Model.AcademicYearStart.HasValue)
+                {
+                    <span class="filter-chip">Yıl: @Model.AcademicYearStart</span>
+                }
+                @if (Model.Term.HasValue)
+                {
+                    <span class="filter-chip">Dönem: @Model.Term.Value.DisplayName()</span>
+                }
+            </div>
+        }
+    </form>
 
-    @if (Model.Result.TotalPages > 1)
-    {
-        <nav aria-label="Başvuru sayfaları">
-            <ul class="pagination justify-content-center">
-                <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)">
-                    <a class="page-link" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Önceki</a>
-                </li>
-                <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
-                <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)">
-                    <a class="page-link" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Sonraki</a>
-                </li>
-            </ul>
-        </nav>
-    }
-}
+    <section aria-labelledby="application-results-heading">
+        <div class="admin-results-heading mb-3">
+            <div>
+                <h2 id="application-results-heading">Başvuru sonuçları</h2>
+                <p class="admin-results-count" role="status">@Model.Result.TotalCount başvuru bulundu</p>
+            </div>
+        </div>
+
+        @if (Model.ErrorMessage is not null)
+        {
+            <div class="alert alert-warning" role="alert">
+                <strong>Başvurular yüklenemedi.</strong>
+                <span>@Model.ErrorMessage</span>
+            </div>
+        }
+        else if (Model.Result.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <h3>Başvuru bulunamadı</h3>
+                <p>Filtreleri değiştirin veya tüm başvuruları görmek için filtreleri temizleyin.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle responsive-table">
+                        <caption class="visually-hidden">Filtrelenmiş lisansüstü başvuruları</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Öğrenci</th>
+                                <th scope="col">Maskelenmiş TC</th>
+                                <th scope="col">Program</th>
+                                <th scope="col">Dönem</th>
+                                <th scope="col">Başvuru tarihi</th>
+                                <th scope="col">Durum</th>
+                                <th scope="col"><span class="visually-hidden">İşlem</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var application in Model.Result.Items)
+                            {
+                                <tr>
+                                    <td data-label="Öğrenci">@application.StudentFullName</td>
+                                    <td data-label="Maskelenmiş TC">@application.MaskedTc</td>
+                                    <td data-label="Program">@application.ProgramName</td>
+                                    <td data-label="Dönem">@application.AcademicYear · @application.TermName</td>
+                                    <td data-label="Başvuru tarihi">
+                                        <time datetime="@application.ApplicationDateUtc.ToString("O")">
+                                            @IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")
+                                        </time>
+                                    </td>
+                                    <td data-label="Durum"><partial name="_ApplicationStatusBadge" model="application.CurrentStatus" /></td>
+                                    <td data-label="">
+                                        <a asp-action="Detail" asp-route-id="@application.PublicId" class="btn btn-sm btn-primary">Başvuru detayı</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (Model.Result.TotalPages > 1)
+            {
+                <nav class="mt-3" aria-label="Başvuru sayfaları">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Önceki</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link" aria-current="page">@Model.Result.Page / @Model.Result.TotalPages</span></li>
+                        <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Sonraki</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </section>
+</div>

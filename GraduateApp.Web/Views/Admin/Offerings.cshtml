@@ -1,318 +1,482 @@
 @model ProgramOfferingPageViewModel
 @{
-    ViewData["Title"] = "Dönemsel program ilanları";
+    ViewData["Title"] = "İlanlar ve değerlendirme";
     var formRequirements = Model.DocumentRequirements.TryGetValue(Model.Form.ProgramOfferingId, out var selectedRequirements)
         ? selectedRequirements
         : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
     var formOfferingHasActiveRequiredRequirement = formRequirements.Any(item => item.IsActive && item.IsRequired);
+    var hasActiveFilters = Model.AcademicYearStart.HasValue || Model.Term.HasValue || Model.IncludeArchived;
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-    <div>
-        <h1 class="h2 mb-1">Dönemsel program ilanları</h1>
-        <p class="text-muted mb-0">Akademik yıl, dönem, kontenjan ve sınav koşullarını yönetin.</p>
-    </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Başvurulara dön</a>
-</div>
-
-@if (Model.ErrorMessage is not null)
-{
-    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
-}
-
-<form method="get" class="card card-body mb-4">
-    <div class="row g-3 align-items-end">
-        <div class="col-12 col-md-3">
-            <label asp-for="AcademicYearStart" class="form-label">Akademik yıl başlangıcı</label>
-            <input asp-for="AcademicYearStart" class="form-control" min="2000" max="2200" />
+<div class="admin-page">
+    <header class="page-heading">
+        <div>
+            <span class="eyebrow">İlanlar ve değerlendirme</span>
+            <h1 class="page-heading__title">Dönemsel program ilanları</h1>
+            <p class="page-heading__description">İlan tarihlerini, kontenjanı, belge ve sınav koşullarını mevcut güvenlik ve eşzamanlılık sözleşmeleriyle yönetin.</p>
         </div>
-        <div class="col-12 col-md-3">
-            <label asp-for="Term" class="form-label">Dönem</label>
-            <select asp-for="Term" class="form-select" asp-items="Html.GetEnumSelectList<AcademicTerm>()">
-                <option value="">Tümü</option>
-            </select>
+        <div class="page-heading__actions">
+            <a asp-action="Index" class="btn btn-outline-secondary">Başvurulara dön</a>
         </div>
-        <div class="col-12 col-md-3 form-check ms-2">
-            <input asp-for="IncludeArchived" class="form-check-input" />
-            <label asp-for="IncludeArchived" class="form-check-label">Arşivlenenleri göster</label>
+    </header>
+
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning" role="alert">
+            <strong>İlan verileri yüklenemedi.</strong>
+            <span>@Model.ErrorMessage</span>
         </div>
-        <div class="col-12 col-md-2">
-            <button class="btn btn-primary" type="submit">Filtrele</button>
-        </div>
-    </div>
-</form>
+    }
 
-<div class="row g-4">
-    <div class="col-12 col-xl-7">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr><th>Program</th><th>Dönem</th><th>Son tarih</th><th>Kontenjan</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var offering in Model.Offerings)
-                    {
-                        var offeringRequirements = Model.DocumentRequirements.TryGetValue(offering.ProgramOfferingId, out var listedRequirements)
-                            ? listedRequirements
-                            : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
-                        var hasActiveRequiredRequirement = offeringRequirements.Any(item => item.IsActive && item.IsRequired);
-                        <tr>
-                            <td>@offering.ProgramName</td>
-                            <td>@offering.AcademicYear · @offering.TermName</td>
-                            <td>
-                                @if (offering.ApplicationDeadlineUtc.HasValue)
-                                {
-                                    <time datetime="@offering.ApplicationDeadlineUtc.Value.ToString("O")">
-                                        @IstanbulTime.FromUtc(offering.ApplicationDeadlineUtc.Value).ToString("dd.MM.yyyy HH:mm")
-                                    </time>
-                                }
-                                else
-                                {
-                                    <span>Belirtilmemiş</span>
-                                }
-                            </td>
-                            <td>@offering.Quota</td>
-                            <td>
-                                <div>@(offering.IsArchived ? "Arşivli" : offering.IsOpen ? "Açık" : "Kapalı")</div>
-                                @if (!hasActiveRequiredRequirement)
-                                {
-                                    <div class="small text-warning">İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</div>
-                                }
-                            </td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a asp-action="Offerings" asp-route-editId="@offering.ProgramOfferingId" class="btn btn-sm btn-outline-primary">Düzenle</a>
-                                    @if (offering.UsesEvaluationWorkflow)
-                                    {
-                                        <a asp-action="Evaluation" asp-route-id="@offering.ProgramOfferingId" class="btn btn-sm btn-outline-dark">Değerlendirme</a>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="col-12 col-xl-5">
-        <section class="card">
-            <div class="card-body">
-                <h2 class="h4">@(Model.Form.ProgramOfferingId > 0 ? "İlanı düzenle" : "Yeni ilan")</h2>
-                <form asp-action="SaveOffering" method="post" novalidate>
-                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
-                    <input asp-for="Form.ProgramOfferingId" type="hidden" />
-                    <input asp-for="Form.RowVersion" type="hidden" />
-
-                    <div class="mb-3">
-                        <label asp-for="Form.ProgramId" class="form-label"></label>
-                        <select asp-for="Form.ProgramId" class="form-select">
-                            @foreach (var program in Model.Form.Programs)
-                            {
-                                <option value="@program.ProgramId">@program.InstituteName · @program.ProgramName · @program.DegreeType</option>
-                            }
-                        </select>
-                        <span asp-validation-for="Form.ProgramId" class="text-danger"></span>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-12 col-sm-6">
-                            <label asp-for="Form.AcademicYearStart" class="form-label"></label>
-                            <input asp-for="Form.AcademicYearStart" class="form-control" type="number" min="2000" max="2200" />
-                            <span asp-validation-for="Form.AcademicYearStart" class="text-danger"></span>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <label asp-for="Form.Term" class="form-label"></label>
-                            <select asp-for="Form.Term" class="form-select">
-                                @foreach (var term in AcademicTermDisplayExtensions.OfferingValues)
-                                {
-                                    <option value="@((int)term)">@term.DisplayName()</option>
-                                }
-                            </select>
-                            <span asp-validation-for="Form.Term" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <div class="mt-3">
-                        <label asp-for="Form.ApplicationStartLocal" class="form-label"></label>
-                        <input asp-for="Form.ApplicationStartLocal" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control" />
-                        <span asp-validation-for="Form.ApplicationStartLocal" class="text-danger"></span>
-                    </div>
-                    <div class="mt-3">
-                        <label asp-for="Form.ApplicationDeadlineLocal" class="form-label"></label>
-                        <input asp-for="Form.ApplicationDeadlineLocal" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control" />
-                        <span asp-validation-for="Form.ApplicationDeadlineLocal" class="text-danger"></span>
-                    </div>
-                    <div class="mt-3">
-                        <label asp-for="Form.Quota" class="form-label"></label>
-                        <input asp-for="Form.Quota" type="number" min="1" class="form-control" />
-                        <span asp-validation-for="Form.Quota" class="text-danger"></span>
-                    </div>
-                    <div class="form-check mt-3">
-                        <input asp-for="Form.UsesEvaluationWorkflow" class="form-check-input" />
-                        <label asp-for="Form.UsesEvaluationWorkflow" class="form-check-label"></label>
-                        <div class="form-text">Etkinleştirildikten sonra kapatılamaz; mevcut ilan yalnızca taslak dâhil hiç başvurusu yoksa bu akışa geçirilebilir.</div>
-                    </div>
-
-                    <fieldset class="mt-3">
-                        <legend class="h6">Sınav koşulları</legend>
-                        @for (var index = 0; index < Model.Form.Exams.Count; index++)
-                        {
-                            var exam = Model.Form.Exams[index];
-                            <div class="border rounded p-2 mb-2">
-                                <input asp-for="Form.ExamRequirements[index].ExamId" value="@exam.ExamId" type="hidden" />
-                                <div class="form-check">
-                                    <input asp-for="Form.ExamRequirements[index].IsConfigured" class="form-check-input" />
-                                    <label asp-for="Form.ExamRequirements[index].IsConfigured" class="form-check-label">@exam.ExamName koşulunu kullan</label>
-                                </div>
-                                <div class="form-check">
-                                    <input asp-for="Form.ExamRequirements[index].IsRequired" class="form-check-input" />
-                                    <label asp-for="Form.ExamRequirements[index].IsRequired" class="form-check-label">@exam.ExamName zorunlu</label>
-                                </div>
-                                <label asp-for="Form.ExamRequirements[index].MinimumScore" class="form-label small">Minimum puan</label>
-                                <input asp-for="Form.ExamRequirements[index].MinimumScore" class="form-control form-control-sm" type="number" step="0.01" min="0" />
-                                <span asp-validation-for="Form.ExamRequirements[index].MinimumScore" class="text-danger"></span>
-                                <label asp-for="Form.ExamRequirements[index].MinimumValidityDate" class="form-label small">Minimum geçerlilik tarihi</label>
-                                <input asp-for="Form.ExamRequirements[index].MinimumValidityDate" class="form-control form-control-sm" type="date" />
-                            </div>
-                        }
-                    </fieldset>
-
-                    @if (Model.Form.ProgramOfferingId == 0)
-                    {
-                        <div class="form-check mt-3">
-                            <input asp-for="Form.IsOpen" class="form-check-input" disabled />
-                            <label asp-for="Form.IsOpen" class="form-check-label"></label>
-                        </div>
-                        <p class="small text-muted">Yeni ilan önce kapalı oluşturulur. En az bir aktif ve zorunlu belge koşulu tanımladıktan sonra ilanı düzenleyerek açabilirsiniz.</p>
-                    }
-                    else
-                    {
-                        <div class="form-check mt-3">
-                            <input asp-for="Form.IsOpen" class="form-check-input" disabled="@(!formOfferingHasActiveRequiredRequirement)" />
-                            <label asp-for="Form.IsOpen" class="form-check-label"></label>
-                        </div>
-                        @if (!formOfferingHasActiveRequiredRequirement)
-                        {
-                            <p class="small text-warning">İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</p>
-                        }
-                    }
-                    @if (Model.Form.ProgramOfferingId > 0)
-                    {
-                        <div class="form-check">
-                            <input asp-for="Form.IsArchived" class="form-check-input" />
-                            <label asp-for="Form.IsArchived" class="form-check-label"></label>
-                        </div>
-                    }
-
-                    <button class="btn btn-primary mt-3" type="submit">Kaydet</button>
-                </form>
+    <form method="get" class="admin-filter-panel" aria-labelledby="offering-filters-heading">
+        <h2 id="offering-filters-heading" class="admin-filter-panel__heading">İlanları filtrele</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label asp-for="AcademicYearStart" class="form-label">Akademik yıl başlangıcı</label>
+                <input asp-for="AcademicYearStart" class="form-control" min="2000" max="2200" />
             </div>
-        </section>
-    </div>
-</div>
-
-<section class="card mt-4" aria-labelledby="document-requirements-heading">
-    <div class="card-body">
-        <h2 id="document-requirements-heading" class="h4">İlan belge koşulları</h2>
-        <div class="alert alert-info">
-            Belge koşulu değişiklikleri yalnızca değişiklikten sonra oluşturulan taslakları etkiler. Mevcut taslak ve başvuruların snapshot koşulları değişmez.
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label asp-for="Term" class="form-label">Dönem</label>
+                <select asp-for="Term" class="form-select" asp-items="Html.GetEnumSelectList<AcademicTerm>()">
+                    <option value="">Tümü</option>
+                </select>
+            </div>
+            <div class="col-12 col-lg-3">
+                <div class="form-check">
+                    <input asp-for="IncludeArchived" class="form-check-input" />
+                    <label asp-for="IncludeArchived" class="form-check-label">Arşivlenen ilanları göster</label>
+                </div>
+            </div>
+            <div class="col-12 col-lg-3 admin-form-actions">
+                <button class="btn btn-primary" type="submit">Filtreleri uygula</button>
+                <a asp-action="Offerings" class="btn btn-outline-secondary">Temizle</a>
+            </div>
         </div>
-
-        @foreach (var offering in Model.Offerings)
+        @if (hasActiveFilters)
         {
-            var requirements = Model.DocumentRequirements.TryGetValue(offering.ProgramOfferingId, out var items)
-                ? items
-                : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
-            <div class="border rounded p-3 mb-3">
-                <h3 class="h6">@offering.ProgramName · @offering.AcademicYear · @offering.TermName</h3>
-                @if (requirements.Count == 0)
+            <div class="active-filters" aria-label="Aktif filtreler">
+                <span class="active-filters__label">Aktif filtreler</span>
+                @if (Model.AcademicYearStart.HasValue)
                 {
-                    <p class="text-muted">Belge koşulu tanımlanmamış.</p>
+                    <span class="filter-chip">Yıl: @Model.AcademicYearStart</span>
                 }
-                else
+                @if (Model.Term.HasValue)
                 {
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle">
-                            <thead><tr><th>Kod</th><th>Ad</th><th>Tür / sınır</th><th>Durum</th><th>İşlem</th></tr></thead>
-                            <tbody>
-                            @foreach (var requirement in requirements)
-                            {
-                                <tr>
-                                    <td><code>@requirement.DocumentCode</code></td>
-                                    <td>@requirement.DisplayName · @(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")</td>
-                                    <td>@requirement.AllowedContentCategory.CategoryName() · @DocumentPresentation.FileSize(requirement.MaximumBytes)</td>
-                                    <td>@(requirement.IsActive ? "Aktif" : "Pasif")</td>
-                                    <td class="d-flex gap-1">
-                                        <a asp-action="Offerings"
-                                           asp-route-requirementOfferingId="@offering.ProgramOfferingId"
-                                           asp-route-editRequirementId="@requirement.PublicId"
-                                           asp-route-includeArchived="true"
-                                           class="btn btn-sm btn-outline-primary">Düzenle</a>
-                                        <form asp-action="SetDocumentRequirementActive" method="post">
-                                            <input type="hidden" name="programOfferingId" value="@offering.ProgramOfferingId" />
-                                            <input type="hidden" name="publicId" value="@requirement.PublicId" />
-                                            <input type="hidden" name="isActive" value="@((!requirement.IsActive).ToString().ToLowerInvariant())" />
-                                            <input type="hidden" name="rowVersion" value="@requirement.RowVersion" />
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary">@(requirement.IsActive ? "Pasifleştir" : "Aktifleştir")</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                            </tbody>
-                        </table>
-                    </div>
+                    <span class="filter-chip">Dönem: @Model.Term.Value.DisplayName()</span>
+                }
+                @if (Model.IncludeArchived)
+                {
+                    <span class="filter-chip">Arşivlenenler dahil</span>
                 }
             </div>
         }
+    </form>
 
-        <h3 class="h5">@(Model.DocumentRequirementForm.PublicId == Guid.Empty ? "Yeni belge koşulu" : "Belge koşulunu düzenle")</h3>
-        <form asp-action="SaveDocumentRequirement" method="post" novalidate>
-            <input asp-for="DocumentRequirementForm.PublicId" type="hidden" />
-            <input asp-for="DocumentRequirementForm.RowVersion" type="hidden" />
-            <div asp-validation-summary="All" class="text-danger"></div>
+    <section aria-labelledby="offering-list-heading">
+        <div class="admin-results-heading mb-3">
+            <div>
+                <h2 id="offering-list-heading">İlanlar</h2>
+                <p class="admin-results-count" role="status">@Model.Offerings.Count ilan gösteriliyor</p>
+            </div>
+        </div>
+        @if (Model.Offerings.Count == 0)
+        {
+            <div class="empty-state">
+                <h3>İlan bulunamadı</h3>
+                <p>Filtreleri değiştirin veya sağlanan formdan yeni ve kapalı bir ilan oluşturun.</p>
+            </div>
+        }
+        else
+        {
+            <div class="admin-card-list">
+                @foreach (var offering in Model.Offerings)
+                {
+                    var catalogProgram = Model.Form.Programs.SingleOrDefault(item => item.ProgramId == offering.ProgramId);
+                    var offeringRequirements = Model.DocumentRequirements.TryGetValue(offering.ProgramOfferingId, out var listedRequirements)
+                        ? listedRequirements
+                        : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
+                    var hasActiveRequiredRequirement = offeringRequirements.Any(item => item.IsActive && item.IsRequired);
+                    var stateClass = offering.IsArchived
+                        ? "admin-state--danger"
+                        : offering.IsOpen
+                            ? "admin-state--success"
+                            : "admin-state--warning";
+                    var stateName = offering.IsArchived ? "Arşivli" : offering.IsOpen ? "Açık" : "Kapalı";
+
+                    <article class="admin-item-card" data-offering-card>
+                        <header>
+                            <div>
+                                <span class="eyebrow">@catalogProgram?.InstituteName</span>
+                                <h3>@offering.ProgramName</h3>
+                                <p class="text-muted mb-0">@offering.AcademicYear · @offering.TermName</p>
+                            </div>
+                            <span class="admin-state @stateClass">@stateName</span>
+                        </header>
+
+                        <dl class="meta-grid">
+                            <div class="meta-item">
+                                <dt>Başvuru başlangıcı</dt>
+                                <dd>
+                                    @if (offering.ApplicationStartUtc.HasValue)
+                                    {
+                                        <time datetime="@offering.ApplicationStartUtc.Value.ToString("O")">@IstanbulTime.FromUtc(offering.ApplicationStartUtc.Value).ToString("dd.MM.yyyy HH:mm")</time>
+                                    }
+                                    else
+                                    {
+                                        <span>Belirtilmemiş</span>
+                                    }
+                                </dd>
+                            </div>
+                            <div class="meta-item">
+                                <dt>Son başvuru</dt>
+                                <dd>
+                                    @if (offering.ApplicationDeadlineUtc.HasValue)
+                                    {
+                                        <time datetime="@offering.ApplicationDeadlineUtc.Value.ToString("O")">@IstanbulTime.FromUtc(offering.ApplicationDeadlineUtc.Value).ToString("dd.MM.yyyy HH:mm")</time>
+                                    }
+                                    else
+                                    {
+                                        <span>Belirtilmemiş</span>
+                                    }
+                                </dd>
+                            </div>
+                            <div class="meta-item"><dt>Kontenjan</dt><dd>@offering.Quota</dd></div>
+                            <div class="meta-item"><dt>Belge akışı</dt><dd>Etkin · @offeringRequirements.Count koşul</dd></div>
+                            <div class="meta-item"><dt>Değerlendirme akışı</dt><dd>@(offering.UsesEvaluationWorkflow ? offering.EvaluationState.DisplayName() : "Kullanılmıyor")</dd></div>
+                            <div class="meta-item"><dt>Sınav koşulları</dt><dd>@offering.ExamRequirements.Count koşul</dd></div>
+                        </dl>
+
+                        <div class="admin-summary-card">
+                            <h4>İlanı açma önkoşulları</h4>
+                            <ul class="readiness-list">
+                                <li class="@(hasActiveRequiredRequirement ? "is-ready" : "is-blocked")">
+                                    <strong>Zorunlu belge koşulu:</strong>
+                                    @(hasActiveRequiredRequirement ? "En az bir aktif zorunlu koşul var." : "İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.")
+                                </li>
+                                @if (offering.UsesEvaluationWorkflow)
+                                {
+                                    <li>
+                                        <strong>Kriter politikası:</strong> Toplam ağırlık 10.000 bp olmalı ve her sınav puanı kriteri bağlı aktif zorunlu sınav koşuluna sahip olmalıdır.
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="is-ready"><strong>Değerlendirme politikası:</strong> Bu ilan sıralamalı değerlendirme akışını kullanmıyor.</li>
+                                }
+                            </ul>
+                        </div>
+
+                        <div class="admin-item-card__actions">
+                            <a asp-action="Offerings"
+                               asp-route-editId="@offering.ProgramOfferingId"
+                               asp-route-academicYearStart="@Model.AcademicYearStart"
+                               asp-route-term="@Model.Term"
+                               asp-route-includeArchived="@Model.IncludeArchived"
+                               class="btn btn-sm btn-primary">İlanı düzenle</a>
+                            <a href="#document-requirements-heading" class="btn btn-sm btn-outline-primary">Belge koşulları</a>
+                            @if (offering.UsesEvaluationWorkflow)
+                            {
+                                <a asp-action="Evaluation" asp-route-id="@offering.ProgramOfferingId" class="btn btn-sm btn-outline-secondary">Değerlendirmeyi aç</a>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="admin-section" aria-labelledby="offering-form-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="offering-form-heading">@(Model.Form.ProgramOfferingId > 0 ? "İlanı düzenle" : "Yeni ilan oluştur")</h2>
+                <p>Yeni ilan güvenli başlangıç davranışı olarak önce kapalı oluşturulur.</p>
+            </div>
+        </div>
+        <form asp-action="SaveOffering" method="post" novalidate data-disable-on-submit="true">
+            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+            <input asp-for="Form.ProgramOfferingId" type="hidden" />
+            <input asp-for="Form.RowVersion" type="hidden" />
+
             <div class="row g-3">
-                <div class="col-12 col-md-6">
-                    <label asp-for="DocumentRequirementForm.ProgramOfferingId" class="form-label">İlan</label>
-                    <select asp-for="DocumentRequirementForm.ProgramOfferingId" class="form-select">
-                        @foreach (var offering in Model.Offerings)
+                <div class="col-12 col-lg-6">
+                    <label asp-for="Form.ProgramId" class="form-label"></label>
+                    <select asp-for="Form.ProgramId" class="form-select">
+                        @foreach (var program in Model.Form.Programs)
                         {
-                            <option value="@offering.ProgramOfferingId">@offering.ProgramName · @offering.AcademicYear · @offering.TermName</option>
+                            <option value="@program.ProgramId">@program.InstituteName · @program.ProgramName · @program.DegreeType</option>
                         }
                     </select>
+                    <span asp-validation-for="Form.ProgramId" class="text-danger"></span>
                 </div>
-                <div class="col-12 col-md-3">
-                    <label asp-for="DocumentRequirementForm.DocumentCode" class="form-label">Belge kodu</label>
-                    <input asp-for="DocumentRequirementForm.DocumentCode" class="form-control" placeholder="TRANSCRIPT" />
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label asp-for="Form.AcademicYearStart" class="form-label"></label>
+                    <input asp-for="Form.AcademicYearStart" class="form-control" type="number" min="2000" max="2200" />
+                    <span asp-validation-for="Form.AcademicYearStart" class="text-danger"></span>
                 </div>
-                <div class="col-12 col-md-3">
-                    <label asp-for="DocumentRequirementForm.DisplayName" class="form-label">Türkçe görünen ad</label>
-                    <input asp-for="DocumentRequirementForm.DisplayName" class="form-control" placeholder="Transkript" />
-                </div>
-                <div class="col-12">
-                    <label asp-for="DocumentRequirementForm.Description" class="form-label">Açıklama</label>
-                    <textarea asp-for="DocumentRequirementForm.Description" class="form-control" maxlength="500"></textarea>
-                </div>
-                <div class="col-12 col-md-4">
-                    <label asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-label">İzin verilen tür</label>
-                    <select asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-select">
-                        <option value="PdfOnly">PDF</option>
-                        <option value="ImageOnly">JPEG veya PNG</option>
-                        <option value="PdfOrImage">PDF, JPEG veya PNG</option>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label asp-for="Form.Term" class="form-label"></label>
+                    <select asp-for="Form.Term" class="form-select">
+                        @foreach (var term in AcademicTermDisplayExtensions.OfferingValues)
+                        {
+                            <option value="@((int)term)">@term.DisplayName()</option>
+                        }
                     </select>
+                    <span asp-validation-for="Form.Term" class="text-danger"></span>
                 </div>
-                <div class="col-12 col-md-4">
-                    <label asp-for="DocumentRequirementForm.MaximumBytes" class="form-label">Maksimum boyut (bayt)</label>
-                    <input asp-for="DocumentRequirementForm.MaximumBytes" type="number" min="1" max="104857600" class="form-control" />
+                <div class="col-12 col-md-6">
+                    <label asp-for="Form.ApplicationStartLocal" class="form-label"></label>
+                    <input asp-for="Form.ApplicationStartLocal" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="Form.ApplicationStartLocal" class="text-danger"></span>
                 </div>
-                <div class="col-12 col-md-4 form-check align-self-end mb-2 ms-2">
-                    <input asp-for="DocumentRequirementForm.IsRequired" class="form-check-input" />
-                    <label asp-for="DocumentRequirementForm.IsRequired" class="form-check-label">Zorunlu belge</label>
+                <div class="col-12 col-md-6">
+                    <label asp-for="Form.ApplicationDeadlineLocal" class="form-label"></label>
+                    <input asp-for="Form.ApplicationDeadlineLocal" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="Form.ApplicationDeadlineLocal" class="text-danger"></span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label asp-for="Form.Quota" class="form-label"></label>
+                    <input asp-for="Form.Quota" type="number" min="1" class="form-control" />
+                    <span asp-validation-for="Form.Quota" class="text-danger"></span>
+                </div>
+                <div class="col-12 col-lg-9">
+                    <div class="form-check mt-2">
+                        <input asp-for="Form.UsesEvaluationWorkflow" class="form-check-input" />
+                        <label asp-for="Form.UsesEvaluationWorkflow" class="form-check-label"></label>
+                    </div>
+                    <div class="form-text">Etkinleştirildikten sonra kapatılamaz; mevcut ilan yalnızca hiç başvurusu yoksa bu akışa geçirilebilir.</div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">Belge koşulunu kaydet</button>
-        </form>
-    </div>
-</section>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+            <fieldset class="mt-4">
+                <legend class="h3 fs-5">Sınav koşulları</legend>
+                <p class="text-muted">Yalnızca seçili sınavlar ilan koşulu olarak gönderilir. Zorunlu sınavlar ExamScore kriterlerine bağlanabilir.</p>
+                <div class="admin-summary-grid">
+                    @for (var index = 0; index < Model.Form.Exams.Count; index++)
+                    {
+                        var exam = Model.Form.Exams[index];
+                        <div class="admin-summary-card">
+                            <input asp-for="Form.ExamRequirements[index].ExamId" value="@exam.ExamId" type="hidden" />
+                            <h3>@exam.ExamName</h3>
+                            <div class="form-check">
+                                <input asp-for="Form.ExamRequirements[index].IsConfigured" class="form-check-input" />
+                                <label asp-for="Form.ExamRequirements[index].IsConfigured" class="form-check-label">Koşulu kullan</label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input asp-for="Form.ExamRequirements[index].IsRequired" class="form-check-input" />
+                                <label asp-for="Form.ExamRequirements[index].IsRequired" class="form-check-label">Zorunlu sınav</label>
+                            </div>
+                            <label asp-for="Form.ExamRequirements[index].MinimumScore" class="form-label mt-3">Minimum puan</label>
+                            <input asp-for="Form.ExamRequirements[index].MinimumScore" class="form-control" type="number" step="0.01" min="0" />
+                            <span asp-validation-for="Form.ExamRequirements[index].MinimumScore" class="text-danger"></span>
+                            <label asp-for="Form.ExamRequirements[index].MinimumValidityDate" class="form-label mt-3">Minimum geçerlilik tarihi</label>
+                            <input asp-for="Form.ExamRequirements[index].MinimumValidityDate" class="form-control" type="date" />
+                        </div>
+                    }
+                </div>
+            </fieldset>
+
+            @if (Model.Form.ProgramOfferingId == 0)
+            {
+                <div class="alert alert-info mt-4" data-new-offering-closed>
+                    <strong>Yeni ilan önce kapalı oluşturulur.</strong>
+                    <div class="form-check">
+                        <input asp-for="Form.IsOpen" class="form-check-input" disabled />
+                        <label asp-for="Form.IsOpen" class="form-check-label">Yeni ilan kapalı oluşturulacak</label>
+                    </div>
+                    <p class="mb-0 mt-2">En az bir aktif zorunlu belge koşulu tanımladıktan ve değerlendirme önkoşullarını tamamladıktan sonra ilanı düzenleyerek açabilirsiniz.</p>
+                </div>
+            }
+            else
+            {
+                <div class="form-check mt-4">
+                    <input asp-for="Form.IsOpen" class="form-check-input" disabled="@(!formOfferingHasActiveRequiredRequirement)" />
+                    <label asp-for="Form.IsOpen" class="form-check-label"></label>
+                </div>
+                @if (!formOfferingHasActiveRequiredRequirement)
+                {
+                    <p class="text-warning mt-2">İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</p>
+                }
+                <div class="danger-zone">
+                    <h3 class="h5">Arşivleme alanı</h3>
+                    <p>Arşivlenen ilan yeni işlemlerde gösterilmez; geçmiş başvuru ve audit kayıtları korunur.</p>
+                    <div class="form-check">
+                        <input asp-for="Form.IsArchived" class="form-check-input" />
+                        <label asp-for="Form.IsArchived" class="form-check-label">İlanı arşivle</label>
+                    </div>
+                </div>
+            }
+
+            <div class="admin-form-actions mt-4">
+                <button class="btn btn-primary" type="submit">@(Model.Form.ProgramOfferingId > 0 ? "İlan değişikliklerini kaydet" : "Kapalı ilanı oluştur")</button>
+                @if (Model.Form.ProgramOfferingId > 0)
+                {
+                    <a asp-action="Offerings" class="btn btn-outline-secondary">Düzenlemeden vazgeç</a>
+                }
+            </div>
+        </form>
+    </section>
+
+    <section class="admin-section" aria-labelledby="document-requirements-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="document-requirements-heading">İlan belge koşulları</h2>
+                <p>Mevcut taslak ve başvuruların snapshot koşulları değişmez. Koşul değişiklikleri yalnızca daha sonra oluşturulan taslakları etkiler.</p>
+            </div>
+        </div>
+        <div class="alert alert-info" role="note">
+            Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler. Açık ilan için son aktif zorunlu koşulu pasifleştirme isteği API tarafından güvenli biçimde reddedilir.
+        </div>
+
+        <div class="admin-card-list">
+            @foreach (var offering in Model.Offerings)
+            {
+                var requirements = Model.DocumentRequirements.TryGetValue(offering.ProgramOfferingId, out var items)
+                    ? items
+                    : (IReadOnlyList<OfferingDocumentRequirementViewModel>)[];
+                var activeRequiredCount = requirements.Count(item => item.IsActive && item.IsRequired);
+                <article class="admin-item-card">
+                    <header>
+                        <div>
+                            <h3>@offering.ProgramName</h3>
+                            <p class="text-muted mb-0">@offering.AcademicYear · @offering.TermName</p>
+                        </div>
+                        <span class="admin-state @(activeRequiredCount > 0 ? "admin-state--success" : "admin-state--danger")">@activeRequiredCount aktif zorunlu</span>
+                    </header>
+                    @if (requirements.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <h4>Belge koşulu tanımlanmamış</h4>
+                            <p>İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-shell">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle responsive-table">
+                                    <caption class="visually-hidden">@offering.ProgramName ilanının belge koşulları</caption>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Koşul</th>
+                                            <th scope="col">Açıklama</th>
+                                            <th scope="col">Tür ve sınır</th>
+                                            <th scope="col">Durum</th>
+                                            <th scope="col">İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var requirement in requirements)
+                                        {
+                                            var isLastActiveRequired = offering.IsOpen
+                                                && requirement.IsActive
+                                                && requirement.IsRequired
+                                                && activeRequiredCount == 1;
+                                            <tr>
+                                                <td data-label="Koşul">
+                                                    <code>@requirement.DocumentCode</code>
+                                                    <div class="fw-semibold">@requirement.DisplayName</div>
+                                                    <small>@(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")</small>
+                                                </td>
+                                                <td data-label="Açıklama">@(string.IsNullOrWhiteSpace(requirement.Description) ? "Açıklama yok" : requirement.Description)</td>
+                                                <td data-label="Tür ve sınır">@requirement.AllowedContentCategory.CategoryName() · @DocumentPresentation.FileSize(requirement.MaximumBytes)</td>
+                                                <td data-label="Durum">
+                                                    <span class="admin-state @(requirement.IsActive ? "admin-state--success" : null)">@(requirement.IsActive ? "Aktif" : "Pasif")</span>
+                                                    <small class="d-block mt-1">Eşzamanlılık korumalı</small>
+                                                </td>
+                                                <td data-label="">
+                                                    <div class="admin-action-stack">
+                                                        <a asp-action="Offerings"
+                                                           asp-route-requirementOfferingId="@offering.ProgramOfferingId"
+                                                           asp-route-editRequirementId="@requirement.PublicId"
+                                                           asp-route-includeArchived="true"
+                                                           class="btn btn-sm btn-outline-primary">Koşulu düzenle</a>
+                                                        <form asp-action="SetDocumentRequirementActive" method="post" data-disable-on-submit="true">
+                                                            <input type="hidden" name="programOfferingId" value="@offering.ProgramOfferingId" />
+                                                            <input type="hidden" name="publicId" value="@requirement.PublicId" />
+                                                            <input type="hidden" name="isActive" value="@((!requirement.IsActive).ToString().ToLowerInvariant())" />
+                                                            <input type="hidden" name="rowVersion" value="@requirement.RowVersion" />
+                                                            <button type="submit"
+                                                                    class="btn btn-sm @(requirement.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                                    aria-label="@(requirement.IsActive ? "Pasifleştir" : "Aktifleştir") belge koşulu: @requirement.DisplayName">
+                                                                @(requirement.IsActive ? "Koşulu pasifleştir" : "Koşulu aktifleştir")
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                    @if (isLastActiveRequired)
+                                                    {
+                                                        <small class="text-warning d-block mt-2">Açık ilandaki son aktif zorunlu koşul kaldırılamaz.</small>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+
+        <div class="admin-summary-card mt-4">
+            <h3>@(Model.DocumentRequirementForm.PublicId == Guid.Empty ? "Yeni belge koşulu" : "Belge koşulunu düzenle")</h3>
+            <form asp-action="SaveDocumentRequirement" method="post" novalidate data-disable-on-submit="true">
+                <input asp-for="DocumentRequirementForm.PublicId" type="hidden" />
+                <input asp-for="DocumentRequirementForm.RowVersion" type="hidden" />
+                <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <label asp-for="DocumentRequirementForm.ProgramOfferingId" class="form-label">İlan</label>
+                        <select asp-for="DocumentRequirementForm.ProgramOfferingId" class="form-select">
+                            @foreach (var offering in Model.Offerings)
+                            {
+                                <option value="@offering.ProgramOfferingId">@offering.ProgramName · @offering.AcademicYear · @offering.TermName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label asp-for="DocumentRequirementForm.DocumentCode" class="form-label">Belge kodu</label>
+                        <input asp-for="DocumentRequirementForm.DocumentCode" class="form-control" placeholder="TRANSCRIPT" />
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label asp-for="DocumentRequirementForm.DisplayName" class="form-label">Türkçe görünen ad</label>
+                        <input asp-for="DocumentRequirementForm.DisplayName" class="form-control" placeholder="Transkript" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="DocumentRequirementForm.Description" class="form-label">Açıklama</label>
+                        <textarea asp-for="DocumentRequirementForm.Description" class="form-control" rows="3" maxlength="500"></textarea>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-label">İzin verilen tür</label>
+                        <select asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-select">
+                            <option value="PdfOnly">PDF</option>
+                            <option value="ImageOnly">JPEG veya PNG</option>
+                            <option value="PdfOrImage">PDF, JPEG veya PNG</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label asp-for="DocumentRequirementForm.MaximumBytes" class="form-label">Maksimum boyut (bayt)</label>
+                        <input asp-for="DocumentRequirementForm.MaximumBytes" type="number" min="1" max="104857600" class="form-control" />
+                    </div>
+                    <div class="col-12 col-md-4 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input asp-for="DocumentRequirementForm.IsRequired" class="form-check-input" />
+                            <label asp-for="DocumentRequirementForm.IsRequired" class="form-check-label">Zorunlu belge</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-form-actions mt-3">
+                    <button type="submit" class="btn btn-primary">Belge koşulunu kaydet</button>
+                    @if (Model.DocumentRequirementForm.PublicId != Guid.Empty)
+                    {
+                        <a asp-action="Offerings" asp-route-includeArchived="true" class="btn btn-outline-secondary">Düzenlemeden vazgeç</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
