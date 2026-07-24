@@ -4,10 +4,12 @@ using GraduateApp.API.Models;
 using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Xunit.Abstractions;
 
 namespace GraduateApp.Tests;
 
-public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
+public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests(
+    ITestOutputHelper output)
 {
     [LocalDbFact]
     public async Task Opening_cannot_race_exam_requirement_or_policy_mutation_into_an_invalid_open_state()
@@ -25,9 +27,40 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
         var policyAttempts = await RunConcurrentlyAsync(
             OpenAsync(database.ConnectionString, aggregates[1]),
             DeleteCriterionAsync(database.ConnectionString, aggregates[1]));
+        var linearizedExamRequirementAttempts = await OpenThenCloseAndMakeExamOptionalAsync(
+            database.ConnectionString,
+            aggregates[2]);
 
-        AssertSafeConflict(examRequirementAttempts);
-        AssertSafeConflict(policyAttempts);
+        AssertExamRequirementReconfigurationAttempts(examRequirementAttempts);
+        AssertPolicyDeleteAttempts(policyAttempts);
+        AssertLinearizedExamRequirementReconfigurationAttempts(linearizedExamRequirementAttempts);
+
+        var examRequirementState = await LoadFinalStateAsync(
+            database.ConnectionString,
+            aggregates[0]);
+        var policyState = await LoadFinalStateAsync(
+            database.ConnectionString,
+            aggregates[1]);
+        var linearizedExamRequirementState = await LoadFinalStateAsync(
+            database.ConnectionString,
+            aggregates[2]);
+        output.WriteLine(
+            "Exam requirement race: {0}. Final state: {1}.",
+            DescribeAttempts(examRequirementAttempts),
+            examRequirementState);
+        output.WriteLine(
+            "Policy delete race: {0}. Final state: {1}.",
+            DescribeAttempts(policyAttempts),
+            policyState);
+        output.WriteLine(
+            "Linearized exam requirement reconfiguration: {0}. Final state: {1}.",
+            DescribeAttempts(linearizedExamRequirementAttempts),
+            linearizedExamRequirementState);
+        AssertExamRequirementFinalState(examRequirementAttempts, examRequirementState);
+        AssertPolicyFinalState(policyAttempts, policyState);
+        AssertLinearizedExamRequirementFinalState(
+            linearizedExamRequirementAttempts,
+            linearizedExamRequirementState);
         foreach (var aggregate in aggregates)
         {
             Assert.Equal(0, await CountInvalidOpenOfferingsAsync(database, aggregate.OfferingId));
@@ -45,6 +78,20 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
         return await Task.WhenAll(firstTask, secondTask);
     }
 
+    private static async Task<IReadOnlyList<Attempt>> OpenThenCloseAndMakeExamOptionalAsync(
+        string connectionString,
+        AggregateState aggregate)
+    {
+        var open = await OpenAsync(connectionString, aggregate)();
+        var currentRowVersion = await LoadOfferingRowVersionAsync(
+            connectionString,
+            aggregate.OfferingId);
+        var closeAndReconfigure = await MakeExamOptionalAsync(
+            connectionString,
+            aggregate with { OfferingRowVersion = currentRowVersion })();
+        return [open, closeAndReconfigure];
+    }
+
     private static async Task<Attempt> RunAfterSignalAsync(Func<Task<Attempt>> action, Task start)
     {
         await start;
@@ -60,7 +107,7 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
                 1,
                 OfferingRequest(aggregate, isOpen: true, examIsRequired: true),
                 CancellationToken.None);
-            return new(result.IsSuccess, result.StatusCode);
+            return new("Open", result.IsSuccess, result.StatusCode);
         };
 
     private static Func<Task<Attempt>> MakeExamOptionalAsync(string connectionString, AggregateState aggregate) =>
@@ -72,7 +119,7 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
                 1,
                 OfferingRequest(aggregate, isOpen: false, examIsRequired: false),
                 CancellationToken.None);
-            return new(result.IsSuccess, result.StatusCode);
+            return new("CloseAndMakeAlesOptional", result.IsSuccess, result.StatusCode);
         };
 
     private static Func<Task<Attempt>> DeleteCriterionAsync(string connectionString, AggregateState aggregate) =>
@@ -85,19 +132,143 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
                 1,
                 new EvaluationCriterionDeleteDto { RowVersion = aggregate.CriterionRowVersion },
                 CancellationToken.None);
-            return new(result.IsSuccess, result.StatusCode);
+            return new("DeleteCriterion", result.IsSuccess, result.StatusCode);
         };
 
-    private static void AssertSafeConflict(IReadOnlyList<Attempt> attempts)
+    private static void AssertExamRequirementReconfigurationAttempts(IReadOnlyList<Attempt> attempts)
     {
-        Assert.False(attempts.All(item => item.Succeeded));
-        Assert.All(attempts, attempt =>
+        var diagnostics = DescribeAttempts(attempts);
+        Assert.True(
+            attempts.Any(item => item.Succeeded),
+            $"Exam requirement yarışında en az bir işlem başarılı olmalıdır. {diagnostics}");
+        AssertFailedAttemptsAreConflicts(attempts, diagnostics);
+    }
+
+    private static void AssertPolicyDeleteAttempts(IReadOnlyList<Attempt> attempts)
+    {
+        var diagnostics = DescribeAttempts(attempts);
+        Assert.False(
+            attempts.All(item => item.Succeeded),
+            $"Açma ve kriter silme birlikte başarılı olamaz. {diagnostics}");
+        AssertFailedAttemptsAreConflicts(attempts, diagnostics);
+    }
+
+    private static void AssertLinearizedExamRequirementReconfigurationAttempts(
+        IReadOnlyList<Attempt> attempts)
+    {
+        var diagnostics = DescribeAttempts(attempts);
+        Assert.True(
+            attempts.All(item => item.Succeeded),
+            $"Açma ve ardından kapatma+optional yapılandırma güncel RowVersion ile başarılı olmalıdır. {diagnostics}");
+    }
+
+    private static void AssertFailedAttemptsAreConflicts(
+        IReadOnlyList<Attempt> attempts,
+        string diagnostics)
+    {
+        foreach (var attempt in attempts.Where(item => !item.Succeeded))
         {
-            if (!attempt.Succeeded)
-            {
-                Assert.Equal(StatusCodes.Status409Conflict, attempt.StatusCode);
-            }
-        });
+            Assert.True(
+                attempt.StatusCode == StatusCodes.Status409Conflict,
+                $"{attempt.Operation} güvenli 409 dönmelidir. {diagnostics}");
+        }
+    }
+
+    private static void AssertExamRequirementFinalState(
+        IReadOnlyList<Attempt> attempts,
+        FinalConfigurationState state)
+    {
+        var diagnostics = $"{DescribeAttempts(attempts)} Final state: {state}.";
+        Assert.Equal(1, state.ExamRequirementCount);
+        Assert.NotNull(state.AlesIsRequired);
+        Assert.Equal(EvaluationScoring.TotalWeightBasisPoints, state.TotalCriterionWeight);
+        Assert.True(
+            !state.IsOpen || state.AlesIsRequired == true,
+            $"Açık ilan ALES koşulunu zorunlu tutmalıdır. {diagnostics}");
+        Assert.True(
+            !state.IsOpen || state.OrphanExamCriterionCount == 0,
+            $"Açık ilan orphan ExamScore kriteri içeremez. {diagnostics}");
+        Assert.Equal(
+            attempts.Count(item => item.Succeeded),
+            state.ProgramOfferingUpdatedAuditCount);
+    }
+
+    private static void AssertPolicyFinalState(
+        IReadOnlyList<Attempt> attempts,
+        FinalConfigurationState state)
+    {
+        var diagnostics = $"{DescribeAttempts(attempts)} Final state: {state}.";
+        Assert.True(
+            !state.IsOpen
+                || (state.TotalCriterionWeight == EvaluationScoring.TotalWeightBasisPoints
+                    && state.OrphanExamCriterionCount == 0),
+            $"Policy delete yarışı açık ve geçersiz bir final state üretemez. {diagnostics}");
+    }
+
+    private static void AssertLinearizedExamRequirementFinalState(
+        IReadOnlyList<Attempt> attempts,
+        FinalConfigurationState state)
+    {
+        var diagnostics = $"{DescribeAttempts(attempts)} Final state: {state}.";
+        Assert.False(state.IsOpen);
+        Assert.Equal(1, state.ExamRequirementCount);
+        Assert.False(state.AlesIsRequired);
+        Assert.Equal(EvaluationScoring.TotalWeightBasisPoints, state.TotalCriterionWeight);
+        Assert.Equal(1, state.OrphanExamCriterionCount);
+        Assert.Equal(2, state.ProgramOfferingUpdatedAuditCount);
+        Assert.True(
+            !state.IsOpen || state.OrphanExamCriterionCount == 0,
+            $"İki başarılı işlem kapalı ve güvenli bir final state bırakmalıdır. {diagnostics}");
+    }
+
+    private static async Task<FinalConfigurationState> LoadFinalStateAsync(
+        string connectionString,
+        AggregateState aggregate)
+    {
+        await using var db = CreateContext(connectionString);
+        var offering = await db.ProgramOfferings.AsNoTracking()
+            .SingleAsync(item => item.ProgramOfferingId == aggregate.OfferingId);
+        var requirements = await db.ProgramOfferingExamRequirements.AsNoTracking()
+            .Where(item => item.ProgramOfferingId == aggregate.OfferingId)
+            .ToListAsync();
+        var criteria = await db.ProgramOfferingEvaluationCriteria.AsNoTracking()
+            .Where(item => item.ProgramOfferingId == aggregate.OfferingId)
+            .ToListAsync();
+        var requiredExamIds = requirements
+            .Where(item => item.IsRequired)
+            .Select(item => item.ExamId)
+            .ToHashSet();
+        var programOfferingUpdatedAuditCount = await db.SecurityAuditLogs.AsNoTracking()
+            .CountAsync(item =>
+                item.EventType == "ProgramOfferingUpdated"
+                && item.TargetType == "ProgramOffering"
+                && item.TargetId == aggregate.OfferingId.ToString());
+        return new(
+            offering.IsOpen,
+            requirements.Count,
+            requirements.SingleOrDefault(item => item.ExamId == aggregate.ExamId)?.IsRequired,
+            criteria.Sum(item => item.WeightBasisPoints),
+            criteria.Count(item =>
+                item.SourceType == EvaluationCriterionSourceType.ExamScore
+                && (!item.ExamId.HasValue || !requiredExamIds.Contains(item.ExamId.Value))),
+            programOfferingUpdatedAuditCount);
+    }
+
+    private static string DescribeAttempts(IEnumerable<Attempt> attempts) =>
+        string.Join(
+            ", ",
+            attempts.Select(item =>
+                $"{item.Operation}: success={item.Succeeded}, status={item.StatusCode}"));
+
+    private static async Task<string> LoadOfferingRowVersionAsync(
+        string connectionString,
+        int offeringId)
+    {
+        await using var db = CreateContext(connectionString);
+        return Convert.ToBase64String(await db.ProgramOfferings.AsNoTracking()
+            .Where(item => item.ProgramOfferingId == offeringId)
+            .Select(item => item.RowVersion)
+            .SingleAsync());
     }
 
     private static Task<int> CountInvalidOpenOfferingsAsync(LocalDbTestDatabase database, int offeringId) =>
@@ -155,7 +326,7 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
         };
         var exam = new Exam { ExamName = "ALES" };
         db.Programs.Add(program);
-        for (var offset = 0; offset < 2; offset++)
+        for (var offset = 0; offset < 3; offset++)
         {
             var offering = new ProgramOffering
             {
@@ -280,5 +451,13 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests
         Guid CriterionPublicId,
         string CriterionRowVersion);
 
-    private sealed record Attempt(bool Succeeded, int StatusCode);
+    private sealed record FinalConfigurationState(
+        bool IsOpen,
+        int ExamRequirementCount,
+        bool? AlesIsRequired,
+        int TotalCriterionWeight,
+        int OrphanExamCriterionCount,
+        int ProgramOfferingUpdatedAuditCount);
+
+    private sealed record Attempt(string Operation, bool Succeeded, int StatusCode);
 }
