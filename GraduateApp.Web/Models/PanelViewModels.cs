@@ -94,6 +94,7 @@ public sealed class StudentApplicationDetailViewModel
     public string AcademicYear { get; set; } = string.Empty;
     public AcademicTerm Term { get; set; }
     public string TermName { get; set; } = string.Empty;
+    public int Quota { get; set; }
     public DateTime ApplicationDateUtc { get; set; }
     public ApplicationStatus CurrentStatus { get; set; }
     public bool UsesDocumentWorkflow { get; set; }

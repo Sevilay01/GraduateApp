@@ -1,73 +1,112 @@
 @model StudentApplicationDetailViewModel
 @{
-    ViewData["Title"] = "Başvuru belgeleri";
+    ViewData["Title"] = "Başvuru detayı";
     var hasInvalidRequirementConfiguration = !Model.HasValidRequiredDocumentConfiguration();
     var canSubmit = Model.CanSubmitDocumentWorkflow();
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+<header class="page-heading">
     <div>
-        <h1 class="h3 mb-1">Başvuru belgeleri</h1>
-        <p class="text-muted mb-0">@Model.InstituteName · @Model.ProgramName · @Model.AcademicYear · @Model.TermName</p>
+        <p class="eyebrow">Başvuru detayı</p>
+        <h1>@Model.ProgramName</h1>
+        <p>@Model.InstituteName · @Model.AcademicYear · @Model.TermName</p>
     </div>
-    <span class="badge text-bg-secondary fs-6">@Model.CurrentStatus.DisplayName()</span>
-</div>
+    <partial name="_ApplicationStatusBadge" model="Model.CurrentStatus" />
+</header>
+
+<partial name="_ApplicationProgress" model="Model.CurrentStatus" />
 
 @if (Model.UsesEvaluationWorkflow)
 {
     if (Model.PublishedEvaluation is null)
     {
-        <div class="alert alert-info" role="status">Değerlendirme süreci devam ediyor. Sonuçlar kesinleştirilip yayımlanana kadar puan, sıralama ve karar gösterilmez.</div>
+        <section class="empty-state empty-state--compact" aria-labelledby="evaluation-pending-heading">
+            <h2 id="evaluation-pending-heading">Değerlendirme sürüyor</h2>
+            <p>Sonuçlar kesinleştirilip yayımlanana kadar puan, sıralama ve karar gösterilmez.</p>
+        </section>
     }
     else
     {
         var result = Model.PublishedEvaluation;
-        <section class="card border-primary mb-4" aria-labelledby="evaluation-result-heading">
-            <div class="card-body">
-                <h2 id="evaluation-result-heading" class="h4">Yayımlanmış değerlendirme sonucu</h2>
-                <dl class="row">
-                    <dt class="col-sm-4">Karar</dt><dd class="col-sm-8"><strong>@result.Outcome.DisplayName()</strong></dd>
-                    <dt class="col-sm-4">Toplam puan</dt><dd class="col-sm-8">@(result.TotalScore?.ToString("0.0000") ?? "-")</dd>
-                    <dt class="col-sm-4">Sıra</dt><dd class="col-sm-8">@(result.Rank?.ToString() ?? "-")</dd>
-                    <dt class="col-sm-4">Yayımlanma</dt><dd class="col-sm-8">@IstanbulTime.FromUtc(result.ResultsPublishedAtUtc).ToString("dd.MM.yyyy HH:mm")</dd>
-                </dl>
-                @if (result.Components.Count > 0)
-                {
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead><tr><th>Kriter</th><th>Ham</th><th>Normalize</th><th>Ağırlık</th><th>Katkı</th></tr></thead>
-                            <tbody>
+        var isAdmitted = result.Outcome == EvaluationOutcome.Admitted;
+        <section class="result-card @(!isAdmitted ? "result-card--negative" : null)" aria-labelledby="evaluation-result-heading">
+            <div class="result-card__hero">
+                <div>
+                    <p class="eyebrow">Kesinleşmiş sonuç</p>
+                    <h2 id="evaluation-result-heading">Yayımlanmış değerlendirme sonucu</h2>
+                    <p>@Model.InstituteName · @Model.ProgramName · @Model.AcademicYear · @Model.TermName</p>
+                </div>
+                <strong>@result.Outcome.DisplayName()</strong>
+            </div>
+
+            <dl class="meta-grid">
+                <div>
+                    <dt>Toplam puan</dt>
+                    <dd>@(result.TotalScore?.ToString("0.0000") ?? "—")</dd>
+                </div>
+                <div>
+                    <dt>Sıralama</dt>
+                    <dd>@(result.Rank?.ToString() ?? "—")</dd>
+                </div>
+                <div>
+                    <dt>Kontenjan</dt>
+                    <dd>@Model.Quota</dd>
+                </div>
+                <div>
+                    <dt>Yayımlanma</dt>
+                    <dd>@IstanbulTime.FromUtc(result.ResultsPublishedAtUtc).ToString("dd.MM.yyyy HH:mm")</dd>
+                </div>
+            </dl>
+
+            @if (result.Components.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle responsive-table">
+                        <caption>Değerlendirme puanı bileşenleri</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Kriter</th>
+                                <th scope="col">Ham puan</th>
+                                <th scope="col">Normalize puan</th>
+                                <th scope="col">Ağırlık</th>
+                                <th scope="col">Katkı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             @foreach (var component in result.Components)
                             {
                                 <tr>
-                                    <td>@component.DisplayName</td>
-                                    <td>@component.RawScore.ToString("0.0000")</td>
-                                    <td>@component.NormalizedScore.ToString("0.0000")</td>
-                                    <td>@((component.WeightBasisPoints / 100m).ToString("0.##"))%</td>
-                                    <td>@component.WeightedScore.ToString("0.0000")</td>
+                                    <th scope="row" data-label="Kriter">@component.DisplayName</th>
+                                    <td data-label="Ham puan">@component.RawScore.ToString("0.0000")</td>
+                                    <td data-label="Normalize puan">@component.NormalizedScore.ToString("0.0000")</td>
+                                    <td data-label="Ağırlık">@((component.WeightBasisPoints / 100m).ToString("0.##"))%</td>
+                                    <td data-label="Katkı">@component.WeightedScore.ToString("0.0000")</td>
                                 </tr>
                             }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <p class="snapshot-note">
+                Bu sonuç, başvuru ve değerlendirme anında kaydedilen kesinleşmiş snapshot verilerine dayanır.
+            </p>
         </section>
     }
 }
 
-@if (TempData["SuccessMessage"] is string success)
-{
-    <div class="alert alert-success" role="status">@success</div>
-}
-@if (TempData["ErrorMessage"] is string error)
-{
-    <div class="alert alert-danger" role="alert">@error</div>
-}
+<section class="section-heading" aria-labelledby="documents-heading">
+    <div>
+        <p class="eyebrow">Güvenli belge akışı</p>
+        <h2 id="documents-heading">Başvuru belgeleri</h2>
+    </div>
+</section>
 
 @if (!Model.UsesDocumentWorkflow)
 {
-    <div class="alert alert-info">Bu başvuru legacy belge iş akışını kullanıyor. Mevcut erişim ve durum kuralları korunur.</div>
+    <div class="alert alert-info" role="status">
+        Bu başvuru legacy belge iş akışını kullanıyor. Mevcut erişim ve durum kuralları korunur.
+    </div>
 }
 else
 {
@@ -78,91 +117,122 @@ else
         </div>
     }
 
-    <div class="row g-3">
+    <div class="document-list">
         @foreach (var requirement in Model.DocumentRequirements)
         {
             var document = requirement.CurrentDocument;
             var canUpload = Model.CurrentStatus == ApplicationStatus.Draft
                 || (Model.CurrentStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview
                     && document?.ReviewStatus == DocumentReviewStatus.Rejected);
-            <div class="col-12">
-                <section class="card">
-                    <div class="card-body">
-                        <div class="d-flex flex-wrap justify-content-between gap-2">
-                            <div>
-                                <h2 class="h5 mb-1">@requirement.DisplayName</h2>
-                                <span class="badge @(requirement.IsRequired ? "text-bg-danger" : "text-bg-light")">
-                                    @(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")
-                                </span>
-                            </div>
-                            <div class="small text-muted text-end">
-                                <div>Tür: @requirement.AllowedContentCategory.CategoryName()</div>
-                                <div>Maksimum: @DocumentPresentation.FileSize(requirement.MaximumBytes)</div>
-                            </div>
-                        </div>
-                        @if (!string.IsNullOrWhiteSpace(requirement.Description))
-                        {
-                            <p class="mt-2 mb-2">@requirement.Description</p>
-                        }
 
-                        @if (document is not null)
-                        {
-                            <div class="border rounded p-3 mt-3">
-                                <div><strong>Dosya:</strong> @document.OriginalFileName</div>
-                                <div><strong>Sürüm:</strong> @document.VersionNumber</div>
-                                <div><strong>Yükleme:</strong> @IstanbulTime.FromUtc(document.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</div>
-                                <div><strong>İnceleme:</strong> @document.ReviewStatus.ReviewName()</div>
-                                @if (document.ReviewStatus == DocumentReviewStatus.Rejected)
-                                {
-                                    <div class="alert alert-danger mt-2 mb-0"><strong>Ret gerekçesi:</strong> @document.RejectionReason</div>
-                                }
-                                <a asp-action="DownloadDocument"
-                                   asp-route-publicId="@Model.PublicId"
-                                   asp-route-documentPublicId="@document.PublicId"
-                                   class="btn btn-sm btn-outline-secondary mt-2">Belgeyi indir</a>
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted mt-3 mb-0">Henüz belge yüklenmedi.</p>
-                        }
-
-                        @if (canUpload)
-                        {
-                            <form asp-action="UploadDocument"
-                                  asp-route-publicId="@Model.PublicId"
-                                  asp-route-requirementPublicId="@requirement.PublicId"
-                                  method="post"
-                                  enctype="multipart/form-data"
-                                  class="mt-3">
-                                <label class="form-label" for="file-@requirement.PublicId">@(document is null ? "Belge yükle" : "Yeni sürüm yükle")</label>
-                                <div class="input-group">
-                                    <input id="file-@requirement.PublicId" name="file" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required />
-                                    <button type="submit" class="btn btn-primary">Yükle</button>
-                                </div>
-                            </form>
-                        }
+            <article class="document-card @(requirement.IsRequired ? "document-card--required" : null)">
+                <header>
+                    <div>
+                        <h3>@requirement.DisplayName</h3>
+                        <span class="status-badge">
+                            @(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")
+                        </span>
                     </div>
-                </section>
-            </div>
+                    <dl>
+                        <div>
+                            <dt>Dosya türü</dt>
+                            <dd>@requirement.AllowedContentCategory.CategoryName()</dd>
+                        </div>
+                        <div>
+                            <dt>En fazla</dt>
+                            <dd>@DocumentPresentation.FileSize(requirement.MaximumBytes)</dd>
+                        </div>
+                    </dl>
+                </header>
+
+                @if (!string.IsNullOrWhiteSpace(requirement.Description))
+                {
+                    <p>@requirement.Description</p>
+                }
+
+                @if (document is not null)
+                {
+                    <section class="document-current" aria-label="@requirement.DisplayName yüklü belge bilgileri">
+                        <dl class="meta-grid">
+                            <div>
+                                <dt>Dosya</dt>
+                                <dd>@document.OriginalFileName</dd>
+                            </div>
+                            <div>
+                                <dt>Sürüm</dt>
+                                <dd>@document.VersionNumber</dd>
+                            </div>
+                            <div>
+                                <dt>Yükleme</dt>
+                                <dd>@IstanbulTime.FromUtc(document.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</dd>
+                            </div>
+                            <div>
+                                <dt>İnceleme</dt>
+                                <dd>@document.ReviewStatus.ReviewName()</dd>
+                            </div>
+                        </dl>
+                        @if (document.ReviewStatus == DocumentReviewStatus.Rejected)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <strong>Ret gerekçesi:</strong> @document.RejectionReason
+                            </div>
+                        }
+                        <a asp-action="DownloadDocument"
+                           asp-route-publicId="@Model.PublicId"
+                           asp-route-documentPublicId="@document.PublicId"
+                           class="btn btn-outline-secondary">Belgeyi indir</a>
+                    </section>
+                }
+                else
+                {
+                    <p class="empty-inline">Henüz belge yüklenmedi.</p>
+                }
+
+                @if (canUpload)
+                {
+                    <form asp-action="UploadDocument"
+                          asp-route-publicId="@Model.PublicId"
+                          asp-route-requirementPublicId="@requirement.PublicId"
+                          method="post"
+                          enctype="multipart/form-data"
+                          class="upload-form">
+                        <label class="form-label" for="file-@requirement.PublicId">
+                            @(document is null ? "Belge yükle" : "Yeni sürüm yükle")
+                        </label>
+                        <div class="input-group">
+                            <input id="file-@requirement.PublicId"
+                                   name="file"
+                                   type="file"
+                                   class="form-control"
+                                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                   required />
+                            <button type="submit" class="btn btn-primary">Yükle</button>
+                        </div>
+                    </form>
+                }
+            </article>
         }
     </div>
 
     @if (Model.CurrentStatus == ApplicationStatus.Draft)
     {
-        <form asp-action="SubmitApplication" asp-route-publicId="@Model.PublicId" method="post" class="mt-4">
+        <form asp-action="SubmitApplication" asp-route-publicId="@Model.PublicId" method="post" class="submission-panel">
+            <div>
+                <h2>Başvuruyu gönder</h2>
+                <p>Göndermeden önce tüm zorunlu belgelerin doğru ve güncel olduğunu kontrol edin.</p>
+                @if (!canSubmit)
+                {
+                    if (hasInvalidRequirementConfiguration)
+                    {
+                        <p class="text-warning">Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Önce tüm zorunlu belgeleri yükleyin.</p>
+                    }
+                }
+            </div>
             <button type="submit" class="btn btn-success" disabled="@(!canSubmit)">Başvuruyu gönder</button>
-            @if (!canSubmit)
-            {
-                if (hasInvalidRequirementConfiguration)
-                {
-                    <span class="text-warning ms-2">Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.</span>
-                }
-                else
-                {
-                    <span class="text-muted ms-2">Önce tüm zorunlu belgeleri yükleyin.</span>
-                }
-            }
         </form>
     }
 }

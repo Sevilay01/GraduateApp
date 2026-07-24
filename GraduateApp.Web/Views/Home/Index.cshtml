@@ -3,45 +3,88 @@
     ViewData["Title"] = "Ana sayfa";
 }
 
-<section class="p-4 p-md-5 mb-4 rounded-3 bg-light border">
-    <div class="container-fluid py-3">
-        <h1 class="display-6 fw-bold">Yüksek lisans başvurunuzu güvenle yönetin</h1>
-        <p class="col-lg-8 fs-5 text-muted">Açık programları inceleyin, başvurunuzu oluşturun ve değerlendirme durumunu tek panelden takip edin.</p>
-        @if (User.Identity?.IsAuthenticated != true)
-        {
-            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg me-2">Öğrenci kaydı</a>
-            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">Giriş yap</a>
-        }
-        else if (User.IsInRole("Student"))
-        {
-            <a asp-controller="Panel" asp-action="Index" class="btn btn-primary btn-lg">Öğrenci paneline git</a>
-        }
+<section class="hero" aria-labelledby="hero-title">
+    <div class="hero__content">
+        <span class="eyebrow">Çukurova Üniversitesi</span>
+        <h1 id="hero-title">Lisansüstü eğitime giden yolunuzu güvenle yönetin</h1>
+        <p class="hero__lead">
+            Başvuruya açık programları inceleyin, belgelerinizi güvenli biçimde yükleyin ve başvurunuzun her adımını tek panelden takip edin.
+        </p>
+        <div class="hero__actions">
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg">Öğrenci kaydı oluştur</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">Öğrenci girişi</a>
+            }
+            else if (User.IsInRole("Student"))
+            {
+                <a asp-controller="Panel" asp-action="Index" class="btn btn-primary btn-lg">Öğrenci paneline git</a>
+            }
+            else if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-primary btn-lg">Yönetim paneline git</a>
+            }
+        </div>
     </div>
 </section>
 
 <section aria-labelledby="open-programs-title">
-    <h2 id="open-programs-title" class="h3 mb-3">Açık yüksek lisans programları</h2>
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">2026–2027 akademik dönemi</span>
+            <h2 id="open-programs-title">Başvuruya açık lisansüstü programlar</h2>
+        </div>
+        <p>Son başvuru tarihlerini ve temel program bilgilerini karşılaştırın.</p>
+    </div>
+
     @if (Model.ErrorMessage is not null)
     {
-        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+        <div class="alert alert-warning app-alert" role="alert">
+            <strong>Program bilgileri alınamadı.</strong>
+            <span>@Model.ErrorMessage</span>
+        </div>
     }
     else if (Model.OpenPrograms.Count == 0)
     {
-        <p class="text-muted">Şu anda başvuruya açık program bulunmuyor.</p>
+        <div class="empty-state">
+            <h3>Şu anda açık program bulunmuyor</h3>
+            <p>Yeni başvuru dönemleri açıldığında programlar bu alanda listelenecektir.</p>
+        </div>
     }
     else
     {
-        <div class="row g-3">
+        <div class="row g-4">
             @foreach (var program in Model.OpenPrograms)
             {
-                <div class="col-12 col-md-6 col-lg-4">
-                    <article class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h3 class="h5">@program.ProgramName</h3>
-                            <p class="mb-1">@program.InstituteName</p>
-                            <p class="text-muted">@program.DegreeType</p>
-                            <p class="mb-1"><strong>@program.AcademicYear · @program.TermName</strong></p>
-                            <p class="small mb-0">Son başvuru: <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">@IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd.MM.yyyy HH:mm")</time> (İstanbul)</p>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <article class="card program-card h-100">
+                        <div class="card-body d-flex flex-column p-4">
+                            <div class="program-card__institute">@program.InstituteName</div>
+                            <h3 class="h5 mb-2">@program.ProgramName</h3>
+                            <p class="program-card__degree">@program.DegreeType</p>
+                            <dl class="meta-grid">
+                                <div class="meta-item">
+                                    <dt>Akademik dönem</dt>
+                                    <dd>@program.AcademicYear · @program.TermName</dd>
+                                </div>
+                                <div class="meta-item">
+                                    <dt>Kontenjan</dt>
+                                    <dd>@program.Quota kişi</dd>
+                                </div>
+                            </dl>
+                            <div class="deadline-callout mt-auto">
+                                <div>
+                                    <div class="deadline-callout__label">Son başvuru</div>
+                                    <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">
+                                        @IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd MMMM yyyy · HH:mm")
+                                    </time>
+                                    <span class="visually-hidden"> İstanbul saati</span>
+                                </div>
+                            </div>
+                            @if (User.Identity?.IsAuthenticated != true)
+                            {
+                                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary w-100">Başvuru için giriş yap</a>
+                            }
                         </div>
                     </article>
                 </div>

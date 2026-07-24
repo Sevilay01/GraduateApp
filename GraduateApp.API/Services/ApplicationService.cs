@@ -841,6 +841,7 @@ public sealed class ApplicationService(
             AcademicPeriodFormatter.FormatAcademicYear(application.ProgramOffering.AcademicYearStart),
             application.ProgramOffering.Term,
             AcademicPeriodFormatter.FormatTerm(application.ProgramOffering.Term),
+            application.ProgramOffering.Quota,
             DateTime.SpecifyKind(application.ApplicationDate, DateTimeKind.Utc),
             ParseStatus(application.CurrentStatus),
             application.UsesDocumentWorkflow,

@@ -3,102 +3,122 @@
     ViewData["Title"] = "Profil ve eğitim bilgileri";
 }
 
-<h1 class="h2">Profil ve eğitim bilgileri</h1>
-<p class="text-muted">Kimlik numarası: @Model.TcMasked</p>
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">Öğrenci profili</span>
+        <h1 class="page-heading__title">Profil ve eğitim bilgileri</h1>
+        <p class="page-heading__description">Kimlik numarası: <strong>@Model.TcMasked</strong></p>
+    </div>
+    <div class="page-heading__actions">
+        <a asp-action="Index" class="btn btn-outline-primary">Öğrenci paneline dön</a>
+    </div>
+</div>
 
-<form asp-action="Profile" method="post" class="card card-body shadow-sm" novalidate>
+<div class="profile-note mb-4" role="note">
+    <strong>Snapshot bilgisi:</strong>
+    Değişiklikler mevcut başvuruların değerlendirme verilerini etkilemez.
+    Profil değişiklikleri mevcut başvuruların snapshot değerlendirme verilerini etkilemez.
+</div>
+
+<form asp-action="Profile" method="post" novalidate>
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-    <fieldset class="mb-4">
-        <legend class="h4">Profil</legend>
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label asp-for="FirstName" class="form-label"></label>
-                <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="LastName" class="form-label"></label>
-                <input asp-for="LastName" class="form-control" autocomplete="family-name" />
-                <span asp-validation-for="LastName" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" autocomplete="email" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="Telephone" class="form-label"></label>
-                <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
-                <span asp-validation-for="Telephone" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="FatherName" class="form-label"></label>
-                <input asp-for="FatherName" class="form-control" />
-                <span asp-validation-for="FatherName" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="BirthDate" class="form-label"></label>
-                <input asp-for="BirthDate" class="form-control" />
-                <span asp-validation-for="BirthDate" class="text-danger"></span>
+
+    <fieldset class="card mb-4">
+        <div class="card-body p-4">
+            <legend class="h4 mb-1">Kişisel ve iletişim bilgileri</legend>
+            <p class="text-muted mb-4">Size ulaşabilmemiz için iletişim bilgilerinizi güncel tutun.</p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Telephone" class="form-label"></label>
+                    <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
+                    <span asp-validation-for="Telephone" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="FatherName" class="form-label"></label>
+                    <input asp-for="FatherName" class="form-control" autocomplete="additional-name" />
+                    <span asp-validation-for="FatherName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="BirthDate" class="form-label"></label>
+                    <input asp-for="BirthDate" class="form-control" autocomplete="bday" />
+                    <span asp-validation-for="BirthDate" class="text-danger"></span>
+                </div>
             </div>
         </div>
     </fieldset>
 
     @if (!Model.UniversityCatalogLoadSucceeded)
     {
-        <div class="alert alert-danger" role="alert">
-            <p class="mb-1">Üniversite kataloğu yüklenemedi.</p>
-            <p class="mb-0">@Model.UniversityCatalogErrorMessage Eğitim alanları şu anda kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</p>
+        <div class="alert alert-danger app-alert" role="alert">
+            <strong>Üniversite kataloğu yüklenemedi.</strong>
+            <span>@Model.UniversityCatalogErrorMessage Eğitim alanları şu anda kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</span>
         </div>
     }
     else if (Model.Universities.Count == 0)
     {
-        <div class="alert alert-warning" role="alert">
-            <p class="mb-1">Üniversite kataloğu henüz tanımlanmamış. Lütfen yöneticiyle iletişime geçin.</p>
-            <p class="mb-0">Katalog tanımlanana kadar eğitim alanları kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</p>
+        <div class="alert alert-warning app-alert" role="alert">
+            <strong>Üniversite kataloğu henüz tanımlanmamış. Lütfen yöneticiyle iletişime geçin.</strong>
+            <span>Katalog tanımlanana kadar eğitim alanları kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</span>
         </div>
     }
 
-    <fieldset class="mb-4">
-        <legend class="h4">Eğitim</legend>
-        <p class="small text-muted">Değişiklikler mevcut başvuruların değerlendirme verilerini etkilemez.</p>
-        <div class="row g-3">
-            <div class="col-12">
-                <label asp-for="UniversityId" class="form-label"></label>
-                <select asp-for="UniversityId" class="form-select"
-                        disabled="@(Model.CanEditEducation ? null : "disabled")">
-                    <option value="">Üniversite seçiniz</option>
-                    @foreach (var university in Model.Universities)
-                    {
-                        <option value="@university.UniversityId">@university.UniversityName</option>
-                    }
-                </select>
-                <span asp-validation-for="UniversityId" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="Faculty" class="form-label"></label>
-                <input asp-for="Faculty" class="form-control"
-                       disabled="@(Model.CanEditEducation ? null : "disabled")" />
-                <span asp-validation-for="Faculty" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="GraduatedProgram" class="form-label"></label>
-                <input asp-for="GraduatedProgram" class="form-control"
-                       disabled="@(Model.CanEditEducation ? null : "disabled")" />
-                <span asp-validation-for="GraduatedProgram" class="text-danger"></span>
-            </div>
-            <div class="col-md-4">
-                <label asp-for="Gno" class="form-label"></label>
-                <input asp-for="Gno" class="form-control" inputmode="decimal"
-                       disabled="@(Model.CanEditEducation ? null : "disabled")" />
-                <span asp-validation-for="Gno" class="text-danger"></span>
+    <fieldset class="card mb-4">
+        <div class="card-body p-4">
+            <legend class="h4 mb-1">Lisans eğitim bilgileri</legend>
+            <p class="text-muted mb-4">Gelecekteki başvurularda kullanılacak güncel mezuniyet bilgilerinizi girin.</p>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="UniversityId" class="form-label"></label>
+                    <select asp-for="UniversityId" class="form-select"
+                            disabled="@(Model.CanEditEducation ? null : "disabled")">
+                        <option value="">Üniversite seçiniz</option>
+                        @foreach (var university in Model.Universities)
+                        {
+                            <option value="@university.UniversityId">@university.UniversityName</option>
+                        }
+                    </select>
+                    <span asp-validation-for="UniversityId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Faculty" class="form-label"></label>
+                    <input asp-for="Faculty" class="form-control"
+                           disabled="@(Model.CanEditEducation ? null : "disabled")" />
+                    <span asp-validation-for="Faculty" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="GraduatedProgram" class="form-label"></label>
+                    <input asp-for="GraduatedProgram" class="form-control"
+                           disabled="@(Model.CanEditEducation ? null : "disabled")" />
+                    <span asp-validation-for="GraduatedProgram" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Gno" class="form-label"></label>
+                    <input asp-for="Gno" class="form-control" inputmode="decimal"
+                           disabled="@(Model.CanEditEducation ? null : "disabled")" />
+                    <span asp-validation-for="Gno" class="text-danger"></span>
+                </div>
             </div>
         </div>
     </fieldset>
 
-    <div>
-        <button type="submit" class="btn btn-primary">Bilgileri kaydet</button>
-        <a asp-action="Index" class="btn btn-link">Panele dön</a>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">Bilgileri kaydet</button>
+        <a asp-action="Index" class="btn btn-link">Vazgeç</a>
     </div>
 </form>
 
