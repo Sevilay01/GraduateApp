@@ -10,6 +10,9 @@ namespace GraduateApp.Tests;
 
 public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
 {
+    private const string OpenOperation = "OpenOffering";
+    private const string DeactivateOperation = "DeactivateLastRequiredDocument";
+
     [LocalDbFact]
     public async Task Opening_and_removing_the_last_required_requirement_are_safe_in_both_orders_and_concurrently()
     {
@@ -122,15 +125,70 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         start.SetResult();
 
         var attempts = await Task.WhenAll(opening, deactivation);
-
-        Assert.False(attempts.All(item => item.Succeeded));
-        Assert.All(attempts, attempt =>
+        var finalState = await LoadConcurrentFinalStateAsync(connectionString, aggregate);
+        var failures = new List<string>();
+        if (finalState.InvalidOpen)
         {
-            if (!attempt.Succeeded)
+            failures.Add("Final state is open without an active required document requirement.");
+        }
+
+        if (finalState.OpenAuditCount is < 0 or > 1
+            || finalState.DeactivationAuditCount is < 0 or > 1
+            || finalState.OpenAuditCount + finalState.DeactivationAuditCount > 1)
+        {
+            failures.Add(
+                $"Audit atomicity failed: open={finalState.OpenAuditCount}, deactivate={finalState.DeactivationAuditCount}.");
+        }
+
+        var successful = attempts.Where(item => item.Success).ToArray();
+        var conflicts = attempts.Where(item =>
+            !item.Success
+            && item.StatusCode == StatusCodes.Status409Conflict
+            && item.FailureCategory == AttemptFailureCategory.SafeConflict).ToArray();
+        if (successful.Length != 1 || conflicts.Length != 1)
+        {
+            failures.Add($"Expected one success and one safe conflict; attempts: {AttemptDiagnostics(attempts)}.");
+        }
+
+        if (attempts.Any(item => item.FailureCategory == AttemptFailureCategory.UnexpectedException))
+        {
+            failures.Add($"An operation leaked an unexpected exception; attempts: {AttemptDiagnostics(attempts)}.");
+        }
+
+        if (successful.Length == 1)
+        {
+            var winner = successful[0].OperationName;
+            if (winner == OpenOperation)
             {
-                Assert.Equal(StatusCodes.Status409Conflict, attempt.StatusCode);
+                if (!finalState.IsOpen || finalState.ActiveRequiredCount == 0)
+                {
+                    failures.Add("Opening won but the final offering is not safely open.");
+                }
+
+                if (finalState.OpenAuditCount != 1 || finalState.DeactivationAuditCount != 0)
+                {
+                    failures.Add("Opening won without exactly one matching success audit.");
+                }
             }
-        });
+            else if (winner == DeactivateOperation)
+            {
+                if (finalState.IsOpen || finalState.TargetRequirementIsActive)
+                {
+                    failures.Add("Deactivation won but the final offering/requirement state is not safely closed.");
+                }
+
+                if (finalState.OpenAuditCount != 0 || finalState.DeactivationAuditCount != 1)
+                {
+                    failures.Add("Deactivation won without exactly one matching success audit.");
+                }
+            }
+            else
+            {
+                failures.Add($"Unknown winning operation: {winner}.");
+            }
+        }
+
+        Assert.True(failures.Count == 0, string.Join(" ", failures));
     }
 
     private static async Task StaleOfferingRowVersionAsync(string connectionString, AggregateState aggregate)
@@ -169,13 +227,20 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         Task start)
     {
         await start;
-        await using var db = CreateContext(connectionString);
-        var result = await CreateOfferingService(db).UpdateAsync(
-            aggregate.OfferingId,
-            1,
-            OpenRequest(aggregate),
-            CancellationToken.None);
-        return new Attempt(result.IsSuccess, result.StatusCode);
+        try
+        {
+            await using var db = CreateContext(connectionString);
+            var result = await CreateOfferingService(db).UpdateAsync(
+                aggregate.OfferingId,
+                1,
+                OpenRequest(aggregate),
+                CancellationToken.None);
+            return Attempt.FromResult(OpenOperation, result.IsSuccess, result.StatusCode);
+        }
+        catch (Exception exception)
+        {
+            return Attempt.FromException(OpenOperation, exception);
+        }
     }
 
     private static async Task<Attempt> DeactivateAfterSignalAsync(
@@ -184,19 +249,64 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         Task start)
     {
         await start;
-        await using var db = CreateContext(connectionString);
-        var result = await CreateRequirementService(db).SetActiveAsync(
-            aggregate.OfferingId,
-            aggregate.RequirementPublicId,
-            1,
-            new DocumentRequirementActiveDto
-            {
-                IsActive = false,
-                RowVersion = aggregate.RequirementRowVersion
-            },
-            CancellationToken.None);
-        return new Attempt(result.IsSuccess, result.StatusCode);
+        try
+        {
+            await using var db = CreateContext(connectionString);
+            var result = await CreateRequirementService(db).SetActiveAsync(
+                aggregate.OfferingId,
+                aggregate.RequirementPublicId,
+                1,
+                new DocumentRequirementActiveDto
+                {
+                    IsActive = false,
+                    RowVersion = aggregate.RequirementRowVersion
+                },
+                CancellationToken.None);
+            return Attempt.FromResult(DeactivateOperation, result.IsSuccess, result.StatusCode);
+        }
+        catch (Exception exception)
+        {
+            return Attempt.FromException(DeactivateOperation, exception);
+        }
     }
+
+    private static async Task<ConcurrentFinalState> LoadConcurrentFinalStateAsync(
+        string connectionString,
+        AggregateState aggregate)
+    {
+        await using var verification = CreateContext(connectionString);
+        var offering = await verification.ProgramOfferings.AsNoTracking()
+            .SingleAsync(item => item.ProgramOfferingId == aggregate.OfferingId);
+        var requirements = await verification.ProgramOfferingDocumentRequirements.AsNoTracking()
+            .Where(item => item.ProgramOfferingId == aggregate.OfferingId)
+            .ToArrayAsync();
+        var targetRequirement = requirements.Single(item => item.PublicId == aggregate.RequirementPublicId);
+        var activeRequiredCount = requirements.Count(item => item.IsActive && item.IsRequired);
+        var offeringTarget = aggregate.OfferingId.ToString(
+            System.Globalization.CultureInfo.InvariantCulture);
+        var requirementTarget = aggregate.RequirementPublicId.ToString();
+        var openAuditCount = await verification.SecurityAuditLogs.AsNoTracking()
+            .CountAsync(item =>
+                item.EventType == "ProgramOfferingUpdated"
+                && item.TargetId == offeringTarget);
+        var deactivationAuditCount = await verification.SecurityAuditLogs.AsNoTracking()
+            .CountAsync(item =>
+                item.EventType == "OfferingDocumentRequirementDeactivated"
+                && item.TargetId == requirementTarget);
+        return new ConcurrentFinalState(
+            offering.IsOpen,
+            targetRequirement.IsActive,
+            activeRequiredCount,
+            offering.IsOpen && activeRequiredCount == 0,
+            openAuditCount,
+            deactivationAuditCount);
+    }
+
+    private static string AttemptDiagnostics(IEnumerable<Attempt> attempts) =>
+        string.Join(
+            ", ",
+            attempts.Select(item =>
+                $"{item.OperationName}:success={item.Success},status={item.StatusCode?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "none"},category={item.FailureCategory},exception={item.ExceptionType ?? "none"}"));
 
     private static async Task<IReadOnlyList<AggregateState>> SeedAggregatesAsync(string connectionString)
     {
@@ -320,5 +430,47 @@ public sealed class DocumentWorkflowConfigurationConcurrencyIntegrationTests
         Guid RequirementPublicId,
         string RequirementRowVersion);
 
-    private sealed record Attempt(bool Succeeded, int StatusCode);
+    private sealed record ConcurrentFinalState(
+        bool IsOpen,
+        bool TargetRequirementIsActive,
+        int ActiveRequiredCount,
+        bool InvalidOpen,
+        int OpenAuditCount,
+        int DeactivationAuditCount);
+
+    private sealed record Attempt(
+        string OperationName,
+        bool Success,
+        int? StatusCode,
+        AttemptFailureCategory FailureCategory,
+        string? ExceptionType)
+    {
+        public static Attempt FromResult(string operationName, bool success, int statusCode) =>
+            new(
+                operationName,
+                success,
+                statusCode,
+                success
+                    ? AttemptFailureCategory.None
+                    : statusCode == StatusCodes.Status409Conflict
+                        ? AttemptFailureCategory.SafeConflict
+                        : AttemptFailureCategory.UnexpectedStatus,
+                null);
+
+        public static Attempt FromException(string operationName, Exception exception) =>
+            new(
+                operationName,
+                false,
+                null,
+                AttemptFailureCategory.UnexpectedException,
+                exception.GetType().Name);
+    }
+
+    private enum AttemptFailureCategory
+    {
+        None,
+        SafeConflict,
+        UnexpectedStatus,
+        UnexpectedException
+    }
 }
