@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Security.Claims;
 using GraduateApp.Web.Controllers;
@@ -5,6 +6,7 @@ using GraduateApp.Web.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -280,61 +282,82 @@ public sealed class GraduateUiFoundationRazorTests
     [Fact]
     public async Task Published_result_renders_hierarchy_quota_snapshot_and_encoded_components()
     {
-        using var host = CreateWebHost();
-        var html = await RenderMainViewAsync(
-            host.Services,
-            "Panel",
-            "ApplicationDetail",
-            new StudentApplicationDetailViewModel
-            {
-                PublicId = Guid.Parse("0A3D7446-50D0-4709-A597-792180A66958"),
-                InstituteName = "Sosyal Bilimler Enstitüsü",
-                ProgramName = "<img src=x onerror=alert(1)>",
-                AcademicYear = "2026–2027",
-                TermName = "Bahar",
-                Quota = 7,
-                CurrentStatus = ApplicationStatus.Approved,
-                UsesEvaluationWorkflow = true,
-                PublishedEvaluation = new PublishedApplicationEvaluationViewModel
-                {
-                    Outcome = EvaluationOutcome.Admitted,
-                    TotalScore = 88.1250m,
-                    Rank = 3,
-                    ResultsPublishedAtUtc = new DateTime(
-                        2026,
-                        7,
-                        24,
-                        9,
-                        0,
-                        0,
-                        DateTimeKind.Utc),
-                    Components =
-                    [
-                        new PublishedEvaluationComponentViewModel
-                        {
-                            DisplayName = "<script>alert('criterion')</script>",
-                            RawScore = 90m,
-                            NormalizedScore = 90m,
-                            WeightBasisPoints = 5000,
-                            WeightedScore = 45m
-                        }
-                    ]
-                }
-            },
-            AuthenticatedUser("Student", "Test Öğrenci"));
+        var previousCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
+        var ambientCulture = CultureInfo.GetCultureInfo("en-US");
 
-        var decoded = WebUtility.HtmlDecode(html);
-        Assert.Contains("Yayımlanmış değerlendirme sonucu", decoded, StringComparison.Ordinal);
-        Assert.Contains("Toplam puan", decoded, StringComparison.Ordinal);
-        Assert.Contains("88,1250", decoded, StringComparison.Ordinal);
-        Assert.Contains("Sıralama", decoded, StringComparison.Ordinal);
-        Assert.Contains("Kontenjan", decoded, StringComparison.Ordinal);
-        Assert.Contains(">7<", html, StringComparison.Ordinal);
-        Assert.Contains("snapshot verilerine dayanır", decoded, StringComparison.Ordinal);
-        Assert.DoesNotContain("<script>alert", html, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("<img src=x", html, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("&lt;script&gt;", html, StringComparison.Ordinal);
-        Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html, StringComparison.Ordinal);
+        try
+        {
+            CultureInfo.CurrentCulture = ambientCulture;
+            CultureInfo.CurrentUICulture = ambientCulture;
+
+            using var host = CreateWebHost();
+            var html = await RenderMainViewAsync(
+                host.Services,
+                "Panel",
+                "ApplicationDetail",
+                new StudentApplicationDetailViewModel
+                {
+                    PublicId = Guid.Parse("0A3D7446-50D0-4709-A597-792180A66958"),
+                    InstituteName = "Sosyal Bilimler Enstitüsü",
+                    ProgramName = "<img src=x onerror=alert(1)>",
+                    AcademicYear = "2026–2027",
+                    TermName = "Bahar",
+                    Quota = 7,
+                    CurrentStatus = ApplicationStatus.Approved,
+                    UsesEvaluationWorkflow = true,
+                    PublishedEvaluation = new PublishedApplicationEvaluationViewModel
+                    {
+                        Outcome = EvaluationOutcome.Admitted,
+                        TotalScore = 88.1250m,
+                        Rank = 3,
+                        ResultsPublishedAtUtc = new DateTime(
+                            2026,
+                            7,
+                            24,
+                            9,
+                            0,
+                            0,
+                            DateTimeKind.Utc),
+                        Components =
+                        [
+                            new PublishedEvaluationComponentViewModel
+                            {
+                                DisplayName = "<script>alert('criterion')</script>",
+                                RawScore = 90.5m,
+                                NormalizedScore = 90.25m,
+                                WeightBasisPoints = 5000,
+                                WeightedScore = 45.125m
+                            }
+                        ]
+                    }
+                },
+                AuthenticatedUser("Student", "Test Öğrenci"));
+
+            Assert.Equal(ambientCulture, CultureInfo.CurrentCulture);
+            Assert.Equal(ambientCulture, CultureInfo.CurrentUICulture);
+
+            var decoded = WebUtility.HtmlDecode(html);
+            Assert.Contains("Yayımlanmış değerlendirme sonucu", decoded, StringComparison.Ordinal);
+            Assert.Contains("Toplam puan", decoded, StringComparison.Ordinal);
+            Assert.Contains("88,1250", decoded, StringComparison.Ordinal);
+            Assert.Contains(">90,5000<", html, StringComparison.Ordinal);
+            Assert.Contains(">90,2500<", html, StringComparison.Ordinal);
+            Assert.Contains(">45,1250<", html, StringComparison.Ordinal);
+            Assert.Contains("Sıralama", decoded, StringComparison.Ordinal);
+            Assert.Contains("Kontenjan", decoded, StringComparison.Ordinal);
+            Assert.Contains(">7<", html, StringComparison.Ordinal);
+            Assert.Contains("snapshot verilerine dayanır", decoded, StringComparison.Ordinal);
+            Assert.DoesNotContain("<script>alert", html, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("<img src=x", html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("&lt;script&gt;", html, StringComparison.Ordinal);
+            Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html, StringComparison.Ordinal);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
+        }
     }
 
     [Fact]
@@ -385,53 +408,70 @@ public sealed class GraduateUiFoundationRazorTests
         ClaimsPrincipal? user = null,
         string? viewName = null)
     {
-        using var scope = services.CreateScope();
-        var scopedServices = scope.ServiceProvider;
-        var httpContext = new DefaultHttpContext
-        {
-            RequestServices = scopedServices,
-            User = user ?? new ClaimsPrincipal(new ClaimsIdentity())
-        };
-        httpContext.Request.Scheme = "https";
-        httpContext.Request.Host = new HostString("localhost");
-        var routeData = new RouteData();
-        routeData.Values["controller"] = controller;
-        routeData.Values["action"] = action;
-        routeData.Routers.Add(new TestRouter());
-        var actionContext = new ActionContext(
-            httpContext,
-            routeData,
-            new ActionDescriptor(),
-            new ModelStateDictionary());
-        var viewEngine = scopedServices.GetRequiredService<ICompositeViewEngine>();
-        var viewResult = viewEngine.FindView(
-            actionContext,
-            viewName ?? action,
-            isMainPage: true);
-        Assert.True(
-            viewResult.Success,
-            $"{controller}/{viewName ?? action} view bulunamadı: "
-            + string.Join(", ", viewResult.SearchedLocations ?? []));
-        var viewData = new ViewDataDictionary<TModel>(
-            scopedServices.GetRequiredService<IModelMetadataProvider>(),
-            actionContext.ModelState)
-        {
-            Model = model
-        };
-        var tempData = new TempDataDictionary(
-            httpContext,
-            scopedServices.GetRequiredService<ITempDataProvider>());
-        using var writer = new StringWriter(System.Globalization.CultureInfo.InvariantCulture);
-        var viewContext = new ViewContext(
-            actionContext,
-            viewResult.View,
-            viewData,
-            tempData,
-            writer,
-            new HtmlHelperOptions());
+        var previousCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
+        var renderCulture = CultureInfo.GetCultureInfo("tr-TR");
 
-        await viewResult.View.RenderAsync(viewContext);
-        return writer.ToString();
+        try
+        {
+            CultureInfo.CurrentCulture = renderCulture;
+            CultureInfo.CurrentUICulture = renderCulture;
+
+            using var scope = services.CreateScope();
+            var scopedServices = scope.ServiceProvider;
+            var httpContext = new DefaultHttpContext
+            {
+                RequestServices = scopedServices,
+                User = user ?? new ClaimsPrincipal(new ClaimsIdentity())
+            };
+            httpContext.Features.Set<IRequestCultureFeature>(
+                new RequestCultureFeature(new RequestCulture(renderCulture), provider: null));
+            httpContext.Request.Scheme = "https";
+            httpContext.Request.Host = new HostString("localhost");
+            var routeData = new RouteData();
+            routeData.Values["controller"] = controller;
+            routeData.Values["action"] = action;
+            routeData.Routers.Add(new TestRouter());
+            var actionContext = new ActionContext(
+                httpContext,
+                routeData,
+                new ActionDescriptor(),
+                new ModelStateDictionary());
+            var viewEngine = scopedServices.GetRequiredService<ICompositeViewEngine>();
+            var viewResult = viewEngine.FindView(
+                actionContext,
+                viewName ?? action,
+                isMainPage: true);
+            Assert.True(
+                viewResult.Success,
+                $"{controller}/{viewName ?? action} view bulunamadı: "
+                + string.Join(", ", viewResult.SearchedLocations ?? []));
+            var viewData = new ViewDataDictionary<TModel>(
+                scopedServices.GetRequiredService<IModelMetadataProvider>(),
+                actionContext.ModelState)
+            {
+                Model = model
+            };
+            var tempData = new TempDataDictionary(
+                httpContext,
+                scopedServices.GetRequiredService<ITempDataProvider>());
+            using var writer = new StringWriter(renderCulture);
+            var viewContext = new ViewContext(
+                actionContext,
+                viewResult.View,
+                viewData,
+                tempData,
+                writer,
+                new HtmlHelperOptions());
+
+            await viewResult.View.RenderAsync(viewContext);
+            return writer.ToString();
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
+        }
     }
 
     private static string OpeningTagForLinkText(string html, string text)
