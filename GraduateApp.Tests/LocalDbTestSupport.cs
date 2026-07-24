@@ -32,6 +32,7 @@ internal sealed class LocalDbTheoryAttribute : TheoryAttribute
 internal static class LocalDbTestSupport
 {
     private static readonly Lazy<(bool IsAvailable, string? Reason)> Availability = new(ProbeAvailability);
+    private static readonly Lazy<Task<SqlException>> DeadlockException = new(CreateDeadlockExceptionCoreAsync);
 
     public static bool IsAvailable => Availability.Value.IsAvailable;
     public static string UnavailableReason => Availability.Value.Reason ?? "SQL Server LocalDB kullanılamıyor.";
@@ -104,6 +105,8 @@ internal static class LocalDbTestSupport
         throw new InvalidOperationException($"SQL Server {errorNumber} hatası üretilemedi.");
     }
 
+    public static Task<SqlException> CreateDeadlockExceptionAsync() => DeadlockException.Value;
+
     internal static string CreateConnectionString(string databaseName) =>
         new SqlConnectionStringBuilder
         {
@@ -139,6 +142,85 @@ internal static class LocalDbTestSupport
         {
             return (false, $"SQL Server LocalDB kullanılamıyor ({exception.GetType().Name}).");
         }
+    }
+
+    private static async Task<SqlException> CreateDeadlockExceptionCoreAsync()
+    {
+        await using var database = new LocalDbTestDatabase(
+            $"GraduateAppDeadlockException_{Guid.NewGuid():N}",
+            null);
+        await database.CreateAsync();
+        await database.ExecuteAsync(
+            """
+            CREATE TABLE [dbo].[DeadlockRows]
+            (
+                [Id] int NOT NULL CONSTRAINT [PK_DeadlockRows] PRIMARY KEY,
+                [Value] int NOT NULL
+            );
+            INSERT INTO [dbo].[DeadlockRows] ([Id], [Value]) VALUES (1, 0), (2, 0);
+            """);
+
+        await using var firstConnection = new SqlConnection(database.ConnectionString);
+        await using var secondConnection = new SqlConnection(database.ConnectionString);
+        await firstConnection.OpenAsync();
+        await secondConnection.OpenAsync();
+        await using var firstTransaction = firstConnection.BeginTransaction(System.Data.IsolationLevel.Serializable);
+        await using var secondTransaction = secondConnection.BeginTransaction(System.Data.IsolationLevel.Serializable);
+
+        await UpdateDeadlockRowAsync(firstConnection, firstTransaction, 1);
+        await UpdateDeadlockRowAsync(secondConnection, secondTransaction, 2);
+
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstAttempt = CaptureDeadlockAsync(
+            firstConnection,
+            firstTransaction,
+            rowId: 2,
+            start.Task);
+        var secondAttempt = CaptureDeadlockAsync(
+            secondConnection,
+            secondTransaction,
+            rowId: 1,
+            start.Task);
+        start.SetResult();
+
+        var exceptions = (await Task.WhenAll(firstAttempt, secondAttempt))
+            .Where(exception => exception is not null)
+            .Cast<SqlException>()
+            .ToArray();
+        var deadlock = Assert.Single(exceptions);
+        Assert.Equal(1205, deadlock.Number);
+        return deadlock;
+    }
+
+    private static async Task<SqlException?> CaptureDeadlockAsync(
+        SqlConnection connection,
+        SqlTransaction transaction,
+        int rowId,
+        Task start)
+    {
+        await start;
+        try
+        {
+            await UpdateDeadlockRowAsync(connection, transaction, rowId);
+            return null;
+        }
+        catch (SqlException exception) when (exception.Number == 1205)
+        {
+            return exception;
+        }
+    }
+
+    private static async Task UpdateDeadlockRowAsync(
+        SqlConnection connection,
+        SqlTransaction transaction,
+        int rowId)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandTimeout = 10;
+        command.CommandText = "UPDATE [dbo].[DeadlockRows] SET [Value] = [Value] + 1 WHERE [Id] = @Id;";
+        command.Parameters.AddWithValue("@Id", rowId);
+        await command.ExecuteNonQueryAsync();
     }
 }
 

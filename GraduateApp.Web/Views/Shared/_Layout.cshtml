@@ -1,53 +1,139 @@
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    var isHome = currentController == "Home" && currentAction == "Index";
+    var isStudentPanel = currentController == "Panel" && currentAction is "Index" or "ApplicationDetail";
+    var isExamScores = currentController == "Panel" && currentAction == "ExamScores";
+    var isProfile = currentController == "Panel" && currentAction == "Profile";
+    var isAdminHome = currentController == "Admin" && currentAction == "Index";
+    var isAdminCatalog = currentController == "Admin"
+        && currentAction is "Institutes" or "Programs" or "Universities";
+    var isAdminApplications = currentController == "Admin"
+        && currentAction is "Offerings" or "Detail" or "Evaluation" or "PublishEvaluation";
+    var isAdminStudents = currentController == "Admin"
+        && currentAction is "Students" or "ActivateStudent" or "DeactivateStudent";
+    var isAdminAccounts = currentController == "Admin" && currentAction == "Accounts";
+    var roleDisplay = User.IsInRole("Admin") ? "Yönetici" : "Öğrenci";
+}
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GraduateApp</title>
+    <meta name="color-scheme" content="light" />
+    <title>@ViewData["Title"] · Çukurova Üniversitesi Lisansüstü Başvuru Sistemi</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm" aria-label="Ana menü">
+    <a class="skip-link" href="#main-content">Ana içeriğe geç</a>
+
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <div class="environment-banner" role="status">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">GraduateApp</a>
+                <strong>Geliştirme ortamı</strong>
+                <span>Bu ortam gerçek başvuru işlemleri için kullanılmamalıdır.</span>
+            </div>
+        </div>
+    }
+
+    <header class="site-header">
+        <nav class="navbar navbar-expand-xl navbar-dark" aria-label="Ana menü">
+            <div class="container">
+                <a class="site-brand" asp-controller="Home" asp-action="Index"
+                   aria-label="Çukurova Üniversitesi Lisansüstü Başvuru Sistemi ana sayfa">
+                    <img src="~/images/brand/cu_logo_tr.svg"
+                         width="270" height="72"
+                         alt="Çukurova Üniversitesi"
+                         class="site-brand__logo" />
+                    <span class="site-brand__product">Lisansüstü Başvuru Sistemi</span>
+                </a>
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                         aria-controls="mainNav" aria-expanded="false" aria-label="Menüyü aç veya kapat">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Ana sayfa</a></li>
+                    <ul class="navbar-nav site-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link @(isHome ? "active" : null)"
+                               aria-current="@(isHome ? "page" : null)"
+                               asp-controller="Home" asp-action="Index">Ana sayfa</a>
+                        </li>
                         @if (User.IsInRole("Student"))
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="Index">Başvurularım</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="ExamScores">Sınav sonuçlarım</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Panel" asp-action="Profile">Profilim</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isStudentPanel ? "active" : null)"
+                                   aria-current="@(isStudentPanel ? "page" : null)"
+                                   asp-controller="Panel" asp-action="Index">Başvurularım</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isExamScores ? "active" : null)"
+                                   aria-current="@(isExamScores ? "page" : null)"
+                                   asp-controller="Panel" asp-action="ExamScores">Sınav sonuçlarım</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isProfile ? "active" : null)"
+                                   aria-current="@(isProfile ? "page" : null)"
+                                   asp-controller="Panel" asp-action="Profile">Profilim</a>
+                            </li>
                         }
                         @if (User.IsInRole("Admin"))
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Yönetim paneli</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Institutes">Enstitü ve programlar</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Universities">Üniversiteler</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Students">Öğrenciler</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Accounts">Yönetici hesapları</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isAdminHome ? "active" : null)"
+                                   aria-current="@(isAdminHome ? "page" : null)"
+                                   asp-controller="Admin" asp-action="Index">Yönetim paneli</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isAdminApplications ? "active" : null)"
+                                   aria-current="@(isAdminApplications ? "page" : null)"
+                                   asp-controller="Admin" asp-action="Offerings">İlanlar ve başvurular</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isAdminCatalog ? "active" : null)"
+                                   aria-current="@(isAdminCatalog ? "page" : null)"
+                                   asp-controller="Admin" asp-action="Institutes">Akademik katalog</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isAdminStudents ? "active" : null)"
+                                   aria-current="@(isAdminStudents ? "page" : null)"
+                                   asp-controller="Admin" asp-action="Students">Öğrenciler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(isAdminAccounts ? "active" : null)"
+                                   aria-current="@(isAdminAccounts ? "page" : null)"
+                                   asp-controller="Admin" asp-action="Accounts">Yönetici hesapları</a>
+                            </li>
                         }
                     </ul>
-                    <div class="d-flex align-items-center gap-2">
+
+                    <div class="session-area">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <span class="small text-muted" aria-label="Oturum sahibi">@User.Identity.Name</span>
-                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="ChangePassword">Parola değiştir</a>
-                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Güvenli çıkış</button>
-                            </form>
+                            <div class="session-identity" aria-label="Oturum bilgisi">
+                                <span class="session-identity__name">@User.Identity.Name</span>
+                                <span class="session-identity__role">@roleDisplay hesabı</span>
+                            </div>
+                            <div class="session-actions">
+                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="ChangePassword">
+                                    Parola değiştir
+                                </a>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="btn btn-sm btn-light">Güvenli çıkış</button>
+                                </form>
+                            </div>
                         }
                         else
                         {
-                            <a class="btn btn-sm btn-outline-primary" asp-controller="Account" asp-action="Login">Giriş yap</a>
-                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="AdminLogin">Yönetici girişi</a>
-                            <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Register">Kayıt ol</a>
+                            <div class="session-actions session-actions--anonymous" aria-label="Hesap işlemleri">
+                                <a class="btn btn-sm btn-light" asp-controller="Account" asp-action="Login">Öğrenci girişi</a>
+                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="AdminLogin">Yönetici girişi</a>
+                                <a class="nav-register-link" asp-controller="Account" asp-action="Register">Öğrenci kaydı</a>
+                            </div>
                         }
                     </div>
                 </div>
@@ -55,26 +141,41 @@
         </nav>
     </header>
 
-    <main class="container flex-grow-1 py-4" id="main-content">
+    <main class="container site-main flex-grow-1" id="main-content" tabindex="-1">
         @if (TempData["SuccessMessage"] is string successMessage)
         {
-            <div class="alert alert-success" role="status">@successMessage</div>
+            <div class="alert alert-success app-alert" role="status">
+                <strong>İşlem tamamlandı.</strong>
+                <span>@successMessage</span>
+            </div>
         }
         @if (TempData["WarningMessage"] is string warningMessage)
         {
-            <div class="alert alert-warning" role="alert">@warningMessage</div>
+            <div class="alert alert-warning app-alert" role="alert">
+                <strong>Dikkat.</strong>
+                <span>@warningMessage</span>
+            </div>
         }
         @if (TempData["ErrorMessage"] is string errorMessage)
         {
-            <div class="alert alert-danger" role="alert">@errorMessage</div>
+            <div class="alert alert-danger app-alert" role="alert">
+                <strong>İşlem tamamlanamadı.</strong>
+                <span>@errorMessage</span>
+            </div>
         }
         @RenderBody()
     </main>
 
-    <footer class="border-top bg-light py-3 mt-auto">
-        <div class="container small text-muted">
-            &copy; @DateTime.UtcNow.Year GraduateApp ·
-            <a asp-controller="Home" asp-action="Privacy">Gizlilik</a>
+    <footer class="site-footer mt-auto">
+        <div class="container site-footer__content">
+            <div>
+                <strong>Çukurova Üniversitesi</strong>
+                <span>Lisansüstü Başvuru Sistemi</span>
+            </div>
+            <div>
+                <span>&copy; @DateTime.UtcNow.Year</span>
+                <a asp-controller="Home" asp-action="Privacy">Gizlilik ve aydınlatma</a>
+            </div>
         </div>
     </footer>
 

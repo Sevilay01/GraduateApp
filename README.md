@@ -176,6 +176,22 @@ Parola sıfırlama yanıtı, hesabın varlığını açıklamayan genel bir mesa
 
 Development ortamında reset e-postası, Git tarafından yok sayılan `GraduateApp.API/.dev-emails/` dizinine yazılır; token loglanmaz. Production ortamında gerçek e-posta sağlayıcısına bağlı bir `IPasswordResetEmailSender` implementasyonu yapılandırılmadan parola sıfırlama bildirimi gönderilmez ve yalnızca genel bir operasyon hatası loglanır.
 
+## Görsel kimlik kaynağı
+
+Arayüzde kullanılan Çukurova Üniversitesi logosu, 24 Temmuz 2026 tarihinde üniversitenin
+[resmî logo dosyasından](https://www.cu.edu.tr/logo/cu_logo_tr.svg) indirilerek
+`GraduateApp.Web/wwwroot/images/brand/cu_logo_tr.svg` altında yerel olarak saklanmıştır.
+Kaynak SVG'nin SHA-256 özeti
+`5513B249715EAD68C94A9E12C5123548AC34BB209576DADAFE205B7723E3FE46` değeridir.
+Uygulama kopyasında dış DTD tanımı ve kullanılmayan `xlink` ad alanı kaldırılmış; script,
+olay işleyicisi, dış kaynak, `javascript:` ve gömülü nesne bulunmadığı doğrulanmıştır.
+Orijinal `270 × 72` görünüm alanı ve kurumun `#00421C`, `#231F20`, `#808184`,
+`#FFFFFF` renkleri korunmuştur. Ana marka rengi dışındaki etkileşim ve durum tonları,
+erişilebilir kontrast sağlamak için bu arayüz kapsamında türetilmiştir. Kurumsal amblemin
+kullanım bağlamı için üniversitenin
+[logo ve amblem açıklaması](https://arsiv.cu.edu.tr/cu/institutional/university/logo)
+esas alınmıştır.
+
 ## Build ve test
 
 ```powershell

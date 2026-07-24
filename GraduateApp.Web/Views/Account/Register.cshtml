@@ -3,69 +3,96 @@
     ViewData["Title"] = "Öğrenci kaydı";
 }
 
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h1 class="h3 mb-3">Öğrenci kayıt paneli</h1>
-                <form asp-action="Register" method="post" novalidate>
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label asp-for="Tc" class="form-label"></label>
-                            <input asp-for="Tc" class="form-control" inputmode="numeric" autocomplete="off" maxlength="11" />
-                            <span asp-validation-for="Tc" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="FirstName" class="form-label"></label>
-                            <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
-                            <span asp-validation-for="FirstName" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="LastName" class="form-label"></label>
-                            <input asp-for="LastName" class="form-control" autocomplete="family-name" />
-                            <span asp-validation-for="LastName" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="FatherName" class="form-label"></label>
-                            <input asp-for="FatherName" class="form-control" autocomplete="additional-name" />
-                            <span asp-validation-for="FatherName" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="BirthDate" class="form-label"></label>
-                            <input asp-for="BirthDate" class="form-control" type="date" autocomplete="bday" />
-                            <span asp-validation-for="BirthDate" class="text-danger"></span>
-                        </div>
-                        <div class="col-12">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" autocomplete="email" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-                        <div class="col-12">
-                            <label asp-for="Telephone" class="form-label"></label>
-                            <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
-                            <span asp-validation-for="Telephone" class="text-danger"></span>
-                            <div class="form-text">Örnek: 05XX XXX XX XX</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" class="form-control" autocomplete="new-password" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="ConfirmPassword" class="form-label"></label>
-                            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
-                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <p class="form-text mt-3">Parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermelidir.</p>
-                    <p class="small text-muted">Kişisel verilerin işlenmesine ilişkin bilgi için <a asp-controller="Home" asp-action="Privacy">aydınlatma metnini</a> inceleyebilirsiniz.</p>
-                    <button type="submit" class="btn btn-primary mt-2">Kayıt oluştur</button>
-                    <a asp-action="Login" class="btn btn-link mt-2">Girişe dön</a>
-                </form>
-            </div>
-        </div>
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">Yeni öğrenci hesabı</span>
+        <h1 class="page-heading__title">Öğrenci kaydı oluşturun</h1>
+        <p class="page-heading__description">Kimlik ve iletişim bilgilerinizi eksiksiz girerek güvenli hesabınızı oluşturun.</p>
+    </div>
+    <div class="page-heading__actions">
+        <a asp-action="Login" class="btn btn-outline-primary">Girişe dön</a>
     </div>
 </div>
+
+<form asp-action="Register" method="post" class="card auth-card" novalidate>
+    <div class="card-body p-4 p-lg-5">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <fieldset class="mb-4">
+            <legend class="h4 mb-3">Kimlik bilgileri</legend>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="Tc" class="form-label"></label>
+                    <input asp-for="Tc" class="form-control" inputmode="numeric" autocomplete="off" maxlength="11" />
+                    <span asp-validation-for="Tc" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="FatherName" class="form-label"></label>
+                    <input asp-for="FatherName" class="form-control" autocomplete="additional-name" />
+                    <span asp-validation-for="FatherName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="BirthDate" class="form-label"></label>
+                    <input asp-for="BirthDate" class="form-control" type="date" autocomplete="bday" />
+                    <span asp-validation-for="BirthDate" class="text-danger"></span>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="mb-4">
+            <legend class="h4 mb-3">İletişim bilgileri</legend>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Telephone" class="form-label"></label>
+                    <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
+                    <span asp-validation-for="Telephone" class="text-danger"></span>
+                    <div class="form-text">Örnek: 05XX XXX XX XX</div>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend class="h4 mb-3">Güvenli parola</legend>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <div class="password-control">
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" data-password-reveal />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <div class="password-control">
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" data-password-reveal />
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+            </div>
+            <p class="form-text mt-3">Parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermelidir.</p>
+        </fieldset>
+
+        <p class="small text-muted mt-4">
+            Kişisel verilerin işlenmesine ilişkin bilgi için
+            <a asp-controller="Home" asp-action="Privacy">aydınlatma metnini</a> inceleyebilirsiniz.
+        </p>
+        <button type="submit" class="btn btn-primary btn-lg mt-2">Kayıt oluştur</button>
+    </div>
+</form>
 
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

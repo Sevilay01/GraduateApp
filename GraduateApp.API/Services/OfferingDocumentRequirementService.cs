@@ -53,6 +53,24 @@ public sealed class OfferingDocumentRequirementService(
         OfferingDocumentRequirementCreateDto request,
         CancellationToken cancellationToken)
     {
+        try
+        {
+            return await CreateCoreAsync(offeringId, adminId, request, cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is not OperationCanceledException
+            && IsSqlServerDeadlock(exception))
+        {
+            return ConfigurationConcurrencyConflict();
+        }
+    }
+
+    private async Task<ServiceResult<OfferingDocumentRequirementDto>> CreateCoreAsync(
+        int offeringId,
+        int adminId,
+        OfferingDocumentRequirementCreateDto request,
+        CancellationToken cancellationToken)
+    {
         await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
         var offering = await LoadOfferingAggregateAsync(offeringId, cancellationToken);
         if (offering is null)
@@ -108,11 +126,7 @@ public sealed class OfferingDocumentRequirementService(
         {
             return ConfigurationConcurrencyConflict();
         }
-        catch (Exception exception) when (IsSqlServerDeadlock(exception))
-        {
-            return ConfigurationConcurrencyConflict();
-        }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!IsSqlServerDeadlock(exception))
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(
                 "Bu ilan için aynı belge kodu zaten bulunuyor.",
@@ -121,6 +135,25 @@ public sealed class OfferingDocumentRequirementService(
     }
 
     public async Task<ServiceResult<OfferingDocumentRequirementDto>> UpdateAsync(
+        int offeringId,
+        Guid publicId,
+        int adminId,
+        OfferingDocumentRequirementUpdateDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await UpdateCoreAsync(offeringId, publicId, adminId, request, cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is not OperationCanceledException
+            && IsSqlServerDeadlock(exception))
+        {
+            return ConfigurationConcurrencyConflict();
+        }
+    }
+
+    private async Task<ServiceResult<OfferingDocumentRequirementDto>> UpdateCoreAsync(
         int offeringId,
         Guid publicId,
         int adminId,
@@ -168,6 +201,25 @@ public sealed class OfferingDocumentRequirementService(
     }
 
     public async Task<ServiceResult<OfferingDocumentRequirementDto>> SetActiveAsync(
+        int offeringId,
+        Guid publicId,
+        int adminId,
+        DocumentRequirementActiveDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await SetActiveCoreAsync(offeringId, publicId, adminId, request, cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is not OperationCanceledException
+            && IsSqlServerDeadlock(exception))
+        {
+            return ConfigurationConcurrencyConflict();
+        }
+    }
+
+    private async Task<ServiceResult<OfferingDocumentRequirementDto>> SetActiveCoreAsync(
         int offeringId,
         Guid publicId,
         int adminId,
@@ -272,11 +324,7 @@ public sealed class OfferingDocumentRequirementService(
         {
             return ConfigurationConcurrencyConflict();
         }
-        catch (Exception exception) when (IsSqlServerDeadlock(exception))
-        {
-            return ConfigurationConcurrencyConflict();
-        }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!IsSqlServerDeadlock(exception))
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(
                 "Belge koşulu kaydedilemedi; belge kodu ve sınırları kontrol edin.",

@@ -3,12 +3,13 @@
     ViewData["Title"] = "Öğrenci paneli";
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+<div class="page-heading">
     <div>
-        <h1 class="h2 mb-1">Öğrenci paneli</h1>
-        <p class="text-muted mb-0">Açık programları ve başvuru durumlarınızı görüntüleyin.</p>
+        <span class="eyebrow">Öğrenci işlemleri</span>
+        <h1 class="page-heading__title">Öğrenci paneli</h1>
+        <p class="page-heading__description">Açık programları inceleyin ve başvurularınızın güncel durumunu takip edin.</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="page-heading__actions">
         <a asp-action="ExamScores" class="btn btn-outline-primary">Sınav sonuçlarım</a>
         <a asp-action="Profile" class="btn btn-outline-primary">Profil ve eğitim bilgilerim</a>
     </div>
@@ -16,43 +17,101 @@
 
 @if (Model.ErrorMessage is not null)
 {
-    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    <div class="alert alert-warning app-alert" role="alert">
+        <strong>Panel bilgileri eksik olabilir.</strong>
+        <span>@Model.ErrorMessage</span>
+    </div>
 }
 
 <section class="mb-5" aria-labelledby="programs-heading">
-    <h2 id="programs-heading" class="h4">Başvuruya açık programlar</h2>
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Yeni başvuru</span>
+            <h2 id="programs-heading">Başvuruya açık programlar</h2>
+        </div>
+        <p>Koşulları karşılaştırın ve başvuru taslağınızı oluşturun.</p>
+    </div>
+
     @if (Model.OpenPrograms.Count == 0)
     {
-        <p class="text-muted">Şu anda başvuruya açık program yok.</p>
+        <div class="empty-state">
+            <h3>Şu anda başvuruya açık program yok</h3>
+            <p>Yeni ilanlar yayımlandığında bu bölümde görüntülenecektir.</p>
+        </div>
     }
     else
     {
-        <div class="row g-3">
+        <div class="row g-4">
             @foreach (var program in Model.OpenPrograms)
             {
-                var alreadyApplied = Model.Applications.Any(item => item.ProgramOfferingId == program.ProgramOfferingId);
-                <div class="col-12 col-lg-6">
-                    <article class="card h-100">
-                        <div class="card-body d-flex flex-column">
-                            <h3 class="h5">@program.ProgramName</h3>
-                            <p class="text-muted">@program.InstituteName · @program.DegreeType</p>
-                            <p class="mb-2"><strong>@program.AcademicYear · @program.TermName</strong></p>
-                            <p class="small">Kontenjan: @program.Quota</p>
-                            <p class="small">Son başvuru: <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">@IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd.MM.yyyy HH:mm")</time> (İstanbul)</p>
+                var existingApplication = Model.Applications.FirstOrDefault(item => item.ProgramOfferingId == program.ProgramOfferingId);
+                var alreadyApplied = existingApplication is not null;
+                <div class="col-12 col-xl-6">
+                    <article class="card program-card h-100">
+                        <div class="card-body d-flex flex-column p-4">
+                            <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+                                <div>
+                                    <div class="program-card__institute">@program.InstituteName</div>
+                                    <h3 class="h4 mb-1">@program.ProgramName</h3>
+                                    <p class="program-card__degree">@program.DegreeType</p>
+                                </div>
+                                @if (existingApplication is not null)
+                                {
+                                    <partial name="_ApplicationStatusBadge" model="existingApplication.CurrentStatus" />
+                                }
+                            </div>
+
+                            <dl class="meta-grid">
+                                <div class="meta-item">
+                                    <dt>Akademik dönem</dt>
+                                    <dd>@program.AcademicYear · @program.TermName</dd>
+                                </div>
+                                <div class="meta-item">
+                                    <dt>Kontenjan</dt>
+                                    <dd>@program.Quota kişi</dd>
+                                </div>
+                            </dl>
+
+                            <div class="deadline-callout">
+                                <div>
+                                    <div class="deadline-callout__label">Son başvuru tarihi</div>
+                                    <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">
+                                        @IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd MMMM yyyy · HH:mm")
+                                    </time>
+                                    <span class="visually-hidden"> İstanbul saati</span>
+                                </div>
+                            </div>
+
                             @if (program.ExamRequirements.Count > 0)
                             {
-                                <ul class="small">
-                                    @foreach (var requirement in program.ExamRequirements)
-                                    {
-                                        <li>@requirement.ExamName: en az @requirement.MinimumScore @(requirement.IsRequired ? "(zorunlu)" : "(isteğe bağlı)")</li>
-                                    }
-                                </ul>
+                                <div class="mb-3">
+                                    <h4 class="h6">Sınav koşulları</h4>
+                                    <ul class="requirement-list">
+                                        @foreach (var requirement in program.ExamRequirements)
+                                        {
+                                            <li>
+                                                <span><strong>@requirement.ExamName</strong> · En az @requirement.MinimumScore.ToString("0.##")</span>
+                                                <span class="requirement-kind">@(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
                             }
+                            else
+                            {
+                                <p class="small text-muted mb-3">Bu ilan için ayrıca bir sınav koşulu belirtilmemiştir.</p>
+                            }
+
                             <form asp-action="Apply" method="post" class="mt-auto">
                                 <input type="hidden" name="programOfferingId" value="@program.ProgramOfferingId" />
                                 <button type="submit" class="btn btn-primary" disabled="@alreadyApplied">
-                                    @(alreadyApplied ? "Başvuru yapıldı" : "Başvuru oluştur")
+                                    @(alreadyApplied ? "Başvuru oluşturuldu" : "Başvuru taslağı oluştur")
                                 </button>
+                                @if (existingApplication is not null)
+                                {
+                                    <a asp-action="ApplicationDetail" asp-route-publicId="@existingApplication.PublicId"
+                                       class="btn btn-link">Başvuruyu görüntüle</a>
+                                }
                             </form>
                         </div>
                     </article>
@@ -63,31 +122,49 @@
 </section>
 
 <section aria-labelledby="applications-heading">
-    <h2 id="applications-heading" class="h4">Başvurularım</h2>
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Takip</span>
+            <h2 id="applications-heading">Başvurularım</h2>
+        </div>
+    </div>
     @if (Model.Applications.Count == 0)
     {
-        <p class="text-muted">Henüz bir başvurunuz bulunmuyor.</p>
+        <div class="empty-state">
+            <h3>Henüz bir başvurunuz bulunmuyor</h3>
+            <p>Yukarıdaki açık programlardan birini seçerek başvuru taslağı oluşturabilirsiniz.</p>
+        </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr><th>Program</th><th>Akademik dönem</th><th>Başvuru tarihi</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var application in Model.Applications)
-                    {
-                        <tr>
-                            <td>@application.ProgramName</td>
-                            <td>@application.AcademicYear · @application.TermName</td>
-                            <td><time datetime="@application.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")</time> (İstanbul)</td>
-                            <td><span class="badge text-bg-secondary">@application.CurrentStatus.DisplayName()</span></td>
-                            <td><a asp-action="ApplicationDetail" asp-route-publicId="@application.PublicId" class="btn btn-sm btn-outline-primary">Belgeler ve detay</a></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="table-shell">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle responsive-table">
+                    <thead>
+                        <tr><th>Program</th><th>Akademik dönem</th><th>Başvuru tarihi</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var application in Model.Applications)
+                        {
+                            <tr>
+                                <td data-label="Program"><strong>@application.ProgramName</strong></td>
+                                <td data-label="Akademik dönem">@application.AcademicYear · @application.TermName</td>
+                                <td data-label="Başvuru tarihi">
+                                    <time datetime="@application.ApplicationDateUtc.ToString("O")">
+                                        @IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")
+                                    </time>
+                                    <span class="visually-hidden"> İstanbul saati</span>
+                                </td>
+                                <td data-label="Durum"><partial name="_ApplicationStatusBadge" model="application.CurrentStatus" /></td>
+                                <td data-label="">
+                                    <a asp-action="ApplicationDetail" asp-route-publicId="@application.PublicId"
+                                       class="btn btn-sm btn-outline-primary">Belgeler ve detay</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
 </section>

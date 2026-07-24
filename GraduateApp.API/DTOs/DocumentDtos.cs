@@ -95,6 +95,7 @@ public sealed record StudentApplicationDetailDto(
     string AcademicYear,
     AcademicTerm Term,
     string TermName,
+    int Quota,
     DateTime ApplicationDateUtc,
     ApplicationStatus CurrentStatus,
     bool UsesDocumentWorkflow,

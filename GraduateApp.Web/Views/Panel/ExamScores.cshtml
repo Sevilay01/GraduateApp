@@ -3,64 +3,83 @@
     ViewData["Title"] = "Sınav sonuçlarım";
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+<div class="page-heading">
     <div>
-        <h1 class="h2 mb-1">Sınav sonuçlarım</h1>
-        <p class="text-muted mb-0">Başvurularda kullanılacak güncel sınav sonuçlarınızı yönetin.</p>
+        <span class="eyebrow">Başvuru verileri</span>
+        <h1 class="page-heading__title">Sınav sonuçlarım</h1>
+        <p class="page-heading__description">Başvurularda kullanılacak güncel sınav puanlarınızı ve sınav tarihlerinizi yönetin.</p>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Öğrenci paneline dön</a>
+    <div class="page-heading__actions">
+        <a asp-action="Index" class="btn btn-outline-primary">Öğrenci paneline dön</a>
+    </div>
+</div>
+
+<div class="profile-note mb-4" role="note">
+    Sınav puanının geçerliliği, başvurduğunuz ilandaki sınav türü ve asgari geçerlilik tarihi koşullarına göre değerlendirilir.
 </div>
 
 @if (Model.ErrorMessage is not null)
 {
-    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    <div class="alert alert-warning app-alert" role="alert">
+        <strong>Sınav sonuçları eksik olabilir.</strong>
+        <span>@Model.ErrorMessage</span>
+    </div>
 }
 
 <div class="row g-4">
-    <div class="col-12 col-lg-7">
+    <div class="col-12 col-xl-7">
         <section aria-labelledby="scores-heading">
-            <h2 id="scores-heading" class="h4">Kayıtlı sonuçlar</h2>
+            <div class="section-heading">
+                <h2 id="scores-heading">Kayıtlı sonuçlar</h2>
+            </div>
             @if (Model.Scores.Count == 0)
             {
-                <p class="text-muted">Henüz bir sınav sonucu eklemediniz.</p>
+                <div class="empty-state">
+                    <h3>Henüz sınav sonucu eklemediniz</h3>
+                    <p>Yeni sonuç formundan sınav türünü, puanınızı ve sınav tarihinizi kaydedebilirsiniz.</p>
+                </div>
             }
             else
             {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr><th>Sınav</th><th>Puan</th><th>Sınav tarihi</th><th><span class="visually-hidden">İşlemler</span></th></tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var score in Model.Scores)
-                            {
-                                <tr>
-                                    <td>@score.ExamName</td>
-                                    <td>@score.Score.ToString("0.##")</td>
-                                    <td>@(score.ExamDate?.ToString("dd.MM.yyyy") ?? "Belirtilmemiş")</td>
-                                    <td class="text-end">
-                                        <a asp-action="ExamScores" asp-route-editId="@score.ScoreId" class="btn btn-sm btn-outline-primary">Düzenle</a>
-                                        <form asp-action="DeleteExamScore" method="post" class="d-inline"
-                                              onsubmit="return confirm('Bu sınav sonucunu silmek istediğinizden emin misiniz?');">
-                                            <input type="hidden" name="scoreId" value="@score.ScoreId" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="table-shell">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle responsive-table">
+                            <thead>
+                                <tr><th>Sınav türü</th><th>Puan</th><th>Sınav tarihi</th><th>Geçerlilik</th><th><span class="visually-hidden">İşlemler</span></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var score in Model.Scores)
+                                {
+                                    <tr>
+                                        <td data-label="Sınav türü"><strong>@score.ExamName</strong></td>
+                                        <td data-label="Puan">@score.Score.ToString("0.##")</td>
+                                        <td data-label="Sınav tarihi">@(score.ExamDate?.ToString("dd.MM.yyyy") ?? "Belirtilmemiş")</td>
+                                        <td data-label="Geçerlilik"><span class="small text-muted">İlan koşuluna göre</span></td>
+                                        <td data-label="" class="text-end">
+                                            <a asp-action="ExamScores" asp-route-editId="@score.ScoreId" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                            <form asp-action="DeleteExamScore" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Bu sınav sonucunu silmek istediğinizden emin misiniz?');">
+                                                <input type="hidden" name="scoreId" value="@score.ScoreId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             }
         </section>
     </div>
 
-    <div class="col-12 col-lg-5">
+    <div class="col-12 col-xl-5">
         <section class="card" aria-labelledby="score-form-heading">
-            <div class="card-body">
-                <h2 id="score-form-heading" class="h4">@(Model.Form.ScoreId > 0 ? "Sonucu güncelle" : "Yeni sonuç ekle")</h2>
+            <div class="card-body p-4">
+                <span class="eyebrow">@(Model.Form.ScoreId > 0 ? "Kayıt güncelleme" : "Yeni kayıt")</span>
+                <h2 id="score-form-heading" class="h4">@(Model.Form.ScoreId > 0 ? "Sınav sonucunu güncelle" : "Yeni sınav sonucu ekle")</h2>
                 <form asp-action="SaveExamScore" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                     <input asp-for="Form.ScoreId" type="hidden" />
 
                     <div class="mb-3">
@@ -84,7 +103,7 @@
                         <span asp-validation-for="Form.Score" class="text-danger"></span>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label asp-for="Form.ExamDate" class="form-label"></label>
                         <input asp-for="Form.ExamDate" class="form-control" type="date" max="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3)).ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="Form.ExamDate" class="text-danger"></span>

@@ -159,6 +159,26 @@ public sealed class ProgramOfferingService(
         ProgramOfferingUpdateDto request,
         CancellationToken cancellationToken)
     {
+        try
+        {
+            return await UpdateCoreAsync(offeringId, adminId, request, cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is not OperationCanceledException
+            && IsSqlServerDeadlock(exception))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status409Conflict);
+        }
+    }
+
+    private async Task<ServiceResult<ProgramOfferingAdminDto>> UpdateCoreAsync(
+        int offeringId,
+        int adminId,
+        ProgramOfferingUpdateDto request,
+        CancellationToken cancellationToken)
+    {
         await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
         var offering = await dbContext.ProgramOfferings
             .Include(item => item.Program)
@@ -288,13 +308,7 @@ public sealed class ProgramOfferingService(
                 "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
-        catch (Exception exception) when (IsSqlServerDeadlock(exception))
-        {
-            return ServiceResult<ProgramOfferingAdminDto>.Failure(
-                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
-                StatusCodes.Status409Conflict);
-        }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!IsSqlServerDeadlock(exception))
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
                 "İlan güncellenemedi; akademik dönem veya sınav koşullarını kontrol edin.",
