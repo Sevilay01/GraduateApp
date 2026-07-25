@@ -59,7 +59,8 @@ public sealed class OfferingDocumentRequirementService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && DatabaseExceptionClassifier.IsDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ConfigurationConcurrencyConflict();
         }
@@ -149,7 +150,8 @@ public sealed class OfferingDocumentRequirementService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && DatabaseExceptionClassifier.IsDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ConfigurationConcurrencyConflict();
         }
@@ -215,7 +217,8 @@ public sealed class OfferingDocumentRequirementService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && DatabaseExceptionClassifier.IsDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ConfigurationConcurrencyConflict();
         }

@@ -144,6 +144,26 @@ public sealed class ProductionReadinessTests
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("Development", true)]
+    [InlineData("Production", false)]
+    [InlineData("Staging", false)]
+    [InlineData("PreProduction", false)]
+    [InlineData("QA", false)]
+    [InlineData("Test", false)]
+    [InlineData("CustomEnvironment", false)]
+    public async Task Default_data_protection_readiness_is_healthy_only_in_development(
+        string environmentName,
+        bool expected)
+    {
+        var probe = new DefaultDataProtectionReadinessProbe(
+            new TestHostEnvironment { EnvironmentName = environmentName });
+
+        var actual = await probe.IsReadyAsync(CancellationToken.None);
+
+        Assert.Equal(expected, actual);
+    }
+
     [Fact]
     public async Task Valid_correlation_id_is_preserved_in_header_and_health_body()
     {
@@ -194,12 +214,23 @@ public sealed class ProductionReadinessTests
         Assert.Equal(header, json.RootElement.GetProperty("correlationId").GetString());
     }
 
-    [Fact]
-    public async Task Authentication_database_timeout_is_safe_503_not_401()
+    [Theory]
+    [InlineData(-2)]
+    [InlineData(10928)]
+    [InlineData(10929)]
+    [InlineData(40143)]
+    [InlineData(40197)]
+    [InlineData(40501)]
+    [InlineData(40540)]
+    [InlineData(40613)]
+    [InlineData(49918)]
+    [InlineData(49919)]
+    [InlineData(49920)]
+    public async Task Authentication_database_unavailability_is_safe_503_not_401(int errorNumber)
     {
         using var factory = new ReadinessApiFactory(
             accessTokenService: new ThrowingAccessTokenService(
-                TestSqlExceptionFactory.Create(-2)));
+                TestSqlExceptionFactory.Create(errorNumber)));
         using var client = factory.CreateClient(ClientOptions());
         using var request = AuthorizedRequest("/api/students/me");
 
@@ -214,6 +245,27 @@ public sealed class ProductionReadinessTests
         Assert.Equal(
             response.Headers.GetValues(ApiCorrelationIdMiddleware.HeaderName).Single(),
             json.RootElement.GetProperty("correlationId").GetString());
+        Assert.DoesNotContain("simulated", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SqlException", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Unrecognized_sql_error_is_a_safe_500()
+    {
+        using var factory = new ReadinessApiFactory(
+            accessTokenService: new ThrowingAccessTokenService(
+                TestSqlExceptionFactory.Create(50000)));
+        using var client = factory.CreateClient(ClientOptions());
+        using var request = AuthorizedRequest("/api/students/me");
+
+        using var response = await client.SendAsync(request);
+        var body = await response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(body);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(
+            "Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+            json.RootElement.GetProperty("detail").GetString());
         Assert.DoesNotContain("simulated", body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("SqlException", body, StringComparison.Ordinal);
     }

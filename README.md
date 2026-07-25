@@ -220,6 +220,8 @@ GitHub Actions kalite kapısı, tüm pull request'lerde ve `main` dalına yapıl
 
 SQL entegrasyon testleri yalnızca CI runner'ındaki izole LocalDB veritabanlarını kullanır; LocalDB kullanılamıyorsa testler sessizce atlanmaz ve job açık bir hatayla durur. Migration adımı yalnızca runner'ın geçici klasöründe SQL üretir; herhangi bir veritabanına migration uygulamaz. CI bootstrap admin veya production secret oluşturmaz.
 
+LocalDB fixture kararlılığı için yalnız yeni `master` bağlantısının `OpenAsync` aşamasında en fazla üç denemelik kısa ve sınırlı retry uygulanır. Her denemede yeni bağlantı açılır; authentication/yapılandırma hataları, `CREATE DATABASE`, migration, transaction ve SQL komutları retry edilmez.
+
 ## Production notları
 
 - Development'taki platform varsayılan Data Protection key sürekliliği production-ready provider kanıtı değildir; Production readiness için kurumsal provider ve açık readiness probe gerekir.

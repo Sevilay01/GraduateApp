@@ -6,6 +6,7 @@ using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
@@ -33,8 +34,14 @@ public sealed class ApplicationDocumentServiceTests
         Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "DocumentStorageFailure");
     }
 
-    [Fact]
-    public async Task Development_scanner_is_fail_closed_in_production()
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    [InlineData("PreProduction")]
+    [InlineData("QA")]
+    [InlineData("Test")]
+    [InlineData("CustomEnvironment")]
+    public async Task Development_scanner_is_fail_closed_outside_development(string environmentName)
     {
         await using var db = TestDb.Create();
         var application = await SeedAsync(db);
@@ -43,7 +50,7 @@ public sealed class ApplicationDocumentServiceTests
             db,
             storage,
             new DevelopmentNoOpFileMalwareScanner(),
-            Environments.Production);
+            environmentName);
 
         var result = await service.UploadAsync(
             application.Tc,
@@ -56,6 +63,138 @@ public sealed class ApplicationDocumentServiceTests
         Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
         Assert.Equal(0, storage.SaveCount);
         Assert.Empty(db.ApplicationDocuments);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Development_providers_can_accept_a_document_in_development()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var service = CreateService(
+            db,
+            storage,
+            new DevelopmentNoOpFileMalwareScanner(),
+            Environments.Development);
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("development-provider"),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, storage.SaveCount);
+        Assert.Single(db.ApplicationDocuments);
+    }
+
+    [Fact]
+    public async Task Ready_probes_allow_document_acceptance_outside_development()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var scanner = new ProbeScanner(ready: true);
+        var service = CreateService(db, storage, scanner, Environments.Staging);
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("ready-providers"),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, scanner.ScanCount);
+        Assert.Equal(1, storage.SaveCount);
+        Assert.Single(db.ApplicationDocuments);
+    }
+
+    [Fact]
+    public async Task Unready_accepting_scanner_is_rejected_consistently_by_upload_and_health()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var scanner = new ProbeScanner(ready: false);
+        var environment = new TestHostEnvironment { EnvironmentName = Environments.Staging };
+        var service = new ApplicationDocumentService(
+            db,
+            new DocumentFileValidator(Options.Create(new DocumentUploadOptions { MaximumBytes = 1024 * 1024 })),
+            storage,
+            scanner,
+            new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)),
+            environment);
+        var healthCheck = new ProviderReadinessHealthCheck(
+            storage,
+            scanner,
+            new ReadyDataProtectionProbe(),
+            environment);
+
+        var upload = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("unready-accepting-scanner"),
+            CancellationToken.None);
+        var health = await healthCheck.CheckHealthAsync(new HealthCheckContext());
+
+        Assert.False(upload.IsSuccess);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, upload.StatusCode);
+        Assert.Equal(HealthStatus.Unhealthy, health.Status);
+        Assert.Equal(0, scanner.ScanCount);
+        Assert.Equal(0, storage.SaveCount);
+        Assert.Empty(db.ApplicationDocuments);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Readiness_timeout_is_fail_closed_without_scan_storage_metadata_or_audit()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var scanner = new ThrowingReadinessScanner(new TimeoutException("simulated readiness timeout"));
+        var service = CreateService(db, storage, scanner, "PreProduction");
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("readiness-timeout"),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
+        Assert.Equal(0, scanner.ScanCount);
+        Assert.Equal(0, storage.SaveCount);
+        Assert.Empty(db.ApplicationDocuments);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Caller_cancellation_during_readiness_is_propagated_without_side_effects()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        using var cancellation = new CancellationTokenSource();
+        var scanner = new CallerCancelingReadinessScanner(cancellation);
+        var service = CreateService(db, storage, scanner, Environments.Staging);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("readiness-cancelled"),
+            cancellation.Token));
+
+        Assert.Equal(0, scanner.ScanCount);
+        Assert.Equal(0, storage.SaveCount);
+        Assert.Empty(db.ApplicationDocuments);
+        Assert.Empty(db.SecurityAuditLogs);
     }
 
     [Fact]
@@ -694,6 +833,66 @@ public sealed class ApplicationDocumentServiceTests
     {
         public Task<MalwareScanResult> ScanAsync(Stream content, CancellationToken cancellationToken) =>
             Task.FromResult(new MalwareScanResult(false, null));
+    }
+
+    private sealed class ProbeScanner(bool ready) : IFileMalwareScanner, IProductionReadinessProbe
+    {
+        public int ScanCount { get; private set; }
+
+        public ValueTask<bool> IsReadyAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(ready);
+        }
+
+        public Task<MalwareScanResult> ScanAsync(Stream content, CancellationToken cancellationToken)
+        {
+            ScanCount++;
+            return Task.FromResult(new MalwareScanResult(true, null));
+        }
+    }
+
+    private sealed class ThrowingReadinessScanner(Exception exception)
+        : IFileMalwareScanner, IProductionReadinessProbe
+    {
+        public int ScanCount { get; private set; }
+
+        public ValueTask<bool> IsReadyAsync(CancellationToken cancellationToken) =>
+            ValueTask.FromException<bool>(exception);
+
+        public Task<MalwareScanResult> ScanAsync(Stream content, CancellationToken cancellationToken)
+        {
+            ScanCount++;
+            return Task.FromResult(new MalwareScanResult(true, null));
+        }
+    }
+
+    private sealed class CallerCancelingReadinessScanner(CancellationTokenSource cancellation)
+        : IFileMalwareScanner, IProductionReadinessProbe
+    {
+        public int ScanCount { get; private set; }
+
+        public ValueTask<bool> IsReadyAsync(CancellationToken cancellationToken)
+        {
+            cancellation.Cancel();
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(true);
+        }
+
+        public Task<MalwareScanResult> ScanAsync(Stream content, CancellationToken cancellationToken)
+        {
+            ScanCount++;
+            return Task.FromResult(new MalwareScanResult(true, null));
+        }
+    }
+
+    private sealed class ReadyDataProtectionProbe : IDataProtectionReadinessProbe
+    {
+        public ValueTask<bool> IsReadyAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(true);
+        }
     }
 
     private sealed class CallerCancelingScanner(CancellationTokenSource cancellation) : IFileMalwareScanner

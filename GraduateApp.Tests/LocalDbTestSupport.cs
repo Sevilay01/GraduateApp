@@ -31,6 +31,23 @@ internal sealed class LocalDbTheoryAttribute : TheoryAttribute
 
 internal static class LocalDbTestSupport
 {
+    internal const int ConnectionOpenMaxAttempts = 3;
+    private static readonly TimeSpan[] ConnectionOpenRetryDelays =
+    [
+        TimeSpan.FromMilliseconds(100),
+        TimeSpan.FromMilliseconds(250)
+    ];
+    private static readonly HashSet<int> RetryableConnectionOpenErrorNumbers =
+    [
+        -2,
+        64,
+        121,
+        233,
+        258,
+        10053,
+        10054,
+        10060
+    ];
     private static readonly Lazy<(bool IsAvailable, string? Reason)> Availability = new(ProbeAvailability);
     private static readonly Lazy<Task<SqlException>> DeadlockException = new(CreateDeadlockExceptionCoreAsync);
 
@@ -44,9 +61,9 @@ internal static class LocalDbTestSupport
         var database = new LocalDbTestDatabase(
             $"GraduateAppTelephone_{Guid.NewGuid():N}",
             databaseCollation);
-        await database.CreateAsync();
         try
         {
+            await database.CreateAsync();
             await database.ExecuteAsync(studentsSchemaSql);
             await database.ExecuteAsync(
                 """
@@ -118,6 +135,48 @@ internal static class LocalDbTestSupport
             MultipleActiveResultSets = false
         }.ConnectionString;
 
+    internal static Task<SqlConnection> OpenMasterConnectionAsync(
+        CancellationToken cancellationToken = default) =>
+        OpenConnectionWithRetryAsync(
+            () => new SqlConnection(CreateConnectionString("master")),
+            static (connection, token) => connection.OpenAsync(token),
+            static connection => connection.DisposeAsync(),
+            static (delay, token) => Task.Delay(delay, token),
+            cancellationToken);
+
+    internal static async Task<TConnection> OpenConnectionWithRetryAsync<TConnection>(
+        Func<TConnection> connectionFactory,
+        Func<TConnection, CancellationToken, Task> openAsync,
+        Func<TConnection, ValueTask> disposeAsync,
+        Func<TimeSpan, CancellationToken, Task> delayAsync,
+        CancellationToken cancellationToken)
+    {
+        var attempt = 0;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            attempt++;
+            var connection = connectionFactory();
+            try
+            {
+                await openAsync(connection, cancellationToken);
+                return connection;
+            }
+            catch (SqlException exception) when (
+                attempt < ConnectionOpenMaxAttempts
+                && IsRetryableConnectionOpenFailure(exception))
+            {
+                await disposeAsync(connection);
+                await delayAsync(ConnectionOpenRetryDelays[attempt - 1], cancellationToken);
+            }
+            catch
+            {
+                await disposeAsync(connection);
+                throw;
+            }
+        }
+    }
+
     internal static string QuoteIdentifier(string identifier) =>
         $"[{identifier.Replace("]", "]]", StringComparison.Ordinal)}]";
 
@@ -143,6 +202,11 @@ internal static class LocalDbTestSupport
             return (false, $"SQL Server LocalDB kullanılamıyor ({exception.GetType().Name}).");
         }
     }
+
+    private static bool IsRetryableConnectionOpenFailure(SqlException exception) =>
+        RetryableConnectionOpenErrorNumbers.Contains(exception.Number)
+        || exception.Errors.Cast<SqlError>().Any(
+            error => RetryableConnectionOpenErrorNumbers.Contains(error.Number));
 
     private static async Task<SqlException> CreateDeadlockExceptionCoreAsync()
     {
@@ -224,17 +288,44 @@ internal static class LocalDbTestSupport
     }
 }
 
-internal sealed class LocalDbTestDatabase(string databaseName, string? databaseCollation) : IAsyncDisposable
+internal sealed class LocalDbTestDatabase : IAsyncDisposable
 {
+    private readonly string databaseName;
+    private readonly string? databaseCollation;
+    private readonly Func<CancellationToken, Task<SqlConnection>> openMasterConnectionAsync;
+    private readonly Func<SqlConnection, string, CancellationToken, Task> executeMasterCommandAsync;
+    private bool createCommandAttempted;
+
+    public LocalDbTestDatabase(string databaseName, string? databaseCollation)
+        : this(
+            databaseName,
+            databaseCollation,
+            LocalDbTestSupport.OpenMasterConnectionAsync,
+            ExecuteMasterCommandAsync)
+    {
+    }
+
+    internal LocalDbTestDatabase(
+        string databaseName,
+        string? databaseCollation,
+        Func<CancellationToken, Task<SqlConnection>> openMasterConnectionAsync,
+        Func<SqlConnection, string, CancellationToken, Task> executeMasterCommandAsync)
+    {
+        this.databaseName = databaseName;
+        this.databaseCollation = databaseCollation;
+        this.openMasterConnectionAsync = openMasterConnectionAsync;
+        this.executeMasterCommandAsync = executeMasterCommandAsync;
+    }
+
     public string ConnectionString => LocalDbTestSupport.CreateConnectionString(databaseName);
 
-    public async Task CreateAsync()
+    public async Task CreateAsync(CancellationToken cancellationToken = default)
     {
-        await using var connection = new SqlConnection(LocalDbTestSupport.CreateConnectionString("master"));
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE DATABASE {LocalDbTestSupport.QuoteIdentifier(databaseName)}{LocalDbTestSupport.GetDatabaseCollationClause(databaseCollation)};";
-        await command.ExecuteNonQueryAsync();
+        await using var connection = await openMasterConnectionAsync(cancellationToken);
+        var commandText =
+            $"CREATE DATABASE {LocalDbTestSupport.QuoteIdentifier(databaseName)}{LocalDbTestSupport.GetDatabaseCollationClause(databaseCollation)};";
+        createCommandAttempted = true;
+        await executeMasterCommandAsync(connection, commandText, cancellationToken);
     }
 
     public async Task MigrateAsync(string? targetMigration = null)
@@ -306,18 +397,32 @@ internal sealed class LocalDbTestDatabase(string databaseName, string? databaseC
 
     public async ValueTask DisposeAsync()
     {
+        if (!createCommandAttempted)
+        {
+            return;
+        }
+
         SqlConnection.ClearAllPools();
-        await using var connection = new SqlConnection(LocalDbTestSupport.CreateConnectionString("master"));
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
+        await using var connection = await openMasterConnectionAsync(CancellationToken.None);
         var quotedDatabaseName = LocalDbTestSupport.QuoteIdentifier(databaseName);
-        command.CommandText = $"""
+        var commandText = $"""
             IF DB_ID(N'{databaseName}') IS NOT NULL
             BEGIN
                 ALTER DATABASE {quotedDatabaseName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
                 DROP DATABASE {quotedDatabaseName};
             END;
             """;
-        await command.ExecuteNonQueryAsync();
+        await executeMasterCommandAsync(connection, commandText, CancellationToken.None);
+        createCommandAttempted = false;
+    }
+
+    private static async Task ExecuteMasterCommandAsync(
+        SqlConnection connection,
+        string commandText,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

@@ -105,6 +105,22 @@ public sealed class DocumentWorkflowDeadlockHandlingTests
     }
 
     [Fact]
+    public async Task Offering_update_does_not_convert_mixed_deadlock_and_unavailable_error_to_conflict()
+    {
+        var mixed = TestSqlExceptionFactory.Create(1205, 40197);
+        await using var db = TestDb.Create(new ThrowingQueryExpressionInterceptor(() => mixed));
+
+        var exception = await Assert.ThrowsAsync<SqlException>(() =>
+            CreateOfferingService(db).UpdateAsync(
+                1,
+                1,
+                EmptyUpdateRequest(),
+                CancellationToken.None));
+
+        Assert.Same(mixed, exception);
+    }
+
+    [Fact]
     public async Task Offering_update_does_not_convert_request_cancellation_to_conflict()
     {
         await using var db = TestDb.Create(new ThrowingQueryExpressionInterceptor(

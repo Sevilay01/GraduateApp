@@ -112,8 +112,13 @@ internal sealed class TemporaryDirectory : IDisposable
 
 internal static class TestSqlExceptionFactory
 {
-    public static SqlException Create(int number)
+    public static SqlException Create(params int[] numbers)
     {
+        if (numbers.Length == 0)
+        {
+            throw new ArgumentException("En az bir SQL hata numarası gereklidir.", nameof(numbers));
+        }
+
         var errorCollection = (SqlErrorCollection)Activator.CreateInstance(
             typeof(SqlErrorCollection),
             nonPublic: true)!;
@@ -121,13 +126,16 @@ internal static class TestSqlExceptionFactory
             .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
             .OrderByDescending(constructor => constructor.GetParameters().Length)
             .First();
-        var errorArguments = errorConstructor.GetParameters()
-            .Select(parameter => CreateArgument(parameter, number, errorCollection))
-            .ToArray();
-        var error = (SqlError)errorConstructor.Invoke(errorArguments);
-        typeof(SqlErrorCollection)
-            .GetMethod("Add", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .Invoke(errorCollection, [error]);
+        var addError = typeof(SqlErrorCollection)
+            .GetMethod("Add", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        foreach (var number in numbers)
+        {
+            var errorArguments = errorConstructor.GetParameters()
+                .Select(parameter => CreateArgument(parameter, number, errorCollection))
+                .ToArray();
+            var error = (SqlError)errorConstructor.Invoke(errorArguments);
+            addError.Invoke(errorCollection, [error]);
+        }
 
         var factory = typeof(SqlException)
             .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
@@ -137,7 +145,7 @@ internal static class TestSqlExceptionFactory
             .OrderBy(method => method.GetParameters().Length)
             .First();
         var factoryArguments = factory.GetParameters()
-            .Select(parameter => CreateArgument(parameter, number, errorCollection))
+            .Select(parameter => CreateArgument(parameter, numbers[0], errorCollection))
             .ToArray();
         return (SqlException)factory.Invoke(null, factoryArguments)!;
     }

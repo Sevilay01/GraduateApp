@@ -21,7 +21,7 @@ public sealed class DefaultDataProtectionReadinessProbe(IHostEnvironment environ
     public ValueTask<bool> IsReadyAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(!environment.IsProduction());
+        return ValueTask.FromResult(environment.IsDevelopment());
     }
 }
 

@@ -187,7 +187,9 @@ public sealed class EvaluationPolicyService(
         {
             return ConcurrencyFailure();
         }
-        catch (Exception exception) when (DatabaseExceptionClassifier.IsDeadlock(exception))
+        catch (Exception exception) when (
+            DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ConcurrencyFailure();
         }
@@ -301,7 +303,9 @@ public sealed class EvaluationPolicyService(
                 "Değerlendirme kriteri veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
-        catch (Exception exception) when (DatabaseExceptionClassifier.IsDeadlock(exception))
+        catch (Exception exception) when (
+            DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramOfferingEvaluationCriterionDto>.Failure(
                 "Değerlendirme kriteri veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",

@@ -137,7 +137,9 @@ public sealed class AdminAccountService(
             await dbContext.SaveChangesAsync(cancellationToken);
             await CommitAsync(transaction, cancellationToken);
         }
-        catch (DbUpdateException exception) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return Failure("Bu e-posta adresiyle yeni bir yönetici daveti oluşturulamıyor.", StatusCodes.Status409Conflict);
         }
@@ -491,7 +493,9 @@ public sealed class AdminAccountService(
         {
             return ServiceResult.Failure(ConcurrencyMessage, StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException exception) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure("Bu bilgilerle yönetici hesabı güncellenemiyor.", StatusCodes.Status409Conflict);
         }

@@ -79,14 +79,8 @@ public sealed class ApplicationDocumentService(
                 StatusCodes.Status409Conflict);
         }
 
-        if (!await ProductionProvidersReadyAsync(cancellationToken))
+        if (!await OperationalProvidersReadyAsync(cancellationToken))
         {
-            await AuditFailureAsync(
-                application.PublicId,
-                "DocumentIntegrityFailure",
-                "UnsafeProviderConfiguration",
-                transaction,
-                cancellationToken);
             return ServiceResult<ApplicationDocumentDto>.Failure(
                 "Belge güvenlik sağlayıcıları hazır olmadığı için yükleme kabul edilemiyor.",
                 StatusCodes.Status503ServiceUnavailable);
@@ -257,18 +251,18 @@ public sealed class ApplicationDocumentService(
         }
     }
 
-    private async Task<bool> ProductionProvidersReadyAsync(CancellationToken cancellationToken)
+    private async Task<bool> OperationalProvidersReadyAsync(CancellationToken cancellationToken)
     {
-        if (!environment.IsProduction())
+        if (environment.IsDevelopment())
         {
             return true;
         }
 
-        return await IsProductionProviderReadyAsync(storage, cancellationToken)
-            && await IsProductionProviderReadyAsync(malwareScanner, cancellationToken);
+        return await IsOperationalProviderReadyAsync(storage, cancellationToken)
+            && await IsOperationalProviderReadyAsync(malwareScanner, cancellationToken);
     }
 
-    private static async ValueTask<bool> IsProductionProviderReadyAsync(
+    private static async ValueTask<bool> IsOperationalProviderReadyAsync(
         object provider,
         CancellationToken cancellationToken)
     {

@@ -165,7 +165,8 @@ public sealed class ProgramOfferingService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && DatabaseExceptionClassifier.IsDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
                 "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",

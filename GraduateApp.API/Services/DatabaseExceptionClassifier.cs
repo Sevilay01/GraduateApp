@@ -7,6 +7,8 @@ internal static class DatabaseExceptionClassifier
 {
     private static readonly HashSet<int> UnavailableErrorNumbers =
     [
+        // Microsoft Azure SQL transient connectivity/service codes:
+        // https://learn.microsoft.com/azure/azure-sql/database/troubleshoot-common-connectivity-issues
         -2,
         2,
         20,
@@ -20,7 +22,17 @@ internal static class DatabaseExceptionClassifier
         10054,
         10060,
         11001,
-        18456
+        18456,
+        10928,
+        10929,
+        40143,
+        40197,
+        40501,
+        40540,
+        40613,
+        49918,
+        49919,
+        49920
     ];
 
     public static bool IsUniqueConstraintViolation(Exception exception) =>

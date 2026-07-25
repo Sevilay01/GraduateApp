@@ -45,7 +45,7 @@ SQL readiness (3 sn) < SQL connection (5 sn) < SQL command / beklenen API iç b�
 
 | Durum | API sonucu | Not |
 | --- | --- | --- |
-| SQL timeout (`-2`) veya doğrulanmış bağlantı erişilemezliği | 503 | Genel Türkçe ProblemDetails; altyapı ayrıntısı yok |
+| SQL timeout (`-2`), doğrulanmış bağlantı erişilemezliği veya Azure SQL servis/failover kodları | 503 | Genel Türkçe ProblemDetails; altyapı ayrıntısı yok |
 | Authentication sırasında SQL erişilemezliği | 503 | Kullanıcı/token hatası olmadığı için 401 değildir |
 | SQL deadlock `1205` | Mevcut servis sınırlarında 409 | Mevcut kontrollü concurrency davranışı korunur |
 | Unique violation `2601` / `2627` | Mevcut servis sınırlarında 409 | Duplicate iş kuralı davranışı korunur |
@@ -58,6 +58,8 @@ SQL readiness (3 sn) < SQL connection (5 sn) < SQL command / beklenen API iç b�
 > Servis geçici olarak kullanılamıyor. Lütfen kısa bir süre sonra tekrar deneyin.
 
 SQL, connection string, data source, database adı, stack trace veya token response'a eklenmez. Response başladıktan sonra status değiştirilmeye çalışılmaz.
+
+Azure SQL için merkezi unavailable allowlist'i `10928`, `10929`, `40143`, `40197`, `40501`, `40540`, `40613`, `49918`, `49919` ve `49920` kodlarını içerir. Bu sınıflandırma yalnız güvenli 503 sınırını seçer; komut veya transaction retry'ı başlatmaz. `1205` deadlock ile `2601`/`2627` unique violation mevcut kontrollü 409 davranışını korur.
 
 ## Health endpoint'leri
 
@@ -76,7 +78,7 @@ Healthy/Degraded cevaplar 200, Unhealthy cevap 503 sözleşmesini kullanır. Bod
 }
 ```
 
-Health body'de entry adı, exception, SQL, connection string, sunucu/database adı, kullanıcı, fiziksel path veya provider diagnostic'i yayınlanmaz. Development adapter'ları yalnız Development ortamında ready sayılır. Production'da development/no-op/unavailable adapter'ları unhealthy'dir.
+Health body'de entry adı, exception, SQL, connection string, sunucu/database adı, kullanıcı, fiziksel path veya provider diagnostic'i yayınlanmaz. Development adapter'ları yalnız Development ortamında ready sayılır. Staging, PreProduction, QA, Test ve diğer Development dışı ortamlarda development/no-op/unavailable adapter'ları unhealthy'dir.
 
 ## Correlation ID ve güvenli logging
 
@@ -127,10 +129,10 @@ Mevcut iş abstraction'ları korunur: `IPrivateFileStorage` ve `IFileMalwareScan
 | Ortam / provider | Readiness | Upload |
 | --- | --- | --- |
 | Development storage + development no-op scanner, Development | Healthy olabilir | Geliştirme amaçlı kabul |
-| Development/no-op provider, Production | Unhealthy | 503 fail-closed |
+| Development/no-op provider, Development dışı ortam | Unhealthy | 503 fail-closed |
 | Unavailable provider | Unhealthy | 503 fail-closed |
-| Production provider, readiness probe yok | Unhealthy | 503 fail-closed |
-| Production provider + `IProductionReadinessProbe=true` | Healthy olabilir | Normal workflow |
+| Operasyonel provider, readiness probe yok | Unhealthy | 503 fail-closed |
+| Operasyonel provider + `IProductionReadinessProbe=true` | Healthy olabilir | Normal workflow |
 | Scanner timeout/unavailable/ambiguous | Unhealthy veya request 503 | Belge kabul edilmez |
 
 Production adapter'ları `IProductionReadinessProbe` uygulamalı ve probe güvenli, kısa, salt-okunur olmalıdır. Storage provider atomic create/no-overwrite, path traversal koruması, erişim kontrolü, encryption-at-rest, yedekleme ve disaster recovery sağlamalıdır. Scanner yalnız kesin temiz sonucu kabul edilebilir olarak işaretlemelidir.

@@ -236,7 +236,8 @@ public sealed class ApplicationEvaluationService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && DatabaseExceptionClassifier.IsDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ConcurrencyConflict();
         }
@@ -589,7 +590,9 @@ public sealed class ApplicationEvaluationService(
         {
             return ConcurrencyConflict();
         }
-        catch (Exception exception) when (DatabaseExceptionClassifier.IsDeadlock(exception))
+        catch (Exception exception) when (
+            DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ConcurrencyConflict();
         }

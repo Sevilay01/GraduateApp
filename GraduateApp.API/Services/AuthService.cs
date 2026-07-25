@@ -124,7 +124,9 @@ public sealed class AuthService(
 
             return ServiceResult.Success(StatusCodes.Status201Created);
         }
-        catch (DbUpdateException exception) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure("Bu bilgilerle kayıt oluşturulamıyor.", StatusCodes.Status409Conflict);
         }
