@@ -777,12 +777,16 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             {
                 var value = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
                 return value is null
-                    ? ApiResult<T>.Failure("Servisten geçersiz bir yanıt alındı.", response.StatusCode)
+                    ? ApiResult<T>.Failure("Servisten geçersiz bir yanıt alındı.", HttpStatusCode.BadGateway)
                     : ApiResult<T>.Success(value, response.StatusCode);
             }
             catch (JsonException)
             {
-                return ApiResult<T>.Failure("Servisten geçersiz bir yanıt alındı.", response.StatusCode);
+                return ApiResult<T>.Failure("Servisten geçersiz bir yanıt alındı.", HttpStatusCode.BadGateway);
+            }
+            catch (NotSupportedException)
+            {
+                return ApiResult<T>.Failure("Servisten geçersiz bir yanıt alındı.", HttpStatusCode.BadGateway);
             }
         }
     }

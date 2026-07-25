@@ -88,7 +88,15 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                 new { returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null });
         }
 
-        return StatusCode((int)(statusCode ?? HttpStatusCode.ServiceUnavailable));
+        if (statusCode is null)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
+
+        var numericStatusCode = (int)statusCode;
+        return StatusCode(numericStatusCode is >= 400 and <= 599
+            ? numericStatusCode
+            : StatusCodes.Status502BadGateway);
     }
 
     [HttpPost("Panel/Applications/{publicId:guid}/Documents/{requirementPublicId:guid}/Upload")]

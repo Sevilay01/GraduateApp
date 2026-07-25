@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -151,6 +153,41 @@ public sealed class StudentApplicationIdorResponseWebTests
         AssertAuthenticationCookieWasNotDeleted(response);
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.OK)]
+    [InlineData(HttpStatusCode.Created)]
+    [InlineData(HttpStatusCode.NoContent)]
+    [InlineData(HttpStatusCode.Redirect)]
+    public void Application_detail_failure_with_non_error_status_returns_bad_gateway(
+        HttpStatusCode statusCode)
+    {
+        using var httpClient = new HttpClient(new StaticStatusHandler(HttpStatusCode.InternalServerError))
+        {
+            BaseAddress = new Uri("https://api.example.test")
+        };
+        var controller = new PanelController(new GraduateApiClient(httpClient));
+
+        var result = InvokeApplicationDetailFailure(controller, statusCode);
+
+        var statusResult = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status502BadGateway, statusResult.StatusCode);
+    }
+
+    [Fact]
+    public void Application_detail_failure_without_status_returns_service_unavailable()
+    {
+        using var httpClient = new HttpClient(new StaticStatusHandler(HttpStatusCode.InternalServerError))
+        {
+            BaseAddress = new Uri("https://api.example.test")
+        };
+        var controller = new PanelController(new GraduateApiClient(httpClient));
+
+        var result = InvokeApplicationDetailFailure(controller, null);
+
+        var statusResult = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, statusResult.StatusCode);
+    }
+
     [Fact]
     public async Task Api_timeout_is_service_unavailable_not_401_404_or_500_and_preserves_cookie()
     {
@@ -181,6 +218,18 @@ public sealed class StudentApplicationIdorResponseWebTests
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => apiClient.GetMyApplicationAsync(Guid.NewGuid(), cancellation.Token));
+    }
+
+    private static IActionResult InvokeApplicationDetailFailure(
+        PanelController controller,
+        HttpStatusCode? statusCode)
+    {
+        var method = typeof(PanelController).GetMethod(
+            "ApplicationDetailFailure",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        return Assert.IsAssignableFrom<IActionResult>(
+            method.Invoke(controller, new object?[] { statusCode }));
     }
 
     private static WebApplicationFactoryClientOptions ClientOptions() => new()
