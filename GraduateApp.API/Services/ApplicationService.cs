@@ -176,6 +176,7 @@ public sealed class ApplicationService(
             .Where(item => item.Tc == studentTc && item.PublicId == publicId)
             .Include(item => item.ProgramOffering).ThenInclude(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);
         return application is null ? null : MapStudentDetail(application);
     }

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -7,6 +8,8 @@ namespace GraduateApp.Web.Services;
 
 public sealed class ApiAccessTokenHandler(IHttpContextAccessor httpContextAccessor) : DelegatingHandler
 {
+    private static readonly object SessionEndedKey = new();
+
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
@@ -20,11 +23,32 @@ public sealed class ApiAccessTokenHandler(IHttpContextAccessor httpContextAccess
 
         var response = await base.SendAsync(request, cancellationToken);
         if (response.StatusCode == HttpStatusCode.Unauthorized
-            && httpContext?.User.Identity?.IsAuthenticated == true)
+            && TryEndCurrentSession(httpContext))
         {
-            await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await httpContext!.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
 
         return response;
+    }
+
+    private static bool TryEndCurrentSession(HttpContext? httpContext)
+    {
+        if (httpContext is null)
+        {
+            return false;
+        }
+
+        lock (httpContext)
+        {
+            if (httpContext.User.Identity?.IsAuthenticated != true
+                || httpContext.Items.ContainsKey(SessionEndedKey))
+            {
+                return false;
+            }
+
+            httpContext.Items[SessionEndedKey] = true;
+            httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+            return true;
+        }
     }
 }

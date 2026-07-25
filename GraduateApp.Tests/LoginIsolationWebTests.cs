@@ -17,6 +17,45 @@ namespace GraduateApp.Tests;
 
 public sealed class LoginIsolationWebTests
 {
+    [Theory]
+    [InlineData("https://evil.example/steal")]
+    [InlineData("//evil.example/steal")]
+    public void Student_login_drops_non_local_return_urls(string returnUrl)
+    {
+        var controller = CreateController(new LoginResponseHandler("Student"));
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = CreateHttpContext(requestServices: CreateRequestServices()),
+            RouteData = new RouteData(),
+            ActionDescriptor = new ControllerActionDescriptor()
+        };
+
+        var result = Assert.IsType<ViewResult>(controller.Login(returnUrl));
+        var model = Assert.IsType<LoginViewModel>(result.Model);
+
+        Assert.Null(model.ReturnUrl);
+    }
+
+    [Fact]
+    public void Student_login_preserves_a_local_return_url()
+    {
+        var controller = CreateController(new LoginResponseHandler("Student"));
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = CreateHttpContext(requestServices: CreateRequestServices()),
+            RouteData = new RouteData(),
+            ActionDescriptor = new ControllerActionDescriptor()
+        };
+
+        var result = Assert.IsType<ViewResult>(
+            controller.Login("/Panel/Applications/00000000-0000-0000-0000-000000000001"));
+        var model = Assert.IsType<LoginViewModel>(result.Model);
+
+        Assert.Equal(
+            "/Panel/Applications/00000000-0000-0000-0000-000000000001",
+            model.ReturnUrl);
+    }
+
     [Fact]
     public void Student_cookie_opening_admin_login_shows_role_and_switch_instead_of_redirecting()
     {

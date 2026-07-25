@@ -1,6 +1,8 @@
+using System.Net;
 using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GraduateApp.Web.Controllers;
@@ -52,8 +54,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.GetMyApplicationAsync(publicId, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Başvuru bulunamadı.";
-            return RedirectToAction(nameof(Index));
+            return ApplicationDetailFailure(result.StatusCode);
         }
 
         if (result.Value.UsesEvaluationWorkflow)
@@ -66,6 +67,28 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         }
 
         return View(result.Value);
+    }
+
+    private IActionResult ApplicationDetailFailure(HttpStatusCode? statusCode)
+    {
+        if (statusCode == HttpStatusCode.NotFound)
+        {
+            Response.StatusCode = StatusCodes.Status404NotFound;
+            ViewData["StatusCode"] = StatusCodes.Status404NotFound;
+            ViewData["StatusMessage"] = "Başvuru bulunamadı.";
+            return View("~/Views/Home/StatusCode.cshtml");
+        }
+
+        if (statusCode == HttpStatusCode.Unauthorized)
+        {
+            var returnUrl = Request.GetEncodedPathAndQuery();
+            return RedirectToAction(
+                "Login",
+                "Account",
+                new { returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null });
+        }
+
+        return StatusCode((int)(statusCode ?? HttpStatusCode.ServiceUnavailable));
     }
 
     [HttpPost("Panel/Applications/{publicId:guid}/Documents/{requirementPublicId:guid}/Upload")]
