@@ -1,7 +1,7 @@
 @{
     var statusCode = ViewData["StatusCode"] as int? ?? 500;
     ViewData["Title"] = "İstek tamamlanamadı";
-    var message = statusCode switch
+    var message = ViewData["StatusMessage"] as string ?? statusCode switch
     {
         404 => "Aradığınız sayfa bulunamadı.",
         401 => "Bu sayfayı görüntülemek için giriş yapmalısınız.",

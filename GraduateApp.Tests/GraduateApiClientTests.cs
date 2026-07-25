@@ -94,6 +94,82 @@ public sealed class GraduateApiClientTests
     }
 
     [Fact]
+    public async Task Successful_api_response_with_empty_body_is_bad_gateway_failure()
+    {
+        using var httpClient = new HttpClient(new StubHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(Array.Empty<byte>())
+        }))
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        var result = await client.GetMyApplicationAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Value);
+        Assert.Equal(HttpStatusCode.BadGateway, result.StatusCode);
+    }
+
+    [Fact]
+    public async Task Successful_api_response_with_json_null_body_is_bad_gateway_failure()
+    {
+        using var httpClient = new HttpClient(new StubHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("null", Encoding.UTF8, "application/json")
+        }))
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        var result = await client.GetMyApplicationAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Value);
+        Assert.Equal(HttpStatusCode.BadGateway, result.StatusCode);
+    }
+
+    [Fact]
+    public async Task Successful_api_response_with_malformed_json_is_bad_gateway_failure()
+    {
+        using var httpClient = new HttpClient(new StubHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{", Encoding.UTF8, "application/json")
+        }))
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        var result = await client.GetMyApplicationAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Value);
+        Assert.Equal(HttpStatusCode.BadGateway, result.StatusCode);
+    }
+
+    [Fact]
+    public async Task Successful_api_response_with_unsupported_payload_is_bad_gateway_failure()
+    {
+        using var httpClient = new HttpClient(new StubHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new UnsupportedContent()
+        }))
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        var result = await client.GetMyApplicationAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Value);
+        Assert.Equal(HttpStatusCode.BadGateway, result.StatusCode);
+    }
+
+    [Fact]
     public async Task Create_offering_sends_null_row_version()
     {
         var handler = new CaptureHandler();
@@ -190,6 +266,18 @@ public sealed class GraduateApiClientTests
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
             Task.FromResult(response);
+    }
+
+    private sealed class UnsupportedContent : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) =>
+            Task.FromException(new NotSupportedException("The payload cannot be read as a stream."));
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = 0;
+            return false;
+        }
     }
 
     private sealed class CaptureHandler : HttpMessageHandler
