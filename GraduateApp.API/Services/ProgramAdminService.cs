@@ -178,11 +178,13 @@ public sealed class ProgramAdminService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return DuplicateFailure();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramAdminDto>.Failure(
                 "Program geçerli bir enstitüye bağlanamadı.",
@@ -382,13 +384,15 @@ public sealed class ProgramAdminService(
                 "Kayıt başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException exception) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure(
                 "Aynı enstitü, program adı ve derece türü için zaten kayıt bulunuyor.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure(
                 "Program bağlı kayıtlar veya veri bütünlüğü nedeniyle değiştirilemedi.",

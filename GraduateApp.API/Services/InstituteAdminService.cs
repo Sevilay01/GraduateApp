@@ -152,7 +152,9 @@ public sealed class InstituteAdminService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return DuplicateFailure();
         }
@@ -316,13 +318,15 @@ public sealed class InstituteAdminService(
                 "Kayıt başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException exception) when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure(
                 "Aynı adda bir enstitü zaten bulunuyor.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure(
                 "Enstitü bağlı kayıtlar veya veri bütünlüğü nedeniyle değiştirilemedi.",

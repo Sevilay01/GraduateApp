@@ -50,6 +50,7 @@ public sealed class GraduateApiClientTests
     [Theory]
     [InlineData(HttpStatusCode.BadRequest)]
     [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
     [InlineData(HttpStatusCode.InternalServerError)]
     public async Task Login_preserves_distinct_api_failure_status(HttpStatusCode statusCode)
     {

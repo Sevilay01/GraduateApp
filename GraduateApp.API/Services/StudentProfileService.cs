@@ -117,7 +117,7 @@ public sealed class StudentProfileService(
             await dbContext.SaveChangesAsync(cancellationToken);
             return ServiceResult<StudentProfileDto>.Success(Map(student));
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<StudentProfileDto>.Failure("Profil bilgileri güncellenemedi.", StatusCodes.Status409Conflict);
         }

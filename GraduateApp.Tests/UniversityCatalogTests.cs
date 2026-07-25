@@ -157,12 +157,12 @@ public sealed class UniversityCatalogTests
         Assert.Empty(db.SecurityAuditLogs);
     }
 
-    [LocalDbTheory]
+    [Theory]
     [InlineData(2601)]
     [InlineData(2627)]
     public async Task Only_sql_server_unique_violations_are_mapped_to_safe_conflict(int errorNumber)
     {
-        var sqlException = await LocalDbTestSupport.CreateUniqueViolationExceptionAsync(errorNumber);
+        var sqlException = TestSqlExceptionFactory.Create(errorNumber);
         await using var db = TestDb.Create(new ThrowingSaveChangesInterceptor(
             () => new DbUpdateException("unique database failure", sqlException)));
 
@@ -174,6 +174,50 @@ public sealed class UniversityCatalogTests
         Assert.False(result.IsSuccess);
         Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
         Assert.Equal("Aynı adda bir üniversite zaten bulunuyor.", result.Error);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Theory]
+    [InlineData(10928)]
+    [InlineData(10929)]
+    [InlineData(40143)]
+    [InlineData(40197)]
+    [InlineData(40501)]
+    [InlineData(40540)]
+    [InlineData(40613)]
+    [InlineData(49918)]
+    [InlineData(49919)]
+    [InlineData(49920)]
+    public async Task Azure_sql_unavailability_is_not_converted_to_a_service_conflict(int errorNumber)
+    {
+        var sqlException = TestSqlExceptionFactory.Create(errorNumber);
+        await using var db = TestDb.Create(new ThrowingSaveChangesInterceptor(
+            () => new DbUpdateException("database unavailable", sqlException)));
+
+        var exception = await Assert.ThrowsAsync<DbUpdateException>(() =>
+            CreateService(db).CreateAsync(
+                7,
+                new UniversityCreateDto { UniversityName = "Test Üniversitesi" },
+                CancellationToken.None));
+
+        Assert.Same(sqlException, exception.InnerException);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Mixed_unique_and_unavailable_errors_are_not_converted_to_conflict()
+    {
+        var sqlException = TestSqlExceptionFactory.Create(2601, 40197);
+        await using var db = TestDb.Create(new ThrowingSaveChangesInterceptor(
+            () => new DbUpdateException("mixed database failure", sqlException)));
+
+        var exception = await Assert.ThrowsAsync<DbUpdateException>(() =>
+            CreateService(db).CreateAsync(
+                7,
+                new UniversityCreateDto { UniversityName = "Test Üniversitesi" },
+                CancellationToken.None));
+
+        Assert.Same(sqlException, exception.InnerException);
         Assert.Empty(db.SecurityAuditLogs);
     }
 

@@ -141,7 +141,7 @@ public sealed class ApplicationService(
                 MapStudentApplication(application, offering),
                 StatusCodes.Status201Created);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             if (transaction is not null)
             {
@@ -353,7 +353,7 @@ public sealed class ApplicationService(
 
             return ServiceResult.Success();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             if (transaction is not null)
             {

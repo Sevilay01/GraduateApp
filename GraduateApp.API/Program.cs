@@ -1,16 +1,19 @@
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using GraduateApp.API.Domain;
+using GraduateApp.API.Infrastructure;
 using GraduateApp.API.Models;
 using GraduateApp.API.Security;
 using GraduateApp.API.Services;
-using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,9 +25,46 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "ConnectionStrings:DefaultConnection environment variable veya user-secrets ile sağlanmalıdır.");
 }
 
-builder.Services.AddDbContext<GraduateAppDbContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddDataProtection().SetApplicationName("GraduateApp.API");
-builder.Services.AddProblemDetails();
+builder.Services.AddOptions<DatabaseTimeoutOptions>()
+    .Bind(builder.Configuration.GetSection(DatabaseTimeoutOptions.SectionName))
+    .Validate(
+        options => options.ConnectionSeconds is >= 1 and <= 30,
+        "DatabaseTimeouts:ConnectionSeconds 1 ile 30 arasında olmalıdır.")
+    .Validate(
+        options => options.CommandSeconds is >= 2 and <= 60,
+        "DatabaseTimeouts:CommandSeconds 2 ile 60 arasında olmalıdır.")
+    .Validate(
+        options => options.ReadinessSeconds is >= 1 and <= 10,
+        "DatabaseTimeouts:ReadinessSeconds 1 ile 10 arasında olmalıdır.")
+    .Validate(
+        options => options.ReadinessSeconds < options.ConnectionSeconds
+            && options.ReadinessSeconds < options.CommandSeconds,
+        "Readiness timeout, SQL connection ve command timeout değerlerinden kısa olmalıdır.")
+    .ValidateOnStart();
+builder.Services.AddDbContext<GraduateAppDbContext>((services, options) =>
+{
+    var timeouts = services.GetRequiredService<IOptions<DatabaseTimeoutOptions>>().Value;
+    var databaseTarget = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString)
+    {
+        ConnectTimeout = timeouts.ConnectionSeconds
+    };
+    options.UseSqlServer(
+        databaseTarget.ConnectionString,
+        sqlServer => sqlServer.CommandTimeout(timeouts.CommandSeconds));
+});
+var apiDataProtection = builder.Services.AddDataProtection()
+    .SetApplicationName("GraduateApp.API");
+if (!builder.Environment.IsDevelopment())
+{
+    apiDataProtection.UseEphemeralDataProtectionProvider();
+}
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+        context.ProblemDetails.Extensions[CorrelationIdMiddleware.ProblemDetailsExtensionName] =
+            CorrelationIdMiddleware.Get(context.HttpContext);
+});
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 var configuredUploadMaximum = builder.Configuration.GetValue<long?>(
     $"{DocumentUploadOptions.SectionName}:MaximumBytes") ?? DocumentWorkflowCatalog.DefaultMaximumUploadBytes;
 builder.Services.AddOptions<DocumentUploadOptions>()
@@ -39,6 +79,7 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = checked(configuredUploadMaximum + 64 * 1024));
 builder.Services.AddControllers(options =>
     {
+        options.Filters.Add<CorrelationProblemDetailsFilter>();
         var messages = options.ModelBindingMessageProvider;
         messages.SetMissingBindRequiredValueAccessor(_ => "Bu alan zorunludur.");
         messages.SetMissingKeyOrValueAccessor(() => "Bu alan zorunludur.");
@@ -70,7 +111,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
             Title = "Gönderilen bilgiler doğrulanamadı.",
             Detail = validationMessages.Length == 0
                 ? "Girilen değerleri kontrol edip tekrar deneyiniz."
-                : string.Join(' ', validationMessages)
+                : string.Join(' ', validationMessages),
+            Extensions =
+            {
+                [CorrelationIdMiddleware.ProblemDetailsExtensionName] =
+                    CorrelationIdMiddleware.Get(context.HttpContext)
+            }
         });
     };
 });
@@ -126,6 +172,13 @@ else
     builder.Services.AddSingleton<IFileMalwareScanner, UnavailableFileMalwareScanner>();
 }
 
+builder.Services.TryAddSingleton<IDataProtectionReadinessProbe, DefaultDataProtectionReadinessProbe>();
+builder.Services.TryAddSingleton<ISqlServerReadinessProbe, SqlServerReadinessProbe>();
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+    .AddCheck<SqlServerReadinessHealthCheck>("sql", tags: ["ready"])
+    .AddCheck<ProviderReadinessHealthCheck>("providers", tags: ["ready"]);
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -140,44 +193,33 @@ if (allowedOrigins.Length > 0)
     builder.Services.AddCors(options => options.AddPolicy("TrustedWeb", policy => policy
         .WithOrigins(allowedOrigins)
         .WithMethods("GET", "POST", "PUT", "DELETE")
-        .WithHeaders("Authorization", "Content-Type")));
+        .WithHeaders("Authorization", "Content-Type", CorrelationIdMiddleware.HeaderName)
+        .WithExposedHeaders(CorrelationIdMiddleware.HeaderName)));
 }
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    var databaseTarget = new SqlConnectionStringBuilder(connectionString);
-    app.Logger.LogInformation(
-        new EventId(1001, "DatabaseTarget"),
-        "Database target: data source {DataSource}, database {DatabaseName}.",
-        databaseTarget.DataSource,
-        databaseTarget.InitialCatalog);
-}
-
-app.UseExceptionHandler(exceptionApp => exceptionApp.Run(async context =>
-{
-    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-    await context.Response.WriteAsJsonAsync(new ProblemDetails
-    {
-        Status = StatusCodes.Status500InternalServerError,
-        Title = "İşlem tamamlanamadı.",
-        Detail = "Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin."
-    });
-}));
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseExceptionHandler();
 app.UseStatusCodePages(async statusContext =>
 {
-    var response = statusContext.HttpContext.Response;
-    await response.WriteAsJsonAsync(new ProblemDetails
+    var httpContext = statusContext.HttpContext;
+    var response = httpContext.Response;
+    var problemDetailsService = httpContext.RequestServices.GetRequiredService<IProblemDetailsService>();
+    _ = await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
     {
-        Status = response.StatusCode,
-        Title = response.StatusCode switch
+        HttpContext = httpContext,
+        ProblemDetails = new ProblemDetails
         {
-            StatusCodes.Status401Unauthorized => "Kimlik doğrulama gerekli.",
-            StatusCodes.Status403Forbidden => "Bu işlem için yetkiniz yok.",
-            StatusCodes.Status404NotFound => "Kaynak bulunamadı.",
-            StatusCodes.Status429TooManyRequests => "Çok fazla istek gönderildi.",
-            _ => "İstek tamamlanamadı."
+            Status = response.StatusCode,
+            Title = response.StatusCode switch
+            {
+                StatusCodes.Status401Unauthorized => "Kimlik doğrulama gerekli.",
+                StatusCodes.Status403Forbidden => "Bu işlem için yetkiniz yok.",
+                StatusCodes.Status404NotFound => "Kaynak bulunamadı.",
+                StatusCodes.Status429TooManyRequests => "Çok fazla istek gönderildi.",
+                _ => "İstek tamamlanamadı."
+            }
         }
     });
 });
@@ -191,8 +233,33 @@ if (allowedOrigins.Length > 0)
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("live"),
+    ResponseWriter = WriteHealthResponseAsync
+}).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready"),
+    ResponseWriter = WriteHealthResponseAsync
+}).AllowAnonymous();
 app.MapControllers();
 app.Run();
+
+static Task WriteHealthResponseAsync(HttpContext context, HealthReport report)
+{
+    var message = report.Status == HealthStatus.Healthy
+        ? "Uygulama hazır."
+        : "Uygulama bağımlılıkları hazır değil.";
+    return context.Response.WriteAsJsonAsync(
+        new
+        {
+            status = report.Status.ToString(),
+            correlationId = CorrelationIdMiddleware.Get(context),
+            message
+        },
+        context.RequestAborted);
+}
 
 static RateLimitPartition<string> CreateFixedWindowPartition(HttpContext context, int permitLimit, TimeSpan window) =>
     RateLimitPartition.GetFixedWindowLimiter(

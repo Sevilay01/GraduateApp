@@ -73,11 +73,12 @@ public sealed class UniversityCatalogService(
                 StatusCodes.Status201Created);
         }
         catch (DbUpdateException exception)
-            when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception))
+            when (DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+                && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return DuplicateFailure();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<UniversityDto>.Failure(
                 "Üniversite şu anda oluşturulamıyor. Lütfen daha sonra tekrar deneyin.",

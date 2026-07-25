@@ -124,11 +124,13 @@ public sealed class AuthService(
 
             return ServiceResult.Success(StatusCodes.Status201Created);
         }
-        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        catch (DbUpdateException exception) when (
+            DatabaseExceptionClassifier.IsUniqueConstraintViolation(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure("Bu bilgilerle kayıt oluşturulamıyor.", StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             logger.LogError(
                 StudentRegistrationDatabaseFailure,
@@ -137,20 +139,6 @@ public sealed class AuthService(
                 "Kayıt şu anda oluşturulamıyor. Lütfen daha sonra tekrar deneyin.",
                 StatusCodes.Status500InternalServerError);
         }
-    }
-
-    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
-    {
-        for (Exception? current = exception; current is not null; current = current.InnerException)
-        {
-            if (current is SqlException sqlException
-                && sqlException.Errors.Cast<SqlError>().Any(error => error.Number is 2601 or 2627))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginDto request, CancellationToken cancellationToken)
@@ -288,7 +276,7 @@ public sealed class AuthService(
             var resetLink = CreateResetLink(rawToken);
             await emailSender.SendAsync(student?.Email ?? admin!.Email, resetLink, cancellationToken);
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogError(
                 new EventId(1004, "PasswordResetNotificationFailure"),
@@ -611,7 +599,7 @@ public sealed class AuthService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             logger.LogError(
                 new EventId(1003, "LoginIdentityAuditFailure"),

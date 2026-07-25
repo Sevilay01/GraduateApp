@@ -670,12 +670,16 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             request.Dispose();
-            return ApiDownloadResult.Failure("Servis yanıt vermedi. Lütfen tekrar deneyin.");
+            return ApiDownloadResult.Failure(
+                "Servis geçici olarak kullanılamıyor. Lütfen kısa bir süre sonra tekrar deneyin.",
+                HttpStatusCode.ServiceUnavailable);
         }
         catch (HttpRequestException)
         {
             request.Dispose();
-            return ApiDownloadResult.Failure("Servise şu anda ulaşılamıyor. Lütfen daha sonra tekrar deneyin.");
+            return ApiDownloadResult.Failure(
+                "Servis geçici olarak kullanılamıyor. Lütfen kısa bir süre sonra tekrar deneyin.",
+                HttpStatusCode.ServiceUnavailable);
         }
 
         request.Dispose();
@@ -759,11 +763,15 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return ApiResult<T>.Failure("Servis yanıt vermedi. Lütfen tekrar deneyin.");
+            return ApiResult<T>.Failure(
+                "Servis geçici olarak kullanılamıyor. Lütfen kısa bir süre sonra tekrar deneyin.",
+                HttpStatusCode.ServiceUnavailable);
         }
         catch (HttpRequestException)
         {
-            return ApiResult<T>.Failure("Servise şu anda ulaşılamıyor. Lütfen daha sonra tekrar deneyin.");
+            return ApiResult<T>.Failure(
+                "Servis geçici olarak kullanılamıyor. Lütfen kısa bir süre sonra tekrar deneyin.",
+                HttpStatusCode.ServiceUnavailable);
         }
 
         using (response)
@@ -800,11 +808,15 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return ApiResult.Failure("Servis yanıt vermedi. Lütfen tekrar deneyin.");
+            return ApiResult.Failure(
+                "Servis geçici olarak kullanılamıyor. Lütfen kısa bir süre sonra tekrar deneyin.",
+                HttpStatusCode.ServiceUnavailable);
         }
         catch (HttpRequestException)
         {
-            return ApiResult.Failure("Servise şu anda ulaşılamıyor. Lütfen daha sonra tekrar deneyin.");
+            return ApiResult.Failure(
+                "Servis geçici olarak kullanılamıyor. Lütfen kısa bir süre sonra tekrar deneyin.",
+                HttpStatusCode.ServiceUnavailable);
         }
 
         using (response)

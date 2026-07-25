@@ -133,7 +133,7 @@ public sealed class AdminBootstrapHostedService(
                 await transaction.CommitAsync(cancellationToken);
             }
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             throw new InvalidOperationException(
                 "Bootstrap admin hesabı oluşturulamadı: merkezi giriş kimliği başka bir hesap tarafından kullanılıyor.");

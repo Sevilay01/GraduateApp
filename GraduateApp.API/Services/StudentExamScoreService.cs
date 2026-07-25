@@ -77,7 +77,7 @@ public sealed class StudentExamScoreService(
             await dbContext.SaveChangesAsync(cancellationToken);
             return ServiceResult<StudentExamScoreDto>.Success(Map(score), StatusCodes.Status201Created);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<StudentExamScoreDto>.Failure(
                 "Bu sınav için zaten bir sonuç kaydınız bulunuyor.",
@@ -119,7 +119,7 @@ public sealed class StudentExamScoreService(
             await dbContext.SaveChangesAsync(cancellationToken);
             return ServiceResult<StudentExamScoreDto>.Success(Map(score));
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<StudentExamScoreDto>.Failure(
                 "Bu sınav için zaten bir sonuç kaydınız bulunuyor.",

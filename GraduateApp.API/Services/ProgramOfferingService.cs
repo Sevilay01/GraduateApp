@@ -137,7 +137,7 @@ public sealed class ProgramOfferingService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
                 "Aynı program, akademik yıl ve dönem için zaten ilan bulunuyor.",
@@ -165,7 +165,8 @@ public sealed class ProgramOfferingService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && IsSqlServerDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
                 "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
@@ -308,7 +309,9 @@ public sealed class ProgramOfferingService(
                 "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException exception) when (!IsSqlServerDeadlock(exception))
+        catch (DbUpdateException exception) when (
+            !DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
                 "İlan güncellenemedi; akademik dönem veya sınav koşullarını kontrol edin.",
@@ -437,10 +440,6 @@ public sealed class ProgramOfferingService(
         dbContext.Database.IsRelational()
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
-
-    private static bool IsSqlServerDeadlock(Exception exception) =>
-        exception is SqlException { Number: 1205 }
-        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 
     private static ProgramOfferingAdminDto Map(ProgramOffering offering) => new(
         offering.ProgramOfferingId,
