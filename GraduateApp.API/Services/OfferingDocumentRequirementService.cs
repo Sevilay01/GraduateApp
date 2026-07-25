@@ -59,7 +59,7 @@ public sealed class OfferingDocumentRequirementService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && IsSqlServerDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception))
         {
             return ConfigurationConcurrencyConflict();
         }
@@ -126,7 +126,9 @@ public sealed class OfferingDocumentRequirementService(
         {
             return ConfigurationConcurrencyConflict();
         }
-        catch (DbUpdateException exception) when (!IsSqlServerDeadlock(exception))
+        catch (DbUpdateException exception) when (
+            !DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(
                 "Bu ilan için aynı belge kodu zaten bulunuyor.",
@@ -147,7 +149,7 @@ public sealed class OfferingDocumentRequirementService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && IsSqlServerDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception))
         {
             return ConfigurationConcurrencyConflict();
         }
@@ -213,7 +215,7 @@ public sealed class OfferingDocumentRequirementService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && IsSqlServerDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception))
         {
             return ConfigurationConcurrencyConflict();
         }
@@ -324,7 +326,9 @@ public sealed class OfferingDocumentRequirementService(
         {
             return ConfigurationConcurrencyConflict();
         }
-        catch (DbUpdateException exception) when (!IsSqlServerDeadlock(exception))
+        catch (DbUpdateException exception) when (
+            !DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(
                 "Belge koşulu kaydedilemedi; belge kodu ve sınırları kontrol edin.",
@@ -370,10 +374,6 @@ public sealed class OfferingDocumentRequirementService(
         ServiceResult<OfferingDocumentRequirementDto>.Failure(
             "Belge koşulu veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
             StatusCodes.Status409Conflict);
-
-    private static bool IsSqlServerDeadlock(Exception exception) =>
-        exception is SqlException { Number: 1205 }
-        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 
     private void AddAudit(
         int adminId,

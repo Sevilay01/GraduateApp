@@ -404,7 +404,7 @@ public sealed class AdminAccountService(
         {
             await emailSender.SendAsync(email, CreateInvitationLink(rawToken), cancellationToken);
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogError(new EventId(1101, "AdminInvitationNotificationFailure"), "Admin invitation notification could not be sent.");
         }
@@ -495,7 +495,7 @@ public sealed class AdminAccountService(
         {
             return ServiceResult.Failure("Bu bilgilerle yönetici hesabı güncellenemiyor.", StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure("Yönetici hesabı veri bütünlüğü nedeniyle güncellenemedi.", StatusCodes.Status409Conflict);
         }

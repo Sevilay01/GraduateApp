@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Net;
 using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -66,6 +67,11 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.LoginAsync(model, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
+            if (result.StatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            }
+
             ModelState.AddModelError(string.Empty, result.Error ?? "Giriş yapılamadı.");
             return View("Login", model);
         }

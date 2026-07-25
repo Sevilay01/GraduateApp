@@ -1,7 +1,9 @@
 using System.Data;
+using System.Data.Common;
 using System.Text.Json;
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
+using GraduateApp.API.Infrastructure;
 using GraduateApp.API.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +44,8 @@ public sealed class ApplicationDocumentService(
     IDocumentFileValidator fileValidator,
     IPrivateFileStorage storage,
     IFileMalwareScanner malwareScanner,
-    TimeProvider timeProvider) : IApplicationDocumentService
+    TimeProvider timeProvider,
+    IHostEnvironment environment) : IApplicationDocumentService
 {
     public async Task<ServiceResult<ApplicationDocumentDto>> UploadAsync(
         string studentTc,
@@ -76,6 +79,19 @@ public sealed class ApplicationDocumentService(
                 StatusCodes.Status409Conflict);
         }
 
+        if (!await ProductionProvidersReadyAsync(cancellationToken))
+        {
+            await AuditFailureAsync(
+                application.PublicId,
+                "DocumentIntegrityFailure",
+                "UnsafeProviderConfiguration",
+                transaction,
+                cancellationToken);
+            return ServiceResult<ApplicationDocumentDto>.Failure(
+                "Belge güvenlik sağlayıcıları hazır olmadığı için yükleme kabul edilemiyor.",
+                StatusCodes.Status503ServiceUnavailable);
+        }
+
         var validation = await fileValidator.ValidateAsync(
             file,
             requirement.AllowedContentCategory,
@@ -107,6 +123,20 @@ public sealed class ApplicationDocumentService(
                 "Dosya güvenlik doğrulaması tamamlanamadı.",
                 StatusCodes.Status503ServiceUnavailable);
         }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            await AuditFailureAsync(application.PublicId, "DocumentIntegrityFailure", "ScannerTimeout", transaction, cancellationToken);
+            return ServiceResult<ApplicationDocumentDto>.Failure(
+                "Dosya güvenlik doğrulaması tamamlanamadı.",
+                StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (Exception exception) when (exception is TimeoutException or HttpRequestException)
+        {
+            await AuditFailureAsync(application.PublicId, "DocumentIntegrityFailure", "ScannerUnavailable", transaction, cancellationToken);
+            return ServiceResult<ApplicationDocumentDto>.Failure(
+                "Dosya güvenlik doğrulaması tamamlanamadı.",
+                StatusCodes.Status503ServiceUnavailable);
+        }
 
         if (current is not null && string.Equals(current.Sha256, validated.Sha256, StringComparison.Ordinal))
         {
@@ -127,6 +157,20 @@ public sealed class ApplicationDocumentService(
             objectKey = await storage.SaveAsync(content, cancellationToken);
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException or UnauthorizedAccessException)
+        {
+            await AuditFailureAsync(application.PublicId, "DocumentStorageFailure", "SaveFailed", transaction, cancellationToken);
+            return ServiceResult<ApplicationDocumentDto>.Failure(
+                "Belge güvenli depoya kaydedilemedi. Lütfen daha sonra tekrar deneyin.",
+                StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            await AuditFailureAsync(application.PublicId, "DocumentStorageFailure", "SaveTimeout", transaction, cancellationToken);
+            return ServiceResult<ApplicationDocumentDto>.Failure(
+                "Belge güvenli depoya kaydedilemedi. Lütfen daha sonra tekrar deneyin.",
+                StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (Exception exception) when (exception is TimeoutException or HttpRequestException)
         {
             await AuditFailureAsync(application.PublicId, "DocumentStorageFailure", "SaveFailed", transaction, cancellationToken);
             return ServiceResult<ApplicationDocumentDto>.Failure(
@@ -173,7 +217,17 @@ public sealed class ApplicationDocumentService(
 
             return ServiceResult<ApplicationDocumentDto>.Success(Map(document), StatusCodes.Status201Created);
         }
-        catch (DbUpdateException)
+        catch (OperationCanceledException)
+        {
+            await RollbackAndDeleteAsync(transaction, objectKey);
+            throw;
+        }
+        catch (Exception exception) when (DatabaseExceptionClassifier.IsUnavailable(exception))
+        {
+            await RollbackAndDeleteAsync(transaction, objectKey);
+            throw;
+        }
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             if (transaction is not null)
             {
@@ -201,6 +255,60 @@ public sealed class ApplicationDocumentService(
                 "Belge metadata kaydı tamamlanamadı; lütfen sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
+    }
+
+    private async Task<bool> ProductionProvidersReadyAsync(CancellationToken cancellationToken)
+    {
+        if (!environment.IsProduction())
+        {
+            return true;
+        }
+
+        return await IsProductionProviderReadyAsync(storage, cancellationToken)
+            && await IsProductionProviderReadyAsync(malwareScanner, cancellationToken);
+    }
+
+    private static async ValueTask<bool> IsProductionProviderReadyAsync(
+        object provider,
+        CancellationToken cancellationToken)
+    {
+        if (provider is not IProductionReadinessProbe probe)
+        {
+            return false;
+        }
+
+        try
+        {
+            return await probe.IsReadyAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return false;
+        }
+    }
+
+    private async Task RollbackAndDeleteAsync(
+        IDbContextTransaction? transaction,
+        string objectKey)
+    {
+        if (transaction is not null)
+        {
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or DbException)
+            {
+                // The request remains failed; storage compensation is still attempted below.
+            }
+        }
+
+        await BestEffortDeleteAsync(objectKey, CancellationToken.None);
+        dbContext.ChangeTracker.Clear();
     }
 
     public async Task<ServiceResult<DocumentDownload>> OpenForStudentAsync(

@@ -322,7 +322,7 @@ public sealed class InstituteAdminService(
                 "Aynı adda bir enstitü zaten bulunuyor.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure(
                 "Enstitü bağlı kayıtlar veya veri bütünlüğü nedeniyle değiştirilemedi.",

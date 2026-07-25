@@ -1,10 +1,12 @@
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
+using GraduateApp.API.Infrastructure;
 using GraduateApp.API.Models;
 using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace GraduateApp.Tests;
@@ -29,6 +31,115 @@ public sealed class ApplicationDocumentServiceTests
         Assert.False(result.IsSuccess);
         Assert.Empty(db.ApplicationDocuments);
         Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "DocumentStorageFailure");
+    }
+
+    [Fact]
+    public async Task Development_scanner_is_fail_closed_in_production()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var service = CreateService(
+            db,
+            storage,
+            new DevelopmentNoOpFileMalwareScanner(),
+            Environments.Production);
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("unsafe-provider"),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
+        Assert.Equal(0, storage.SaveCount);
+        Assert.Empty(db.ApplicationDocuments);
+    }
+
+    [Fact]
+    public async Task Scanner_timeout_is_fail_closed_without_storage_write()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var service = CreateService(db, storage, new TimeoutScanner());
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("scanner-timeout"),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
+        Assert.Equal(0, storage.SaveCount);
+        Assert.Empty(db.ApplicationDocuments);
+        Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "DocumentIntegrityFailure");
+    }
+
+    [Fact]
+    public async Task Ambiguous_scanner_result_is_fail_closed()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var service = CreateService(db, storage, new AmbiguousScanner());
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("ambiguous"),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
+        Assert.Equal(0, storage.SaveCount);
+        Assert.Empty(db.ApplicationDocuments);
+    }
+
+    [Fact]
+    public async Task Caller_cancellation_during_scan_creates_no_audit_document_or_storage_object()
+    {
+        await using var db = TestDb.Create();
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        using var cancellation = new CancellationTokenSource();
+        var service = CreateService(db, storage, new CallerCancelingScanner(cancellation));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("cancelled"),
+            cancellation.Token));
+
+        Assert.Equal(0, storage.SaveCount);
+        Assert.Empty(db.ApplicationDocuments);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Cancellation_during_metadata_save_compensates_storage_and_success_audit()
+    {
+        await using var db = TestDb.Create(new CancelDocumentMetadataSaveInterceptor());
+        var application = await SeedAsync(db);
+        var storage = new FakeStorage();
+        var service = CreateService(db, storage);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("cancelled-save"),
+            CancellationToken.None));
+
+        Assert.Single(storage.DeletedKeys);
+        Assert.Empty(db.ApplicationDocuments);
+        Assert.Empty(db.SecurityAuditLogs);
     }
 
     [Fact]
@@ -484,12 +595,17 @@ public sealed class ApplicationDocumentServiceTests
         return (application, db.ApplicationDocuments.Single());
     }
 
-    private static ApplicationDocumentService CreateService(GraduateAppDbContext db, FakeStorage storage) => new(
+    private static ApplicationDocumentService CreateService(
+        GraduateAppDbContext db,
+        FakeStorage storage,
+        IFileMalwareScanner? scanner = null,
+        string environmentName = "Development") => new(
         db,
         new DocumentFileValidator(Options.Create(new DocumentUploadOptions { MaximumBytes = 1024 * 1024 })),
         storage,
-        new DevelopmentNoOpFileMalwareScanner(),
-        new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)));
+        scanner ?? new DevelopmentNoOpFileMalwareScanner(),
+        new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)),
+        new TestHostEnvironment { EnvironmentName = environmentName });
 
     private static async Task<Application> SeedAsync(GraduateAppDbContext db)
     {
@@ -526,7 +642,7 @@ public sealed class ApplicationDocumentServiceTests
         };
     }
 
-    private sealed class FakeStorage : IPrivateFileStorage
+    private sealed class FakeStorage : IPrivateFileStorage, IProductionReadinessProbe
     {
         private readonly Dictionary<string, byte[]> files = [];
         public bool FailSave { get; init; }
@@ -560,6 +676,34 @@ public sealed class ApplicationDocumentServiceTests
             files.Remove(objectKey);
             return Task.CompletedTask;
         }
+
+        public ValueTask<bool> IsReadyAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(true);
+        }
+    }
+
+    private sealed class TimeoutScanner : IFileMalwareScanner
+    {
+        public Task<MalwareScanResult> ScanAsync(Stream content, CancellationToken cancellationToken) =>
+            Task.FromException<MalwareScanResult>(new TaskCanceledException("simulated scanner timeout"));
+    }
+
+    private sealed class AmbiguousScanner : IFileMalwareScanner
+    {
+        public Task<MalwareScanResult> ScanAsync(Stream content, CancellationToken cancellationToken) =>
+            Task.FromResult(new MalwareScanResult(false, null));
+    }
+
+    private sealed class CallerCancelingScanner(CancellationTokenSource cancellation) : IFileMalwareScanner
+    {
+        public Task<MalwareScanResult> ScanAsync(Stream content, CancellationToken cancellationToken)
+        {
+            cancellation.Cancel();
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new InvalidOperationException("Cancellation was expected.");
+        }
     }
 
     private sealed class FailDocumentMetadataSaveInterceptor : SaveChangesInterceptor
@@ -573,6 +717,24 @@ public sealed class ApplicationDocumentServiceTests
                 .Any(item => item.State == EntityState.Added))
             {
                 return ValueTask.FromException<InterceptionResult<int>>(new DbUpdateException("simulated"));
+            }
+
+            return ValueTask.FromResult(result);
+        }
+    }
+
+    private sealed class CancelDocumentMetadataSaveInterceptor : SaveChangesInterceptor
+    {
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (eventData.Context!.ChangeTracker.Entries<ApplicationDocument>()
+                .Any(item => item.State == EntityState.Added))
+            {
+                return ValueTask.FromException<InterceptionResult<int>>(
+                    new OperationCanceledException("simulated metadata cancellation"));
             }
 
             return ValueTask.FromResult(result);

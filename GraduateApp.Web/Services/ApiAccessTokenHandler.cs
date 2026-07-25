@@ -21,6 +21,12 @@ public sealed class ApiAccessTokenHandler(IHttpContextAccessor httpContextAccess
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
+        var correlationId = CorrelationIdMiddleware.TryGet(httpContext);
+        if (correlationId is not null && !request.Headers.Contains(CorrelationIdMiddleware.HeaderName))
+        {
+            request.Headers.TryAddWithoutValidation(CorrelationIdMiddleware.HeaderName, correlationId);
+        }
+
         var response = await base.SendAsync(request, cancellationToken);
         if (response.StatusCode == HttpStatusCode.Unauthorized
             && TryEndCurrentSession(httpContext))

@@ -182,7 +182,7 @@ public sealed class ProgramAdminService(
         {
             return DuplicateFailure();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramAdminDto>.Failure(
                 "Program geçerli bir enstitüye bağlanamadı.",
@@ -388,7 +388,7 @@ public sealed class ProgramAdminService(
                 "Aynı enstitü, program adı ve derece türü için zaten kayıt bulunuyor.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure(
                 "Program bağlı kayıtlar veya veri bütünlüğü nedeniyle değiştirilemedi.",

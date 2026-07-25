@@ -479,12 +479,12 @@ public sealed class AuthServiceTests
         Assert.DoesNotContain(original.Email, duplicateEmail.Error, StringComparison.OrdinalIgnoreCase);
     }
 
-    [LocalDbTheory]
+    [Theory]
     [InlineData(2601)]
     [InlineData(2627)]
     public async Task RegisterStudent_MapsOnlySqlServerUniqueViolationsToSafeConflict(int errorNumber)
     {
-        var sqlException = await LocalDbTestSupport.CreateUniqueViolationExceptionAsync(errorNumber);
+        var sqlException = TestSqlExceptionFactory.Create(errorNumber);
         var interceptor = new ThrowingSaveChangesInterceptor(
             () => new DbUpdateException("Database persistence failed.", sqlException));
         await using var db = TestDb.Create(interceptor);

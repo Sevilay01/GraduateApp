@@ -1,5 +1,8 @@
 # GraduateApp
 
+Production yapılandırması, health sözleşmesi, timeout bütçesi ve sağlayıcı karar noktaları için
+[`docs/production-readiness.md`](docs/production-readiness.md) belgesine bakın.
+
 GraduateApp, öğrencilerin açık yüksek lisans programlarını görüntüleyip başvuru yapabildiği; başvurularını takip edebildiği ve yöneticilerin başvuruları filtreleyip güvenli durum geçişleriyle değerlendirebildiği ASP.NET Core tabanlı bir başvuru sistemidir.
 
 ## Mimari
@@ -219,6 +222,7 @@ SQL entegrasyon testleri yalnızca CI runner'ındaki izole LocalDB veritabanlar�
 
 ## Production notları
 
+- Development'taki platform varsayılan Data Protection key sürekliliği production-ready provider kanıtı değildir; Production readiness için kurumsal provider ve açık readiness probe gerekir.
 - Data Protection key ring'i container/çoklu instance ortamında kalıcı ve erişimi sınırlı ortak depoda tutun.
 - Gerçek e-posta sağlayıcısı ekleyin; reset linkini veya token'ı production loglarına yazmayın.
 - Connection string, bootstrap secret ve origin listesini deployment secret store üzerinden sağlayın.

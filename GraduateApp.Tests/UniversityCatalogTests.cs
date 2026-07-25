@@ -157,12 +157,12 @@ public sealed class UniversityCatalogTests
         Assert.Empty(db.SecurityAuditLogs);
     }
 
-    [LocalDbTheory]
+    [Theory]
     [InlineData(2601)]
     [InlineData(2627)]
     public async Task Only_sql_server_unique_violations_are_mapped_to_safe_conflict(int errorNumber)
     {
-        var sqlException = await LocalDbTestSupport.CreateUniqueViolationExceptionAsync(errorNumber);
+        var sqlException = TestSqlExceptionFactory.Create(errorNumber);
         await using var db = TestDb.Create(new ThrowingSaveChangesInterceptor(
             () => new DbUpdateException("unique database failure", sqlException)));
 

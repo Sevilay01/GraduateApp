@@ -236,7 +236,7 @@ public sealed class ApplicationEvaluationService(
         }
         catch (Exception exception) when (
             exception is not OperationCanceledException
-            && IsSqlServerDeadlock(exception))
+            && DatabaseExceptionClassifier.IsDeadlock(exception))
         {
             return ConcurrencyConflict();
         }
@@ -589,11 +589,11 @@ public sealed class ApplicationEvaluationService(
         {
             return ConcurrencyConflict();
         }
-        catch (Exception exception) when (IsSqlServerDeadlock(exception))
+        catch (Exception exception) when (DatabaseExceptionClassifier.IsDeadlock(exception))
         {
             return ConcurrencyConflict();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure(
                 "Değerlendirme işlemi atomik olarak tamamlanamadı. Verileri yenileyip tekrar deneyin.",
@@ -746,10 +746,6 @@ public sealed class ApplicationEvaluationService(
         ServiceResult.Failure(
             "Değerlendirme veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
             StatusCodes.Status409Conflict);
-
-    private static bool IsSqlServerDeadlock(Exception exception) =>
-        exception is SqlException { Number: 1205 }
-        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 
     private static string MaskTc(string tc) => tc.Length >= 4 ? $"*******{tc[^4..]}" : "***********";
     private static string OfferingTarget(ProgramOffering offering) => offering.ProgramOfferingId.ToString();

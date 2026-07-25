@@ -187,11 +187,11 @@ public sealed class EvaluationPolicyService(
         {
             return ConcurrencyFailure();
         }
-        catch (Exception exception) when (IsSqlServerDeadlock(exception))
+        catch (Exception exception) when (DatabaseExceptionClassifier.IsDeadlock(exception))
         {
             return ConcurrencyFailure();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult.Failure("Değerlendirme kriteri kaldırılamadı.", StatusCodes.Status409Conflict);
         }
@@ -301,13 +301,13 @@ public sealed class EvaluationPolicyService(
                 "Değerlendirme kriteri veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
-        catch (Exception exception) when (IsSqlServerDeadlock(exception))
+        catch (Exception exception) when (DatabaseExceptionClassifier.IsDeadlock(exception))
         {
             return ServiceResult<ProgramOfferingEvaluationCriterionDto>.Failure(
                 "Değerlendirme kriteri veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (!DatabaseExceptionClassifier.IsUnavailable(exception))
         {
             return ServiceResult<ProgramOfferingEvaluationCriterionDto>.Failure(
                 "Değerlendirme kriteri kaydedilemedi; kod, sınav ve öncelik alanlarını kontrol edin.",
@@ -401,7 +401,4 @@ public sealed class EvaluationPolicyService(
             "Değerlendirme kriteri veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
             StatusCodes.Status409Conflict);
 
-    private static bool IsSqlServerDeadlock(Exception exception) =>
-        exception is SqlException { Number: 1205 }
-        || (exception.InnerException is not null && IsSqlServerDeadlock(exception.InnerException));
 }

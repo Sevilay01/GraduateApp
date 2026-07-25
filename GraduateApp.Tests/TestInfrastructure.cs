@@ -4,7 +4,11 @@ using GraduateApp.API.Security;
 using GraduateApp.API.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace GraduateApp.Tests;
 
@@ -72,6 +76,117 @@ internal sealed class TestTimeProvider(DateTimeOffset utcNow) : TimeProvider
     public DateTimeOffset UtcNow { get; private set; } = utcNow;
     public override DateTimeOffset GetUtcNow() => UtcNow;
     public void Advance(TimeSpan duration) => UtcNow = UtcNow.Add(duration);
+}
+
+internal sealed class TestHostEnvironment : IHostEnvironment
+{
+    public string EnvironmentName { get; set; } = Environments.Development;
+    public string ApplicationName { get; set; } = "GraduateApp.Tests";
+    public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+    public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+}
+
+internal sealed class TemporaryDirectory : IDisposable
+{
+    public TemporaryDirectory()
+    {
+        Path = System.IO.Path.Combine(
+            System.IO.Path.GetTempPath(),
+            "GraduateApp.Tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path);
+    }
+
+    public string Path { get; }
+
+    public DirectoryInfo DirectoryInfo => new(Path);
+
+    public void Dispose()
+    {
+        if (Directory.Exists(Path))
+        {
+            Directory.Delete(Path, recursive: true);
+        }
+    }
+}
+
+internal static class TestSqlExceptionFactory
+{
+    public static SqlException Create(int number)
+    {
+        var errorCollection = (SqlErrorCollection)Activator.CreateInstance(
+            typeof(SqlErrorCollection),
+            nonPublic: true)!;
+        var errorConstructor = typeof(SqlError)
+            .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+            .OrderByDescending(constructor => constructor.GetParameters().Length)
+            .First();
+        var errorArguments = errorConstructor.GetParameters()
+            .Select(parameter => CreateArgument(parameter, number, errorCollection))
+            .ToArray();
+        var error = (SqlError)errorConstructor.Invoke(errorArguments);
+        typeof(SqlErrorCollection)
+            .GetMethod("Add", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(errorCollection, [error]);
+
+        var factory = typeof(SqlException)
+            .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+            .Where(method => method.Name == "CreateException")
+            .Where(method => method.GetParameters().Length > 0
+                && method.GetParameters()[0].ParameterType == typeof(SqlErrorCollection))
+            .OrderBy(method => method.GetParameters().Length)
+            .First();
+        var factoryArguments = factory.GetParameters()
+            .Select(parameter => CreateArgument(parameter, number, errorCollection))
+            .ToArray();
+        return (SqlException)factory.Invoke(null, factoryArguments)!;
+    }
+
+    private static object? CreateArgument(
+        ParameterInfo parameter,
+        int number,
+        SqlErrorCollection errorCollection)
+    {
+        if (parameter.ParameterType == typeof(SqlErrorCollection))
+        {
+            return errorCollection;
+        }
+
+        if (parameter.ParameterType == typeof(int))
+        {
+            return parameter.Name?.Contains("number", StringComparison.OrdinalIgnoreCase) == true
+                || parameter.Name?.Contains("info", StringComparison.OrdinalIgnoreCase) == true
+                    ? number
+                    : 0;
+        }
+
+        if (parameter.ParameterType == typeof(byte))
+        {
+            return (byte)0;
+        }
+
+        if (parameter.ParameterType == typeof(uint))
+        {
+            return 0U;
+        }
+
+        if (parameter.ParameterType == typeof(string))
+        {
+            return "simulated";
+        }
+
+        if (parameter.ParameterType == typeof(Guid))
+        {
+            return Guid.Empty;
+        }
+
+        if (parameter.ParameterType == typeof(bool))
+        {
+            return false;
+        }
+
+        return null;
+    }
 }
 
 internal sealed class StubAccessTokenService : IAccessTokenService

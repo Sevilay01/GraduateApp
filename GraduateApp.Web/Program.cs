@@ -2,8 +2,10 @@ using System.Globalization;
 using GraduateApp.Web.ModelBinding;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 var turkishCulture = CultureInfo.GetCultureInfo("tr-TR");
@@ -24,6 +26,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         options.SlidingExpiration = false;
     });
+var webDataProtection = builder.Services.AddDataProtection()
+    .SetApplicationName("GraduateApp.Web");
+if (!builder.Environment.IsDevelopment())
+{
+    webDataProtection.UseEphemeralDataProtectionProvider();
+}
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews(options =>
@@ -51,24 +59,33 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<ApiAccessTokenHandler>();
+builder.Services.AddOptions<GraduateApiOptions>()
+    .Bind(builder.Configuration.GetSection(GraduateApiOptions.SectionName))
+    .Validate(
+        options => Uri.TryCreate(options.BaseAddress, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp),
+        "GraduateApi:BaseAddress geçerli bir mutlak HTTP(S) adresi olmalıdır.")
+    .Validate(
+        options => options.TimeoutSeconds is >= 3 and <= 120,
+        "GraduateApi:TimeoutSeconds 3 ile 120 arasında olmalıdır.")
+    .Validate(
+        options => options.InnerDependencyTimeoutSeconds is >= 1 and <= 60,
+        "GraduateApi:InnerDependencyTimeoutSeconds 1 ile 60 arasında olmalıdır.")
+    .Validate(
+        options => options.TimeoutSeconds > options.InnerDependencyTimeoutSeconds,
+        "Web API client timeout, API iç bağımlılık timeout değerinden uzun olmalıdır.")
+    .ValidateOnStart();
 builder.Services.AddHttpClient<GraduateApiClient>((services, client) =>
     {
-        var configuration = services.GetRequiredService<IConfiguration>();
-        var baseAddress = configuration["GraduateApi:BaseAddress"];
-        if (!Uri.TryCreate(baseAddress, UriKind.Absolute, out var apiUri)
-            || (apiUri.Scheme != Uri.UriSchemeHttps && apiUri.Scheme != Uri.UriSchemeHttp))
-        {
-            throw new InvalidOperationException(
-                "GraduateApi:BaseAddress appsettings veya environment variable ile sağlanmalıdır.");
-        }
-
-        client.BaseAddress = apiUri;
-        client.Timeout = TimeSpan.FromSeconds(15);
+        var options = services.GetRequiredService<IOptions<GraduateApiOptions>>().Value;
+        client.BaseAddress = new Uri(options.BaseAddress, UriKind.Absolute);
+        client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
     })
     .AddHttpMessageHandler<ApiAccessTokenHandler>();
 
 var app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
