@@ -59,45 +59,39 @@ public sealed class ProductionReadinessTests
         int commandSeconds,
         int readinessSeconds)
     {
-        using var factory = new ReadinessApiFactory(
-            startHost: false,
-            configuration:
-            [
-                new(
-                    "DatabaseTimeouts:ConnectionSeconds",
-                    connectionSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)),
-                new(
-                    "DatabaseTimeouts:CommandSeconds",
-                    commandSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)),
-                new(
-                    "DatabaseTimeouts:ReadinessSeconds",
-                    readinessSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture))
-            ]);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(DatabaseTimeoutSettings(5, 8, 3))
+            .AddInMemoryCollection(DatabaseTimeoutSettings(
+                connectionSeconds,
+                commandSeconds,
+                readinessSeconds))
+            .Build();
+        using var configurationLifetime = configuration as IDisposable;
+        var services = new ServiceCollection();
+        services.AddDatabaseTimeoutOptions(configuration);
+        using var provider = services.BuildServiceProvider();
 
-        var exception = Record.Exception(() =>
-            _ = factory.Services
+        var validation = Assert.Throws<OptionsValidationException>(() =>
+            _ = provider
                 .GetRequiredService<IOptions<DatabaseTimeoutOptions>>()
                 .Value);
 
-        Assert.NotNull(exception);
-        var validation = FindException<OptionsValidationException>(exception);
-        Assert.NotNull(validation);
         Assert.Contains("Readiness timeout", validation.Message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Valid_database_timeout_values_are_bound_and_accepted()
+    public void Database_timeout_test_overrides_take_precedence_and_are_accepted()
     {
-        using var factory = new ReadinessApiFactory(
-            startHost: false,
-            configuration:
-            [
-                new("DatabaseTimeouts:ConnectionSeconds", "4"),
-                new("DatabaseTimeouts:CommandSeconds", "4"),
-                new("DatabaseTimeouts:ReadinessSeconds", "3")
-            ]);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(DatabaseTimeoutSettings(5, 8, 3))
+            .AddInMemoryCollection(DatabaseTimeoutSettings(4, 4, 3))
+            .Build();
+        using var configurationLifetime = configuration as IDisposable;
+        var services = new ServiceCollection();
+        services.AddDatabaseTimeoutOptions(configuration);
+        using var provider = services.BuildServiceProvider();
 
-        var options = factory.Services
+        var options = provider
             .GetRequiredService<IOptions<DatabaseTimeoutOptions>>()
             .Value;
 
@@ -107,21 +101,20 @@ public sealed class ProductionReadinessTests
     }
 
     [Fact]
-    public void Invalid_database_timeout_configuration_is_rejected_by_registered_startup_validator()
+    public async Task Invalid_database_timeout_configuration_is_rejected_during_generic_host_startup()
     {
-        using var factory = new ReadinessApiFactory(
-            startHost: false,
-            configuration:
-            [
-                new("DatabaseTimeouts:ConnectionSeconds", "3"),
-                new("DatabaseTimeouts:CommandSeconds", "3"),
-                new("DatabaseTimeouts:ReadinessSeconds", "3")
-            ]);
-        var startupValidator = factory.Services.GetRequiredService<IStartupValidator>();
+        var builder = Host.CreateApplicationBuilder();
+        builder.Logging.ClearProviders();
+        builder.Configuration.AddInMemoryCollection(DatabaseTimeoutSettings(3, 3, 3));
+        builder.Services.AddDatabaseTimeoutOptions(builder.Configuration);
+        using var host = builder.Build();
 
-        var validation = Assert.Throws<OptionsValidationException>(
-            () => startupValidator.Validate());
+        var exception = await Record.ExceptionAsync(
+            () => host.StartAsync(CancellationToken.None));
 
+        Assert.NotNull(exception);
+        var validation = FindException<OptionsValidationException>(exception);
+        Assert.NotNull(validation);
         Assert.Contains("Readiness timeout", validation.Message, StringComparison.Ordinal);
     }
 
@@ -381,6 +374,20 @@ public sealed class ProductionReadinessTests
         BaseAddress = new Uri("https://localhost")
     };
 
+    private static Dictionary<string, string?> DatabaseTimeoutSettings(
+        int connectionSeconds,
+        int commandSeconds,
+        int readinessSeconds) =>
+        new()
+        {
+            ["DatabaseTimeouts:ConnectionSeconds"] =
+                connectionSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["DatabaseTimeouts:CommandSeconds"] =
+                commandSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["DatabaseTimeouts:ReadinessSeconds"] =
+                readinessSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+
     private static TException? FindException<TException>(Exception exception)
         where TException : Exception
     {
@@ -442,7 +449,6 @@ public sealed class ProductionReadinessTests
         private readonly IDataProtectionProvider? dataProtectionProvider;
         private readonly IAccessTokenService? accessTokenService;
         private readonly IReadOnlyList<KeyValuePair<string, string?>> configurationOverrides;
-        private readonly bool startHost;
 
         public ReadinessApiFactory(
             bool sqlReady = true,
@@ -451,8 +457,7 @@ public sealed class ProductionReadinessTests
             bool replaceDataProtectionProbe = false,
             IDataProtectionProvider? dataProtectionProvider = null,
             IAccessTokenService? accessTokenService = null,
-            IReadOnlyList<KeyValuePair<string, string?>>? configuration = null,
-            bool startHost = true)
+            IReadOnlyList<KeyValuePair<string, string?>>? configuration = null)
         {
             SqlProbe = new CountingSqlProbe(sqlReady);
             Storage = new ReadyStorage();
@@ -464,16 +469,12 @@ public sealed class ProductionReadinessTests
             this.dataProtectionProvider = dataProtectionProvider;
             this.accessTokenService = accessTokenService;
             configurationOverrides = configuration ?? [];
-            this.startHost = startHost;
         }
 
         public CountingSqlProbe SqlProbe { get; }
         public ReadyStorage Storage { get; }
         public ReadyScanner Scanner { get; }
         public ReadyDataProtectionProbe DataProtectionProbe { get; }
-
-        protected override IHost CreateHost(IHostBuilder builder) =>
-            startHost ? base.CreateHost(builder) : builder.Build();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {

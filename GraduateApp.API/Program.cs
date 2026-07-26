@@ -25,22 +25,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "ConnectionStrings:DefaultConnection environment variable veya user-secrets ile sağlanmalıdır.");
 }
 
-builder.Services.AddOptions<DatabaseTimeoutOptions>()
-    .Bind(builder.Configuration.GetSection(DatabaseTimeoutOptions.SectionName))
-    .Validate(
-        options => options.ConnectionSeconds is >= 1 and <= 30,
-        "DatabaseTimeouts:ConnectionSeconds 1 ile 30 arasında olmalıdır.")
-    .Validate(
-        options => options.CommandSeconds is >= 2 and <= 60,
-        "DatabaseTimeouts:CommandSeconds 2 ile 60 arasında olmalıdır.")
-    .Validate(
-        options => options.ReadinessSeconds is >= 1 and <= 10,
-        "DatabaseTimeouts:ReadinessSeconds 1 ile 10 arasında olmalıdır.")
-    .Validate(
-        options => options.ReadinessSeconds < options.ConnectionSeconds
-            && options.ReadinessSeconds < options.CommandSeconds,
-        "Readiness timeout, SQL connection ve command timeout değerlerinden kısa olmalıdır.")
-    .ValidateOnStart();
+builder.Services.AddDatabaseTimeoutOptions(builder.Configuration);
 builder.Services.AddDbContext<GraduateAppDbContext>((services, options) =>
 {
     var timeouts = services.GetRequiredService<IOptions<DatabaseTimeoutOptions>>().Value;
