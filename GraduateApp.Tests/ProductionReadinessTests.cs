@@ -48,18 +48,69 @@ public sealed class ProductionReadinessTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
-    public void Invalid_database_timeout_order_is_rejected_during_startup()
+    [Theory]
+    [InlineData(3, 3, 3)]
+    [InlineData(3, 4, 3)]
+    [InlineData(4, 3, 3)]
+    [InlineData(3, 5, 4)]
+    [InlineData(5, 3, 4)]
+    public void Invalid_database_timeout_value_matrix_is_rejected_by_bound_options_validation(
+        int connectionSeconds,
+        int commandSeconds,
+        int readinessSeconds)
     {
-        using var factory = new ReadinessApiFactory(
-            configuration:
-            [
-                new("DatabaseTimeouts:ConnectionSeconds", "3"),
-                new("DatabaseTimeouts:CommandSeconds", "3"),
-                new("DatabaseTimeouts:ReadinessSeconds", "3")
-            ]);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(DatabaseTimeoutSettings(5, 8, 3))
+            .AddInMemoryCollection(DatabaseTimeoutSettings(
+                connectionSeconds,
+                commandSeconds,
+                readinessSeconds))
+            .Build();
+        using var configurationLifetime = configuration as IDisposable;
+        var services = new ServiceCollection();
+        services.AddDatabaseTimeoutOptions(configuration);
+        using var provider = services.BuildServiceProvider();
 
-        var exception = Record.Exception(() => factory.CreateClient());
+        var validation = Assert.Throws<OptionsValidationException>(() =>
+            _ = provider
+                .GetRequiredService<IOptions<DatabaseTimeoutOptions>>()
+                .Value);
+
+        Assert.Contains("Readiness timeout", validation.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Database_timeout_test_overrides_take_precedence_and_are_accepted()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(DatabaseTimeoutSettings(5, 8, 3))
+            .AddInMemoryCollection(DatabaseTimeoutSettings(4, 4, 3))
+            .Build();
+        using var configurationLifetime = configuration as IDisposable;
+        var services = new ServiceCollection();
+        services.AddDatabaseTimeoutOptions(configuration);
+        using var provider = services.BuildServiceProvider();
+
+        var options = provider
+            .GetRequiredService<IOptions<DatabaseTimeoutOptions>>()
+            .Value;
+
+        Assert.Equal(4, options.ConnectionSeconds);
+        Assert.Equal(4, options.CommandSeconds);
+        Assert.Equal(3, options.ReadinessSeconds);
+    }
+
+    [Fact]
+    public async Task Invalid_database_timeout_configuration_is_rejected_during_generic_host_startup()
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Logging.ClearProviders();
+        builder.Configuration.AddInMemoryCollection(DatabaseTimeoutSettings(3, 3, 3));
+        builder.Services.AddDatabaseTimeoutOptions(builder.Configuration);
+        using var host = builder.Build();
+
+        var exception = await Record.ExceptionAsync(
+            () => host.StartAsync(CancellationToken.None));
 
         Assert.NotNull(exception);
         var validation = FindException<OptionsValidationException>(exception);
@@ -323,6 +374,20 @@ public sealed class ProductionReadinessTests
         BaseAddress = new Uri("https://localhost")
     };
 
+    private static Dictionary<string, string?> DatabaseTimeoutSettings(
+        int connectionSeconds,
+        int commandSeconds,
+        int readinessSeconds) =>
+        new()
+        {
+            ["DatabaseTimeouts:ConnectionSeconds"] =
+                connectionSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["DatabaseTimeouts:CommandSeconds"] =
+                commandSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["DatabaseTimeouts:ReadinessSeconds"] =
+                readinessSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+
     private static TException? FindException<TException>(Exception exception)
         where TException : Exception
     {
@@ -383,7 +448,7 @@ public sealed class ProductionReadinessTests
         private readonly bool replaceDataProtectionProbe;
         private readonly IDataProtectionProvider? dataProtectionProvider;
         private readonly IAccessTokenService? accessTokenService;
-        private readonly IReadOnlyList<KeyValuePair<string, string?>> configuration;
+        private readonly IReadOnlyList<KeyValuePair<string, string?>> configurationOverrides;
 
         public ReadinessApiFactory(
             bool sqlReady = true,
@@ -403,7 +468,7 @@ public sealed class ProductionReadinessTests
             this.replaceDataProtectionProbe = replaceDataProtectionProbe;
             this.dataProtectionProvider = dataProtectionProvider;
             this.accessTokenService = accessTokenService;
-            this.configuration = configuration ?? [];
+            configurationOverrides = configuration ?? [];
         }
 
         public CountingSqlProbe SqlProbe { get; }
@@ -415,17 +480,28 @@ public sealed class ProductionReadinessTests
         {
             builder.UseEnvironment(environmentName);
             builder.ConfigureLogging(logging => logging.ClearProviders());
-            builder.UseSetting(
-                "ConnectionStrings:DefaultConnection",
-                "Server=sensitive-host;Database=sensitive-database;User ID=sensitive-user;Password=sensitive-password;Encrypt=True");
-            foreach (var setting in configuration)
+            var testConfiguration = new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] =
+                    "Server=sensitive-host;Database=sensitive-database;User ID=sensitive-user;Password=sensitive-password;Encrypt=True"
+            };
+            foreach (var setting in configurationOverrides)
             {
                 if (setting.Value is not null)
                 {
-                    builder.UseSetting(setting.Key, setting.Value);
+                    testConfiguration[setting.Key] = setting.Value;
                 }
             }
 
+            // Minimal hosting reads some settings before app configuration callbacks run.
+            // Seed bootstrap settings, then add the same values last for deterministic precedence.
+            foreach (var setting in testConfiguration)
+            {
+                builder.UseSetting(setting.Key, setting.Value);
+            }
+
+            builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+                configurationBuilder.AddInMemoryCollection(testConfiguration));
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IDataProtectionProvider>();
