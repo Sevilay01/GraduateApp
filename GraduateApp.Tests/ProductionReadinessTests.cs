@@ -48,22 +48,80 @@ public sealed class ProductionReadinessTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
-    public void Invalid_database_timeout_order_is_rejected_during_startup()
+    [Theory]
+    [InlineData(3, 3, 3)]
+    [InlineData(3, 4, 3)]
+    [InlineData(4, 3, 3)]
+    [InlineData(3, 5, 4)]
+    [InlineData(5, 3, 4)]
+    public void Invalid_database_timeout_value_matrix_is_rejected_by_bound_options_validation(
+        int connectionSeconds,
+        int commandSeconds,
+        int readinessSeconds)
     {
         using var factory = new ReadinessApiFactory(
+            startHost: false,
+            configuration:
+            [
+                new(
+                    "DatabaseTimeouts:ConnectionSeconds",
+                    connectionSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                new(
+                    "DatabaseTimeouts:CommandSeconds",
+                    commandSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                new(
+                    "DatabaseTimeouts:ReadinessSeconds",
+                    readinessSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            ]);
+
+        var exception = Record.Exception(() =>
+            _ = factory.Services
+                .GetRequiredService<IOptions<DatabaseTimeoutOptions>>()
+                .Value);
+
+        Assert.NotNull(exception);
+        var validation = FindException<OptionsValidationException>(exception);
+        Assert.NotNull(validation);
+        Assert.Contains("Readiness timeout", validation.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Valid_database_timeout_values_are_bound_and_accepted()
+    {
+        using var factory = new ReadinessApiFactory(
+            startHost: false,
+            configuration:
+            [
+                new("DatabaseTimeouts:ConnectionSeconds", "4"),
+                new("DatabaseTimeouts:CommandSeconds", "4"),
+                new("DatabaseTimeouts:ReadinessSeconds", "3")
+            ]);
+
+        var options = factory.Services
+            .GetRequiredService<IOptions<DatabaseTimeoutOptions>>()
+            .Value;
+
+        Assert.Equal(4, options.ConnectionSeconds);
+        Assert.Equal(4, options.CommandSeconds);
+        Assert.Equal(3, options.ReadinessSeconds);
+    }
+
+    [Fact]
+    public void Invalid_database_timeout_configuration_is_rejected_by_registered_startup_validator()
+    {
+        using var factory = new ReadinessApiFactory(
+            startHost: false,
             configuration:
             [
                 new("DatabaseTimeouts:ConnectionSeconds", "3"),
                 new("DatabaseTimeouts:CommandSeconds", "3"),
                 new("DatabaseTimeouts:ReadinessSeconds", "3")
             ]);
+        var startupValidator = factory.Services.GetRequiredService<IStartupValidator>();
 
-        var exception = Record.Exception(() => factory.CreateClient());
+        var validation = Assert.Throws<OptionsValidationException>(
+            () => startupValidator.Validate());
 
-        Assert.NotNull(exception);
-        var validation = FindException<OptionsValidationException>(exception);
-        Assert.NotNull(validation);
         Assert.Contains("Readiness timeout", validation.Message, StringComparison.Ordinal);
     }
 
@@ -383,7 +441,8 @@ public sealed class ProductionReadinessTests
         private readonly bool replaceDataProtectionProbe;
         private readonly IDataProtectionProvider? dataProtectionProvider;
         private readonly IAccessTokenService? accessTokenService;
-        private readonly IReadOnlyList<KeyValuePair<string, string?>> configuration;
+        private readonly IReadOnlyList<KeyValuePair<string, string?>> configurationOverrides;
+        private readonly bool startHost;
 
         public ReadinessApiFactory(
             bool sqlReady = true,
@@ -392,7 +451,8 @@ public sealed class ProductionReadinessTests
             bool replaceDataProtectionProbe = false,
             IDataProtectionProvider? dataProtectionProvider = null,
             IAccessTokenService? accessTokenService = null,
-            IReadOnlyList<KeyValuePair<string, string?>>? configuration = null)
+            IReadOnlyList<KeyValuePair<string, string?>>? configuration = null,
+            bool startHost = true)
         {
             SqlProbe = new CountingSqlProbe(sqlReady);
             Storage = new ReadyStorage();
@@ -403,7 +463,8 @@ public sealed class ProductionReadinessTests
             this.replaceDataProtectionProbe = replaceDataProtectionProbe;
             this.dataProtectionProvider = dataProtectionProvider;
             this.accessTokenService = accessTokenService;
-            this.configuration = configuration ?? [];
+            configurationOverrides = configuration ?? [];
+            this.startHost = startHost;
         }
 
         public CountingSqlProbe SqlProbe { get; }
@@ -411,21 +472,35 @@ public sealed class ProductionReadinessTests
         public ReadyScanner Scanner { get; }
         public ReadyDataProtectionProbe DataProtectionProbe { get; }
 
+        protected override IHost CreateHost(IHostBuilder builder) =>
+            startHost ? base.CreateHost(builder) : builder.Build();
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment(environmentName);
             builder.ConfigureLogging(logging => logging.ClearProviders());
-            builder.UseSetting(
-                "ConnectionStrings:DefaultConnection",
-                "Server=sensitive-host;Database=sensitive-database;User ID=sensitive-user;Password=sensitive-password;Encrypt=True");
-            foreach (var setting in configuration)
+            var testConfiguration = new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] =
+                    "Server=sensitive-host;Database=sensitive-database;User ID=sensitive-user;Password=sensitive-password;Encrypt=True"
+            };
+            foreach (var setting in configurationOverrides)
             {
                 if (setting.Value is not null)
                 {
-                    builder.UseSetting(setting.Key, setting.Value);
+                    testConfiguration[setting.Key] = setting.Value;
                 }
             }
 
+            // Minimal hosting reads some settings before app configuration callbacks run.
+            // Seed bootstrap settings, then add the same values last for deterministic precedence.
+            foreach (var setting in testConfiguration)
+            {
+                builder.UseSetting(setting.Key, setting.Value);
+            }
+
+            builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+                configurationBuilder.AddInMemoryCollection(testConfiguration));
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IDataProtectionProvider>();
