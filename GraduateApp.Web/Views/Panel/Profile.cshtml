@@ -108,7 +108,7 @@
                 </div>
                 <div class="col-md-4">
                     <label asp-for="Gno" class="form-label"></label>
-                    <input asp-for="Gno" class="form-control" inputmode="decimal"
+                    <input asp-for="Gno" class="form-control" type="text" inputmode="decimal"
                            disabled="@(Model.CanEditEducation ? null : "disabled")" />
                     <span asp-validation-for="Gno" class="text-danger"></span>
                 </div>

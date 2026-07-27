@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GraduateApp.Web.Validation;
 
 namespace GraduateApp.Web.Models;
 
@@ -41,7 +42,10 @@ public sealed class StudentProfileViewModel
     [Display(Name = "Mezun olunan program")]
     public string? GraduatedProgram { get; set; }
 
-    [Range(0, 4)]
+    [LocalizedDecimalRange(
+        0,
+        4,
+        ErrorMessage = "{0} 0 ile 4 arasında geçerli bir ondalık sayı olmalıdır.")]
     [Display(Name = "Lisans not ortalaması")]
     public decimal? Gno { get; set; }
 
