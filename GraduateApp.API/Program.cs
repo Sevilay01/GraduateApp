@@ -209,6 +209,11 @@ app.UseStatusCodePages(async statusContext =>
     });
 });
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
 if (allowedOrigins.Length > 0)
 {

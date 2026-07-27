@@ -57,6 +57,7 @@ public sealed class ApplicationDocumentService(
         await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
         var application = await dbContext.Applications
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(
                 item => item.PublicId == applicationPublicId && item.Tc == studentTc,
                 cancellationToken);

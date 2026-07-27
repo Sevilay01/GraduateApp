@@ -61,6 +61,33 @@ public sealed class StudentApplicationDetailQuerySplittingIntegrationTests
             item => item!.OriginalFileName == "diploma.pdf");
     }
 
+    [LocalDbFact]
+    public async Task Admin_application_detail_uses_five_split_queries_and_maps_complete_collections()
+    {
+        await using var database = await CreateDatabaseAsync();
+        var applicationPublicId = await SeedDocumentGraphAsync(
+            database.ConnectionString,
+            ApplicationStatus.Pending);
+        var commandCounter = new ReaderCommandCounter();
+
+        await using var db = CreateContext(database.ConnectionString, commandCounter);
+        var detail = await CreateService(db).GetDetailForAdminAsync(
+            applicationPublicId,
+            CancellationToken.None);
+
+        Assert.NotNull(detail);
+        Assert.Equal(5, commandCounter.Count);
+        Assert.Single(detail.History);
+        Assert.Single(detail.ScoreSnapshots);
+        Assert.Equal(2, detail.DocumentRequirements.Count);
+        Assert.Equal(
+            detail.DocumentRequirements.Count,
+            detail.DocumentRequirements.Select(item => item.PublicId).Distinct().Count());
+        Assert.Equal(
+            2,
+            detail.DocumentRequirements.Count(item => item.CurrentDocument is not null));
+    }
+
     private static async Task<LocalDbTestDatabase> CreateDatabaseAsync()
     {
         var database = new LocalDbTestDatabase(
@@ -92,7 +119,9 @@ public sealed class StudentApplicationDetailQuerySplittingIntegrationTests
     private static ApplicationService CreateService(GraduateAppDbContext db) =>
         new(db, new TestTimeProvider(new DateTimeOffset(2026, 7, 25, 9, 0, 0, TimeSpan.Zero)));
 
-    private static async Task<Guid> SeedDocumentGraphAsync(string connectionString)
+    private static async Task<Guid> SeedDocumentGraphAsync(
+        string connectionString,
+        ApplicationStatus status = ApplicationStatus.Draft)
     {
         await using var db = new GraduateAppDbContext(
             new DbContextOptionsBuilder<GraduateAppDbContext>()
@@ -101,6 +130,7 @@ public sealed class StudentApplicationDetailQuerySplittingIntegrationTests
         var now = new DateTime(2026, 7, 25, 9, 0, 0, DateTimeKind.Utc);
         var owner = CreateStudent("10000000146", "owner@example.test", now);
         var other = CreateStudent("10000000154", "other@example.test", now);
+        var exam = new Exam { ExamName = "ALES" };
         var application = new Application
         {
             PublicId = Guid.NewGuid(),
@@ -132,8 +162,29 @@ public sealed class StudentApplicationDetailQuerySplittingIntegrationTests
                 UpdatedAtUtc = now
             },
             ApplicationDate = now,
-            CurrentStatus = ApplicationStatus.Draft.ToString(),
-            UsesDocumentWorkflow = true
+            CurrentStatus = status.ToString(),
+            UsesDocumentWorkflow = true,
+            ApplicationStatusHistories =
+            [
+                new ApplicationStatusHistory
+                {
+                    PreviousStatus = ApplicationStatus.Draft.ToString(),
+                    StatusName = status.ToString(),
+                    ChangeDate = now,
+                    Notes = "Test durum geçmişi."
+                }
+            ],
+            ScoreSnapshots =
+            [
+                new ApplicationScoreSnapshot
+                {
+                    Exam = exam,
+                    ExamNameSnapshot = exam.ExamName,
+                    ScoreSnapshot = 82.5m,
+                    ExamDateSnapshot = new DateOnly(2026, 6, 1),
+                    CapturedAtUtc = now
+                }
+            ]
         };
         AddRequirement(application, "TRANSCRIPT", "Transkript", "transkript.pdf", now);
         AddRequirement(application, "DIPLOMA", "Diploma", "diploma.pdf", now);

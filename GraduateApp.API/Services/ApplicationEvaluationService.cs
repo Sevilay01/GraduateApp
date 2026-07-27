@@ -102,6 +102,7 @@ public sealed class ApplicationEvaluationService(
             .Include(item => item.ProgramOffering)
             .Include(item => item.Evaluation).ThenInclude(item => item!.Components)
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(item => item.PublicId == applicationPublicId, cancellationToken);
         if (application?.Evaluation is null || !application.UsesEvaluationWorkflow)
         {
