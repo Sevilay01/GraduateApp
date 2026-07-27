@@ -93,6 +93,8 @@ public sealed class ProgramOfferingAdminViewModel
     public OfferingEvaluationState EvaluationState { get; set; }
     public DateTime? EvaluationFinalizedAtUtc { get; set; }
     public DateTime? ResultsPublishedAtUtc { get; set; }
+    public int DocumentRequirementCount { get; set; }
+    public bool HasActiveRequiredDocumentRequirement { get; set; }
     public string RowVersion { get; set; } = string.Empty;
     public IReadOnlyList<ExamRequirementViewModel> ExamRequirements { get; set; } = [];
 }
@@ -191,6 +193,8 @@ public sealed class ProgramOfferingPageViewModel
     public AcademicTerm? Term { get; set; }
     public bool IncludeArchived { get; set; }
     public string? ErrorMessage { get; set; }
+    public int? RequirementOfferingId { get; set; }
+    public string? AutoFocusTarget { get; set; }
     public IReadOnlyDictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>> DocumentRequirements { get; set; }
         = new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>();
     public OfferingDocumentRequirementFormViewModel DocumentRequirementForm { get; set; } = new();

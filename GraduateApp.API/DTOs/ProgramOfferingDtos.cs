@@ -89,6 +89,8 @@ public sealed record ProgramOfferingAdminDto(
     OfferingEvaluationState EvaluationState,
     DateTime? EvaluationFinalizedAtUtc,
     DateTime? ResultsPublishedAtUtc,
+    int DocumentRequirementCount,
+    bool HasActiveRequiredDocumentRequirement,
     string RowVersion,
     IReadOnlyList<ExamRequirementDto> ExamRequirements);
 

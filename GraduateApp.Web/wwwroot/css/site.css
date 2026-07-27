@@ -582,6 +582,8 @@ legend {
 
 .form-control,
 .form-select {
+  min-width: 0;
+  max-width: 100%;
   min-height: 2.75rem;
   color: var(--cu-ink);
   background-color: #fff;
@@ -1264,6 +1266,30 @@ legend {
   gap: 0.5rem;
   align-items: center;
   margin-top: 1rem;
+}
+
+.configuration-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.65rem 1.25rem;
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.configuration-steps li,
+.configuration-steps a,
+.configuration-steps span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+[data-fragment-focus] {
+  scroll-margin-top: 1.5rem;
+}
+
+[data-fragment-focus]:focus {
+  outline: 0.2rem solid color-mix(in srgb, var(--cu-primary) 55%, transparent);
+  outline-offset: 0.25rem;
 }
 
 .admin-state {

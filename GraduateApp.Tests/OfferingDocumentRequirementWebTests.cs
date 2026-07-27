@@ -64,6 +64,8 @@ public sealed class OfferingDocumentRequirementWebTests
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(nameof(AdminController.Offerings), redirect.ActionName);
+        Assert.Equal("document-requirements", redirect.Fragment);
+        Assert.Equal(42, redirect.RouteValues!["requirementOfferingId"]);
         Assert.Equal(HttpMethod.Post, handler.Method);
         Assert.Equal(
             $"/api/program-offerings/42/document-requirements/{RequirementPublicId:D}/active",

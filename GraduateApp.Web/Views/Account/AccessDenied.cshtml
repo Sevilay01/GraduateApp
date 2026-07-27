@@ -2,9 +2,30 @@
     ViewData["Title"] = "Erişim reddedildi";
 }
 
-<div class="text-center py-5">
+<div class="text-center py-5" data-access-denied-actions>
     <div class="display-1 fw-bold text-danger" aria-hidden="true">403</div>
     <h1 class="h2">Bu sayfaya erişim yetkiniz yok</h1>
-    <p class="text-muted">Farklı bir hesapla giriş yapabilir veya ana sayfaya dönebilirsiniz.</p>
-    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Ana sayfaya dön</a>
+    <p class="text-muted">Bu oturumun hesap türü istenen sayfaya uygun değil. Güvenli biçimde hesap değiştirebilir veya ana sayfaya dönebilirsiniz.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            var targetAccountType = User.IsInRole("Admin")
+                ? LoginAccountType.Student
+                : LoginAccountType.Admin;
+            <form asp-action="SwitchAccount" method="post">
+                <input type="hidden" name="accountType" value="@targetAccountType" />
+                <button type="submit" class="btn btn-primary">
+                    @(targetAccountType == LoginAccountType.Admin
+                        ? "Yönetici hesabıyla giriş yap"
+                        : "Öğrenci hesabıyla giriş yap")
+                </button>
+            </form>
+        }
+        else
+        {
+            <a asp-action="Login" class="btn btn-primary">Öğrenci girişi</a>
+            <a asp-action="AdminLogin" class="btn btn-outline-primary">Yönetici girişi</a>
+        }
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Ana sayfaya dön</a>
+    </div>
 </div>

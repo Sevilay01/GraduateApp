@@ -1,3 +1,34 @@
+const focusRequestedPageContext = () => {
+    let requestedTarget = null;
+    if (window.location.hash.length > 1) {
+        try {
+            requestedTarget = document.getElementById(decodeURIComponent(window.location.hash.substring(1)));
+        } catch {
+            requestedTarget = null;
+        }
+    }
+
+    requestedTarget ??= document.querySelector('[data-auto-focus="true"]');
+    if (!(requestedTarget instanceof HTMLElement)) {
+        return;
+    }
+
+    const focusTarget = requestedTarget.matches("[data-fragment-focus]")
+        ? requestedTarget
+        : requestedTarget.querySelector("[data-fragment-focus]");
+    if (!(focusTarget instanceof HTMLElement)) {
+        return;
+    }
+
+    window.requestAnimationFrame(() => {
+        focusTarget.focus({ preventScroll: true });
+        requestedTarget.scrollIntoView({ block: "start" });
+    });
+};
+
+focusRequestedPageContext();
+window.addEventListener("hashchange", focusRequestedPageContext);
+
 document.addEventListener("submit", (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement) || form.dataset.disableOnSubmit !== "true") {

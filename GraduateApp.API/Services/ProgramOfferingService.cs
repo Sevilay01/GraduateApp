@@ -37,6 +37,21 @@ public sealed class ProgramOfferingService(
         bool includeArchived,
         CancellationToken cancellationToken)
     {
+        var offerings = await AdminListQuery(academicYearStart, term, includeArchived)
+            .ToListAsync(cancellationToken);
+        return offerings
+            .Select(item => Map(
+                item.Offering,
+                item.DocumentRequirementCount,
+                item.HasActiveRequiredDocumentRequirement))
+            .ToArray();
+    }
+
+    private IQueryable<ProgramOfferingAdminListRow> AdminListQuery(
+        int? academicYearStart,
+        AcademicTerm? term,
+        bool includeArchived)
+    {
         var query = dbContext.ProgramOfferings.AsNoTracking()
             .Include(item => item.Program)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
@@ -56,15 +71,17 @@ public sealed class ProgramOfferingService(
             query = query.Where(item => !item.IsArchived);
         }
 
-        var offerings = await query
+        return query
             .OrderByDescending(item => item.AcademicYearStart)
             .ThenBy(item => item.Term)
             .ThenBy(item => item.Program.Institute.InstituteName)
             .ThenBy(item => item.Program.ProgramName)
             .ThenBy(item => item.Program.DegreeType)
             .ThenBy(item => item.ProgramOfferingId)
-            .ToListAsync(cancellationToken);
-        return offerings.Select(Map).ToArray();
+            .Select(item => new ProgramOfferingAdminListRow(
+                item,
+                item.DocumentRequirements.Count,
+                item.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired)));
     }
 
     public async Task<ProgramOfferingCatalogDto> GetCatalogAsync(CancellationToken cancellationToken)
@@ -441,7 +458,16 @@ public sealed class ProgramOfferingService(
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
-    private static ProgramOfferingAdminDto Map(ProgramOffering offering) => new(
+    private static ProgramOfferingAdminDto Map(ProgramOffering offering) =>
+        Map(
+            offering,
+            offering.DocumentRequirements.Count,
+            offering.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired));
+
+    private static ProgramOfferingAdminDto Map(
+        ProgramOffering offering,
+        int documentRequirementCount,
+        bool hasActiveRequiredDocumentRequirement) => new(
         offering.ProgramOfferingId,
         offering.ProgramId,
         offering.Program.ProgramName,
@@ -462,6 +488,8 @@ public sealed class ProgramOfferingService(
         offering.ResultsPublishedAtUtc.HasValue
             ? DateTime.SpecifyKind(offering.ResultsPublishedAtUtc.Value, DateTimeKind.Utc)
             : null,
+        documentRequirementCount,
+        hasActiveRequiredDocumentRequirement,
         Convert.ToBase64String(offering.RowVersion),
         offering.ExamRequirements.Select(requirement => new ExamRequirementDto(
             requirement.ExamId,
@@ -469,6 +497,11 @@ public sealed class ProgramOfferingService(
             requirement.MinimumScore,
             requirement.MinimumValidityDate,
             requirement.IsRequired)).ToArray());
+
+    private sealed record ProgramOfferingAdminListRow(
+        ProgramOffering Offering,
+        int DocumentRequirementCount,
+        bool HasActiveRequiredDocumentRequirement);
 
     private sealed record RequestValidationError(string Message, int StatusCode);
 }

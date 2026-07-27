@@ -172,6 +172,19 @@ public sealed class LoginIsolationWebTests
     }
 
     [Fact]
+    public void Logout_is_post_only_and_antiforgery_protected()
+    {
+        var method = typeof(AccountController).GetMethod(
+            nameof(AccountController.Logout),
+            [typeof(CancellationToken)]);
+
+        Assert.NotNull(method);
+        Assert.NotNull(method!.GetCustomAttributes(typeof(HttpPostAttribute), inherit: true).SingleOrDefault());
+        Assert.Empty(method.GetCustomAttributes(typeof(HttpGetAttribute), inherit: true));
+        Assert.NotNull(method.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), inherit: true).SingleOrDefault());
+    }
+
+    [Fact]
     public async Task Account_switch_closes_existing_cookie_before_admin_login()
     {
         var authentication = new RecordingAuthenticationService();
