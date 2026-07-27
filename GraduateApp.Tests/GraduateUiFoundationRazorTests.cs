@@ -290,16 +290,23 @@ public sealed class GraduateUiFoundationRazorTests
                     ProgramOfferingId = 7,
                     ProgramId = 11,
                     ProgramName = "<img src=x onerror=alert(1)>",
+                    InstituteName = "Fen Bilimleri Enstitüsü",
+                    DegreeType = "Doktora",
                     AcademicYear = "2026–2027",
                     TermName = "Güz",
                     ApplicationStartUtc = new DateTime(2026, 8, 1, 7, 0, 0, DateTimeKind.Utc),
                     ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
                     Quota = 10,
-                    IsOpen = false,
+                    IsOpen = true,
+                    UsesDocumentWorkflow = true,
                     UsesEvaluationWorkflow = true,
                     EvaluationState = OfferingEvaluationState.Configuring,
                     DocumentRequirementCount = 0,
+                    ActiveRequiredDocumentRequirementCount = 0,
                     HasActiveRequiredDocumentRequirement = false,
+                    DraftApplicationCount = 1,
+                    DocumentConfigurationHealth =
+                        OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts,
                     RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24="
                 },
                 new ProgramOfferingAdminViewModel
@@ -307,13 +314,18 @@ public sealed class GraduateUiFoundationRazorTests
                     ProgramOfferingId = 8,
                     ProgramId = 12,
                     ProgramName = "İstatistik",
+                    InstituteName = "Fen Bilimleri Enstitüsü",
+                    DegreeType = "Tezli Yüksek Lisans",
                     AcademicYear = "2026–2027",
                     TermName = "Bahar",
                     Quota = 8,
                     IsOpen = true,
+                    UsesDocumentWorkflow = true,
                     UsesEvaluationWorkflow = false,
                     DocumentRequirementCount = 1,
+                    ActiveRequiredDocumentRequirementCount = 1,
                     HasActiveRequiredDocumentRequirement = true,
+                    DocumentConfigurationHealth = OfferingDocumentConfigurationHealth.OpenHealthy,
                     RowVersion = "c2Vjb25kLW9mZmVyaW5nLXJvdw=="
                 }
             ],
@@ -389,6 +401,19 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın", decoded, StringComparison.Ordinal);
         Assert.Contains("Toplam ağırlık 10.000 bp", decoded, StringComparison.Ordinal);
         Assert.Contains("Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler", decoded, StringComparison.Ordinal);
+        Assert.Contains("İlan yapılandırma sağlığı", decoded, StringComparison.Ordinal);
+        Assert.Contains("data-health-category=\"D\"", html, StringComparison.Ordinal);
+        Assert.Contains("Belge koşullarını yapılandır", decoded, StringComparison.Ordinal);
+        Assert.Contains(
+            "Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez",
+            decoded,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Belge koşullarını, ilgili enstitünün güncel ilan kılavuzuna göre tanımlayın",
+            decoded,
+            StringComparison.Ordinal);
+        Assert.Contains("sosyalbilimler.cu.edu.tr", html, StringComparison.Ordinal);
+        Assert.Contains("iso.cu.edu.tr", html, StringComparison.Ordinal);
         Assert.Contains("data-selected-requirement-offering", html, StringComparison.Ordinal);
         Assert.Contains("Seçili ilan · #8", decoded, StringComparison.Ordinal);
         Assert.Contains("requirementOfferingId=8", decoded, StringComparison.Ordinal);

@@ -99,7 +99,90 @@ public sealed class ProgramOfferingServiceTests
 
         var dto = Assert.Single(result);
         Assert.Equal(3, dto.DocumentRequirementCount);
+        Assert.Equal(1, dto.ActiveRequiredDocumentRequirementCount);
         Assert.True(dto.HasActiveRequiredDocumentRequirement);
+    }
+
+    [Fact]
+    public async Task Admin_health_list_classifies_historical_open_offerings_without_writes_or_audits()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+
+        var legacy = AddOffering(db, program.ProgramId);
+        legacy.AcademicYearStart = 0;
+        legacy.Term = AcademicTerm.LegacyUnspecified;
+        legacy.IsOpen = true;
+
+        var healthy = AddOffering(db, program.ProgramId);
+        healthy.AcademicYearStart = 2021;
+        healthy.IsOpen = true;
+        healthy.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+
+        var noApplications = AddOffering(db, program.ProgramId);
+        noApplications.AcademicYearStart = 2022;
+        noApplications.IsOpen = true;
+        noApplications.DocumentRequirements.Add(DocumentRequirement(isRequired: false, isActive: true));
+
+        var withDraft = AddOffering(db, program.ProgramId);
+        withDraft.AcademicYearStart = 2023;
+        withDraft.IsOpen = true;
+        withDraft.Applications.Add(CreateApplication("10000000146", ApplicationStatus.Draft));
+
+        var withSubmitted = AddOffering(db, program.ProgramId);
+        withSubmitted.AcademicYearStart = 2024;
+        withSubmitted.IsOpen = true;
+        withSubmitted.UsesEvaluationWorkflow = true;
+        withSubmitted.EvaluationState = OfferingEvaluationState.Published;
+        withSubmitted.Applications.Add(CreateApplication("10000000147", ApplicationStatus.Draft));
+        withSubmitted.Applications.Add(CreateApplication("10000000148", ApplicationStatus.Pending));
+        withSubmitted.Applications.Add(CreateApplication("10000000149", ApplicationStatus.UnderReview));
+        withSubmitted.Applications.Add(CreateApplication("10000000150", ApplicationStatus.Approved));
+        withSubmitted.Applications.Add(CreateApplication("10000000151", ApplicationStatus.Rejected));
+        withSubmitted.Applications.Add(CreateApplication("10000000152", ApplicationStatus.Withdrawn));
+
+        var closed = AddOffering(db, program.ProgramId);
+        closed.AcademicYearStart = 2025;
+        await db.SaveChangesAsync();
+        var auditCount = await db.SecurityAuditLogs.CountAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await CreateService(db).GetForAdminAsync(
+            academicYearStart: null,
+            term: null,
+            includeArchived: true,
+            CancellationToken.None);
+
+        var byYear = result.ToDictionary(item => item.AcademicYearStart);
+        Assert.Equal(
+            OfferingDocumentConfigurationHealth.LegacyOutsideDocumentWorkflow,
+            byYear[0].DocumentConfigurationHealth);
+        Assert.False(byYear[0].UsesDocumentWorkflow);
+        Assert.Equal(
+            OfferingDocumentConfigurationHealth.OpenHealthy,
+            byYear[2021].DocumentConfigurationHealth);
+        Assert.Equal(
+            OfferingDocumentConfigurationHealth.OpenInvalidNoApplications,
+            byYear[2022].DocumentConfigurationHealth);
+        Assert.Equal(1, byYear[2022].DocumentRequirementCount);
+        Assert.Equal(0, byYear[2022].ActiveRequiredDocumentRequirementCount);
+        Assert.Equal(
+            OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts,
+            byYear[2023].DocumentConfigurationHealth);
+        Assert.Equal(1, byYear[2023].DraftApplicationCount);
+        Assert.Equal(0, byYear[2023].SubmittedOrLaterApplicationCount);
+        Assert.Equal(
+            OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications,
+            byYear[2024].DocumentConfigurationHealth);
+        Assert.Equal(1, byYear[2024].DraftApplicationCount);
+        Assert.Equal(5, byYear[2024].SubmittedOrLaterApplicationCount);
+        Assert.Equal(
+            OfferingDocumentConfigurationHealth.ClosedWorkflow,
+            byYear[2025].DocumentConfigurationHealth);
+        Assert.All(result.Where(item => item.UsesDocumentWorkflow), item =>
+            Assert.Equal("Fen Bilimleri", item.InstituteName));
+        Assert.Equal(auditCount, await db.SecurityAuditLogs.CountAsync());
+        Assert.False(db.ChangeTracker.HasChanges());
     }
 
     [Fact]
@@ -556,6 +639,15 @@ public sealed class ProgramOfferingServiceTests
         MaximumBytes = 1024,
         CreatedAtUtc = DateTime.UtcNow,
         UpdatedAtUtc = DateTime.UtcNow
+    };
+
+    private static Application CreateApplication(string tc, ApplicationStatus status) => new()
+    {
+        PublicId = Guid.NewGuid(),
+        Tc = tc,
+        ApplicationDate = new DateTime(2026, 7, 17, 9, 0, 0, DateTimeKind.Utc),
+        CurrentStatus = status.ToString(),
+        UsesDocumentWorkflow = true
     };
 
     private static (Exam Ales, Exam Yds) AddValidExamEvaluationPolicy(

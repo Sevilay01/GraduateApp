@@ -12,6 +12,21 @@
     var formOfferingHasActiveRequiredRequirement =
         formOffering?.HasActiveRequiredDocumentRequirement ?? false;
     var hasActiveFilters = Model.AcademicYearStart.HasValue || Model.Term.HasValue || Model.IncludeArchived;
+    var legacyOfferingCount = Model.Offerings.Count(item =>
+        item.DocumentConfigurationHealth == OfferingDocumentConfigurationHealth.LegacyOutsideDocumentWorkflow);
+    var healthyOpenOfferingCount = Model.Offerings.Count(item =>
+        item.DocumentConfigurationHealth == OfferingDocumentConfigurationHealth.OpenHealthy);
+    var invalidWithoutApplicationsCount = Model.Offerings.Count(item =>
+        item.DocumentConfigurationHealth == OfferingDocumentConfigurationHealth.OpenInvalidNoApplications);
+    var invalidWithDraftsCount = Model.Offerings.Count(item =>
+        item.DocumentConfigurationHealth == OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts);
+    var invalidWithSubmittedApplicationsCount = Model.Offerings.Count(item =>
+        item.DocumentConfigurationHealth == OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications);
+    var invalidOpenOfferings = Model.Offerings.Where(item =>
+        item.DocumentConfigurationHealth is
+            OfferingDocumentConfigurationHealth.OpenInvalidNoApplications
+            or OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts
+            or OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications).ToArray();
 }
 
 <div class="admin-page">
@@ -84,6 +99,143 @@
         }
     </form>
 
+    <section id="offering-configuration-health"
+             class="admin-section"
+             aria-labelledby="offering-configuration-health-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="offering-configuration-health-heading">İlan yapılandırma sağlığı</h2>
+                <p>Salt-okunur özet, açık ilanların aktif ve zorunlu belge koşulu ile mevcut başvuru riskini gösterir.</p>
+            </div>
+        </div>
+
+        <div class="admin-summary-grid" data-offering-health-summary>
+            <article class="admin-summary-card" data-health-category="A">
+                <span class="eyebrow">A · Legacy</span>
+                <h3>@legacyOfferingCount ilan</h3>
+                <p>Belge iş akışı dışında kalan legacy ilanlar. Mevcut davranışları değiştirilmez.</p>
+            </article>
+            <article class="admin-summary-card" data-health-category="B">
+                <span class="eyebrow">B · Sağlıklı</span>
+                <h3>@healthyOpenOfferingCount ilan</h3>
+                <p>Açık ve en az bir aktif zorunlu belge koşulu bulunan ilanlar.</p>
+            </article>
+            <article class="admin-summary-card" data-health-category="C">
+                <span class="eyebrow">C · Başvuru yok</span>
+                <h3>@invalidWithoutApplicationsCount ilan</h3>
+                <p>Açık, belge akışı etkin, aktif zorunlu koşulu ve başvurusu olmayan ilanlar.</p>
+            </article>
+            <article class="admin-summary-card" data-health-category="D">
+                <span class="eyebrow">D · Taslak var</span>
+                <h3>@invalidWithDraftsCount ilan</h3>
+                <p>Aktif zorunlu koşulu bulunmayan ve mevcut taslakları olan açık ilanlar.</p>
+            </article>
+            <article class="admin-summary-card" data-health-category="E">
+                <span class="eyebrow">E · İleri başvuru var</span>
+                <h3>@invalidWithSubmittedApplicationsCount ilan</h3>
+                <p>Aktif zorunlu koşulu bulunmayan ve gönderilmiş veya daha ileri başvuruları olan açık ilanlar.</p>
+            </article>
+        </div>
+
+        @if (invalidOpenOfferings.Length == 0)
+        {
+            <div class="alert alert-success mt-4" role="status" data-offering-health-clear>
+                Filtrelenen ilanlarda açık ve eksik belge yapılandırmasına sahip workflow ilanı bulunmuyor.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning mt-4" role="alert">
+                <strong>@invalidOpenOfferings.Length açık ilanda yapılandırma riski bulundu.</strong>
+                Bu ilanlar yeni öğrenci program listesinde gösterilmez. Otomatik veri düzeltmesi yapılmaz.
+            </div>
+            <div class="admin-card-list mt-4">
+                @foreach (var offering in invalidOpenOfferings)
+                {
+                    var healthGroup = offering.DocumentConfigurationHealth switch
+                    {
+                        OfferingDocumentConfigurationHealth.OpenInvalidNoApplications => "C",
+                        OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts => "D",
+                        _ => "E"
+                    };
+                    <article class="admin-item-card"
+                             data-offering-health-risk
+                             data-health-category="@healthGroup">
+                        <header>
+                            <div>
+                                <span class="eyebrow">@healthGroup grubu · İlan #@offering.ProgramOfferingId</span>
+                                <h3>@offering.ProgramName</h3>
+                                <p class="text-muted mb-0">
+                                    @offering.InstituteName · @offering.DegreeType · @offering.AcademicYear · @offering.TermName
+                                </p>
+                            </div>
+                            <span class="admin-state admin-state--danger">Açık · Eksik koşul</span>
+                        </header>
+
+                        <dl class="meta-grid">
+                            <div class="meta-item">
+                                <dt>Aktif zorunlu koşul</dt>
+                                <dd>@offering.ActiveRequiredDocumentRequirementCount</dd>
+                            </div>
+                            <div class="meta-item">
+                                <dt>Toplam belge koşulu</dt>
+                                <dd>@offering.DocumentRequirementCount</dd>
+                            </div>
+                            <div class="meta-item">
+                                <dt>Taslak</dt>
+                                <dd>@offering.DraftApplicationCount</dd>
+                            </div>
+                            <div class="meta-item">
+                                <dt>Gönderilmiş ve ileri</dt>
+                                <dd>@offering.SubmittedOrLaterApplicationCount</dd>
+                            </div>
+                        </dl>
+
+                        @if (offering.DraftApplicationCount + offering.SubmittedOrLaterApplicationCount > 0)
+                        {
+                            <div class="alert alert-danger" role="alert" data-existing-application-snapshot-warning>
+                                Bu ilana daha önce oluşturulmuş taslak veya gönderilmiş başvurular bulunmaktadır.
+                                Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez.
+                                Mevcut başvurular için enstitü kararı verilmeden otomatik veri değişikliği yapılmamalıdır.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning" role="note">
+                                İlan öğrenciye gösterilmez ve doğrudan taslak oluşturma API tarafından reddedilir.
+                            </div>
+                        }
+
+                        <ol class="configuration-steps">
+                            <li>İlanı yeni başvurulara kapatın.</li>
+                            <li>İlgili enstitünün güncel dönem ve program kılavuzunu doğrulayın.</li>
+                            <li>Belge koşullarını mevcut güvenli admin akışından ekleyin.</li>
+                            <li>En az bir aktif ve zorunlu koşul bulunduğunu doğrulayın.</li>
+                            <li>İlanı güncel RowVersion ve API invariant kontrolleriyle yeniden açın.</li>
+                        </ol>
+
+                        <div class="admin-item-card__actions">
+                            <a asp-action="Offerings"
+                               asp-route-editId="@offering.ProgramOfferingId"
+                               asp-route-academicYearStart="@Model.AcademicYearStart"
+                               asp-route-term="@Model.Term"
+                               asp-route-includeArchived="@Model.IncludeArchived"
+                               asp-fragment="offering-readiness-heading"
+                               class="btn btn-sm btn-outline-danger">İlanı kapat</a>
+                            <a asp-action="Offerings"
+                               asp-route-requirementOfferingId="@offering.ProgramOfferingId"
+                               asp-route-academicYearStart="@Model.AcademicYearStart"
+                               asp-route-term="@Model.Term"
+                               asp-route-includeArchived="@Model.IncludeArchived"
+                               asp-fragment="document-requirements"
+                               class="btn btn-sm btn-primary">Belge koşullarını yapılandır</a>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
     <section aria-labelledby="offering-list-heading">
         <div class="admin-results-heading mb-3">
             <div>
@@ -114,7 +266,7 @@
                     <article class="admin-item-card" data-offering-card>
                         <header>
                             <div>
-                                <span class="eyebrow">@catalogProgram?.InstituteName</span>
+                                <span class="eyebrow">@(string.IsNullOrWhiteSpace(offering.InstituteName) ? catalogProgram?.InstituteName : offering.InstituteName)</span>
                                 <h3>@offering.ProgramName</h3>
                                 <p class="text-muted mb-0">@offering.AcademicYear · @offering.TermName</p>
                             </div>
@@ -151,7 +303,16 @@
                             <div class="meta-item"><dt>Kontenjan</dt><dd>@offering.Quota</dd></div>
                             <div class="meta-item">
                                 <dt>Belge akışı</dt>
-                                <dd>@(offering.HasActiveRequiredDocumentRequirement ? "Hazır" : "Eksik") · @offering.DocumentRequirementCount koşul</dd>
+                                <dd>
+                                    @if (!offering.UsesDocumentWorkflow)
+                                    {
+                                        <span>Legacy akış · kapsam dışı</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@(offering.HasActiveRequiredDocumentRequirement ? "Hazır" : "Eksik") · @offering.DocumentRequirementCount koşul</span>
+                                    }
+                                </dd>
                             </div>
                             <div class="meta-item"><dt>Değerlendirme akışı</dt><dd>@(offering.UsesEvaluationWorkflow ? offering.EvaluationState.DisplayName() : "Kullanılmıyor")</dd></div>
                             <div class="meta-item"><dt>Sınav koşulları</dt><dd>@offering.ExamRequirements.Count koşul</dd></div>
@@ -406,6 +567,21 @@
         </div>
         <div class="alert alert-info" role="note">
             Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler. Açık ilan için son aktif zorunlu koşulu pasifleştirme isteği API tarafından güvenli biçimde reddedilir.
+        </div>
+        <div class="admin-summary-card mb-4" data-document-guidance>
+            <h3 class="h5">Kılavuz doğrulaması</h3>
+            <p>Belge koşullarını, ilgili enstitünün güncel ilan kılavuzuna göre tanımlayın. Programlara özel ek belgeler bulunabilir.</p>
+            <p class="mb-0">
+                Evrak listesini bütün ilanlara kopyalamayın.
+                <a href="https://sosyalbilimler.cu.edu.tr/storage/Belgeler/ilanlar/2026_2027_guz/cu_sosbil_2026_2027_guz_6_temmuz.pdf"
+                   target="_blank"
+                   rel="noopener noreferrer">Sosyal Bilimler Enstitüsü 2026–2027 Güz kılavuzu</a>
+                ve
+                <a href="https://iso.cu.edu.tr/haber-detay/84/2026-2027-guz-yariyili-lisansustu-programlara-uluslararasi-ogrenci-basvurulari"
+                   target="_blank"
+                   rel="noopener noreferrer">uluslararası öğrenci duyurusu</a>
+                gibi başvuru türüne uygun resmî kaynağı kullanın.
+            </p>
         </div>
 
         @if (selectedRequirementOffering is null)

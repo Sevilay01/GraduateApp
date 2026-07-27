@@ -31,6 +31,8 @@ public sealed class ProgramOfferingService(
     GraduateAppDbContext dbContext,
     TimeProvider timeProvider) : IProgramOfferingService
 {
+    private static readonly string DraftStatus = ApplicationStatus.Draft.ToString();
+
     public async Task<IReadOnlyList<ProgramOfferingAdminDto>> GetForAdminAsync(
         int? academicYearStart,
         AcademicTerm? term,
@@ -43,7 +45,10 @@ public sealed class ProgramOfferingService(
             .Select(item => Map(
                 item.Offering,
                 item.DocumentRequirementCount,
-                item.HasActiveRequiredDocumentRequirement))
+                item.ActiveRequiredDocumentRequirementCount,
+                item.HasActiveRequiredDocumentRequirement,
+                item.DraftApplicationCount,
+                item.SubmittedOrLaterApplicationCount))
             .ToArray();
     }
 
@@ -53,7 +58,7 @@ public sealed class ProgramOfferingService(
         bool includeArchived)
     {
         var query = dbContext.ProgramOfferings.AsNoTracking()
-            .Include(item => item.Program)
+            .Include(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
             .AsQueryable();
         if (academicYearStart.HasValue)
@@ -81,7 +86,10 @@ public sealed class ProgramOfferingService(
             .Select(item => new ProgramOfferingAdminListRow(
                 item,
                 item.DocumentRequirements.Count,
-                item.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired)));
+                item.DocumentRequirements.Count(requirement => requirement.IsActive && requirement.IsRequired),
+                item.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired),
+                item.Applications.Count(application => application.CurrentStatus == DraftStatus),
+                item.Applications.Count(application => application.CurrentStatus != DraftStatus)));
     }
 
     public async Task<ProgramOfferingCatalogDto> GetCatalogAsync(CancellationToken cancellationToken)
@@ -162,6 +170,7 @@ public sealed class ProgramOfferingService(
         }
 
         await dbContext.Entry(offering).Reference(item => item.Program).LoadAsync(cancellationToken);
+        await dbContext.Entry(offering.Program).Reference(item => item.Institute).LoadAsync(cancellationToken);
         foreach (var requirement in offering.ExamRequirements)
         {
             await dbContext.Entry(requirement).Reference(item => item.Exam).LoadAsync(cancellationToken);
@@ -199,7 +208,7 @@ public sealed class ProgramOfferingService(
     {
         await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
         var offering = await dbContext.ProgramOfferings
-            .Include(item => item.Program)
+            .Include(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.Applications)
             .Include(item => item.DocumentRequirements)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
@@ -335,9 +344,9 @@ public sealed class ProgramOfferingService(
                 StatusCodes.Status409Conflict);
         }
 
-        offering.Program = await dbContext.Programs.SingleAsync(
-            item => item.ProgramId == offering.ProgramId,
-            cancellationToken);
+        offering.Program = await dbContext.Programs
+            .Include(item => item.Institute)
+            .SingleAsync(item => item.ProgramId == offering.ProgramId, cancellationToken);
 
         foreach (var requirement in offering.ExamRequirements)
         {
@@ -462,15 +471,23 @@ public sealed class ProgramOfferingService(
         Map(
             offering,
             offering.DocumentRequirements.Count,
-            offering.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired));
+            offering.DocumentRequirements.Count(requirement => requirement.IsActive && requirement.IsRequired),
+            offering.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired),
+            offering.Applications.Count(application => application.CurrentStatus == DraftStatus),
+            offering.Applications.Count(application => application.CurrentStatus != DraftStatus));
 
     private static ProgramOfferingAdminDto Map(
         ProgramOffering offering,
         int documentRequirementCount,
-        bool hasActiveRequiredDocumentRequirement) => new(
+        int activeRequiredDocumentRequirementCount,
+        bool hasActiveRequiredDocumentRequirement,
+        int draftApplicationCount,
+        int submittedOrLaterApplicationCount) => new(
         offering.ProgramOfferingId,
         offering.ProgramId,
         offering.Program.ProgramName,
+        offering.Program.Institute.InstituteName,
+        offering.Program.DegreeType,
         offering.AcademicYearStart,
         AcademicPeriodFormatter.FormatAcademicYear(offering.AcademicYearStart),
         offering.Term,
@@ -480,6 +497,7 @@ public sealed class ProgramOfferingService(
         offering.Quota,
         offering.IsOpen,
         offering.IsArchived,
+        UsesDocumentWorkflow(offering),
         offering.UsesEvaluationWorkflow,
         offering.EvaluationState,
         offering.EvaluationFinalizedAtUtc.HasValue
@@ -489,7 +507,15 @@ public sealed class ProgramOfferingService(
             ? DateTime.SpecifyKind(offering.ResultsPublishedAtUtc.Value, DateTimeKind.Utc)
             : null,
         documentRequirementCount,
+        activeRequiredDocumentRequirementCount,
         hasActiveRequiredDocumentRequirement,
+        draftApplicationCount,
+        submittedOrLaterApplicationCount,
+        ClassifyDocumentConfiguration(
+            offering,
+            activeRequiredDocumentRequirementCount,
+            draftApplicationCount,
+            submittedOrLaterApplicationCount),
         Convert.ToBase64String(offering.RowVersion),
         offering.ExamRequirements.Select(requirement => new ExamRequirementDto(
             requirement.ExamId,
@@ -498,10 +524,47 @@ public sealed class ProgramOfferingService(
             requirement.MinimumValidityDate,
             requirement.IsRequired)).ToArray());
 
+    private static bool UsesDocumentWorkflow(ProgramOffering offering) =>
+        offering.Term != AcademicTerm.LegacyUnspecified;
+
+    private static OfferingDocumentConfigurationHealth ClassifyDocumentConfiguration(
+        ProgramOffering offering,
+        int activeRequiredDocumentRequirementCount,
+        int draftApplicationCount,
+        int submittedOrLaterApplicationCount)
+    {
+        if (!UsesDocumentWorkflow(offering))
+        {
+            return OfferingDocumentConfigurationHealth.LegacyOutsideDocumentWorkflow;
+        }
+
+        if (!offering.IsOpen || offering.IsArchived)
+        {
+            return OfferingDocumentConfigurationHealth.ClosedWorkflow;
+        }
+
+        if (activeRequiredDocumentRequirementCount > 0)
+        {
+            return OfferingDocumentConfigurationHealth.OpenHealthy;
+        }
+
+        if (submittedOrLaterApplicationCount > 0)
+        {
+            return OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications;
+        }
+
+        return draftApplicationCount > 0
+            ? OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts
+            : OfferingDocumentConfigurationHealth.OpenInvalidNoApplications;
+    }
+
     private sealed record ProgramOfferingAdminListRow(
         ProgramOffering Offering,
         int DocumentRequirementCount,
-        bool HasActiveRequiredDocumentRequirement);
+        int ActiveRequiredDocumentRequirementCount,
+        bool HasActiveRequiredDocumentRequirement,
+        int DraftApplicationCount,
+        int SubmittedOrLaterApplicationCount);
 
     private sealed record RequestValidationError(string Message, int StatusCode);
 }

@@ -80,6 +80,8 @@ public sealed class ProgramOfferingAdminViewModel
     public int ProgramOfferingId { get; set; }
     public int ProgramId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public string InstituteName { get; set; } = string.Empty;
+    public string DegreeType { get; set; } = string.Empty;
     public int AcademicYearStart { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
     public AcademicTerm Term { get; set; }
@@ -89,14 +91,29 @@ public sealed class ProgramOfferingAdminViewModel
     public int Quota { get; set; }
     public bool IsOpen { get; set; }
     public bool IsArchived { get; set; }
+    public bool UsesDocumentWorkflow { get; set; }
     public bool UsesEvaluationWorkflow { get; set; }
     public OfferingEvaluationState EvaluationState { get; set; }
     public DateTime? EvaluationFinalizedAtUtc { get; set; }
     public DateTime? ResultsPublishedAtUtc { get; set; }
     public int DocumentRequirementCount { get; set; }
+    public int ActiveRequiredDocumentRequirementCount { get; set; }
     public bool HasActiveRequiredDocumentRequirement { get; set; }
+    public int DraftApplicationCount { get; set; }
+    public int SubmittedOrLaterApplicationCount { get; set; }
+    public OfferingDocumentConfigurationHealth DocumentConfigurationHealth { get; set; }
     public string RowVersion { get; set; } = string.Empty;
     public IReadOnlyList<ExamRequirementViewModel> ExamRequirements { get; set; } = [];
+}
+
+public enum OfferingDocumentConfigurationHealth
+{
+    LegacyOutsideDocumentWorkflow,
+    OpenHealthy,
+    OpenInvalidNoApplications,
+    OpenInvalidWithDrafts,
+    OpenInvalidWithSubmittedApplications,
+    ClosedWorkflow
 }
 
 public sealed class ProgramCatalogItemViewModel
