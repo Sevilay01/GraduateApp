@@ -4,6 +4,7 @@ using GraduateApp.API.Models;
 using GraduateApp.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace GraduateApp.Tests;
 
@@ -236,7 +237,11 @@ public sealed class ApplicationEvaluationConcurrencyIntegrationTests
     }
 
     private static GraduateAppDbContext Context(string connectionString) => new(
-        new DbContextOptionsBuilder<GraduateAppDbContext>().UseSqlServer(connectionString).Options);
+        new DbContextOptionsBuilder<GraduateAppDbContext>()
+            .UseSqlServer(connectionString)
+            .ConfigureWarnings(warnings =>
+                warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning))
+            .Options);
 
     private static async Task<IReadOnlyList<SubmitDraft>> SeedConcurrentSubmissionsAsync(string connectionString)
     {

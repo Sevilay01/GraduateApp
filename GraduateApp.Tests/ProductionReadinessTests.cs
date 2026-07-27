@@ -134,6 +134,31 @@ public sealed class ProductionReadinessTests
     }
 
     [Fact]
+    public async Task Production_api_https_responses_include_hsts()
+    {
+        using var factory = new ReadinessApiFactory(
+            environmentName: Environments.Production,
+            replaceDataProtectionProbe: true,
+            configuration:
+            [
+                new KeyValuePair<string, string?>("AllowedHosts", "api.example.test")
+            ]);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = new Uri("https://api.example.test")
+        });
+
+        using var response = await client.GetAsync("/health/live");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var values = response.Headers.GetValues("Strict-Transport-Security");
+        Assert.Contains(
+            values,
+            value => value.Contains("max-age=", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task Readiness_is_unhealthy_when_sql_is_unavailable_and_response_is_safe()
     {
         using var factory = new ReadinessApiFactory(sqlReady: false);

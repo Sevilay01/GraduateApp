@@ -193,6 +193,7 @@ public sealed class ApplicationService(
             .Include(item => item.ProgramOffering).ThenInclude(item => item.EvaluationCriteria)
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
             .Include(item => item.ScoreSnapshots)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(item => item.PublicId == publicId && item.Tc == studentTc, cancellationToken);
         if (application is null)
         {
@@ -484,6 +485,7 @@ public sealed class ApplicationService(
             .Include(item => item.ApplicationStatusHistories)
             .Include(item => item.ScoreSnapshots)
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);
         if (application is null)
         {
