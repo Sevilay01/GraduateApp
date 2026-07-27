@@ -298,6 +298,8 @@ public sealed class GraduateUiFoundationRazorTests
                     IsOpen = false,
                     UsesEvaluationWorkflow = true,
                     EvaluationState = OfferingEvaluationState.Configuring,
+                    DocumentRequirementCount = 0,
+                    HasActiveRequiredDocumentRequirement = false,
                     RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24="
                 },
                 new ProgramOfferingAdminViewModel
@@ -310,6 +312,8 @@ public sealed class GraduateUiFoundationRazorTests
                     Quota = 8,
                     IsOpen = true,
                     UsesEvaluationWorkflow = false,
+                    DocumentRequirementCount = 1,
+                    HasActiveRequiredDocumentRequirement = true,
                     RowVersion = "c2Vjb25kLW9mZmVyaW5nLXJvdw=="
                 }
             ],
@@ -341,9 +345,9 @@ public sealed class GraduateUiFoundationRazorTests
                 Exams = [new ExamCatalogItemViewModel { ExamId = 3, ExamName = "ALES" }],
                 ExamRequirements = [new ProgramOfferingRequirementInputViewModel { ExamId = 3 }]
             },
+            RequirementOfferingId = 8,
             DocumentRequirements = new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
             {
-                [7] = [],
                 [8] =
                 [
                     new OfferingDocumentRequirementViewModel
@@ -377,15 +381,56 @@ public sealed class GraduateUiFoundationRazorTests
 
         Assert.Contains("data-new-offering-closed", html, StringComparison.Ordinal);
         Assert.Contains("Yeni ilan kapalı oluşturulacak", decoded, StringComparison.Ordinal);
+        Assert.True(
+            decoded.IndexOf("Yeni ilan oluştur", StringComparison.Ordinal)
+            < decoded.IndexOf("İlanları filtrele", StringComparison.Ordinal));
+        Assert.Contains("Eksik · 0 koşul", decoded, StringComparison.Ordinal);
+        Assert.Contains("Hazır · 1 koşul", decoded, StringComparison.Ordinal);
         Assert.Contains("İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın", decoded, StringComparison.Ordinal);
         Assert.Contains("Toplam ağırlık 10.000 bp", decoded, StringComparison.Ordinal);
         Assert.Contains("Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler", decoded, StringComparison.Ordinal);
+        Assert.Contains("data-selected-requirement-offering", html, StringComparison.Ordinal);
+        Assert.Contains("Seçili ilan · #8", decoded, StringComparison.Ordinal);
+        Assert.Contains("requirementOfferingId=8", decoded, StringComparison.Ordinal);
+        Assert.Contains("#document-requirements", decoded, StringComparison.Ordinal);
+        Assert.Contains("editId=7", decoded, StringComparison.Ordinal);
+        Assert.Contains("#exam-requirements-heading", decoded, StringComparison.Ordinal);
+        Assert.Contains("#offering-readiness-heading", decoded, StringComparison.Ordinal);
         Assert.Contains("Koşulu pasifleştir", decoded, StringComparison.Ordinal);
         Assert.Contains("name=\"rowVersion\" value=\"cmVxdWlyZW1lbnQtcm93LXZlcnNpb24=\"", html, StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
         Assert.Contains("responsive-table", html, StringComparison.Ordinal);
         Assert.DoesNotContain("<img src=x", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html, StringComparison.Ordinal);
+
+        model.Form.ProgramOfferingId = 7;
+        model.Form.RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24=";
+        model.AutoFocusTarget = "offering-form-heading";
+        var editHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Offerings",
+            model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var decodedEditHtml = WebUtility.HtmlDecode(editHtml);
+
+        Assert.Contains("data-selected-offering-context", editHtml, StringComparison.Ordinal);
+        Assert.Contains("Düzenlenen ilan:", decodedEditHtml, StringComparison.Ordinal);
+        Assert.Contains("İlan #7", decodedEditHtml, StringComparison.Ordinal);
+        Assert.Contains(
+            "data-auto-focus=\"true\"",
+            editHtml,
+            StringComparison.Ordinal);
+        var generalIndex = decodedEditHtml.IndexOf("Genel bilgiler</a>", StringComparison.Ordinal);
+        var documentIndex = decodedEditHtml.IndexOf("Belge koşulları</a>", generalIndex, StringComparison.Ordinal);
+        var examIndex = decodedEditHtml.IndexOf("Sınav koşulları</a>", documentIndex, StringComparison.Ordinal);
+        var evaluationIndex = decodedEditHtml.IndexOf("Değerlendirme kriterleri</a>", examIndex, StringComparison.Ordinal);
+        var readinessIndex = decodedEditHtml.IndexOf("Gözden geçir ve aç</a>", evaluationIndex, StringComparison.Ordinal);
+        Assert.True(generalIndex >= 0);
+        Assert.True(documentIndex > generalIndex);
+        Assert.True(examIndex > documentIndex);
+        Assert.True(evaluationIndex > examIndex);
+        Assert.True(readinessIndex > evaluationIndex);
     }
 
     [Fact]
@@ -625,6 +670,46 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task Access_denied_renders_safe_role_specific_account_switch_actions()
+    {
+        using var host = CreateWebHost();
+        var studentHtml = await RenderMainViewAsync<object?>(
+            host.Services,
+            "Account",
+            "AccessDenied",
+            null,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        var adminHtml = await RenderMainViewAsync<object?>(
+            host.Services,
+            "Account",
+            "AccessDenied",
+            null,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var anonymousHtml = await RenderMainViewAsync<object?>(
+            host.Services,
+            "Account",
+            "AccessDenied",
+            null);
+
+        Assert.Contains("action=\"/Account/SwitchAccount\"", studentHtml, StringComparison.Ordinal);
+        Assert.Contains("name=\"accountType\" value=\"Admin\"", studentHtml, StringComparison.Ordinal);
+        Assert.Contains("Yönetici hesabıyla giriş yap", WebUtility.HtmlDecode(studentHtml), StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", studentHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("returnUrl", studentHtml, StringComparison.OrdinalIgnoreCase);
+
+        Assert.Contains("action=\"/Account/SwitchAccount\"", adminHtml, StringComparison.Ordinal);
+        Assert.Contains("name=\"accountType\" value=\"Student\"", adminHtml, StringComparison.Ordinal);
+        Assert.Contains("Öğrenci hesabıyla giriş yap", WebUtility.HtmlDecode(adminHtml), StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", adminHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("returnUrl", adminHtml, StringComparison.OrdinalIgnoreCase);
+
+        Assert.DoesNotContain("SwitchAccount", anonymousHtml, StringComparison.Ordinal);
+        Assert.Contains("href=\"/Account/Login\"", anonymousHtml, StringComparison.Ordinal);
+        Assert.Contains("href=\"/Account/AdminLogin\"", anonymousHtml, StringComparison.Ordinal);
+        Assert.Matches("href=\"/(?:Home(?:/Index)?)?\"[^>]*>Ana sayfaya dön</a>", anonymousHtml);
+    }
+
+    [Fact]
     public async Task Application_detail_hides_unpublished_result_and_preserves_secure_document_forms()
     {
         using var host = CreateWebHost();
@@ -770,6 +855,20 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains(":focus-visible", css, StringComparison.Ordinal);
         Assert.Contains("@media (prefers-reduced-motion: reduce)", css, StringComparison.Ordinal);
         Assert.Contains("--cu-focus-ring", css, StringComparison.Ordinal);
+        Assert.Contains(".configuration-steps", css, StringComparison.Ordinal);
+        Assert.Contains("max-width: 100%;", css, StringComparison.Ordinal);
+        Assert.Contains(".admin-item-card__actions .btn", css, StringComparison.Ordinal);
+
+        var siteJavaScript = File.ReadAllText(
+            Path.Combine(
+                RepositoryRoot(),
+                "GraduateApp.Web",
+                "wwwroot",
+                "js",
+                "site.js"));
+        Assert.Contains("focusRequestedPageContext", siteJavaScript, StringComparison.Ordinal);
+        Assert.Contains("data-auto-focus=\"true\"", siteJavaScript, StringComparison.Ordinal);
+        Assert.Contains("scrollIntoView", siteJavaScript, StringComparison.Ordinal);
     }
 
     private static IHost CreateWebHost() =>

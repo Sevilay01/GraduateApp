@@ -227,32 +227,78 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         await Task.WhenAll(offeringsTask, catalogTask);
         var offerings = await offeringsTask;
         var catalog = await catalogTask;
+        var offeringValues = offerings.Value ?? [];
         var catalogValue = catalog.Value ?? new ProgramOfferingCatalogViewModel();
         var selected = editId.HasValue
-            ? offerings.Value?.SingleOrDefault(item => item.ProgramOfferingId == editId.Value)
+            ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == editId.Value)
             : null;
-        var requirementResults = await LoadDocumentRequirementsAsync(offerings.Value ?? [], cancellationToken);
+        var editOfferingError = editId.HasValue && selected is null
+            ? "Düzenlenecek ilan bulunamadı."
+            : null;
+        var selectedRequirementOffering = requirementOfferingId.HasValue
+            ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == requirementOfferingId.Value)
+            : null;
+        var requirementResults =
+            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>();
+        string? documentRequirementError = null;
+        if (requirementOfferingId.HasValue)
+        {
+            if (selectedRequirementOffering is null)
+            {
+                documentRequirementError = "Belge koşulları için seçilen ilan bulunamadı.";
+            }
+            else
+            {
+                var requirementResult = await apiClient.GetOfferingDocumentRequirementsAsync(
+                    selectedRequirementOffering.ProgramOfferingId,
+                    cancellationToken);
+                if (requirementResult.IsSuccess)
+                {
+                    requirementResults[selectedRequirementOffering.ProgramOfferingId] =
+                        requirementResult.Value ?? [];
+                }
+                else
+                {
+                    documentRequirementError =
+                        requirementResult.Error ?? "Belge koşulları yüklenemedi.";
+                }
+            }
+        }
+        else if (editRequirementId.HasValue)
+        {
+            documentRequirementError = "Belge koşulunu düzenlemek için önce ilan seçiniz.";
+        }
+
         OfferingDocumentRequirementViewModel? selectedRequirement = null;
-        if (requirementOfferingId.HasValue && editRequirementId.HasValue
-            && requirementResults.TryGetValue(requirementOfferingId.Value, out var offeringRequirements))
+        if (selectedRequirementOffering is not null && editRequirementId.HasValue
+            && requirementResults.TryGetValue(
+                selectedRequirementOffering.ProgramOfferingId,
+                out var offeringRequirements))
         {
             selectedRequirement = offeringRequirements.SingleOrDefault(item => item.PublicId == editRequirementId.Value);
+            if (selectedRequirement is null)
+            {
+                documentRequirementError = "Düzenlenecek belge koşulu seçilen ilanda bulunamadı.";
+            }
         }
 
         return View(new ProgramOfferingPageViewModel
         {
-            Offerings = offerings.Value ?? [],
+            Offerings = offeringValues,
             AcademicYearStart = academicYearStart,
             Term = term,
             IncludeArchived = includeArchived,
             Form = CreateOfferingForm(selected, catalogValue),
             DocumentRequirements = requirementResults,
+            RequirementOfferingId = selectedRequirementOffering?.ProgramOfferingId,
+            AutoFocusTarget = editId.HasValue
+                ? "offering-form-heading"
+                : requirementOfferingId.HasValue
+                    ? "document-requirements-heading"
+                    : null,
             DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
             {
-                ProgramOfferingId = requirementOfferingId
-                    ?? selected?.ProgramOfferingId
-                    ?? offerings.Value?.FirstOrDefault()?.ProgramOfferingId
-                    ?? 0,
+                ProgramOfferingId = selectedRequirementOffering?.ProgramOfferingId ?? 0,
                 PublicId = selectedRequirement?.PublicId ?? Guid.Empty,
                 DocumentCode = selectedRequirement?.DocumentCode ?? string.Empty,
                 DisplayName = selectedRequirement?.DisplayName ?? string.Empty,
@@ -262,9 +308,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 MaximumBytes = selectedRequirement?.MaximumBytes ?? 10485760,
                 RowVersion = selectedRequirement?.RowVersion
             },
-            ErrorMessage = offerings.IsSuccess && catalog.IsSuccess
-                ? null
-                : offerings.Error ?? catalog.Error ?? "İlan bilgileri yüklenemedi."
+            ErrorMessage = !offerings.IsSuccess || !catalog.IsSuccess
+                ? offerings.Error ?? catalog.Error ?? "İlan bilgileri yüklenemedi."
+                : editOfferingError ?? documentRequirementError
         });
     }
 
@@ -309,7 +355,18 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         }
 
         TempData["SuccessMessage"] = "Dönemsel ilan kaydedildi.";
-        return RedirectToAction(nameof(Offerings));
+        var savedOfferingId = result.Value?.ProgramOfferingId ?? model.ProgramOfferingId;
+        return RedirectToAction(
+            nameof(Offerings),
+            controllerName: null,
+            routeValues: new
+            {
+                academicYearStart = model.AcademicYearStart,
+                term = model.Term,
+                includeArchived = model.IsArchived,
+                editId = savedOfferingId
+            },
+            fragment: "offering-form");
     }
 
     [HttpPost]
@@ -331,7 +388,11 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         if (!ModelState.IsValid)
         {
             TempData["ErrorMessage"] = "Belge koşulu bilgileri doğrulanamadı.";
-            return RedirectToAction(nameof(Offerings), new { requirementOfferingId = model.ProgramOfferingId });
+            return RedirectToAction(
+                nameof(Offerings),
+                controllerName: null,
+                routeValues: new { requirementOfferingId = model.ProgramOfferingId },
+                fragment: "document-requirements");
         }
 
         var result = model.PublicId == Guid.Empty
@@ -340,7 +401,11 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? "Belge koşulu kaydedildi. Değişiklik yalnızca bundan sonra oluşturulan taslakları etkiler."
             : result.Error ?? "Belge koşulu kaydedilemedi.";
-        return RedirectToAction(nameof(Offerings), new { requirementOfferingId = model.ProgramOfferingId });
+        return RedirectToAction(
+            nameof(Offerings),
+            controllerName: null,
+            routeValues: new { requirementOfferingId = model.ProgramOfferingId },
+            fragment: "document-requirements");
     }
 
     [HttpPost]
@@ -355,7 +420,11 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         if (!ModelState.IsValid)
         {
             TempData["ErrorMessage"] = "Belge koşulu durumu doğrulanamadı. Sayfayı yenileyip tekrar deneyin.";
-            return RedirectToAction(nameof(Offerings), new { requirementOfferingId = programOfferingId });
+            return RedirectToAction(
+                nameof(Offerings),
+                controllerName: null,
+                routeValues: new { requirementOfferingId = programOfferingId },
+                fragment: "document-requirements");
         }
 
         var result = await apiClient.SetOfferingDocumentRequirementActiveAsync(
@@ -375,7 +444,11 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             TempData["ErrorMessage"] = result.Error ?? "Belge koşulu güncellenemedi.";
         }
 
-        return RedirectToAction(nameof(Offerings), new { requirementOfferingId = programOfferingId });
+        return RedirectToAction(
+            nameof(Offerings),
+            controllerName: null,
+            routeValues: new { requirementOfferingId = programOfferingId },
+            fragment: "document-requirements");
     }
 
     [HttpGet]
@@ -1038,25 +1111,15 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         return View(nameof(Offerings), new ProgramOfferingPageViewModel
         {
             Offerings = offerings.Value ?? [],
+            AcademicYearStart = form.AcademicYearStart,
+            Term = form.Term,
             IncludeArchived = true,
             Form = form,
+            AutoFocusTarget = "offering-form-heading",
             ErrorMessage = errorMessage
                 ?? offerings.Error
                 ?? catalog.Error
         });
-    }
-
-    private async Task<IReadOnlyDictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>> LoadDocumentRequirementsAsync(
-        IReadOnlyList<ProgramOfferingAdminViewModel> offerings,
-        CancellationToken cancellationToken)
-    {
-        var tasks = offerings.ToDictionary(
-            item => item.ProgramOfferingId,
-            item => apiClient.GetOfferingDocumentRequirementsAsync(item.ProgramOfferingId, cancellationToken));
-        await Task.WhenAll(tasks.Values);
-        return tasks.ToDictionary(
-            item => item.Key,
-            item => item.Value.Result.Value ?? (IReadOnlyList<OfferingDocumentRequirementViewModel>)[]);
     }
 
     private async Task<IActionResult> RenderInstituteFormAsync(

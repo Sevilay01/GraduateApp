@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using ApiAcademicTerm = GraduateApp.API.Domain.AcademicTerm;
@@ -53,9 +54,14 @@ public sealed class ProgramOfferingLocalizationTests
 
         var result = await controller.SaveOffering(CreateValidWebModel(rowVersion: null), CancellationToken.None);
 
-        Assert.IsType<ViewResult>(result);
+        var view = Assert.IsType<ViewResult>(result);
+        var page = Assert.IsType<ProgramOfferingPageViewModel>(view.Model);
         Assert.Equal(1, handler.PostCount);
         Assert.DoesNotContain("Form.RowVersion", controller.ModelState.Keys);
+        Assert.Equal("offering-form-heading", page.AutoFocusTarget);
+        Assert.Equal(2026, page.AcademicYearStart);
+        Assert.Equal(AcademicTerm.Fall, page.Term);
+        Assert.Equal(1, page.Form.ProgramId);
     }
 
     [Fact]
@@ -71,10 +77,39 @@ public sealed class ProgramOfferingLocalizationTests
 
         var result = await controller.SaveOffering(model, CancellationToken.None);
 
-        Assert.IsType<ViewResult>(result);
+        var view = Assert.IsType<ViewResult>(result);
+        var page = Assert.IsType<ProgramOfferingPageViewModel>(view.Model);
         Assert.True(controller.ModelState.TryGetValue("Form.RowVersion", out var rowVersionState));
         var error = Assert.Single(rowVersionState.Errors);
         Assert.Equal("İlan eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.", error.ErrorMessage);
+        Assert.Equal(42, page.Form.ProgramOfferingId);
+        Assert.Equal("offering-form-heading", page.AutoFocusTarget);
+    }
+
+    [Fact]
+    public async Task Successful_save_redirects_to_the_saved_offering_and_fragment()
+    {
+        var handler = new SuccessfulOfferingHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var controller = new AdminController(new GraduateApiClient(httpClient))
+        {
+            TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempDataProvider())
+        };
+        var model = CreateValidWebModel(rowVersion: null);
+
+        var result = Assert.IsType<RedirectToActionResult>(
+            await controller.SaveOffering(model, CancellationToken.None));
+
+        Assert.Equal(nameof(AdminController.Offerings), result.ActionName);
+        Assert.Equal("offering-form", result.Fragment);
+        Assert.Equal(73, result.RouteValues!["editId"]);
+        Assert.Equal(2026, result.RouteValues["academicYearStart"]);
+        Assert.Equal(AcademicTerm.Fall, result.RouteValues["term"]);
+        Assert.Equal(false, result.RouteValues["includeArchived"]);
+        Assert.Equal(1, handler.PostCount);
     }
 
     [Theory]
@@ -216,5 +251,45 @@ public sealed class ProgramOfferingLocalizationTests
                 : JsonContent.Create(Array.Empty<ProgramOfferingAdminViewModel>());
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = content });
         }
+    }
+
+    private sealed class SuccessfulOfferingHandler : HttpMessageHandler
+    {
+        public int PostCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            PostCount++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new ProgramOfferingAdminViewModel
+                {
+                    ProgramOfferingId = 73,
+                    ProgramId = 1,
+                    ProgramName = "Bilgisayar Mühendisliği",
+                    AcademicYearStart = 2026,
+                    AcademicYear = "2026–2027",
+                    Term = AcademicTerm.Fall,
+                    TermName = "Güz",
+                    Quota = 10,
+                    IsOpen = false,
+                    RowVersion = "AQIDBA=="
+                })
+            });
+        }
+    }
+
+    private sealed class MemoryTempDataProvider : ITempDataProvider
+    {
+        private Dictionary<string, object?> values = new(StringComparer.Ordinal);
+
+        public IDictionary<string, object?> LoadTempData(HttpContext context) =>
+            new Dictionary<string, object?>(values, StringComparer.Ordinal);
+
+        public void SaveTempData(HttpContext context, IDictionary<string, object?> values) =>
+            this.values = new Dictionary<string, object?>(values, StringComparer.Ordinal);
     }
 }

@@ -81,6 +81,28 @@ public sealed class ProgramOfferingServiceTests
     }
 
     [Fact]
+    public async Task Admin_list_returns_document_requirement_count_and_active_required_summary()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: false, isActive: true));
+        offering.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: false));
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).GetForAdminAsync(
+            2026,
+            AcademicTerm.Fall,
+            includeArchived: false,
+            CancellationToken.None);
+
+        var dto = Assert.Single(result);
+        Assert.Equal(3, dto.DocumentRequirementCount);
+        Assert.True(dto.HasActiveRequiredDocumentRequirement);
+    }
+
+    [Fact]
     public async Task Create_rejects_non_utc_dates()
     {
         await using var db = TestDb.Create();
