@@ -468,11 +468,10 @@ public sealed class GraduateUiFoundationRazorTests
             "<form\\b[^>]*data-remediation-close-form[^>]*>.*?</form>",
             RegexOptions.Singleline | RegexOptions.CultureInvariant);
         var publishedRemediationForm = Assert.Single(
-            remediationForms
-                .Cast<Match>()
-                .Where(match => match.Value.Contains(
-                    "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==",
-                    StringComparison.Ordinal)))
+            remediationForms.Cast<Match>(),
+            match => match.Value.Contains(
+                "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==",
+                StringComparison.Ordinal))
             .Value;
         Assert.Contains("method=\"post\"", publishedRemediationForm, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("CloseInvalidOfferingForRemediation", publishedRemediationForm, StringComparison.Ordinal);
