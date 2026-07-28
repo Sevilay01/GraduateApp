@@ -8,15 +8,37 @@ namespace GraduateApp.Web.Controllers;
 public sealed class HomeController(GraduateApiClient apiClient) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        string? search,
+        int? academicYearStart,
+        AcademicTerm? term,
+        CancellationToken cancellationToken)
     {
-        var result = await apiClient.GetOpenProgramsAsync(cancellationToken);
+        var programSearch = OpenProgramSearchViewModel.From(search, academicYearStart, term);
+        if (!TryValidateModel(programSearch, nameof(HomeViewModel.ProgramSearch)))
+        {
+            return View(new HomeViewModel
+            {
+                ProgramSearch = programSearch
+            });
+        }
+
+        var result = await apiClient.GetOpenProgramsAsync(
+            programSearch.Search,
+            programSearch.AcademicYearStart,
+            programSearch.Term,
+            cancellationToken);
         return View(new HomeViewModel
         {
+            ProgramSearch = programSearch,
             OpenPrograms = result.Value ?? [],
             ErrorMessage = result.IsSuccess ? null : result.Error
         });
     }
+
+    [NonAction]
+    public Task<IActionResult> Index(CancellationToken cancellationToken) =>
+        Index(null, null, null, cancellationToken);
 
     [HttpGet]
     public IActionResult Privacy() => View();
