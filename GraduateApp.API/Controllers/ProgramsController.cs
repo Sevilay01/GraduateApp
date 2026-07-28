@@ -28,6 +28,9 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
                 && item.ApplicationDeadlineUtc.HasValue
                 && item.ApplicationDeadlineUtc.Value >= now
                 && item.Quota > 0
+                && (item.Term == AcademicTerm.LegacyUnspecified
+                    || item.DocumentRequirements.Any(requirement =>
+                        requirement.IsActive && requirement.IsRequired))
                 && (item.UsesEvaluationWorkflow
                     || item.Applications.Count(application => application.CurrentStatus != withdrawn && application.CurrentStatus != draft) < item.Quota))
             .OrderBy(item => item.Program.Institute.InstituteName)

@@ -72,10 +72,31 @@ public sealed class ProgramOfferingUpdateDto : ProgramOfferingCreateDto
     public bool IsArchived { get; init; }
 }
 
+public sealed class ProgramOfferingRemediationCloseDto
+{
+    [Required(ErrorMessage = "İlan eşzamanlılık bilgisi zorunludur.")]
+    [StringLength(
+        64,
+        ErrorMessage = "İlan eşzamanlılık bilgisi geçersiz.")]
+    public string RowVersion { get; init; } = string.Empty;
+}
+
+public enum OfferingDocumentConfigurationHealth
+{
+    LegacyOutsideDocumentWorkflow,
+    OpenHealthy,
+    OpenInvalidNoApplications,
+    OpenInvalidWithDrafts,
+    OpenInvalidWithSubmittedApplications,
+    ClosedWorkflow
+}
+
 public sealed record ProgramOfferingAdminDto(
     int ProgramOfferingId,
     int ProgramId,
     string ProgramName,
+    string InstituteName,
+    string DegreeType,
     int AcademicYearStart,
     string AcademicYear,
     AcademicTerm Term,
@@ -85,12 +106,17 @@ public sealed record ProgramOfferingAdminDto(
     int Quota,
     bool IsOpen,
     bool IsArchived,
+    bool UsesDocumentWorkflow,
     bool UsesEvaluationWorkflow,
     OfferingEvaluationState EvaluationState,
     DateTime? EvaluationFinalizedAtUtc,
     DateTime? ResultsPublishedAtUtc,
     int DocumentRequirementCount,
+    int ActiveRequiredDocumentRequirementCount,
     bool HasActiveRequiredDocumentRequirement,
+    int DraftApplicationCount,
+    int SubmittedOrLaterApplicationCount,
+    OfferingDocumentConfigurationHealth DocumentConfigurationHealth,
     string RowVersion,
     IReadOnlyList<ExamRequirementDto> ExamRequirements);
 

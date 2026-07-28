@@ -25,12 +25,19 @@ public interface IProgramOfferingService
         int adminId,
         ProgramOfferingUpdateDto request,
         CancellationToken cancellationToken);
+    Task<ServiceResult<ProgramOfferingAdminDto>> CloseInvalidForRemediationAsync(
+        int offeringId,
+        int adminId,
+        ProgramOfferingRemediationCloseDto request,
+        CancellationToken cancellationToken);
 }
 
 public sealed class ProgramOfferingService(
     GraduateAppDbContext dbContext,
     TimeProvider timeProvider) : IProgramOfferingService
 {
+    private static readonly string DraftStatus = ApplicationStatus.Draft.ToString();
+
     public async Task<IReadOnlyList<ProgramOfferingAdminDto>> GetForAdminAsync(
         int? academicYearStart,
         AcademicTerm? term,
@@ -43,7 +50,10 @@ public sealed class ProgramOfferingService(
             .Select(item => Map(
                 item.Offering,
                 item.DocumentRequirementCount,
-                item.HasActiveRequiredDocumentRequirement))
+                item.ActiveRequiredDocumentRequirementCount,
+                item.HasActiveRequiredDocumentRequirement,
+                item.DraftApplicationCount,
+                item.SubmittedOrLaterApplicationCount))
             .ToArray();
     }
 
@@ -53,7 +63,7 @@ public sealed class ProgramOfferingService(
         bool includeArchived)
     {
         var query = dbContext.ProgramOfferings.AsNoTracking()
-            .Include(item => item.Program)
+            .Include(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
             .AsQueryable();
         if (academicYearStart.HasValue)
@@ -81,7 +91,10 @@ public sealed class ProgramOfferingService(
             .Select(item => new ProgramOfferingAdminListRow(
                 item,
                 item.DocumentRequirements.Count,
-                item.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired)));
+                item.DocumentRequirements.Count(requirement => requirement.IsActive && requirement.IsRequired),
+                item.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired),
+                item.Applications.Count(application => application.CurrentStatus == DraftStatus),
+                item.Applications.Count(application => application.CurrentStatus != DraftStatus)));
     }
 
     public async Task<ProgramOfferingCatalogDto> GetCatalogAsync(CancellationToken cancellationToken)
@@ -162,6 +175,7 @@ public sealed class ProgramOfferingService(
         }
 
         await dbContext.Entry(offering).Reference(item => item.Program).LoadAsync(cancellationToken);
+        await dbContext.Entry(offering.Program).Reference(item => item.Institute).LoadAsync(cancellationToken);
         foreach (var requirement in offering.ExamRequirements)
         {
             await dbContext.Entry(requirement).Reference(item => item.Exam).LoadAsync(cancellationToken);
@@ -191,6 +205,124 @@ public sealed class ProgramOfferingService(
         }
     }
 
+    public async Task<ServiceResult<ProgramOfferingAdminDto>> CloseInvalidForRemediationAsync(
+        int offeringId,
+        int adminId,
+        ProgramOfferingRemediationCloseDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await CloseInvalidForRemediationCoreAsync(
+                offeringId,
+                adminId,
+                request,
+                cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is not OperationCanceledException
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status409Conflict);
+        }
+    }
+
+    private async Task<ServiceResult<ProgramOfferingAdminDto>> CloseInvalidForRemediationCoreAsync(
+        int offeringId,
+        int adminId,
+        ProgramOfferingRemediationCloseDto request,
+        CancellationToken cancellationToken)
+    {
+        byte[] rowVersion;
+        try
+        {
+            rowVersion = Convert.FromBase64String(request.RowVersion);
+        }
+        catch (FormatException)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Eş zamanlılık belirteci geçersiz.",
+                StatusCodes.Status400BadRequest);
+        }
+
+        await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
+        var offering = await dbContext.ProgramOfferings
+            .Include(item => item.Program).ThenInclude(item => item.Institute)
+            .Include(item => item.Applications)
+            .Include(item => item.DocumentRequirements)
+            .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
+        if (offering is null)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan bulunamadı.",
+                StatusCodes.Status404NotFound);
+        }
+
+        if (!UsesDocumentWorkflow(offering))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Legacy ilanlar bu düzeltme akışının dışındadır.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (offering.IsArchived)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Arşivlenmiş ilan bu düzeltme akışıyla değiştirilemez.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (!offering.IsOpen)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan zaten kapalıdır.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (offering.DocumentRequirements.Any(item => item.IsActive && item.IsRequired))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan artık aktif ve zorunlu belge koşuluna sahiptir. Normal ilan yönetimini kullanın.",
+                StatusCodes.Status409Conflict);
+        }
+
+        dbContext.Entry(offering).Property(item => item.RowVersion).OriginalValue = rowVersion;
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        offering.IsOpen = false;
+        offering.UpdatedAtUtc = now;
+        AddAudit(adminId, "ProgramOfferingClosedForRemediation", offering, now);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status409Conflict);
+        }
+        catch (DbUpdateException exception) when (
+            !DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan güvenli düzeltme için kapatılamadı.",
+                StatusCodes.Status409Conflict);
+        }
+
+        return ServiceResult<ProgramOfferingAdminDto>.Success(Map(offering));
+    }
+
     private async Task<ServiceResult<ProgramOfferingAdminDto>> UpdateCoreAsync(
         int offeringId,
         int adminId,
@@ -199,7 +331,7 @@ public sealed class ProgramOfferingService(
     {
         await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
         var offering = await dbContext.ProgramOfferings
-            .Include(item => item.Program)
+            .Include(item => item.Program).ThenInclude(item => item.Institute)
             .Include(item => item.Applications)
             .Include(item => item.DocumentRequirements)
             .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
@@ -335,9 +467,9 @@ public sealed class ProgramOfferingService(
                 StatusCodes.Status409Conflict);
         }
 
-        offering.Program = await dbContext.Programs.SingleAsync(
-            item => item.ProgramId == offering.ProgramId,
-            cancellationToken);
+        offering.Program = await dbContext.Programs
+            .Include(item => item.Institute)
+            .SingleAsync(item => item.ProgramId == offering.ProgramId, cancellationToken);
 
         foreach (var requirement in offering.ExamRequirements)
         {
@@ -462,15 +594,23 @@ public sealed class ProgramOfferingService(
         Map(
             offering,
             offering.DocumentRequirements.Count,
-            offering.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired));
+            offering.DocumentRequirements.Count(requirement => requirement.IsActive && requirement.IsRequired),
+            offering.DocumentRequirements.Any(requirement => requirement.IsActive && requirement.IsRequired),
+            offering.Applications.Count(application => application.CurrentStatus == DraftStatus),
+            offering.Applications.Count(application => application.CurrentStatus != DraftStatus));
 
     private static ProgramOfferingAdminDto Map(
         ProgramOffering offering,
         int documentRequirementCount,
-        bool hasActiveRequiredDocumentRequirement) => new(
+        int activeRequiredDocumentRequirementCount,
+        bool hasActiveRequiredDocumentRequirement,
+        int draftApplicationCount,
+        int submittedOrLaterApplicationCount) => new(
         offering.ProgramOfferingId,
         offering.ProgramId,
         offering.Program.ProgramName,
+        offering.Program.Institute.InstituteName,
+        offering.Program.DegreeType,
         offering.AcademicYearStart,
         AcademicPeriodFormatter.FormatAcademicYear(offering.AcademicYearStart),
         offering.Term,
@@ -480,6 +620,7 @@ public sealed class ProgramOfferingService(
         offering.Quota,
         offering.IsOpen,
         offering.IsArchived,
+        UsesDocumentWorkflow(offering),
         offering.UsesEvaluationWorkflow,
         offering.EvaluationState,
         offering.EvaluationFinalizedAtUtc.HasValue
@@ -489,7 +630,15 @@ public sealed class ProgramOfferingService(
             ? DateTime.SpecifyKind(offering.ResultsPublishedAtUtc.Value, DateTimeKind.Utc)
             : null,
         documentRequirementCount,
+        activeRequiredDocumentRequirementCount,
         hasActiveRequiredDocumentRequirement,
+        draftApplicationCount,
+        submittedOrLaterApplicationCount,
+        ClassifyDocumentConfiguration(
+            offering,
+            activeRequiredDocumentRequirementCount,
+            draftApplicationCount,
+            submittedOrLaterApplicationCount),
         Convert.ToBase64String(offering.RowVersion),
         offering.ExamRequirements.Select(requirement => new ExamRequirementDto(
             requirement.ExamId,
@@ -498,10 +647,47 @@ public sealed class ProgramOfferingService(
             requirement.MinimumValidityDate,
             requirement.IsRequired)).ToArray());
 
+    private static bool UsesDocumentWorkflow(ProgramOffering offering) =>
+        offering.Term != AcademicTerm.LegacyUnspecified;
+
+    private static OfferingDocumentConfigurationHealth ClassifyDocumentConfiguration(
+        ProgramOffering offering,
+        int activeRequiredDocumentRequirementCount,
+        int draftApplicationCount,
+        int submittedOrLaterApplicationCount)
+    {
+        if (!UsesDocumentWorkflow(offering))
+        {
+            return OfferingDocumentConfigurationHealth.LegacyOutsideDocumentWorkflow;
+        }
+
+        if (!offering.IsOpen || offering.IsArchived)
+        {
+            return OfferingDocumentConfigurationHealth.ClosedWorkflow;
+        }
+
+        if (activeRequiredDocumentRequirementCount > 0)
+        {
+            return OfferingDocumentConfigurationHealth.OpenHealthy;
+        }
+
+        if (submittedOrLaterApplicationCount > 0)
+        {
+            return OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications;
+        }
+
+        return draftApplicationCount > 0
+            ? OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts
+            : OfferingDocumentConfigurationHealth.OpenInvalidNoApplications;
+    }
+
     private sealed record ProgramOfferingAdminListRow(
         ProgramOffering Offering,
         int DocumentRequirementCount,
-        bool HasActiveRequiredDocumentRequirement);
+        int ActiveRequiredDocumentRequirementCount,
+        bool HasActiveRequiredDocumentRequirement,
+        int DraftApplicationCount,
+        int SubmittedOrLaterApplicationCount);
 
     private sealed record RequestValidationError(string Message, int StatusCode);
 }

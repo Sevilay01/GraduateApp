@@ -33,6 +33,47 @@ public sealed class ProgramsControllerTests
     }
 
     [Theory]
+    [InlineData(DocumentRequirementScenario.None, false)]
+    [InlineData(DocumentRequirementScenario.ActiveOptional, false)]
+    [InlineData(DocumentRequirementScenario.InactiveRequired, false)]
+    [InlineData(DocumentRequirementScenario.ActiveRequired, true)]
+    public async Task Workflow_offering_visibility_requires_an_active_required_document(
+        DocumentRequirementScenario scenario,
+        bool expectedVisible)
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedFullOfferingAsync(
+            db,
+            usesEvaluationWorkflow: true,
+            documentRequirementScenario: scenario,
+            includeSubmittedApplication: false);
+
+        var programs = await GetOpenProgramsAsync(db);
+
+        Assert.Equal(
+            expectedVisible,
+            programs.Any(item => item.ProgramOfferingId == offering.ProgramOfferingId));
+    }
+
+    [Fact]
+    public async Task Legacy_document_workflow_sentinel_preserves_existing_open_list_behavior()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedFullOfferingAsync(
+            db,
+            usesEvaluationWorkflow: true,
+            documentRequirementScenario: DocumentRequirementScenario.None,
+            includeSubmittedApplication: false);
+        offering.AcademicYearStart = 0;
+        offering.Term = AcademicTerm.LegacyUnspecified;
+        await db.SaveChangesAsync();
+
+        var programs = await GetOpenProgramsAsync(db);
+
+        Assert.Contains(programs, item => item.ProgramOfferingId == offering.ProgramOfferingId);
+    }
+
+    [Theory]
     [InlineData("closed")]
     [InlineData("archived")]
     [InlineData("not-started")]
@@ -88,20 +129,10 @@ public sealed class ProgramsControllerTests
 
     private static async Task<ProgramOffering> SeedFullOfferingAsync(
         GraduateAppDbContext db,
-        bool usesEvaluationWorkflow)
+        bool usesEvaluationWorkflow,
+        DocumentRequirementScenario documentRequirementScenario = DocumentRequirementScenario.ActiveRequired,
+        bool includeSubmittedApplication = true)
     {
-        var student = new Student
-        {
-            Tc = "10000000146",
-            PublicId = Guid.NewGuid(),
-            StudentName = "Test",
-            StudentSurname = "Öğrenci",
-            Email = "student@example.test",
-            NormalizedEmail = "STUDENT@EXAMPLE.TEST",
-            PasswordHash = "hash",
-            SecurityStamp = Guid.NewGuid().ToString("N"),
-            IsActive = true
-        };
         var offering = new ProgramOffering
         {
             Program = new GraduateApp.API.Models.Program
@@ -123,18 +154,68 @@ public sealed class ProgramsControllerTests
             IsOpen = true,
             UsesEvaluationWorkflow = usesEvaluationWorkflow
         };
-        offering.Applications.Add(new Application
+
+        if (documentRequirementScenario != DocumentRequirementScenario.None)
         {
-            PublicId = Guid.NewGuid(),
-            Tc = student.Tc,
-            TcNavigation = student,
-            ApplicationDate = Now.UtcDateTime,
-            CurrentStatus = ApplicationStatus.Pending.ToString(),
-            UsesDocumentWorkflow = true,
-            UsesEvaluationWorkflow = usesEvaluationWorkflow
-        });
+            offering.DocumentRequirements.Add(DocumentRequirement(
+                isRequired: documentRequirementScenario is DocumentRequirementScenario.InactiveRequired
+                    or DocumentRequirementScenario.ActiveRequired,
+                isActive: documentRequirementScenario is DocumentRequirementScenario.ActiveOptional
+                    or DocumentRequirementScenario.ActiveRequired));
+        }
+
+        if (includeSubmittedApplication)
+        {
+            var student = new Student
+            {
+                Tc = "10000000146",
+                PublicId = Guid.NewGuid(),
+                StudentName = "Test",
+                StudentSurname = "Öğrenci",
+                Email = "student@example.test",
+                NormalizedEmail = "STUDENT@EXAMPLE.TEST",
+                PasswordHash = "hash",
+                SecurityStamp = Guid.NewGuid().ToString("N"),
+                IsActive = true
+            };
+            offering.Applications.Add(new Application
+            {
+                PublicId = Guid.NewGuid(),
+                Tc = student.Tc,
+                TcNavigation = student,
+                ApplicationDate = Now.UtcDateTime,
+                CurrentStatus = ApplicationStatus.Pending.ToString(),
+                UsesDocumentWorkflow = true,
+                UsesEvaluationWorkflow = usesEvaluationWorkflow
+            });
+        }
+
         db.ProgramOfferings.Add(offering);
         await db.SaveChangesAsync();
         return offering;
+    }
+
+    private static ProgramOfferingDocumentRequirement DocumentRequirement(
+        bool isRequired,
+        bool isActive) => new()
+        {
+            PublicId = Guid.NewGuid(),
+            DocumentCode = "DOC",
+            NormalizedDocumentCode = "DOC",
+            DisplayName = "Başvuru belgesi",
+            IsRequired = isRequired,
+            IsActive = isActive,
+            AllowedContentCategory = DocumentContentCategory.PdfOnly,
+            MaximumBytes = 1024,
+            CreatedAtUtc = Now.UtcDateTime,
+            UpdatedAtUtc = Now.UtcDateTime
+        };
+
+    public enum DocumentRequirementScenario
+    {
+        None,
+        ActiveOptional,
+        InactiveRequired,
+        ActiveRequired
     }
 }

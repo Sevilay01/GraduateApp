@@ -210,6 +210,199 @@ public sealed class OfferingDocumentRequirementServiceTests
         Assert.True(db.ProgramOfferingDocumentRequirements.Single(item => item.PublicId == diploma.Value!.PublicId).IsActive);
     }
 
+    [Theory]
+    [InlineData(OfferingEvaluationState.Finalized)]
+    [InlineData(OfferingEvaluationState.Published)]
+    public async Task Finalized_or_published_evaluation_offering_rejects_all_requirement_mutations_without_changes(
+        OfferingEvaluationState state)
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        var service = CreateService(db);
+        var active = await service.CreateAsync(
+            offering.ProgramOfferingId,
+            1,
+            Request("TRANSCRIPT"),
+            CancellationToken.None);
+        var inactive = await service.CreateAsync(
+            offering.ProgramOfferingId,
+            1,
+            Request("DIPLOMA"),
+            CancellationToken.None);
+        var deactivated = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            inactive.Value!.PublicId,
+            1,
+            new DocumentRequirementActiveDto
+            {
+                IsActive = false,
+                RowVersion = inactive.Value.RowVersion
+            },
+            CancellationToken.None);
+        Assert.True(active.IsSuccess);
+        Assert.True(deactivated.IsSuccess);
+
+        var finalizedAt = new DateTime(2026, 7, 18, 9, 0, 0, DateTimeKind.Utc);
+        offering.UsesEvaluationWorkflow = true;
+        offering.EvaluationState = state;
+        offering.EvaluationFinalizedAtUtc = finalizedAt;
+        offering.ResultsPublishedAtUtc = state == OfferingEvaluationState.Published
+            ? finalizedAt.AddHours(1)
+            : null;
+        await db.SaveChangesAsync();
+        var offeringUpdatedAt = offering.UpdatedAtUtc;
+        var offeringRowVersion = offering.RowVersion.ToArray();
+        var auditCount = await db.SecurityAuditLogs.CountAsync();
+
+        var createResult = await service.CreateAsync(
+            offering.ProgramOfferingId,
+            1,
+            Request("REFERENCE"),
+            CancellationToken.None);
+        var updateResult = await service.UpdateAsync(
+            offering.ProgramOfferingId,
+            active.Value!.PublicId,
+            1,
+            new OfferingDocumentRequirementUpdateDto
+            {
+                DocumentCode = active.Value.DocumentCode,
+                DisplayName = "Değiştirilmiş transkript",
+                Description = active.Value.Description,
+                IsRequired = active.Value.IsRequired,
+                AllowedContentCategory = active.Value.AllowedContentCategory,
+                MaximumBytes = active.Value.MaximumBytes,
+                RowVersion = active.Value.RowVersion
+            },
+            CancellationToken.None);
+        var activateResult = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            inactive.Value.PublicId,
+            1,
+            new DocumentRequirementActiveDto
+            {
+                IsActive = true,
+                RowVersion = deactivated.Value!.RowVersion
+            },
+            CancellationToken.None);
+        var deactivateResult = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            active.Value.PublicId,
+            1,
+            new DocumentRequirementActiveDto
+            {
+                IsActive = false,
+                RowVersion = active.Value.RowVersion
+            },
+            CancellationToken.None);
+
+        foreach (var result in new[] { createResult, updateResult, activateResult, deactivateResult })
+        {
+            Assert.False(result.IsSuccess);
+            Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+            Assert.Equal(
+                "Kesinleştirilmiş veya yayımlanmış bir ilanın belge koşulları değiştirilemez.",
+                result.Error);
+        }
+
+        db.ChangeTracker.Clear();
+        var persistedOffering = await db.ProgramOfferings.AsNoTracking().SingleAsync();
+        var persistedRequirements = await db.ProgramOfferingDocumentRequirements
+            .AsNoTracking()
+            .ToListAsync();
+        Assert.Equal(state, persistedOffering.EvaluationState);
+        Assert.True(persistedOffering.UsesEvaluationWorkflow);
+        Assert.Equal(finalizedAt, persistedOffering.EvaluationFinalizedAtUtc);
+        Assert.Equal(offering.ResultsPublishedAtUtc, persistedOffering.ResultsPublishedAtUtc);
+        Assert.Equal(offeringUpdatedAt, persistedOffering.UpdatedAtUtc);
+        Assert.Equal(offeringRowVersion, persistedOffering.RowVersion);
+        Assert.Equal(2, persistedRequirements.Count);
+        var persistedActive = persistedRequirements.Single(item => item.PublicId == active.Value.PublicId);
+        var persistedInactive = persistedRequirements.Single(item => item.PublicId == inactive.Value.PublicId);
+        Assert.Equal("Transkript", persistedActive.DisplayName);
+        Assert.True(persistedActive.IsActive);
+        Assert.False(persistedInactive.IsActive);
+        Assert.Equal(auditCount, await db.SecurityAuditLogs.CountAsync());
+    }
+
+    [Fact]
+    public async Task Configuring_evaluation_offering_keeps_all_requirement_mutations_available()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        offering.UsesEvaluationWorkflow = true;
+        offering.EvaluationState = OfferingEvaluationState.Configuring;
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        var created = await service.CreateAsync(
+            offering.ProgramOfferingId,
+            1,
+            Request("TRANSCRIPT"),
+            CancellationToken.None);
+        var updated = await service.UpdateAsync(
+            offering.ProgramOfferingId,
+            created.Value!.PublicId,
+            1,
+            new OfferingDocumentRequirementUpdateDto
+            {
+                DocumentCode = created.Value.DocumentCode,
+                DisplayName = "Güncel transkript",
+                Description = created.Value.Description,
+                IsRequired = created.Value.IsRequired,
+                AllowedContentCategory = created.Value.AllowedContentCategory,
+                MaximumBytes = created.Value.MaximumBytes,
+                RowVersion = created.Value.RowVersion
+            },
+            CancellationToken.None);
+        var deactivated = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            created.Value.PublicId,
+            1,
+            new DocumentRequirementActiveDto
+            {
+                IsActive = false,
+                RowVersion = updated.Value!.RowVersion
+            },
+            CancellationToken.None);
+        var activated = await service.SetActiveAsync(
+            offering.ProgramOfferingId,
+            created.Value.PublicId,
+            1,
+            new DocumentRequirementActiveDto
+            {
+                IsActive = true,
+                RowVersion = deactivated.Value!.RowVersion
+            },
+            CancellationToken.None);
+
+        Assert.True(created.IsSuccess);
+        Assert.True(updated.IsSuccess);
+        Assert.Equal("Güncel transkript", updated.Value!.DisplayName);
+        Assert.True(deactivated.IsSuccess);
+        Assert.False(deactivated.Value!.IsActive);
+        Assert.True(activated.IsSuccess);
+        Assert.True(activated.Value!.IsActive);
+    }
+
+    [Fact]
+    public async Task Non_evaluation_legacy_offering_is_not_locked_by_evaluation_state()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedOfferingAsync(db);
+        offering.UsesEvaluationWorkflow = false;
+        offering.EvaluationState = OfferingEvaluationState.Published;
+        await db.SaveChangesAsync();
+
+        var result = await CreateService(db).CreateAsync(
+            offering.ProgramOfferingId,
+            1,
+            Request("TRANSCRIPT"),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(db.ProgramOfferingDocumentRequirements);
+    }
+
     private static OfferingDocumentRequirementService CreateService(GraduateAppDbContext db) => new(
         db,
         new TestTimeProvider(new DateTimeOffset(2026, 7, 17, 9, 0, 0, TimeSpan.Zero)),

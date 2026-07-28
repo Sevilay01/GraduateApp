@@ -59,6 +59,27 @@ public sealed class ProgramOfferingsController(
             : Problem(statusCode: result.StatusCode, detail: result.Error);
     }
 
+    [HttpPost("{id:int}/close-for-remediation")]
+    public async Task<IActionResult> CloseInvalidForRemediation(
+        int id,
+        ProgramOfferingRemediationCloseDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await offeringService.CloseInvalidForRemediationAsync(
+            id,
+            adminId,
+            request,
+            cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
     [HttpGet("{id:int}/document-requirements")]
     public async Task<IActionResult> GetDocumentRequirements(int id, CancellationToken cancellationToken) =>
         Ok(await documentRequirementService.GetAsync(id, cancellationToken));

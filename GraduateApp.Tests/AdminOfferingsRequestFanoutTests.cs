@@ -92,6 +92,39 @@ public sealed class AdminOfferingsRequestFanoutTests
     }
 
     [Fact]
+    public async Task Locked_evaluation_offering_loads_requirements_read_only_without_populating_an_edit_form()
+    {
+        var offerings = CreateOfferings(3);
+        var selected = offerings[1];
+        selected.UsesEvaluationWorkflow = true;
+        selected.EvaluationState = OfferingEvaluationState.Published;
+        var requirementPublicId = Guid.Parse("DC044726-758E-4C52-B028-A9AB744E3275");
+        var handler = new OfferingPageHandler(offerings);
+        using var client = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var controller = new AdminController(new GraduateApiClient(client));
+
+        var result = Assert.IsType<ViewResult>(await controller.Offerings(
+            academicYearStart: null,
+            term: null,
+            includeArchived: false,
+            requirementOfferingId: selected.ProgramOfferingId,
+            editRequirementId: requirementPublicId,
+            cancellationToken: CancellationToken.None));
+        var model = Assert.IsType<ProgramOfferingPageViewModel>(result.Model);
+
+        Assert.Equal(3, handler.Requests.Count);
+        Assert.All(handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
+        Assert.Single(model.DocumentRequirements[selected.ProgramOfferingId]);
+        Assert.Equal(selected.ProgramOfferingId, model.RequirementOfferingId);
+        Assert.Equal(0, model.DocumentRequirementForm.ProgramOfferingId);
+        Assert.Equal(Guid.Empty, model.DocumentRequirementForm.PublicId);
+        Assert.Null(model.DocumentRequirementForm.RowVersion);
+    }
+
+    [Fact]
     public async Task Invalid_requirement_offering_is_rejected_without_a_document_api_call()
     {
         var handler = new OfferingPageHandler(CreateOfferings(3));

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using GraduateApp.Web.Controllers;
 using GraduateApp.Web.Models;
 using Microsoft.AspNetCore.DataProtection;
@@ -290,16 +291,23 @@ public sealed class GraduateUiFoundationRazorTests
                     ProgramOfferingId = 7,
                     ProgramId = 11,
                     ProgramName = "<img src=x onerror=alert(1)>",
+                    InstituteName = "Fen Bilimleri Enstitüsü",
+                    DegreeType = "Doktora",
                     AcademicYear = "2026–2027",
                     TermName = "Güz",
                     ApplicationStartUtc = new DateTime(2026, 8, 1, 7, 0, 0, DateTimeKind.Utc),
                     ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
                     Quota = 10,
-                    IsOpen = false,
+                    IsOpen = true,
+                    UsesDocumentWorkflow = true,
                     UsesEvaluationWorkflow = true,
                     EvaluationState = OfferingEvaluationState.Configuring,
                     DocumentRequirementCount = 0,
+                    ActiveRequiredDocumentRequirementCount = 0,
                     HasActiveRequiredDocumentRequirement = false,
+                    DraftApplicationCount = 1,
+                    DocumentConfigurationHealth =
+                        OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts,
                     RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24="
                 },
                 new ProgramOfferingAdminViewModel
@@ -307,14 +315,41 @@ public sealed class GraduateUiFoundationRazorTests
                     ProgramOfferingId = 8,
                     ProgramId = 12,
                     ProgramName = "İstatistik",
+                    InstituteName = "Fen Bilimleri Enstitüsü",
+                    DegreeType = "Tezli Yüksek Lisans",
                     AcademicYear = "2026–2027",
                     TermName = "Bahar",
                     Quota = 8,
                     IsOpen = true,
+                    UsesDocumentWorkflow = true,
                     UsesEvaluationWorkflow = false,
                     DocumentRequirementCount = 1,
+                    ActiveRequiredDocumentRequirementCount = 1,
                     HasActiveRequiredDocumentRequirement = true,
+                    DocumentConfigurationHealth = OfferingDocumentConfigurationHealth.OpenHealthy,
                     RowVersion = "c2Vjb25kLW9mZmVyaW5nLXJvdw=="
+                },
+                new ProgramOfferingAdminViewModel
+                {
+                    ProgramOfferingId = 9,
+                    ProgramId = 12,
+                    ProgramName = "Yayımlanmış Riskli İlan",
+                    InstituteName = "Fen Bilimleri Enstitüsü",
+                    DegreeType = "Tezli Yüksek Lisans",
+                    AcademicYear = "2025–2026",
+                    TermName = "Güz",
+                    Quota = 5,
+                    IsOpen = true,
+                    UsesDocumentWorkflow = true,
+                    UsesEvaluationWorkflow = true,
+                    EvaluationState = OfferingEvaluationState.Published,
+                    DocumentRequirementCount = 0,
+                    ActiveRequiredDocumentRequirementCount = 0,
+                    HasActiveRequiredDocumentRequirement = false,
+                    SubmittedOrLaterApplicationCount = 1,
+                    DocumentConfigurationHealth =
+                        OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications,
+                    RowVersion = "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw=="
                 }
             ],
             Form = new ProgramOfferingFormViewModel
@@ -389,6 +424,31 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın", decoded, StringComparison.Ordinal);
         Assert.Contains("Toplam ağırlık 10.000 bp", decoded, StringComparison.Ordinal);
         Assert.Contains("Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler", decoded, StringComparison.Ordinal);
+        Assert.Contains("İlan yapılandırma sağlığı", decoded, StringComparison.Ordinal);
+        Assert.Contains("data-health-category=\"D\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-health-category=\"E\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-remediation-close-form", html, StringComparison.Ordinal);
+        Assert.Contains("CloseInvalidOfferingForRemediation", html, StringComparison.Ordinal);
+        Assert.Contains("Kapat ve manuel incelemeye al", decoded, StringComparison.Ordinal);
+        Assert.Contains("Kesinleştirilmiş veya yayımlanmış değerlendirme", decoded, StringComparison.Ordinal);
+        Assert.Contains(
+            "Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.",
+            decoded,
+            StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("requirementOfferingId=9", decoded, StringComparison.Ordinal);
+        Assert.DoesNotContain("editId=9", decoded, StringComparison.Ordinal);
+        Assert.Contains("Belge koşullarını yapılandır", decoded, StringComparison.Ordinal);
+        Assert.Contains(
+            "Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez",
+            decoded,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Belge koşullarını, ilgili enstitünün güncel ilan kılavuzuna göre tanımlayın",
+            decoded,
+            StringComparison.Ordinal);
+        Assert.Contains("sosyalbilimler.cu.edu.tr", html, StringComparison.Ordinal);
+        Assert.Contains("iso.cu.edu.tr", html, StringComparison.Ordinal);
         Assert.Contains("data-selected-requirement-offering", html, StringComparison.Ordinal);
         Assert.Contains("Seçili ilan · #8", decoded, StringComparison.Ordinal);
         Assert.Contains("requirementOfferingId=8", decoded, StringComparison.Ordinal);
@@ -403,6 +463,95 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.DoesNotContain("<img src=x", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html, StringComparison.Ordinal);
 
+        var remediationForms = Regex.Matches(
+            html,
+            "<form\\b[^>]*data-remediation-close-form[^>]*>.*?</form>",
+            RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        var publishedRemediationForm = Assert.Single(
+            remediationForms.Cast<Match>(),
+            match => match.Value.Contains(
+                "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==",
+                StringComparison.Ordinal))
+            .Value;
+        Assert.Contains("method=\"post\"", publishedRemediationForm, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CloseInvalidOfferingForRemediation", publishedRemediationForm, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", publishedRemediationForm, StringComparison.Ordinal);
+        var remediationFieldNames = Regex.Matches(
+                publishedRemediationForm,
+                "name=\"([^\"]+)\"",
+                RegexOptions.CultureInvariant)
+            .Select(match => match.Groups[1].Value)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.True(remediationFieldNames.SetEquals(
+        [
+            "programOfferingId",
+            "rowVersion",
+            "academicYearStart",
+            "term",
+            "includeArchived",
+            "__RequestVerificationToken"
+        ]));
+
+        var editableRequirements = model.DocumentRequirements[8];
+        model.RequirementOfferingId = 9;
+        model.DocumentRequirements =
+            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
+            {
+                [9] =
+                [
+                    new OfferingDocumentRequirementViewModel
+                    {
+                        PublicId = Guid.Parse("F03B23D5-4B41-4A57-B99D-5DF2B3799C86"),
+                        DocumentCode = "HISTORICAL",
+                        DisplayName = "Tarihsel belge",
+                        IsRequired = true,
+                        IsActive = true,
+                        AllowedContentCategory = DocumentContentCategory.PdfOnly,
+                        MaximumBytes = 1024,
+                        RowVersion = "bG9ja2VkLXJlcXVpcmVtZW50"
+                    }
+                ]
+            };
+        model.DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
+        {
+            ProgramOfferingId = 9,
+            PublicId = Guid.Parse("F03B23D5-4B41-4A57-B99D-5DF2B3799C86"),
+            DocumentCode = "HISTORICAL",
+            DisplayName = "Tarihsel belge",
+            MaximumBytes = 1024,
+            RowVersion = "bG9ja2VkLXJlcXVpcmVtZW50"
+        };
+        var lockedRequirementHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Offerings",
+            model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var decodedLockedRequirementHtml = WebUtility.HtmlDecode(lockedRequirementHtml);
+
+        Assert.Contains("data-document-requirements-read-only", lockedRequirementHtml, StringComparison.Ordinal);
+        Assert.Contains(
+            "Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.",
+            decodedLockedRequirementHtml,
+            StringComparison.Ordinal);
+        Assert.Contains("HISTORICAL", decodedLockedRequirementHtml, StringComparison.Ordinal);
+        Assert.Contains("Salt okunur", decodedLockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("SaveDocumentRequirement", lockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetDocumentRequirementActive", lockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("editRequirementId", decodedLockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("requirementOfferingId=9", decodedLockedRequirementHtml, StringComparison.Ordinal);
+
+        model.RequirementOfferingId = 8;
+        model.DocumentRequirements =
+            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
+            {
+                [8] = editableRequirements
+            };
+        model.DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
+        {
+            ProgramOfferingId = 8,
+            MaximumBytes = 5 * 1024 * 1024
+        };
         model.Form.ProgramOfferingId = 7;
         model.Form.RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24=";
         model.AutoFocusTarget = "offering-form-heading";

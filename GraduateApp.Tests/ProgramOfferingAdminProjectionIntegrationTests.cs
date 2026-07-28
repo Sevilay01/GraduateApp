@@ -36,6 +36,8 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
             "[ProgramOfferingDocumentRequirements]",
             commandText,
             StringComparison.Ordinal);
+        Assert.Contains("[Applications]", commandText, StringComparison.Ordinal);
+        Assert.Contains("[CurrentStatus]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[DocumentCode]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[DisplayName]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[MaximumBytes]", commandText, StringComparison.Ordinal);
@@ -64,18 +66,32 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
             new TestTimeProvider(new DateTimeOffset(2026, 7, 27, 9, 0, 0, TimeSpan.Zero)));
 
         var result = await service.GetForAdminAsync(
-            academicYearStart: 2026,
+            academicYearStart: null,
             term: null,
             includeArchived: false,
             CancellationToken.None);
 
         var summaries = result.ToDictionary(item => item.ProgramName, StringComparer.Ordinal);
-        Assert.Equal(5, summaries.Count);
-        AssertSummary(summaries["Zero Requirements"], expectedCount: 0, expectedActiveRequired: false);
-        AssertSummary(summaries["One Inactive Required"], expectedCount: 1, expectedActiveRequired: false);
-        AssertSummary(summaries["One Active Optional"], expectedCount: 1, expectedActiveRequired: false);
-        AssertSummary(summaries["One Active Required"], expectedCount: 1, expectedActiveRequired: true);
-        AssertSummary(summaries["Many Requirements"], expectedCount: 3, expectedActiveRequired: true);
+        Assert.Equal(8, summaries.Count);
+        AssertSummary(summaries["Zero Requirements"], expectedCount: 0, expectedActiveRequiredCount: 0);
+        AssertSummary(summaries["One Inactive Required"], expectedCount: 1, expectedActiveRequiredCount: 0);
+        AssertSummary(summaries["One Active Optional"], expectedCount: 1, expectedActiveRequiredCount: 0);
+        AssertSummary(summaries["One Active Required"], expectedCount: 1, expectedActiveRequiredCount: 1);
+        AssertSummary(summaries["Many Requirements"], expectedCount: 4, expectedActiveRequiredCount: 2);
+        Assert.Equal(
+            GraduateApp.API.DTOs.OfferingDocumentConfigurationHealth.OpenInvalidNoApplications,
+            summaries["Zero Requirements"].DocumentConfigurationHealth);
+        Assert.Equal(
+            GraduateApp.API.DTOs.OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts,
+            summaries["With Draft"].DocumentConfigurationHealth);
+        Assert.Equal(1, summaries["With Draft"].DraftApplicationCount);
+        Assert.Equal(
+            GraduateApp.API.DTOs.OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications,
+            summaries["With Submitted"].DocumentConfigurationHealth);
+        Assert.Equal(1, summaries["With Submitted"].SubmittedOrLaterApplicationCount);
+        Assert.Equal(
+            GraduateApp.API.DTOs.OfferingDocumentConfigurationHealth.LegacyOutsideDocumentWorkflow,
+            summaries["Legacy Offering"].DocumentConfigurationHealth);
 
         var commandText = Assert.Single(commands.CommandTexts);
         Assert.Contains("COUNT(*)", commandText, StringComparison.OrdinalIgnoreCase);
@@ -84,6 +100,7 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
             "[ProgramOfferingDocumentRequirements]",
             commandText,
             StringComparison.Ordinal);
+        Assert.Contains("[Applications]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[DocumentCode]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[DisplayName]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[MaximumBytes]", commandText, StringComparison.Ordinal);
@@ -92,10 +109,11 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
     private static void AssertSummary(
         GraduateApp.API.DTOs.ProgramOfferingAdminDto summary,
         int expectedCount,
-        bool expectedActiveRequired)
+        int expectedActiveRequiredCount)
     {
         Assert.Equal(expectedCount, summary.DocumentRequirementCount);
-        Assert.Equal(expectedActiveRequired, summary.HasActiveRequiredDocumentRequirement);
+        Assert.Equal(expectedActiveRequiredCount > 0, summary.HasActiveRequiredDocumentRequirement);
+        Assert.Equal(expectedActiveRequiredCount, summary.ActiveRequiredDocumentRequirementCount);
     }
 
     private static async Task SeedAsync(string connectionString)
@@ -112,6 +130,18 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
             CreatedAtUtc = now,
             UpdatedAtUtc = now
         };
+        var student = CreateStudent("10000000146");
+        var secondStudent = CreateStudent("10000000147");
+        var withDraft = CreateProgram(institute, "With Draft", now);
+        withDraft.Offerings.Single().Applications.Add(
+            CreateApplication(student, ApplicationStatus.Draft, now));
+        var withSubmitted = CreateProgram(institute, "With Submitted", now);
+        withSubmitted.Offerings.Single().Applications.Add(
+            CreateApplication(secondStudent, ApplicationStatus.Pending, now));
+        var legacy = CreateProgram(institute, "Legacy Offering", now);
+        legacy.Offerings.Single().AcademicYearStart = 0;
+        legacy.Offerings.Single().Term = AcademicTerm.LegacyUnspecified;
+        db.Students.AddRange(student, secondStudent);
         db.Programs.AddRange(
             CreateProgram(institute, "Zero Requirements", now),
             CreateProgram(institute, "One Inactive Required", now, (true, false)),
@@ -123,7 +153,11 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
                 now,
                 (true, false),
                 (false, true),
-                (true, true)));
+                (true, true),
+                (true, true)),
+            withDraft,
+            withSubmitted,
+            legacy);
         await db.SaveChangesAsync();
     }
 
@@ -150,7 +184,7 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
             ApplicationStartUtc = new DateTime(2026, 8, 1, 9, 0, 0, DateTimeKind.Utc),
             ApplicationDeadlineUtc = new DateTime(2026, 8, 31, 17, 0, 0, DateTimeKind.Utc),
             Quota = 10,
-            IsOpen = false,
+            IsOpen = true,
             IsArchived = false,
             CreatedAtUtc = now,
             UpdatedAtUtc = now
@@ -176,6 +210,32 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
         program.Offerings.Add(offering);
         return program;
     }
+
+    private static Student CreateStudent(string tc) => new()
+    {
+        Tc = tc,
+        PublicId = Guid.NewGuid(),
+        StudentName = "Test",
+        StudentSurname = "Öğrenci",
+        Email = $"{tc}@example.test",
+        NormalizedEmail = $"{tc}@EXAMPLE.TEST",
+        PasswordHash = "hash",
+        SecurityStamp = Guid.NewGuid().ToString("N"),
+        IsActive = true
+    };
+
+    private static Application CreateApplication(
+        Student student,
+        ApplicationStatus status,
+        DateTime now) => new()
+        {
+            PublicId = Guid.NewGuid(),
+            Tc = student.Tc,
+            TcNavigation = student,
+            ApplicationDate = now,
+            CurrentStatus = status.ToString(),
+            UsesDocumentWorkflow = true
+        };
 
     private sealed class ReaderCommandRecorder : DbCommandInterceptor
     {

@@ -238,6 +238,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var selectedRequirementOffering = requirementOfferingId.HasValue
             ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == requirementOfferingId.Value)
             : null;
+        var canEditSelectedRequirements = selectedRequirementOffering is not null
+            && (!selectedRequirementOffering.UsesEvaluationWorkflow
+                || selectedRequirementOffering.EvaluationState == OfferingEvaluationState.Configuring);
         var requirementResults =
             new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>();
         string? documentRequirementError = null;
@@ -270,7 +273,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         }
 
         OfferingDocumentRequirementViewModel? selectedRequirement = null;
-        if (selectedRequirementOffering is not null && editRequirementId.HasValue
+        if (canEditSelectedRequirements && selectedRequirementOffering is not null && editRequirementId.HasValue
             && requirementResults.TryGetValue(
                 selectedRequirementOffering.ProgramOfferingId,
                 out var offeringRequirements))
@@ -298,7 +301,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                     : null,
             DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
             {
-                ProgramOfferingId = selectedRequirementOffering?.ProgramOfferingId ?? 0,
+                ProgramOfferingId = canEditSelectedRequirements
+                    ? selectedRequirementOffering?.ProgramOfferingId ?? 0
+                    : 0,
                 PublicId = selectedRequirement?.PublicId ?? Guid.Empty,
                 DocumentCode = selectedRequirement?.DocumentCode ?? string.Empty,
                 DisplayName = selectedRequirement?.DisplayName ?? string.Empty,
@@ -367,6 +372,40 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 editId = savedOfferingId
             },
             fragment: "offering-form");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CloseInvalidOfferingForRemediation(
+        int programOfferingId,
+        string rowVersion,
+        int? academicYearStart,
+        AcademicTerm? term,
+        bool includeArchived,
+        CancellationToken cancellationToken)
+    {
+        if (programOfferingId <= 0 || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "İlan kapatma bilgisi geçersiz. Sayfayı yenileyiniz.";
+            return RedirectToAction(
+                nameof(Offerings),
+                controllerName: null,
+                routeValues: new { academicYearStart, term, includeArchived },
+                fragment: "offering-configuration-health");
+        }
+
+        var result = await apiClient.CloseInvalidProgramOfferingForRemediationAsync(
+            programOfferingId,
+            rowVersion,
+            cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Geçersiz açık ilan güvenli biçimde kapatıldı. Mevcut başvuru ve sonuçlar değiştirilmedi."
+            : result.Error ?? "İlan güvenli düzeltme için kapatılamadı.";
+        return RedirectToAction(
+            nameof(Offerings),
+            controllerName: null,
+            routeValues: new { academicYearStart, term, includeArchived },
+            fragment: "offering-configuration-health");
     }
 
     [HttpPost]

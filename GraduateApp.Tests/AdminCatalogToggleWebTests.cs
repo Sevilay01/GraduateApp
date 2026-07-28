@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using GraduateApp.Web.Controllers;
+using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -80,6 +81,41 @@ public sealed class AdminCatalogToggleWebTests
             "/api/admin/programs/15/deactivate",
             nameof(AdminController.Programs),
             controller => controller.DeactivateProgram(15, RowVersion, CancellationToken.None));
+
+    [Fact]
+    public async Task Remediation_close_posts_only_row_version_to_the_narrow_endpoint()
+    {
+        var handler = new ToggleHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var controller = new AdminController(new GraduateApiClient(httpClient))
+        {
+            TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempDataProvider())
+        };
+
+        var result = Assert.IsType<RedirectToActionResult>(
+            await controller.CloseInvalidOfferingForRemediation(
+                programOfferingId: 15,
+                rowVersion: RowVersion,
+                academicYearStart: 2026,
+                term: AcademicTerm.Fall,
+                includeArchived: true,
+                cancellationToken: CancellationToken.None));
+
+        Assert.Equal(nameof(AdminController.Offerings), result.ActionName);
+        Assert.Equal("offering-configuration-health", result.Fragment);
+        Assert.Equal(2026, result.RouteValues!["academicYearStart"]);
+        Assert.Equal(AcademicTerm.Fall, result.RouteValues["term"]);
+        Assert.Equal(true, result.RouteValues["includeArchived"]);
+        Assert.Equal(HttpMethod.Post, handler.Method);
+        Assert.Equal("/api/program-offerings/15/close-for-remediation", handler.RequestUri!.AbsolutePath);
+        using var body = JsonDocument.Parse(handler.RequestBody);
+        var property = Assert.Single(body.RootElement.EnumerateObject());
+        Assert.Equal("rowVersion", property.Name);
+        Assert.Equal(RowVersion, property.Value.GetString());
+    }
 
     private static async Task AssertFixedToggleAsync(
         string actionName,
