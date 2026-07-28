@@ -82,6 +82,53 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task Public_and_student_program_discovery_forms_preserve_filters_and_render_filtered_empty_state()
+    {
+        using var host = CreateWebHost();
+        var filter = new OpenProgramSearchViewModel
+        {
+            Search = "<Bilgisayar>",
+            AcademicYearStart = 2026,
+            Term = AcademicTerm.Fall
+        };
+        var homeHtml = await RenderMainViewAsync(
+            host.Services,
+            "Home",
+            "Index",
+            new HomeViewModel
+            {
+                ProgramSearch = filter
+            });
+        var panelHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "Index",
+            new PanelDashboardViewModel
+            {
+                ProgramSearch = filter
+            },
+            AuthenticatedUser("Student", "Öğrenci"));
+
+        foreach (var html in new[] { homeHtml, panelHtml })
+        {
+            Assert.Contains("role=\"search\"", html, StringComparison.Ordinal);
+            Assert.Contains("method=\"get\"", html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("name=\"search\"", html, StringComparison.Ordinal);
+            Assert.Contains("name=\"academicYearStart\"", html, StringComparison.Ordinal);
+            Assert.Contains("name=\"term\"", html, StringComparison.Ordinal);
+            Assert.Contains("value=\"2026\"", html, StringComparison.Ordinal);
+            Assert.Contains("value=\"Fall\" selected", html, StringComparison.Ordinal);
+            Assert.Contains("&lt;Bilgisayar&gt;", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("value=\"<Bilgisayar>\"", html, StringComparison.Ordinal);
+            Assert.Contains("Filtreleri temizle", html, StringComparison.Ordinal);
+            Assert.Contains(
+                "Arama ölçütlerine uygun açık program bulunamadı",
+                html,
+                StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
     public async Task Student_layout_and_panel_render_role_navigation_post_forms_and_antiforgery()
     {
         using var host = CreateWebHost();
