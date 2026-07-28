@@ -76,6 +76,29 @@ public sealed class GraduateApiClientTests
     }
 
     [Fact]
+    public async Task Open_program_search_encodes_all_filters_in_query_string()
+    {
+        var handler = new CaptureHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        await client.GetOpenProgramsAsync(
+            " data & science ",
+            2026,
+            AcademicTerm.Fall,
+            CancellationToken.None);
+
+        Assert.Equal(HttpMethod.Get, handler.Method);
+        Assert.Equal(
+            "/api/programs/open?search=data%20%26%20science&academicYearStart=2026&term=Fall",
+            handler.RequestUri?.PathAndQuery);
+        Assert.Null(handler.RequestBody);
+    }
+
+    [Fact]
     public async Task FailedApiResponse_IsHandledWithoutDeserializingDomainPayload()
     {
         using var httpClient = new HttpClient(new StubHandler(new HttpResponseMessage(HttpStatusCode.InternalServerError)
