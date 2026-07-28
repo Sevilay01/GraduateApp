@@ -2,6 +2,52 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GraduateApp.Web.Models;
 
+public sealed class OpenProgramSearchViewModel : IValidatableObject
+{
+    public const int MaximumSearchLength = 100;
+
+    [StringLength(
+        MaximumSearchLength,
+        ErrorMessage = "Arama metni en fazla 100 karakter olabilir.")]
+    [Display(Name = "Program arama")]
+    public string? Search { get; set; }
+
+    [Range(
+        2000,
+        2200,
+        ErrorMessage = "Akademik yıl 2000 ile 2200 arasında olmalıdır.")]
+    [Display(Name = "Akademik yıl başlangıcı")]
+    public int? AcademicYearStart { get; set; }
+
+    [Display(Name = "Dönem")]
+    public AcademicTerm? Term { get; set; }
+
+    public bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(Search)
+        || AcademicYearStart.HasValue
+        || Term.HasValue;
+
+    public static OpenProgramSearchViewModel From(
+        string? search,
+        int? academicYearStart,
+        AcademicTerm? term) => new()
+        {
+            Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+            AcademicYearStart = academicYearStart,
+            Term = term
+        };
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Term.HasValue && !AcademicTermDisplayExtensions.OfferingValues.Contains(Term.Value))
+        {
+            yield return new ValidationResult(
+                "Geçerli bir akademik dönem seçiniz.",
+                [nameof(Term)]);
+        }
+    }
+}
+
 public sealed class ProgramViewModel
 {
     public int ProgramOfferingId { get; set; }
@@ -144,6 +190,7 @@ public static class DocumentPresentation
 
 public sealed class PanelDashboardViewModel
 {
+    public OpenProgramSearchViewModel ProgramSearch { get; set; } = new();
     public IReadOnlyList<ProgramViewModel> OpenPrograms { get; set; } = [];
     public IReadOnlyList<PanelApplicationViewModel> Applications { get; set; } = [];
     public string? ErrorMessage { get; set; }
@@ -151,6 +198,7 @@ public sealed class PanelDashboardViewModel
 
 public sealed class HomeViewModel
 {
+    public OpenProgramSearchViewModel ProgramSearch { get; set; } = new();
     public IReadOnlyList<ProgramViewModel> OpenPrograms { get; set; } = [];
     public string? ErrorMessage { get; set; }
 }

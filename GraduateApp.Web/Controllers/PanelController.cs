@@ -11,16 +11,39 @@ namespace GraduateApp.Web.Controllers;
 public sealed class PanelController(GraduateApiClient apiClient) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        string? search,
+        int? academicYearStart,
+        AcademicTerm? term,
+        CancellationToken cancellationToken)
     {
-        var programsTask = apiClient.GetOpenProgramsAsync(cancellationToken);
+        var programSearch = OpenProgramSearchViewModel.From(search, academicYearStart, term);
         var applicationsTask = apiClient.GetMyApplicationsAsync(cancellationToken);
+        if (!TryValidateModel(programSearch, nameof(PanelDashboardViewModel.ProgramSearch)))
+        {
+            var invalidSearchApplications = await applicationsTask;
+            return View(new PanelDashboardViewModel
+            {
+                ProgramSearch = programSearch,
+                Applications = invalidSearchApplications.Value ?? [],
+                ErrorMessage = invalidSearchApplications.IsSuccess
+                    ? null
+                    : invalidSearchApplications.Error ?? "Başvurular yüklenemedi."
+            });
+        }
+
+        var programsTask = apiClient.GetOpenProgramsAsync(
+            programSearch.Search,
+            programSearch.AcademicYearStart,
+            programSearch.Term,
+            cancellationToken);
         await Task.WhenAll(programsTask, applicationsTask);
         var programs = await programsTask;
         var applications = await applicationsTask;
 
         return View(new PanelDashboardViewModel
         {
+            ProgramSearch = programSearch,
             OpenPrograms = programs.Value ?? [],
             Applications = applications.Value ?? [],
             ErrorMessage = programs.IsSuccess && applications.IsSuccess
@@ -28,6 +51,10 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                 : programs.Error ?? applications.Error ?? "Panel bilgileri yüklenemedi."
         });
     }
+
+    [NonAction]
+    public Task<IActionResult> Index(CancellationToken cancellationToken) =>
+        Index(null, null, null, cancellationToken);
 
     [HttpPost]
     [ValidateAntiForgeryToken]

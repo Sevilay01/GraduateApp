@@ -1,6 +1,25 @@
+using System.ComponentModel.DataAnnotations;
 using GraduateApp.API.Domain;
 
 namespace GraduateApp.API.DTOs;
+
+public sealed class OpenProgramSearchQueryDto
+{
+    public const int MaximumSearchLength = 100;
+
+    [StringLength(
+        MaximumSearchLength,
+        ErrorMessage = "Arama metni en fazla 100 karakter olabilir.")]
+    public string? Search { get; init; }
+
+    [Range(
+        2000,
+        2200,
+        ErrorMessage = "Akademik yıl 2000 ile 2200 arasında olmalıdır.")]
+    public int? AcademicYearStart { get; init; }
+
+    public AcademicTerm? Term { get; init; }
+}
 
 public sealed record OpenProgramDto(
     int ProgramOfferingId,

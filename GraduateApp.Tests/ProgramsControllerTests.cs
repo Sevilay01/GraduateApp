@@ -2,6 +2,7 @@ using GraduateApp.API.Controllers;
 using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GraduateApp.Tests;
@@ -119,10 +120,107 @@ public sealed class ProgramsControllerTests
         Assert.DoesNotContain(programs, item => item.ProgramOfferingId == offering.ProgramOfferingId);
     }
 
-    private static async Task<IReadOnlyList<OpenProgramDto>> GetOpenProgramsAsync(GraduateAppDbContext db)
+
+    [Theory]
+    [InlineData("İstatistik")]
+    [InlineData("Sosyal Bilimler")]
+    [InlineData("Doktora")]
+    public async Task Open_program_search_matches_program_institute_and_degree_in_database_query(string search)
+    {
+        await using var db = TestDb.Create();
+        var expected = await SeedFullOfferingAsync(
+            db,
+            usesEvaluationWorkflow: true,
+            includeSubmittedApplication: false);
+        expected.Program.ProgramName = "İstatistik";
+        expected.Program.DegreeType = "Doktora";
+        expected.Program.Institute.InstituteName = "Sosyal Bilimler";
+
+        var other = await SeedFullOfferingAsync(
+            db,
+            usesEvaluationWorkflow: true,
+            includeSubmittedApplication: false);
+        other.Program.ProgramName = "Kimya";
+        other.Program.DegreeType = "Tezli Yüksek Lisans";
+        other.Program.Institute.InstituteName = "Fen Bilimleri";
+        await db.SaveChangesAsync();
+
+        var programs = await GetOpenProgramsAsync(db, new OpenProgramSearchQueryDto
+        {
+            Search = search
+        });
+
+        var match = Assert.Single(programs);
+        Assert.Equal(expected.ProgramOfferingId, match.ProgramOfferingId);
+    }
+
+    [Fact]
+    public async Task Open_program_search_combines_academic_year_and_term_filters()
+    {
+        await using var db = TestDb.Create();
+        var fall = await SeedFullOfferingAsync(
+            db,
+            usesEvaluationWorkflow: true,
+            includeSubmittedApplication: false);
+        var spring = await SeedFullOfferingAsync(
+            db,
+            usesEvaluationWorkflow: true,
+            includeSubmittedApplication: false);
+        spring.AcademicYearStart = 2027;
+        spring.Term = AcademicTerm.Spring;
+        await db.SaveChangesAsync();
+
+        var programs = await GetOpenProgramsAsync(db, new OpenProgramSearchQueryDto
+        {
+            AcademicYearStart = 2027,
+            Term = AcademicTerm.Spring
+        });
+
+        var match = Assert.Single(programs);
+        Assert.Equal(spring.ProgramOfferingId, match.ProgramOfferingId);
+        Assert.DoesNotContain(programs, item => item.ProgramOfferingId == fall.ProgramOfferingId);
+    }
+
+    [Theory]
+    [InlineData("search")]
+    [InlineData("year")]
+    [InlineData("term")]
+    public async Task Invalid_open_program_search_is_rejected_before_querying(string invalidField)
+    {
+        await using var db = TestDb.Create();
+        var request = invalidField switch
+        {
+            "search" => new OpenProgramSearchQueryDto
+            {
+                Search = new string('a', OpenProgramSearchQueryDto.MaximumSearchLength + 1)
+            },
+            "year" => new OpenProgramSearchQueryDto
+            {
+                AcademicYearStart = 1999
+            },
+            "term" => new OpenProgramSearchQueryDto
+            {
+                Term = AcademicTerm.LegacyUnspecified
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(invalidField))
+        };
+        var controller = new ProgramsController(db, new TestTimeProvider(Now));
+
+        var actionResult = await controller.GetOpen(request, CancellationToken.None);
+
+        var problem = Assert.IsType<ObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status400BadRequest, problem.StatusCode);
+        Assert.Empty(db.ProgramOfferings);
+    }
+
+    private static async Task<IReadOnlyList<OpenProgramDto>> GetOpenProgramsAsync(
+        GraduateAppDbContext db,
+        OpenProgramSearchQueryDto? request = null)
     {
         var controller = new ProgramsController(db, new TestTimeProvider(Now));
-        var actionResult = await controller.GetOpen(CancellationToken.None);
+        var actionResult = await controller.GetOpen(
+            request ?? new OpenProgramSearchQueryDto(),
+            CancellationToken.None);
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
         return Assert.IsAssignableFrom<IReadOnlyList<OpenProgramDto>>(ok.Value);
     }

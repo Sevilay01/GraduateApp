@@ -66,7 +66,35 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         PostAsync("api/auth/logout", new { }, cancellationToken);
 
     public Task<ApiResult<IReadOnlyList<ProgramViewModel>>> GetOpenProgramsAsync(CancellationToken cancellationToken) =>
-        GetAsync<IReadOnlyList<ProgramViewModel>>("api/programs/open", cancellationToken);
+        GetOpenProgramsAsync(null, null, null, cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<ProgramViewModel>>> GetOpenProgramsAsync(
+        string? search,
+        int? academicYearStart,
+        AcademicTerm? term,
+        CancellationToken cancellationToken)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        }
+
+        if (academicYearStart.HasValue)
+        {
+            query.Add($"academicYearStart={academicYearStart.Value}");
+        }
+
+        if (term.HasValue)
+        {
+            query.Add($"term={Uri.EscapeDataString(term.Value.ToString())}");
+        }
+
+        var path = query.Count == 0
+            ? "api/programs/open"
+            : $"api/programs/open?{string.Join("&", query)}";
+        return GetAsync<IReadOnlyList<ProgramViewModel>>(path, cancellationToken);
+    }
 
     public Task<ApiResult<IReadOnlyList<PanelApplicationViewModel>>> GetMyApplicationsAsync(CancellationToken cancellationToken) =>
         GetAsync<IReadOnlyList<PanelApplicationViewModel>>("api/applications/mine", cancellationToken);

@@ -13,12 +13,23 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
 {
     [HttpGet("open")]
     [AllowAnonymous]
-    public async Task<ActionResult<IReadOnlyList<OpenProgramDto>>> GetOpen(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<OpenProgramDto>>> GetOpen(
+        [FromQuery] OpenProgramSearchQueryDto request,
+        CancellationToken cancellationToken)
     {
+        var validationProblem = ValidateSearch(request);
+        if (validationProblem is not null)
+        {
+            return validationProblem;
+        }
+
+        var search = string.IsNullOrWhiteSpace(request.Search)
+            ? null
+            : request.Search.Trim();
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var draft = ApplicationStatus.Draft.ToString();
         var withdrawn = ApplicationStatus.Withdrawn.ToString();
-        var offerings = await dbContext.ProgramOfferings.AsNoTracking()
+        var query = dbContext.ProgramOfferings.AsNoTracking()
             .Where(item => item.Program.IsActive
                 && item.Program.Institute.IsActive
                 && item.IsOpen
@@ -32,7 +43,27 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
                     || item.DocumentRequirements.Any(requirement =>
                         requirement.IsActive && requirement.IsRequired))
                 && (item.UsesEvaluationWorkflow
-                    || item.Applications.Count(application => application.CurrentStatus != withdrawn && application.CurrentStatus != draft) < item.Quota))
+                    || item.Applications.Count(application => application.CurrentStatus != withdrawn && application.CurrentStatus != draft) < item.Quota));
+
+        if (search is not null)
+        {
+            query = query.Where(item =>
+                item.Program.ProgramName.Contains(search)
+                || item.Program.Institute.InstituteName.Contains(search)
+                || (item.Program.DegreeType != null && item.Program.DegreeType.Contains(search)));
+        }
+
+        if (request.AcademicYearStart.HasValue)
+        {
+            query = query.Where(item => item.AcademicYearStart == request.AcademicYearStart.Value);
+        }
+
+        if (request.Term.HasValue)
+        {
+            query = query.Where(item => item.Term == request.Term.Value);
+        }
+
+        var offerings = await query
             .OrderBy(item => item.Program.Institute.InstituteName)
             .ThenBy(item => item.Program.ProgramName)
             .ThenBy(item => item.Program.DegreeType)
@@ -66,5 +97,34 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
                         requirement.IsRequired))
                     .ToArray()))
             .ToArray());
+    }
+
+    private ActionResult<IReadOnlyList<OpenProgramDto>>? ValidateSearch(OpenProgramSearchQueryDto request)
+    {
+        if (request.Search?.Trim().Length > OpenProgramSearchQueryDto.MaximumSearchLength)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: "Arama metni en fazla 100 karakter olabilir.");
+        }
+
+        if (request.AcademicYearStart is < 2000 or > 2200)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: "Akademik yıl 2000 ile 2200 arasında olmalıdır.");
+        }
+
+        if (request.Term.HasValue
+            && request.Term is not AcademicTerm.Fall
+                and not AcademicTerm.Spring
+                and not AcademicTerm.Summer)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: "Geçerli bir akademik dönem seçiniz.");
+        }
+
+        return null;
     }
 }
