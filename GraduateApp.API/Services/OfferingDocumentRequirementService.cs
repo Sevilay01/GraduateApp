@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text.Json;
+using GraduateApp.API.Domain;
 using GraduateApp.API.DTOs;
 using GraduateApp.API.Models;
 using Microsoft.Data.SqlClient;
@@ -77,6 +78,12 @@ public sealed class OfferingDocumentRequirementService(
         if (offering is null)
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure("İlan bulunamadı.", StatusCodes.Status404NotFound);
+        }
+
+        var lifecycleConflict = EvaluationLifecycleConflict(offering);
+        if (lifecycleConflict is not null)
+        {
+            return lifecycleConflict;
         }
 
         var validation = Validate(offering, null, request);
@@ -166,19 +173,30 @@ public sealed class OfferingDocumentRequirementService(
     {
         await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
         var offering = await LoadOfferingAggregateAsync(offeringId, cancellationToken);
-        var requirement = offering?.DocumentRequirements.SingleOrDefault(item => item.PublicId == publicId);
+        if (offering is null)
+        {
+            return NotFound();
+        }
+
+        var lifecycleConflict = EvaluationLifecycleConflict(offering);
+        if (lifecycleConflict is not null)
+        {
+            return lifecycleConflict;
+        }
+
+        var requirement = offering.DocumentRequirements.SingleOrDefault(item => item.PublicId == publicId);
         if (requirement is null)
         {
             return NotFound();
         }
 
-        var validation = Validate(offering!, requirement.RequirementId, request);
+        var validation = Validate(offering, requirement.RequirementId, request);
         if (validation is not null)
         {
             return ServiceResult<OfferingDocumentRequirementDto>.Failure(validation.Value.Message, validation.Value.StatusCode);
         }
 
-        if (offering!.IsOpen
+        if (offering.IsOpen
             && !offering.IsArchived
             && !HasActiveRequiredAfterChange(offering, requirement, requirement.IsActive, request.IsRequired))
         {
@@ -233,13 +251,24 @@ public sealed class OfferingDocumentRequirementService(
     {
         await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
         var offering = await LoadOfferingAggregateAsync(offeringId, cancellationToken);
-        var requirement = offering?.DocumentRequirements.SingleOrDefault(item => item.PublicId == publicId);
+        if (offering is null)
+        {
+            return NotFound();
+        }
+
+        var lifecycleConflict = EvaluationLifecycleConflict(offering);
+        if (lifecycleConflict is not null)
+        {
+            return lifecycleConflict;
+        }
+
+        var requirement = offering.DocumentRequirements.SingleOrDefault(item => item.PublicId == publicId);
         if (requirement is null)
         {
             return NotFound();
         }
 
-        if (offering!.IsOpen
+        if (offering.IsOpen
             && !offering.IsArchived
             && !HasActiveRequiredAfterChange(offering, requirement, request.IsActive, requirement.IsRequired))
         {
@@ -377,6 +406,15 @@ public sealed class OfferingDocumentRequirementService(
         ServiceResult<OfferingDocumentRequirementDto>.Failure(
             "Belge koşulu veya ilan başka bir yönetici tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
             StatusCodes.Status409Conflict);
+
+    private static ServiceResult<OfferingDocumentRequirementDto>? EvaluationLifecycleConflict(
+        ProgramOffering offering) =>
+        offering.UsesEvaluationWorkflow
+        && offering.EvaluationState != OfferingEvaluationState.Configuring
+            ? ServiceResult<OfferingDocumentRequirementDto>.Failure(
+                "Kesinleştirilmiş veya yayımlanmış bir ilanın belge koşulları değiştirilemez.",
+                StatusCodes.Status409Conflict)
+            : null;
 
     private void AddAudit(
         int adminId,

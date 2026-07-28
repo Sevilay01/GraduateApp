@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using GraduateApp.Web.Controllers;
 using GraduateApp.Web.Models;
 using Microsoft.AspNetCore.DataProtection;
@@ -430,8 +431,13 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("CloseInvalidOfferingForRemediation", html, StringComparison.Ordinal);
         Assert.Contains("Kapat ve manuel incelemeye al", decoded, StringComparison.Ordinal);
         Assert.Contains("Kesinleştirilmiş veya yayımlanmış değerlendirme", decoded, StringComparison.Ordinal);
+        Assert.Contains(
+            "Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.",
+            decoded,
+            StringComparison.Ordinal);
         Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("requirementOfferingId=9", decoded, StringComparison.Ordinal);
+        Assert.DoesNotContain("editId=9", decoded, StringComparison.Ordinal);
         Assert.Contains("Belge koşullarını yapılandır", decoded, StringComparison.Ordinal);
         Assert.Contains(
             "Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez",
@@ -457,6 +463,96 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.DoesNotContain("<img src=x", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html, StringComparison.Ordinal);
 
+        var remediationForms = Regex.Matches(
+            html,
+            "<form\\b[^>]*data-remediation-close-form[^>]*>.*?</form>",
+            RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        var publishedRemediationForm = Assert.Single(
+            remediationForms
+                .Cast<Match>()
+                .Where(match => match.Value.Contains(
+                    "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==",
+                    StringComparison.Ordinal)))
+            .Value;
+        Assert.Contains("method=\"post\"", publishedRemediationForm, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CloseInvalidOfferingForRemediation", publishedRemediationForm, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", publishedRemediationForm, StringComparison.Ordinal);
+        var remediationFieldNames = Regex.Matches(
+                publishedRemediationForm,
+                "name=\"([^\"]+)\"",
+                RegexOptions.CultureInvariant)
+            .Select(match => match.Groups[1].Value)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.True(remediationFieldNames.SetEquals(
+        [
+            "programOfferingId",
+            "rowVersion",
+            "academicYearStart",
+            "term",
+            "includeArchived",
+            "__RequestVerificationToken"
+        ]));
+
+        var editableRequirements = model.DocumentRequirements[8];
+        model.RequirementOfferingId = 9;
+        model.DocumentRequirements =
+            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
+            {
+                [9] =
+                [
+                    new OfferingDocumentRequirementViewModel
+                    {
+                        PublicId = Guid.Parse("F03B23D5-4B41-4A57-B99D-5DF2B3799C86"),
+                        DocumentCode = "HISTORICAL",
+                        DisplayName = "Tarihsel belge",
+                        IsRequired = true,
+                        IsActive = true,
+                        AllowedContentCategory = DocumentContentCategory.PdfOnly,
+                        MaximumBytes = 1024,
+                        RowVersion = "bG9ja2VkLXJlcXVpcmVtZW50"
+                    }
+                ]
+            };
+        model.DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
+        {
+            ProgramOfferingId = 9,
+            PublicId = Guid.Parse("F03B23D5-4B41-4A57-B99D-5DF2B3799C86"),
+            DocumentCode = "HISTORICAL",
+            DisplayName = "Tarihsel belge",
+            MaximumBytes = 1024,
+            RowVersion = "bG9ja2VkLXJlcXVpcmVtZW50"
+        };
+        var lockedRequirementHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Offerings",
+            model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        var decodedLockedRequirementHtml = WebUtility.HtmlDecode(lockedRequirementHtml);
+
+        Assert.Contains("data-document-requirements-read-only", lockedRequirementHtml, StringComparison.Ordinal);
+        Assert.Contains(
+            "Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.",
+            decodedLockedRequirementHtml,
+            StringComparison.Ordinal);
+        Assert.Contains("HISTORICAL", decodedLockedRequirementHtml, StringComparison.Ordinal);
+        Assert.Contains("Salt okunur", decodedLockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("SaveDocumentRequirement", lockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetDocumentRequirementActive", lockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("editRequirementId", decodedLockedRequirementHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("requirementOfferingId=9", decodedLockedRequirementHtml, StringComparison.Ordinal);
+
+        model.RequirementOfferingId = 8;
+        model.DocumentRequirements =
+            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
+            {
+                [8] = editableRequirements
+            };
+        model.DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
+        {
+            ProgramOfferingId = 8,
+            MaximumBytes = 5 * 1024 * 1024
+        };
         model.Form.ProgramOfferingId = 7;
         model.Form.RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24=";
         model.AutoFocusTarget = "offering-form-heading";

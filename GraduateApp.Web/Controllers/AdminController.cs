@@ -238,6 +238,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var selectedRequirementOffering = requirementOfferingId.HasValue
             ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == requirementOfferingId.Value)
             : null;
+        var canEditSelectedRequirements = selectedRequirementOffering is not null
+            && (!selectedRequirementOffering.UsesEvaluationWorkflow
+                || selectedRequirementOffering.EvaluationState == OfferingEvaluationState.Configuring);
         var requirementResults =
             new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>();
         string? documentRequirementError = null;
@@ -270,7 +273,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         }
 
         OfferingDocumentRequirementViewModel? selectedRequirement = null;
-        if (selectedRequirementOffering is not null && editRequirementId.HasValue
+        if (canEditSelectedRequirements && selectedRequirementOffering is not null && editRequirementId.HasValue
             && requirementResults.TryGetValue(
                 selectedRequirementOffering.ProgramOfferingId,
                 out var offeringRequirements))
@@ -298,7 +301,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                     : null,
             DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
             {
-                ProgramOfferingId = selectedRequirementOffering?.ProgramOfferingId ?? 0,
+                ProgramOfferingId = canEditSelectedRequirements
+                    ? selectedRequirementOffering?.ProgramOfferingId ?? 0
+                    : 0,
                 PublicId = selectedRequirement?.PublicId ?? Guid.Empty,
                 DocumentCode = selectedRequirement?.DocumentCode ?? string.Empty,
                 DisplayName = selectedRequirement?.DisplayName ?? string.Empty,
