@@ -371,6 +371,40 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CloseInvalidOfferingForRemediation(
+        int programOfferingId,
+        string rowVersion,
+        int? academicYearStart,
+        AcademicTerm? term,
+        bool includeArchived,
+        CancellationToken cancellationToken)
+    {
+        if (programOfferingId <= 0 || string.IsNullOrWhiteSpace(rowVersion))
+        {
+            TempData["ErrorMessage"] = "İlan kapatma bilgisi geçersiz. Sayfayı yenileyiniz.";
+            return RedirectToAction(
+                nameof(Offerings),
+                controllerName: null,
+                routeValues: new { academicYearStart, term, includeArchived },
+                fragment: "offering-configuration-health");
+        }
+
+        var result = await apiClient.CloseInvalidProgramOfferingForRemediationAsync(
+            programOfferingId,
+            rowVersion,
+            cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Geçersiz açık ilan güvenli biçimde kapatıldı. Mevcut başvuru ve sonuçlar değiştirilmedi."
+            : result.Error ?? "İlan güvenli düzeltme için kapatılamadı.";
+        return RedirectToAction(
+            nameof(Offerings),
+            controllerName: null,
+            routeValues: new { academicYearStart, term, includeArchived },
+            fragment: "offering-configuration-health");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveDocumentRequirement(
         [Bind(Prefix = "DocumentRequirementForm")] OfferingDocumentRequirementFormViewModel model,
         CancellationToken cancellationToken)

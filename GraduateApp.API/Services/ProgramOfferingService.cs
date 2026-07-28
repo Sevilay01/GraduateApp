@@ -25,6 +25,11 @@ public interface IProgramOfferingService
         int adminId,
         ProgramOfferingUpdateDto request,
         CancellationToken cancellationToken);
+    Task<ServiceResult<ProgramOfferingAdminDto>> CloseInvalidForRemediationAsync(
+        int offeringId,
+        int adminId,
+        ProgramOfferingRemediationCloseDto request,
+        CancellationToken cancellationToken);
 }
 
 public sealed class ProgramOfferingService(
@@ -198,6 +203,124 @@ public sealed class ProgramOfferingService(
                 "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
                 StatusCodes.Status409Conflict);
         }
+    }
+
+    public async Task<ServiceResult<ProgramOfferingAdminDto>> CloseInvalidForRemediationAsync(
+        int offeringId,
+        int adminId,
+        ProgramOfferingRemediationCloseDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await CloseInvalidForRemediationCoreAsync(
+                offeringId,
+                adminId,
+                request,
+                cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is not OperationCanceledException
+            && DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status409Conflict);
+        }
+    }
+
+    private async Task<ServiceResult<ProgramOfferingAdminDto>> CloseInvalidForRemediationCoreAsync(
+        int offeringId,
+        int adminId,
+        ProgramOfferingRemediationCloseDto request,
+        CancellationToken cancellationToken)
+    {
+        byte[] rowVersion;
+        try
+        {
+            rowVersion = Convert.FromBase64String(request.RowVersion);
+        }
+        catch (FormatException)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Eş zamanlılık belirteci geçersiz.",
+                StatusCodes.Status400BadRequest);
+        }
+
+        await using var transaction = await BeginConfigurationTransactionIfSupportedAsync(cancellationToken);
+        var offering = await dbContext.ProgramOfferings
+            .Include(item => item.Program).ThenInclude(item => item.Institute)
+            .Include(item => item.Applications)
+            .Include(item => item.DocumentRequirements)
+            .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
+        if (offering is null)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan bulunamadı.",
+                StatusCodes.Status404NotFound);
+        }
+
+        if (!UsesDocumentWorkflow(offering))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Legacy ilanlar bu düzeltme akışının dışındadır.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (offering.IsArchived)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "Arşivlenmiş ilan bu düzeltme akışıyla değiştirilemez.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (!offering.IsOpen)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan zaten kapalıdır.",
+                StatusCodes.Status409Conflict);
+        }
+
+        if (offering.DocumentRequirements.Any(item => item.IsActive && item.IsRequired))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan artık aktif ve zorunlu belge koşuluna sahiptir. Normal ilan yönetimini kullanın.",
+                StatusCodes.Status409Conflict);
+        }
+
+        dbContext.Entry(offering).Property(item => item.RowVersion).OriginalValue = rowVersion;
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        offering.IsOpen = false;
+        offering.UpdatedAtUtc = now;
+        AddAudit(adminId, "ProgramOfferingClosedForRemediation", offering, now);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan başka bir kullanıcı tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status409Conflict);
+        }
+        catch (DbUpdateException exception) when (
+            !DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                "İlan güvenli düzeltme için kapatılamadı.",
+                StatusCodes.Status409Conflict);
+        }
+
+        return ServiceResult<ProgramOfferingAdminDto>.Success(Map(offering));
     }
 
     private async Task<ServiceResult<ProgramOfferingAdminDto>> UpdateCoreAsync(

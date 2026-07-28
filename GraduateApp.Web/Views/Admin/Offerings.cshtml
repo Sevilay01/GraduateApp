@@ -158,6 +158,9 @@
                         OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts => "D",
                         _ => "E"
                     };
+                    var hasCompletedEvaluation = offering.UsesEvaluationWorkflow
+                        && offering.EvaluationState is OfferingEvaluationState.Finalized
+                            or OfferingEvaluationState.Published;
                     <article class="admin-item-card"
                              data-offering-health-risk
                              data-health-category="@healthGroup">
@@ -206,29 +209,54 @@
                             </div>
                         }
 
-                        <ol class="configuration-steps">
-                            <li>İlanı yeni başvurulara kapatın.</li>
-                            <li>İlgili enstitünün güncel dönem ve program kılavuzunu doğrulayın.</li>
-                            <li>Belge koşullarını mevcut güvenli admin akışından ekleyin.</li>
-                            <li>En az bir aktif ve zorunlu koşul bulunduğunu doğrulayın.</li>
-                            <li>İlanı güncel RowVersion ve API invariant kontrolleriyle yeniden açın.</li>
-                        </ol>
+                        @if (hasCompletedEvaluation)
+                        {
+                            <div class="alert alert-warning" role="note" data-completed-evaluation-remediation>
+                                Kesinleştirilmiş veya yayımlanmış değerlendirme, sonuç ve başvurular değiştirilmez.
+                                İlan yalnızca yeni başvurulara kapatılır ve manuel incelemeye alınır.
+                            </div>
+                            <ol class="configuration-steps">
+                                <li>İlanı güvenli biçimde yeni başvurulara kapatın.</li>
+                                <li>Mevcut sonuçları değiştirmeden enstitü kararı için manuel incelemeye alın.</li>
+                            </ol>
+                        }
+                        else
+                        {
+                            <ol class="configuration-steps">
+                                <li>İlanı güvenli biçimde yeni başvurulara kapatın.</li>
+                                <li>İlgili enstitünün güncel dönem ve program kılavuzunu doğrulayın.</li>
+                                <li>Belge koşullarını mevcut güvenli admin akışından ekleyin.</li>
+                                <li>En az bir aktif ve zorunlu koşul bulunduğunu doğrulayın.</li>
+                                <li>İlanı güncel RowVersion ve API invariant kontrolleriyle yeniden açın.</li>
+                            </ol>
+                        }
 
                         <div class="admin-item-card__actions">
-                            <a asp-action="Offerings"
-                               asp-route-editId="@offering.ProgramOfferingId"
-                               asp-route-academicYearStart="@Model.AcademicYearStart"
-                               asp-route-term="@Model.Term"
-                               asp-route-includeArchived="@Model.IncludeArchived"
-                               asp-fragment="offering-readiness-heading"
-                               class="btn btn-sm btn-outline-danger">İlanı kapat</a>
-                            <a asp-action="Offerings"
-                               asp-route-requirementOfferingId="@offering.ProgramOfferingId"
-                               asp-route-academicYearStart="@Model.AcademicYearStart"
-                               asp-route-term="@Model.Term"
-                               asp-route-includeArchived="@Model.IncludeArchived"
-                               asp-fragment="document-requirements"
-                               class="btn btn-sm btn-primary">Belge koşullarını yapılandır</a>
+                            <form asp-action="CloseInvalidOfferingForRemediation"
+                                  method="post"
+                                  class="d-inline"
+                                  data-remediation-close-form>
+                                <input type="hidden" name="programOfferingId" value="@offering.ProgramOfferingId" />
+                                <input type="hidden" name="rowVersion" value="@offering.RowVersion" />
+                                <input type="hidden" name="academicYearStart" value="@Model.AcademicYearStart" />
+                                <input type="hidden" name="term" value="@Model.Term" />
+                                <input type="hidden" name="includeArchived" value="@Model.IncludeArchived.ToString().ToLowerInvariant()" />
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        data-disable-on-submit="true">
+                                    @(hasCompletedEvaluation ? "Kapat ve manuel incelemeye al" : "İlanı güvenli biçimde kapat")
+                                </button>
+                            </form>
+                            @if (!hasCompletedEvaluation)
+                            {
+                                <a asp-action="Offerings"
+                                   asp-route-requirementOfferingId="@offering.ProgramOfferingId"
+                                   asp-route-academicYearStart="@Model.AcademicYearStart"
+                                   asp-route-term="@Model.Term"
+                                   asp-route-includeArchived="@Model.IncludeArchived"
+                                   asp-fragment="document-requirements"
+                                   class="btn btn-sm btn-primary">Belge koşullarını yapılandır</a>
+                            }
                         </div>
                     </article>
                 }

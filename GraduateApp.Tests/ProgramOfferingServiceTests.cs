@@ -500,6 +500,88 @@ public sealed class ProgramOfferingServiceTests
     [Theory]
     [InlineData(OfferingEvaluationState.Finalized)]
     [InlineData(OfferingEvaluationState.Published)]
+    public async Task Invalid_open_finalized_or_published_offering_can_only_be_closed_for_remediation(
+        OfferingEvaluationState state)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        offering.IsOpen = true;
+        offering.UsesEvaluationWorkflow = true;
+        offering.EvaluationState = state;
+        offering.Applications.Add(CreateApplication("10000000146", ApplicationStatus.Pending));
+        await db.SaveChangesAsync();
+        var originalQuota = offering.Quota;
+        var originalStatus = Assert.Single(offering.Applications).CurrentStatus;
+
+        var result = await CreateService(db).CloseInvalidForRemediationAsync(
+            offering.ProgramOfferingId,
+            41,
+            new ProgramOfferingRemediationCloseDto
+            {
+                RowVersion = Convert.ToBase64String(offering.RowVersion)
+            },
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(offering.IsOpen);
+        Assert.Equal(state, offering.EvaluationState);
+        Assert.Equal(originalQuota, offering.Quota);
+        Assert.Equal(originalStatus, Assert.Single(offering.Applications).CurrentStatus);
+        Assert.Equal(OfferingDocumentConfigurationHealth.ClosedWorkflow, result.Value!.DocumentConfigurationHealth);
+        var audit = Assert.Single(
+            db.SecurityAuditLogs,
+            item => item.EventType == "ProgramOfferingClosedForRemediation");
+        Assert.Equal(41, audit.ActorAdminId);
+    }
+
+    [Fact]
+    public async Task Remediation_close_rejects_legacy_and_already_valid_open_offerings_without_audit()
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var legacy = AddOffering(db, program.ProgramId);
+        legacy.AcademicYearStart = 0;
+        legacy.Term = AcademicTerm.LegacyUnspecified;
+        legacy.IsOpen = true;
+        var healthy = AddOffering(db, program.ProgramId);
+        healthy.AcademicYearStart = 2027;
+        healthy.IsOpen = true;
+        healthy.DocumentRequirements.Add(DocumentRequirement(isRequired: true, isActive: true));
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        var legacyResult = await service.CloseInvalidForRemediationAsync(
+            legacy.ProgramOfferingId,
+            1,
+            new ProgramOfferingRemediationCloseDto
+            {
+                RowVersion = Convert.ToBase64String(legacy.RowVersion)
+            },
+            CancellationToken.None);
+        var healthyResult = await service.CloseInvalidForRemediationAsync(
+            healthy.ProgramOfferingId,
+            1,
+            new ProgramOfferingRemediationCloseDto
+            {
+                RowVersion = Convert.ToBase64String(healthy.RowVersion)
+            },
+            CancellationToken.None);
+
+        Assert.False(legacyResult.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, legacyResult.StatusCode);
+        Assert.False(healthyResult.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, healthyResult.StatusCode);
+        Assert.True(legacy.IsOpen);
+        Assert.True(healthy.IsOpen);
+        Assert.DoesNotContain(
+            db.SecurityAuditLogs,
+            item => item.EventType == "ProgramOfferingClosedForRemediation");
+    }
+
+    [Theory]
+    [InlineData(OfferingEvaluationState.Finalized)]
+    [InlineData(OfferingEvaluationState.Published)]
     public async Task Finalized_or_published_evaluation_offering_cannot_be_edited(OfferingEvaluationState state)
     {
         await using var db = TestDb.Create();

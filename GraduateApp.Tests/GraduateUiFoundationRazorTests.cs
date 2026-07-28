@@ -327,6 +327,28 @@ public sealed class GraduateUiFoundationRazorTests
                     HasActiveRequiredDocumentRequirement = true,
                     DocumentConfigurationHealth = OfferingDocumentConfigurationHealth.OpenHealthy,
                     RowVersion = "c2Vjb25kLW9mZmVyaW5nLXJvdw=="
+                },
+                new ProgramOfferingAdminViewModel
+                {
+                    ProgramOfferingId = 9,
+                    ProgramId = 12,
+                    ProgramName = "Yayımlanmış Riskli İlan",
+                    InstituteName = "Fen Bilimleri Enstitüsü",
+                    DegreeType = "Tezli Yüksek Lisans",
+                    AcademicYear = "2025–2026",
+                    TermName = "Güz",
+                    Quota = 5,
+                    IsOpen = true,
+                    UsesDocumentWorkflow = true,
+                    UsesEvaluationWorkflow = true,
+                    EvaluationState = OfferingEvaluationState.Published,
+                    DocumentRequirementCount = 0,
+                    ActiveRequiredDocumentRequirementCount = 0,
+                    HasActiveRequiredDocumentRequirement = false,
+                    SubmittedOrLaterApplicationCount = 1,
+                    DocumentConfigurationHealth =
+                        OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications,
+                    RowVersion = "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw=="
                 }
             ],
             Form = new ProgramOfferingFormViewModel
@@ -403,6 +425,13 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler", decoded, StringComparison.Ordinal);
         Assert.Contains("İlan yapılandırma sağlığı", decoded, StringComparison.Ordinal);
         Assert.Contains("data-health-category=\"D\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-health-category=\"E\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-remediation-close-form", html, StringComparison.Ordinal);
+        Assert.Contains("CloseInvalidOfferingForRemediation", html, StringComparison.Ordinal);
+        Assert.Contains("Kapat ve manuel incelemeye al", decoded, StringComparison.Ordinal);
+        Assert.Contains("Kesinleştirilmiş veya yayımlanmış değerlendirme", decoded, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("requirementOfferingId=9", decoded, StringComparison.Ordinal);
         Assert.Contains("Belge koşullarını yapılandır", decoded, StringComparison.Ordinal);
         Assert.Contains(
             "Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez",

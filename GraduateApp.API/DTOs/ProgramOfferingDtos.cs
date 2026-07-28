@@ -72,6 +72,15 @@ public sealed class ProgramOfferingUpdateDto : ProgramOfferingCreateDto
     public bool IsArchived { get; init; }
 }
 
+public sealed class ProgramOfferingRemediationCloseDto
+{
+    [Required(ErrorMessage = "İlan eşzamanlılık bilgisi zorunludur.")]
+    [StringLength(
+        64,
+        ErrorMessage = "İlan eşzamanlılık bilgisi geçersiz.")]
+    public string RowVersion { get; init; } = string.Empty;
+}
+
 public enum OfferingDocumentConfigurationHealth
 {
     LegacyOutsideDocumentWorkflow,

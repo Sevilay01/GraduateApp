@@ -227,6 +227,15 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             MapOfferingRequest(model, includeConcurrency: true),
             cancellationToken);
 
+    public Task<ApiResult<ProgramOfferingAdminViewModel>> CloseInvalidProgramOfferingForRemediationAsync(
+        int offeringId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync<ProgramOfferingAdminViewModel>(
+            $"api/program-offerings/{offeringId}/close-for-remediation",
+            new { rowVersion },
+            cancellationToken);
+
     public Task<ApiResult<IReadOnlyList<OfferingDocumentRequirementViewModel>>> GetOfferingDocumentRequirementsAsync(
         int offeringId,
         CancellationToken cancellationToken) =>
