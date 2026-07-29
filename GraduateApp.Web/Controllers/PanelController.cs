@@ -79,9 +79,10 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                     foreach (var program in openPrograms)
                     {
                         program.IsRecommendedForProfile =
-                            UndergraduateProgramRecommendation.IsExactProgramNameMatch(
+                            UndergraduateProgramRecommendation.IsProgramAreaMatch(
                                 graduatedProgram,
-                                program.ProgramName);
+                                program.ProgramName,
+                                program.DegreeType);
                     }
 
                     var recommendationCount = openPrograms.Count(item => item.IsRecommendedForProfile);
@@ -89,8 +90,8 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                         .OrderByDescending(item => item.IsRecommendedForProfile)
                         .ToArray();
                     recommendationMessage = recommendationCount > 0
-                        ? $"{recommendationCount} ilan mezuniyet programı adınızla eşleşti ve listenin başına taşındı."
-                        : "Mezuniyet programı adınızla birebir eşleşen açık ilan bulunamadı; diğer ilanlar başvuruya açık olmaya devam ediyor.";
+                        ? $"{recommendationCount} ilan mezuniyet programınızla aynı alan adına sahip ve listenin başına taşındı."
+                        : "Mezuniyet programınızla aynı alan adına sahip açık ilan bulunamadı; diğer ilanlar başvuruya açık olmaya devam ediyor.";
                 }
             }
         }
