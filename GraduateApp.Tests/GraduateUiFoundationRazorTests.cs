@@ -214,7 +214,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
         Assert.Contains("Profilinizle eşleşiyor", html, StringComparison.Ordinal);
         Assert.Contains("data-profile-recommendation", html, StringComparison.Ordinal);
-        Assert.Contains("&lt;Bilgisayar Mühendisliği&gt;", html, StringComparison.Ordinal);
+        var decodedHtml = WebUtility.HtmlDecode(html);
+        Assert.Contains("<Bilgisayar Mühendisliği>", decodedHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("<Bilgisayar Mühendisliği>", html, StringComparison.Ordinal);
         Assert.Contains("Güvenli çıkış", html, StringComparison.Ordinal);
         Assert.Contains("Öğrenci hesabı", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
