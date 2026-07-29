@@ -193,7 +193,7 @@ public sealed class GraduateUiFoundationRazorTests
                             DateTimeKind.Utc),
                         CurrentStatus = ApplicationStatus.Pending
                     }
-                ]
+                ],
                 RecommendationMessage = "1 ilan mezuniyet programı adınızla eşleşti.",
                 GraduatedProgram = "<Bilgisayar Mühendisliği>"
             },
