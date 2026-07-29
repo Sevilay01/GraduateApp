@@ -56,7 +56,12 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         if (profileTask is not null)
         {
             var profile = await profileTask;
-            if (!profile.IsSuccess || profile.Value is null)
+            if (!programs.IsSuccess)
+            {
+                recommendationMessage =
+                    "Programlar yüklenemediği için profil önerileri şu anda kullanılamıyor.";
+            }
+            else if (!profile.IsSuccess || profile.Value is null)
             {
                 recommendationMessage =
                     "Eğitim profiliniz yüklenemediği için programlar normal sıralamada gösteriliyor.";
