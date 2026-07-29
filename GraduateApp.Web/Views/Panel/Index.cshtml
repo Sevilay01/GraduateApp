@@ -77,10 +77,10 @@
                    checked="@(Model.ProgramSearch.PreferUndergraduateProgram ? "checked" : null)"
                    class="form-check-input" />
             <label for="prefer-undergraduate-program" class="form-check-label">
-                Mezuniyet programımla aynı adlı ilanları öne çıkar
+                Mezuniyet programımla aynı alanı taşıyan ilanları öne çıkar
             </label>
             <div class="form-text">
-                Bu sıralama yalnızca profilinizdeki mezuniyet programı adıyla birebir eşleşmeye dayanır.
+                Program adları karşılaştırılır; ilandaki tezli/tezsiz yüksek lisans veya doktora gibi derece ekleri eşleştirmeyi değiştirmez.
                 Resmî başvuru uygunluğu kararı değildir ve hiçbir ilana başvurmanızı engellemez.
             </div>
         </div>
@@ -141,7 +141,7 @@
                                     @if (program.IsRecommendedForProfile)
                                     {
                                         <span class="admin-state admin-state--success" data-profile-match>
-                                            Profilinizle eşleşiyor
+                                            Program alanı eşleşiyor
                                         </span>
                                     }
                                     @if (existingApplication is not null)
