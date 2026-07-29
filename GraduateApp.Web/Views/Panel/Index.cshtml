@@ -69,6 +69,21 @@
                 </select>
             </div>
         </div>
+        <div class="form-check mt-3">
+            <input id="prefer-undergraduate-program"
+                   name="preferUndergraduateProgram"
+                   type="checkbox"
+                   value="true"
+                   checked="@(Model.ProgramSearch.PreferUndergraduateProgram ? "checked" : null)"
+                   class="form-check-input" />
+            <label for="prefer-undergraduate-program" class="form-check-label">
+                Mezuniyet programımla aynı adlı ilanları öne çıkar
+            </label>
+            <div class="form-text">
+                Bu sıralama yalnızca profilinizdeki mezuniyet programı adıyla birebir eşleşmeye dayanır.
+                Resmî başvuru uygunluğu kararı değildir ve hiçbir ilana başvurmanızı engellemez.
+            </div>
+        </div>
         <div class="admin-form-actions mt-3">
             <button type="submit" class="btn btn-primary">Programları ara</button>
             @if (Model.ProgramSearch.HasActiveFilters)
@@ -77,6 +92,18 @@
             }
         </div>
     </form>
+
+    @if (Model.RecommendationMessage is not null)
+    {
+        <div class="alert alert-info app-alert" role="status" data-profile-recommendation>
+            <strong>Profil önerisi</strong>
+            <span>@Model.RecommendationMessage</span>
+            @if (!string.IsNullOrWhiteSpace(Model.GraduatedProgram))
+            {
+                <small>Profildeki program: @Model.GraduatedProgram</small>
+            }
+        </div>
+    }
 
     @if (Model.OpenPrograms.Count == 0)
     {
@@ -110,10 +137,18 @@
                                     <h3 class="h4 mb-1">@program.ProgramName</h3>
                                     <p class="program-card__degree">@program.DegreeType</p>
                                 </div>
-                                @if (existingApplication is not null)
-                                {
-                                    <partial name="_ApplicationStatusBadge" model="existingApplication.CurrentStatus" />
-                                }
+                                <div class="d-flex flex-column align-items-end gap-2">
+                                    @if (program.IsRecommendedForProfile)
+                                    {
+                                        <span class="admin-state admin-state--success" data-profile-match>
+                                            Profilinizle eşleşiyor
+                                        </span>
+                                    }
+                                    @if (existingApplication is not null)
+                                    {
+                                        <partial name="_ApplicationStatusBadge" model="existingApplication.CurrentStatus" />
+                                    }
+                                </div>
                             </div>
 
                             <dl class="meta-grid">

@@ -22,19 +22,25 @@ public sealed class OpenProgramSearchViewModel : IValidatableObject
     [Display(Name = "Dönem")]
     public AcademicTerm? Term { get; set; }
 
+    [Display(Name = "Lisans programıma göre öne çıkar")]
+    public bool PreferUndergraduateProgram { get; set; }
+
     public bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(Search)
         || AcademicYearStart.HasValue
-        || Term.HasValue;
+        || Term.HasValue
+        || PreferUndergraduateProgram;
 
     public static OpenProgramSearchViewModel From(
         string? search,
         int? academicYearStart,
-        AcademicTerm? term) => new()
+        AcademicTerm? term,
+        bool preferUndergraduateProgram = false) => new()
         {
             Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
             AcademicYearStart = academicYearStart,
-            Term = term
+            Term = term,
+            PreferUndergraduateProgram = preferUndergraduateProgram
         };
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -62,6 +68,7 @@ public sealed class ProgramViewModel
     public DateTime ApplicationStartUtc { get; set; }
     public DateTime ApplicationDeadlineUtc { get; set; }
     public int Quota { get; set; }
+    public bool IsRecommendedForProfile { get; set; }
     public IReadOnlyList<ExamRequirementViewModel> ExamRequirements { get; set; } = [];
 }
 
@@ -193,6 +200,8 @@ public sealed class PanelDashboardViewModel
     public OpenProgramSearchViewModel ProgramSearch { get; set; } = new();
     public IReadOnlyList<ProgramViewModel> OpenPrograms { get; set; } = [];
     public IReadOnlyList<PanelApplicationViewModel> Applications { get; set; } = [];
+    public string? GraduatedProgram { get; set; }
+    public string? RecommendationMessage { get; set; }
     public string? ErrorMessage { get; set; }
 }
 

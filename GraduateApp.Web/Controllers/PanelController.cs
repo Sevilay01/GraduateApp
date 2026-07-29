@@ -15,9 +15,14 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         string? search,
         int? academicYearStart,
         AcademicTerm? term,
+        bool preferUndergraduateProgram,
         CancellationToken cancellationToken)
     {
-        var programSearch = OpenProgramSearchViewModel.From(search, academicYearStart, term);
+        var programSearch = OpenProgramSearchViewModel.From(
+            search,
+            academicYearStart,
+            term,
+            preferUndergraduateProgram);
         var applicationsTask = apiClient.GetMyApplicationsAsync(cancellationToken);
         if (!TryValidateModel(programSearch, nameof(PanelDashboardViewModel.ProgramSearch)))
         {
@@ -37,15 +42,66 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             programSearch.AcademicYearStart,
             programSearch.Term,
             cancellationToken);
+        var profileTask = programSearch.PreferUndergraduateProgram
+            ? apiClient.GetProfileAsync(cancellationToken)
+            : null;
+
         await Task.WhenAll(programsTask, applicationsTask);
         var programs = await programsTask;
         var applications = await applicationsTask;
+        var openPrograms = (programs.Value ?? []).ToArray();
+        string? graduatedProgram = null;
+        string? recommendationMessage = null;
+
+        if (profileTask is not null)
+        {
+            var profile = await profileTask;
+            if (!programs.IsSuccess)
+            {
+                recommendationMessage =
+                    "Programlar yüklenemediği için profil önerileri şu anda kullanılamıyor.";
+            }
+            else if (!profile.IsSuccess || profile.Value is null)
+            {
+                recommendationMessage =
+                    "Eğitim profiliniz yüklenemediği için programlar normal sıralamada gösteriliyor.";
+            }
+            else
+            {
+                graduatedProgram = profile.Value.Education?.GraduatedProgram;
+                if (string.IsNullOrWhiteSpace(graduatedProgram))
+                {
+                    recommendationMessage =
+                        "Önerileri kullanmak için profilinizde mezun olduğunuz lisans programını belirtin.";
+                }
+                else
+                {
+                    foreach (var program in openPrograms)
+                    {
+                        program.IsRecommendedForProfile =
+                            UndergraduateProgramRecommendation.IsExactProgramNameMatch(
+                                graduatedProgram,
+                                program.ProgramName);
+                    }
+
+                    var recommendationCount = openPrograms.Count(item => item.IsRecommendedForProfile);
+                    openPrograms = openPrograms
+                        .OrderByDescending(item => item.IsRecommendedForProfile)
+                        .ToArray();
+                    recommendationMessage = recommendationCount > 0
+                        ? $"{recommendationCount} ilan mezuniyet programı adınızla eşleşti ve listenin başına taşındı."
+                        : "Mezuniyet programı adınızla birebir eşleşen açık ilan bulunamadı; diğer ilanlar başvuruya açık olmaya devam ediyor.";
+                }
+            }
+        }
 
         return View(new PanelDashboardViewModel
         {
             ProgramSearch = programSearch,
-            OpenPrograms = programs.Value ?? [],
+            OpenPrograms = openPrograms,
             Applications = applications.Value ?? [],
+            GraduatedProgram = graduatedProgram,
+            RecommendationMessage = recommendationMessage,
             ErrorMessage = programs.IsSuccess && applications.IsSuccess
                 ? null
                 : programs.Error ?? applications.Error ?? "Panel bilgileri yüklenemedi."
@@ -53,8 +109,16 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     }
 
     [NonAction]
+    public Task<IActionResult> Index(
+        string? search,
+        int? academicYearStart,
+        AcademicTerm? term,
+        CancellationToken cancellationToken) =>
+        Index(search, academicYearStart, term, false, cancellationToken);
+
+    [NonAction]
     public Task<IActionResult> Index(CancellationToken cancellationToken) =>
-        Index(null, null, null, cancellationToken);
+        Index(null, null, null, false, cancellationToken);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
