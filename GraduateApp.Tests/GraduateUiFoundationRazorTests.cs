@@ -139,6 +139,10 @@ public sealed class GraduateUiFoundationRazorTests
             "hiçbir ilana başvurmanızı engellemez",
             panelHtml,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "derece ekleri eşleştirmeyi değiştirmez",
+            panelHtml,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -212,7 +216,7 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("name=\"programOfferingId\" value=\"42\"", html, StringComparison.Ordinal);
         Assert.Contains("method=\"post\"", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
-        Assert.Contains("Profilinizle eşleşiyor", html, StringComparison.Ordinal);
+        Assert.Contains("Program alanı eşleşiyor", html, StringComparison.Ordinal);
         Assert.Contains("data-profile-recommendation", html, StringComparison.Ordinal);
         var decodedHtml = WebUtility.HtmlDecode(html);
         Assert.Contains("<Bilgisayar Mühendisliği>", decodedHtml, StringComparison.Ordinal);
