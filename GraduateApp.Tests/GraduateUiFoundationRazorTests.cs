@@ -126,6 +126,19 @@ public sealed class GraduateUiFoundationRazorTests
                 html,
                 StringComparison.Ordinal);
         }
+
+        Assert.DoesNotContain(
+            "name=\"preferUndergraduateProgram\"",
+            homeHtml,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "name=\"preferUndergraduateProgram\"",
+            panelHtml,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "hiçbir ilana başvurmanızı engellemez",
+            panelHtml,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -150,6 +163,7 @@ public sealed class GraduateUiFoundationRazorTests
                         AcademicYear = "2026–2027",
                         TermName = "Güz",
                         Quota = 8,
+                        IsRecommendedForProfile = true,
                         ApplicationDeadlineUtc = new DateTime(
                             2026,
                             8,
@@ -180,6 +194,8 @@ public sealed class GraduateUiFoundationRazorTests
                         CurrentStatus = ApplicationStatus.Pending
                     }
                 ]
+                RecommendationMessage = "1 ilan mezuniyet programı adınızla eşleşti.",
+                GraduatedProgram = "<Bilgisayar Mühendisliği>"
             },
             AuthenticatedUser("Student", "<Öğrenci Kullanıcı>"));
 
@@ -196,6 +212,10 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("name=\"programOfferingId\" value=\"42\"", html, StringComparison.Ordinal);
         Assert.Contains("method=\"post\"", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
+        Assert.Contains("Profilinizle eşleşiyor", html, StringComparison.Ordinal);
+        Assert.Contains("data-profile-recommendation", html, StringComparison.Ordinal);
+        Assert.Contains("&lt;Bilgisayar Mühendisliği&gt;", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<Bilgisayar Mühendisliği>", html, StringComparison.Ordinal);
         Assert.Contains("Güvenli çıkış", html, StringComparison.Ordinal);
         Assert.Contains("Öğrenci hesabı", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
     }
