@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GraduateApp.Web.Validation;
 
 namespace GraduateApp.Web.Models;
 
@@ -242,17 +243,15 @@ public sealed class StudentExamScoreInputViewModel
     public int ExamId { get; set; }
 
     [Required(ErrorMessage = "Sınav puanı zorunludur.")]
-    [Range(
-        typeof(decimal),
+    [LocalizedDecimalRange(
         "0",
         "999.99",
-        ParseLimitsInInvariantCulture = true,
-        ErrorMessage = "Sınav puanı 0 ile 999,99 arasında olmalıdır.")]
+        ErrorMessage = "Sınav puanı 0 ile 999,99 arasında geçerli bir ondalık sayı olmalıdır.")]
     [Display(Name = "Puan")]
     public decimal? Score { get; set; }
 
-    [Required(ErrorMessage = "Sınav tarihi zorunludur.")]
-    [Display(Name = "Sınav tarihi")]
+    [Required(ErrorMessage = "Sonuç tarihi zorunludur.")]
+    [Display(Name = "Sonuç tarihi")]
     public DateOnly? ExamDate { get; set; }
 }
 
