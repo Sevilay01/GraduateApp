@@ -285,4 +285,13 @@
   <data name="Home.LoginToApply" xml:space="preserve">
     <value>Başvuru için giriş yap</value>
   </data>
+  <data name="AcademicTerm.Fall" xml:space="preserve">
+    <value>Güz</value>
+  </data>
+  <data name="AcademicTerm.Spring" xml:space="preserve">
+    <value>Bahar</value>
+  </data>
+  <data name="AcademicTerm.Summer" xml:space="preserve">
+    <value>Yaz</value>
+  </data>
 </root>
