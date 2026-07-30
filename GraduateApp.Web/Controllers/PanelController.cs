@@ -149,7 +149,8 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             return ApplicationDetailFailure(result.StatusCode);
         }
 
-        if (result.Value.UsesEvaluationWorkflow)
+        if (result.Value.UsesEvaluationWorkflow
+            && result.Value.CurrentStatus != ApplicationStatus.Withdrawn)
         {
             var published = await apiClient.GetMyPublishedEvaluationAsync(publicId, cancellationToken);
             if (published.IsSuccess)
