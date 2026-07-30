@@ -184,6 +184,12 @@ public sealed partial class StudentProfileGnoWebTests
         Assert.Contains("\"localizeddecimal\"", script, StringComparison.Ordinal);
         Assert.Contains("options.rules.number = false;", script, StringComparison.Ordinal);
         Assert.Contains(
+            "[\"min\", \"max\", \"scale\"]",
+            script,
+            StringComparison.Ordinal);
+        Assert.Contains("fractionalDigitCount(value)", script, StringComparison.Ordinal);
+        Assert.Contains("parameters.scale", script, StringComparison.Ordinal);
+        Assert.Contains(
             "const decimalPattern = /^[+-]?(?:\\d+(?:[.,]\\d+)?|[.,]\\d+)$/;",
             script,
             StringComparison.Ordinal);
