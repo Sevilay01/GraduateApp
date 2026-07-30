@@ -137,8 +137,13 @@ internal static class LocalDbTestSupport
 
     internal static Task<SqlConnection> OpenMasterConnectionAsync(
         CancellationToken cancellationToken = default) =>
+        OpenDatabaseConnectionAsync(CreateConnectionString("master"), cancellationToken);
+
+    internal static Task<SqlConnection> OpenDatabaseConnectionAsync(
+        string connectionString,
+        CancellationToken cancellationToken = default) =>
         OpenConnectionWithRetryAsync(
-            () => new SqlConnection(CreateConnectionString("master")),
+            () => new SqlConnection(connectionString),
             static (connection, token) => connection.OpenAsync(token),
             static connection => connection.DisposeAsync(),
             static (delay, token) => Task.Delay(delay, token),
@@ -294,6 +299,8 @@ internal sealed class LocalDbTestDatabase : IAsyncDisposable
     private readonly string? databaseCollation;
     private readonly Func<CancellationToken, Task<SqlConnection>> openMasterConnectionAsync;
     private readonly Func<SqlConnection, string, CancellationToken, Task> executeMasterCommandAsync;
+    private readonly Func<string, CancellationToken, Task<SqlConnection>> openDatabaseConnectionAsync;
+    private readonly Func<SqlConnection, string, CancellationToken, Task<int>> executeDatabaseCommandAsync;
     private bool createCommandAttempted;
 
     public LocalDbTestDatabase(string databaseName, string? databaseCollation)
@@ -310,11 +317,30 @@ internal sealed class LocalDbTestDatabase : IAsyncDisposable
         string? databaseCollation,
         Func<CancellationToken, Task<SqlConnection>> openMasterConnectionAsync,
         Func<SqlConnection, string, CancellationToken, Task> executeMasterCommandAsync)
+        : this(
+            databaseName,
+            databaseCollation,
+            openMasterConnectionAsync,
+            executeMasterCommandAsync,
+            LocalDbTestSupport.OpenDatabaseConnectionAsync,
+            ExecuteDatabaseCommandAsync)
+    {
+    }
+
+    internal LocalDbTestDatabase(
+        string databaseName,
+        string? databaseCollation,
+        Func<CancellationToken, Task<SqlConnection>> openMasterConnectionAsync,
+        Func<SqlConnection, string, CancellationToken, Task> executeMasterCommandAsync,
+        Func<string, CancellationToken, Task<SqlConnection>> openDatabaseConnectionAsync,
+        Func<SqlConnection, string, CancellationToken, Task<int>> executeDatabaseCommandAsync)
     {
         this.databaseName = databaseName;
         this.databaseCollation = databaseCollation;
         this.openMasterConnectionAsync = openMasterConnectionAsync;
         this.executeMasterCommandAsync = executeMasterCommandAsync;
+        this.openDatabaseConnectionAsync = openDatabaseConnectionAsync;
+        this.executeDatabaseCommandAsync = executeDatabaseCommandAsync;
     }
 
     public string ConnectionString => LocalDbTestSupport.CreateConnectionString(databaseName);
@@ -353,17 +379,20 @@ internal sealed class LocalDbTestDatabase : IAsyncDisposable
 
     public async Task<int> ExecuteAsync(string sql)
     {
-        await using var connection = new SqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        return await command.ExecuteNonQueryAsync();
+        await using var connection = await openDatabaseConnectionAsync(
+            ConnectionString,
+            CancellationToken.None);
+        return await executeDatabaseCommandAsync(
+            connection,
+            sql,
+            CancellationToken.None);
     }
 
     public async Task ExecuteSqlServerScriptAsync(string sql)
     {
-        await using var connection = new SqlConnection(ConnectionString);
-        await connection.OpenAsync();
+        await using var connection = await LocalDbTestSupport.OpenDatabaseConnectionAsync(
+            ConnectionString,
+            CancellationToken.None);
         foreach (var batch in Regex.Split(
             sql,
             @"^\s*GO\s*(?:--.*)?$",
@@ -382,8 +411,9 @@ internal sealed class LocalDbTestDatabase : IAsyncDisposable
 
     public async Task<T> ScalarAsync<T>(string sql)
     {
-        await using var connection = new SqlConnection(ConnectionString);
-        await connection.OpenAsync();
+        await using var connection = await LocalDbTestSupport.OpenDatabaseConnectionAsync(
+            ConnectionString,
+            CancellationToken.None);
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         var value = await command.ExecuteScalarAsync();
@@ -424,5 +454,15 @@ internal sealed class LocalDbTestDatabase : IAsyncDisposable
         await using var command = connection.CreateCommand();
         command.CommandText = commandText;
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task<int> ExecuteDatabaseCommandAsync(
+        SqlConnection connection,
+        string commandText,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+        return await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }
