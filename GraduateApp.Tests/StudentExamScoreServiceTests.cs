@@ -125,7 +125,7 @@ public sealed class StudentExamScoreServiceTests
         Validator.TryValidateObject(request, new ValidationContext(request), results, validateAllProperties: true);
 
         Assert.Contains(results, item => item.ErrorMessage == "Sınav puanı zorunludur.");
-        Assert.Contains(results, item => item.ErrorMessage == "Sınav tarihi zorunludur.");
+        Assert.Contains(results, item => item.ErrorMessage == "Sonuç tarihi zorunludur.");
     }
 
     private static StudentExamScoreService CreateService(GraduateAppDbContext db) =>
