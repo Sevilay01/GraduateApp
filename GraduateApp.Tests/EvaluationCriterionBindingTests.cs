@@ -41,6 +41,11 @@ public sealed class EvaluationCriterionBindingTests
 
             var html = await RenderEvaluationViewAsync(host.Services);
             var decodedHtml = WebUtility.HtmlDecode(html);
+            var newCriterionForm = FormContaining(html, "<h3 class=\"h6\">Yeni kriter</h3>");
+            var maximumRawScoreInput = OpeningTagContaining(
+                newCriterionForm,
+                "name=\"MaximumRawScore\"");
+            var decodedMaximumRawScoreInput = WebUtility.HtmlDecode(maximumRawScoreInput);
 
             foreach (var name in new[]
                      {
@@ -59,9 +64,28 @@ public sealed class EvaluationCriterionBindingTests
             }
 
             Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
-            Assert.Contains("name=\"MaximumRawScore\"", html, StringComparison.Ordinal);
-            Assert.Contains("data-val-range-min=\"0.0001\"", html, StringComparison.Ordinal);
-            Assert.Contains("data-val-range-max=\"99999\"", html, StringComparison.Ordinal);
+            Assert.Contains("type=\"text\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains("inputmode=\"decimal\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains("value=\"100,00\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains("data-val=\"true\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-localizeddecimal=\"Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.\"",
+                decodedMaximumRawScoreInput,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-localizeddecimal-min=\"0.0001\"",
+                maximumRawScoreInput,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-localizeddecimal-max=\"99999\"",
+                maximumRawScoreInput,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-number=\"Geçerli bir sayı giriniz.\"",
+                decodedMaximumRawScoreInput,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain("data-val-range", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.DoesNotContain("type=\"number\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.DoesNotContain("<input name=\"ExamId\"", html, StringComparison.Ordinal);
             Assert.Contains("Sınav puanı", decodedHtml, StringComparison.Ordinal);
             Assert.Contains("Lisans GNO", decodedHtml, StringComparison.Ordinal);
@@ -126,11 +150,26 @@ public sealed class EvaluationCriterionBindingTests
             var manualScoreForm = FormContaining(
                 html,
                 $"name=\"criterionPublicId\" value=\"{CriterionPublicId:D}\"");
+            var maximumRawScoreInput = OpeningTagContaining(
+                criterionForm,
+                "name=\"MaximumRawScore\"");
 
             Assert.Contains(
-                "name=\"MaximumRawScore\" value=\"100\"",
-                criterionForm,
+                "name=\"MaximumRawScore\"",
+                maximumRawScoreInput,
                 StringComparison.Ordinal);
+            Assert.Contains("value=\"100\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains("type=\"text\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains("inputmode=\"decimal\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-localizeddecimal-min=\"0.0001\"",
+                maximumRawScoreInput,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-localizeddecimal-max=\"99999\"",
+                maximumRawScoreInput,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain("type=\"number\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.Contains(
                 "name=\"WeightBasisPoints\" value=\"55\"",
                 criterionForm,
@@ -261,6 +300,39 @@ public sealed class EvaluationCriterionBindingTests
             Assert.Equal("ManualScore", body.RootElement.GetProperty("sourceType").GetString());
             Assert.Equal(JsonValueKind.Null, body.RootElement.GetProperty("examId").ValueKind);
             Assert.Equal(100m, body.RootElement.GetProperty("maximumRawScore").GetDecimal());
+        });
+
+    [Theory]
+    [InlineData("100,00")]
+    [InlineData("100.00")]
+    public Task Turkish_and_canonical_criterion_decimals_bind_and_reach_the_api_exactly(
+        string attemptedValue) =>
+        ExecuteInTurkishCultureAsync(async () =>
+        {
+            using var host = CreateWebHost();
+            using var scope = host.Services.CreateScope();
+            var values = ValidFormValues(maximumRawScore: attemptedValue);
+            values["Code"] = "ALES";
+            values["DisplayName"] = "ALES";
+            values["SourceType"] = EvaluationCriterionSourceType.ExamScore.ToString();
+            values["ExamId"] = "6";
+            var (model, actionContext) = await BindAndValidateAsync(
+                scope.ServiceProvider,
+                values);
+            var handler = new CriterionHandler();
+            using var httpClient = Client(handler);
+            var controller = CreateController(httpClient, actionContext);
+
+            await controller.SaveEvaluationCriterion(model, CancellationToken.None);
+
+            Assert.True(controller.ModelState.IsValid);
+            Assert.Equal(100m, model.MaximumRawScore);
+            Assert.Equal(1, handler.RequestCount);
+            Assert.Equal(HttpMethod.Post, handler.Method);
+            using var body = JsonDocument.Parse(handler.RequestBody);
+            Assert.Equal(
+                100m,
+                body.RootElement.GetProperty("maximumRawScore").GetDecimal());
         });
 
     [Fact]
