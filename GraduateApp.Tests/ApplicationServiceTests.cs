@@ -685,12 +685,24 @@ public sealed class ApplicationServiceTests
         var validStudent = CreateStudent("10000000170", "valid@example.test");
         var draftStudent = CreateStudent("10000000189", "draft@example.test");
         var legacyStudent = CreateStudent("10000000197", "legacy@example.test");
-        db.Students.AddRange(missingDocumentStudent, validStudent, draftStudent, legacyStudent);
+        var withdrawnStudent = CreateStudent("10000000200", "withdrawn@example.test");
+        db.Students.AddRange(
+            missingDocumentStudent,
+            validStudent,
+            draftStudent,
+            legacyStudent,
+            withdrawnStudent);
         var missingDocument = AddWorkflowApplication(db, offering, missingDocumentStudent.Tc, ApplicationStatus.Approved, true);
         var valid = AddWorkflowApplication(db, offering, validStudent.Tc, ApplicationStatus.Rejected, true);
         AddCurrentDocument(valid);
         AddWorkflowApplication(db, offering, draftStudent.Tc, ApplicationStatus.Draft, null);
         AddWorkflowApplication(db, offering, legacyStudent.Tc, ApplicationStatus.Pending, null).UsesDocumentWorkflow = false;
+        var withdrawn = AddWorkflowApplication(
+            db,
+            offering,
+            withdrawnStudent.Tc,
+            ApplicationStatus.Withdrawn,
+            true);
         await db.SaveChangesAsync();
         var auditCount = db.SecurityAuditLogs.Count();
         db.ChangeTracker.Clear();
@@ -702,6 +714,7 @@ public sealed class ApplicationServiceTests
         Assert.Equal("NoRequiredRequirementSnapshots", result.Single(item => item.ApplicationPublicId == noRequired.PublicId).ViolationCategory);
         Assert.Equal("MissingRequiredDocuments", result.Single(item => item.ApplicationPublicId == missingDocument.PublicId).ViolationCategory);
         Assert.DoesNotContain(result, item => item.ApplicationPublicId == valid.PublicId);
+        Assert.DoesNotContain(result, item => item.ApplicationPublicId == withdrawn.PublicId);
         Assert.Equal(auditCount, db.SecurityAuditLogs.Count());
         Assert.Empty(db.ChangeTracker.Entries());
     }
