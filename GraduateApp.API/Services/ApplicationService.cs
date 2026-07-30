@@ -17,6 +17,16 @@ public interface IApplicationService
     Task<IReadOnlyList<DocumentWorkflowInvariantViolationDto>> GetDocumentWorkflowInvariantViolationsAsync(
         CancellationToken cancellationToken);
     Task<ServiceResult> SubmitAsync(string studentTc, Guid publicId, CancellationToken cancellationToken);
+    Task<ServiceResult> WithdrawAsync(
+        string studentTc,
+        Guid publicId,
+        StudentApplicationCommandDto request,
+        CancellationToken cancellationToken);
+    Task<ServiceResult> ReactivateAsync(
+        string studentTc,
+        Guid publicId,
+        StudentApplicationCommandDto request,
+        CancellationToken cancellationToken);
     Task<PagedResult<AdminApplicationListItemDto>> GetForAdminAsync(
         string? search,
         ApplicationStatus? status,
@@ -366,6 +376,181 @@ public sealed class ApplicationService(
             return ServiceResult.Failure(
                 "Başvuru gönderilemedi; ilan koşullarını yeniden kontrol edin.",
                 StatusCodes.Status409Conflict);
+        }
+    }
+
+    public async Task<ServiceResult> WithdrawAsync(
+        string studentTc,
+        Guid publicId,
+        StudentApplicationCommandDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ChangeStudentApplicationStatusAsync(
+                studentTc,
+                publicId,
+                request,
+                reactivate: false,
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception) when (
+            DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
+        {
+            return StudentMutationConflict();
+        }
+    }
+
+    public async Task<ServiceResult> ReactivateAsync(
+        string studentTc,
+        Guid publicId,
+        StudentApplicationCommandDto request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ChangeStudentApplicationStatusAsync(
+                studentTc,
+                publicId,
+                request,
+                reactivate: true,
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception) when (
+            DatabaseExceptionClassifier.IsDeadlock(exception)
+            && !DatabaseExceptionClassifier.IsUnavailable(exception))
+        {
+            return StudentMutationConflict();
+        }
+    }
+
+    private async Task<ServiceResult> ChangeStudentApplicationStatusAsync(
+        string studentTc,
+        Guid publicId,
+        StudentApplicationCommandDto request,
+        bool reactivate,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
+        var application = await dbContext.Applications
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.Program).ThenInclude(item => item.Institute)
+            .Include(item => item.ScoreSnapshots)
+            .Include(item => item.Evaluation).ThenInclude(item => item!.Components)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync(
+                item => item.PublicId == publicId && item.Tc == studentTc,
+                cancellationToken);
+        if (application is null)
+        {
+            return ServiceResult.Failure("Başvuru bulunamadı.", StatusCodes.Status404NotFound);
+        }
+
+        if (!ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var currentStatus))
+        {
+            return StudentMutationConflict();
+        }
+
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var canChange = reactivate
+            ? currentStatus == ApplicationStatus.Withdrawn && CanChangeStudentApplication(application, now)
+            : currentStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
+                && CanChangeStudentApplication(application, now);
+        if (!canChange)
+        {
+            return ServiceResult.Failure(
+                reactivate
+                    ? "Yalnızca başvuruya açık ve değerlendirmesi kesinleşmemiş bir ilandaki geri çekilmiş başvuru yeniden etkinleştirilebilir."
+                    : "Yalnızca başvuruya açık ve değerlendirmesi kesinleşmemiş bir ilandaki taslak, bekleyen veya incelenen başvuru geri çekilebilir.",
+                StatusCodes.Status409Conflict);
+        }
+
+        byte[] rowVersion;
+        try
+        {
+            rowVersion = Convert.FromBase64String(request.RowVersion);
+        }
+        catch (FormatException)
+        {
+            return ServiceResult.Failure("Eş zamanlılık belirteci geçersiz.", StatusCodes.Status400BadRequest);
+        }
+
+        dbContext.Entry(application).Property(item => item.RowVersion).OriginalValue = rowVersion;
+        var nextStatus = reactivate ? ApplicationStatus.Draft : ApplicationStatus.Withdrawn;
+        var removedScoreSnapshotCount = 0;
+        var removedEvaluationComponentCount = 0;
+        if (reactivate)
+        {
+            removedScoreSnapshotCount = application.ScoreSnapshots.Count;
+            if (removedScoreSnapshotCount > 0)
+            {
+                dbContext.ApplicationScoreSnapshots.RemoveRange(application.ScoreSnapshots);
+            }
+
+            if (application.Evaluation is not null)
+            {
+                removedEvaluationComponentCount = application.Evaluation.Components.Count;
+                if (removedEvaluationComponentCount > 0)
+                {
+                    dbContext.ApplicationEvaluationComponents.RemoveRange(application.Evaluation.Components);
+                }
+
+                dbContext.ApplicationEvaluations.Remove(application.Evaluation);
+                application.Evaluation = null;
+            }
+        }
+
+        application.CurrentStatus = nextStatus.ToString();
+        dbContext.ApplicationStatusHistories.Add(new ApplicationStatusHistory
+        {
+            ApplicationId = application.ApplicationId,
+            PreviousStatus = currentStatus.ToString(),
+            StatusName = nextStatus.ToString(),
+            ChangeDate = now,
+            Notes = reactivate
+                ? "Başvuru öğrenci tarafından yeniden etkinleştirilerek taslağa döndürüldü."
+                : "Başvuru öğrenci tarafından geri çekildi."
+        });
+        AddAudit(
+            null,
+            reactivate ? "ApplicationReactivatedByStudent" : "ApplicationWithdrawnByStudent",
+            "Application",
+            application.PublicId,
+            new
+            {
+                Previous = currentStatus,
+                Current = nextStatus,
+                RemovedScoreSnapshotCount = removedScoreSnapshotCount,
+                RemovedEvaluationComponentCount = removedEvaluationComponentCount
+            },
+            now);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return ServiceResult.Success();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (transaction is not null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            return StudentMutationConflict();
         }
     }
 
@@ -800,6 +985,16 @@ public sealed class ApplicationService(
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
+    private static bool CanChangeStudentApplication(Application application, DateTime now) =>
+        IsOfferingOpen(application.ProgramOffering, now)
+        && (!application.UsesEvaluationWorkflow
+            || application.ProgramOffering.EvaluationState == OfferingEvaluationState.Configuring);
+
+    private static ServiceResult StudentMutationConflict() =>
+        ServiceResult.Failure(
+            "Başvuru başka bir işlem tarafından güncellendi veya ilan artık bu işleme uygun değil. Sayfayı yenileyip tekrar deneyin.",
+            StatusCodes.Status409Conflict);
+
     private static bool CanUpdateDocuments(Application application, DateTime now) =>
         ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var status)
         && status is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
@@ -859,7 +1054,14 @@ public sealed class ApplicationService(
                 ? DateTime.SpecifyKind(application.ProgramOffering.ApplicationDeadlineUtc.Value, DateTimeKind.Utc)
                 : null,
             CanUpdateDocuments(application, now),
+            ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var detailStatus)
+                && detailStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
+                && CanChangeStudentApplication(application, now),
+            ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out detailStatus)
+                && detailStatus == ApplicationStatus.Withdrawn
+                && CanChangeStudentApplication(application, now),
             ParseStatus(application.CurrentStatus),
+            Convert.ToBase64String(application.RowVersion),
             application.UsesDocumentWorkflow,
             application.UsesEvaluationWorkflow,
             requirements,
