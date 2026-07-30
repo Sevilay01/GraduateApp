@@ -907,12 +907,12 @@ public sealed class ProgramOfferingServiceTests
         int examId,
         bool isRequired,
         DateOnly? minimumValidityDate = null) => new()
-    {
-        ExamId = examId,
-        MinimumScore = 0m,
-        MinimumValidityDate = minimumValidityDate,
-        IsRequired = isRequired
-    };
+        {
+            ExamId = examId,
+            MinimumScore = 0m,
+            MinimumValidityDate = minimumValidityDate,
+            IsRequired = isRequired
+        };
 
     private static ProgramOfferingUpdateDto UpdateRequest(
         ProgramOffering offering,
