@@ -155,9 +155,10 @@
                                            type="text"
                                            inputmode="decimal"
                                            data-val="true"
-                                           data-val-localizeddecimal="Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır."
+                                           data-val-localizeddecimal="Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır."
                                            data-val-localizeddecimal-min="0.0001"
-                                           data-val-localizeddecimal-max="99999" />
+                                           data-val-localizeddecimal-max="99999"
+                                           data-val-localizeddecimal-scale="4" />
                                 </div>
                                 <div class="col-12 col-sm-4 col-md-3">
                                     <label for="priority-@criterion.PublicId" class="form-label">Tie-break önceliği</label>
