@@ -45,6 +45,63 @@ public sealed class ProgramOfferingServiceTests
         Assert.False(db.ProgramOfferings.Single().IsOpen);
     }
 
+    [Theory]
+    [InlineData(2021, 8, 14, true)]
+    [InlineData(2021, 8, 13, false)]
+    [InlineData(2026, 8, 14, false)]
+    public async Task Create_enforces_the_five_year_ALES_validity_date(
+        int validityYear,
+        int validityMonth,
+        int validityDay,
+        bool expectedSuccess)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var ales = new Exam { ExamName = "ALES Sayısal / Eşdeğer" };
+        db.Exams.Add(ales);
+        await db.SaveChangesAsync();
+        var baseRequest = CreateRequest(program.ProgramId, AcademicTerm.Fall);
+        var request = new ProgramOfferingCreateDto
+        {
+            ProgramId = baseRequest.ProgramId,
+            AcademicYearStart = baseRequest.AcademicYearStart,
+            Term = baseRequest.Term,
+            ApplicationStartUtc = baseRequest.ApplicationStartUtc,
+            ApplicationDeadlineUtc = new DateTime(2026, 8, 14, 14, 0, 0, DateTimeKind.Utc),
+            Quota = baseRequest.Quota,
+            ExamRequirements =
+            [
+                new ProgramOfferingRequirementInputDto
+                {
+                    ExamId = ales.ExamId,
+                    MinimumScore = 55m,
+                    MinimumValidityDate = new DateOnly(validityYear, validityMonth, validityDay),
+                    IsRequired = true
+                }
+            ]
+        };
+
+        var result = await CreateService(db).CreateAsync(1, request, CancellationToken.None);
+
+        Assert.Equal(expectedSuccess, result.IsSuccess);
+        if (expectedSuccess)
+        {
+            Assert.Equal(
+                new DateOnly(2021, 8, 14),
+                Assert.Single(db.ProgramOfferingExamRequirements).MinimumValidityDate);
+        }
+        else
+        {
+            Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+            Assert.Equal(
+                "ALES için en eski kabul edilen sonuç tarihi 14.08.2021 olmalıdır. "
+                + "Bu tarih son başvuru tarihinden beş yıl öncesidir.",
+                result.Error);
+            Assert.Empty(db.ProgramOfferings);
+            Assert.Empty(db.SecurityAuditLogs);
+        }
+    }
+
     [Fact]
     public async Task Create_rejects_duplicate_program_year_term_but_allows_another_term()
     {
