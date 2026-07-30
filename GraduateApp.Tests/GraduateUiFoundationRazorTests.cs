@@ -102,7 +102,7 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("There are currently no open programs", html, StringComparison.Ordinal);
         Assert.Contains("name=\"culture\"", html, StringComparison.Ordinal);
         Assert.Contains("value=\"en-US\"", html, StringComparison.Ordinal);
-        Assert.Contains("selected=\"selected\"", html, StringComparison.Ordinal);
+        Assert.Matches("value=\\\"en-US\\\"\\s+selected", html);
         Assert.Contains("name=\"returnUrl\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Ana sayfa</a>", html, StringComparison.Ordinal);
