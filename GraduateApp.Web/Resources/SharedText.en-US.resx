@@ -285,4 +285,13 @@
   <data name="Home.LoginToApply" xml:space="preserve">
     <value>Sign in to apply</value>
   </data>
+  <data name="AcademicTerm.Fall" xml:space="preserve">
+    <value>Fall</value>
+  </data>
+  <data name="AcademicTerm.Spring" xml:space="preserve">
+    <value>Spring</value>
+  </data>
+  <data name="AcademicTerm.Summer" xml:space="preserve">
+    <value>Summer</value>
+  </data>
 </root>
