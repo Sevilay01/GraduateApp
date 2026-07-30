@@ -225,6 +225,34 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         return RedirectToAction(nameof(ApplicationDetail), new { publicId });
     }
 
+    [HttpPost("Panel/Applications/{publicId:guid}/Withdraw")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> WithdrawApplication(
+        Guid publicId,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.WithdrawApplicationAsync(publicId, rowVersion, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Başvurunuz geri çekildi."
+            : result.Error ?? "Başvuru geri çekilemedi.";
+        return RedirectToAction(nameof(ApplicationDetail), new { publicId });
+    }
+
+    [HttpPost("Panel/Applications/{publicId:guid}/Reactivate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReactivateApplication(
+        Guid publicId,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        var result = await apiClient.ReactivateApplicationAsync(publicId, rowVersion, cancellationToken);
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
+            ? "Başvurunuz taslak olarak yeniden etkinleştirildi. Güncel bilgileri kontrol edip tekrar gönderebilirsiniz."
+            : result.Error ?? "Başvuru yeniden etkinleştirilemedi.";
+        return RedirectToAction(nameof(ApplicationDetail), new { publicId });
+    }
+
     [HttpGet("Panel/Applications/{publicId:guid}/Documents/{documentPublicId:guid}/Download")]
     public async Task<IActionResult> DownloadDocument(
         Guid publicId,
