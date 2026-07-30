@@ -462,14 +462,14 @@ public sealed class ApplicationService(
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var canChange = reactivate
             ? currentStatus == ApplicationStatus.Withdrawn && CanChangeStudentApplication(application, now)
-            : currentStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
+            : currentStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview
                 && CanChangeStudentApplication(application, now);
         if (!canChange)
         {
             return ServiceResult.Failure(
                 reactivate
                     ? "Yalnızca başvuruya açık ve değerlendirmesi kesinleşmemiş bir ilandaki geri çekilmiş başvuru yeniden etkinleştirilebilir."
-                    : "Yalnızca başvuruya açık ve değerlendirmesi kesinleşmemiş bir ilandaki taslak, bekleyen veya incelenen başvuru geri çekilebilir.",
+                    : "Yalnızca başvuruya açık ve değerlendirmesi kesinleşmemiş bir ilandaki bekleyen veya incelenen başvuru geri çekilebilir.",
                 StatusCodes.Status409Conflict);
         }
 
@@ -1058,7 +1058,7 @@ public sealed class ApplicationService(
                 ? DateTime.SpecifyKind(application.ProgramOffering.ApplicationDeadlineUtc.Value, DateTimeKind.Utc)
                 : null,
             CanUpdateDocuments(application, now),
-            detailStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
+            detailStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview
                 && CanChangeStudentApplication(application, now),
             detailStatus == ApplicationStatus.Withdrawn
                 && CanChangeStudentApplication(application, now),
