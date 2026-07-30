@@ -153,12 +153,12 @@ public sealed class StudentExamScoreService(
     {
         if (!request.Score.HasValue || !request.ExamDate.HasValue)
         {
-            return ScoreValidation.Failure("Puan ve sınav tarihi zorunludur.", StatusCodes.Status400BadRequest);
+            return ScoreValidation.Failure("Puan ve sonuç tarihi zorunludur.", StatusCodes.Status400BadRequest);
         }
 
         if (request.ExamDate.Value > TodayInIstanbul())
         {
-            return ScoreValidation.Failure("Sınav tarihi gelecekte olamaz.", StatusCodes.Status400BadRequest);
+            return ScoreValidation.Failure("Sonuç tarihi gelecekte olamaz.", StatusCodes.Status400BadRequest);
         }
 
         var exam = await dbContext.Exams.SingleOrDefaultAsync(
