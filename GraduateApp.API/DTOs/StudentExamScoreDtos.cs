@@ -13,10 +13,10 @@ public sealed class StudentExamScoreInputDto
         "0",
         "999.99",
         ParseLimitsInInvariantCulture = true,
-        ErrorMessage = "Sınav puanı 0 ile 999,99 arasında olmalıdır.")]
+        ErrorMessage = "Sınav puanı 0 ile 999,99 arasında geçerli bir ondalık sayı olmalıdır.")]
     public decimal? Score { get; init; }
 
-    [Required(ErrorMessage = "Sınav tarihi zorunludur.")]
+    [Required(ErrorMessage = "Sonuç tarihi zorunludur.")]
     public DateOnly? ExamDate { get; init; }
 }
 
