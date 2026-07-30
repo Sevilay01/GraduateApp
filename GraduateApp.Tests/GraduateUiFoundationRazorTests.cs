@@ -514,7 +514,7 @@ public sealed class GraduateUiFoundationRazorTests
                         DegreeType = "Tezli Yüksek Lisans"
                     }
                 ],
-                Exams = [new ExamCatalogItemViewModel { ExamId = 3, ExamName = "ALES" }],
+                Exams = [new ExamCatalogItemViewModel { ExamId = 3, ExamName = "ÖSYM ALES", IsAles = true }],
                 ExamRequirements = [new ProgramOfferingRequirementInputViewModel { ExamId = 3 }]
             },
             RequirementOfferingId = 8,
