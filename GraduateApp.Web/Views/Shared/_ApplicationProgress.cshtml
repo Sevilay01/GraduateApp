@@ -1,13 +1,17 @@
 @model ApplicationStatus
 @{
+    var isWithdrawn = Model == ApplicationStatus.Withdrawn;
+    var steps = isWithdrawn
+        ? new[] { "Taslak", "Gönderildi", "Geri çekildi" }
+        : new[] { "Taslak", "Gönderildi", "İnceleniyor", "Sonuçlandı" };
     var currentStep = Model switch
     {
         ApplicationStatus.Draft => 0,
         ApplicationStatus.Pending => 1,
         ApplicationStatus.UnderReview => 2,
+        ApplicationStatus.Withdrawn => 2,
         _ => 3
     };
-    var steps = new[] { "Taslak", "Gönderildi", "İnceleniyor", "Sonuçlandı" };
 }
 <section class="application-progress" aria-labelledby="application-progress-heading">
     <h2 id="application-progress-heading" class="h5 mb-3">Başvuru süreci</h2>
