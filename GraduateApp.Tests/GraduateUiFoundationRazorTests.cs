@@ -984,6 +984,66 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task Student_application_lifecycle_controls_are_capability_gated_and_antiforgery_protected()
+    {
+        using var host = CreateWebHost();
+        var publicId = Guid.Parse("AD1E8726-F34B-4836-959A-EB280EC3FD91");
+        var model = new StudentApplicationDetailViewModel
+        {
+            PublicId = publicId,
+            InstituteName = "Fen Bilimleri Enstitüsü",
+            ProgramName = "Bilgisayar Mühendisliği",
+            AcademicYear = "2026–2027",
+            TermName = "Güz",
+            CurrentStatus = ApplicationStatus.UnderReview,
+            RowVersion = "AQIDBA==",
+            CanWithdraw = true
+        };
+
+        var withdrawHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        var decodedWithdrawHtml = WebUtility.HtmlDecode(withdrawHtml);
+
+        Assert.Contains("Başvuruyu geri çek", decodedWithdrawHtml, StringComparison.Ordinal);
+        Assert.Contains($"/Panel/Applications/{publicId:D}/Withdraw", withdrawHtml, StringComparison.Ordinal);
+        Assert.Contains("name="rowVersion" value="AQIDBA=="", withdrawHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", withdrawHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("/Reactivate", withdrawHtml, StringComparison.Ordinal);
+
+        model.CurrentStatus = ApplicationStatus.Withdrawn;
+        model.CanWithdraw = false;
+        model.CanReactivate = true;
+        var reactivateHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        var decodedReactivateHtml = WebUtility.HtmlDecode(reactivateHtml);
+
+        Assert.Contains("Taslak olarak yeniden etkinleştir", decodedReactivateHtml, StringComparison.Ordinal);
+        Assert.Contains($"/Panel/Applications/{publicId:D}/Reactivate", reactivateHtml, StringComparison.Ordinal);
+        Assert.Contains("name="rowVersion" value="AQIDBA=="", reactivateHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", reactivateHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("/Withdraw", reactivateHtml, StringComparison.Ordinal);
+
+        model.CurrentStatus = ApplicationStatus.Approved;
+        model.CanReactivate = false;
+        var terminalHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        Assert.DoesNotContain("/Withdraw", terminalHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("/Reactivate", terminalHtml, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Submitted_application_renders_document_replacement_only_while_capability_is_open()
     {
         using var host = CreateWebHost();
