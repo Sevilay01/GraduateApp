@@ -564,7 +564,7 @@ public sealed class ApplicationServiceTests
         Assert.Equal(ApplicationStatus.Withdrawn.ToString(), application.CurrentStatus);
         Assert.NotEmpty(db.ApplicationScoreSnapshots);
         Assert.NotEmpty(db.ApplicationEvaluations);
-        Assert.Single(application.Documents.Where(item => item.IsCurrent));
+        Assert.Single(application.Documents, item => item.IsCurrent);
         Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "ApplicationWithdrawnByStudent");
 
         var withdrawnDetail = await service.GetDetailForStudentAsync(
@@ -588,7 +588,7 @@ public sealed class ApplicationServiceTests
         Assert.Empty(db.ApplicationScoreSnapshots);
         Assert.Empty(db.ApplicationEvaluations);
         Assert.Empty(db.ApplicationEvaluationComponents);
-        Assert.Single(application.Documents.Where(item => item.IsCurrent));
+        Assert.Single(application.Documents, item => item.IsCurrent);
         Assert.Contains(db.ApplicationStatusHistories, item =>
             item.PreviousStatus == ApplicationStatus.UnderReview.ToString()
             && item.StatusName == ApplicationStatus.Withdrawn.ToString());
