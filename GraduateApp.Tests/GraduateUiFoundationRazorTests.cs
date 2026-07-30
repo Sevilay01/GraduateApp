@@ -947,6 +947,8 @@ public sealed class GraduateUiFoundationRazorTests
                 ProgramName = "Biyoteknoloji",
                 AcademicYear = "2026–2027",
                 TermName = "Güz",
+                ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
+                CanUpdateDocuments = true,
                 CurrentStatus = ApplicationStatus.Draft,
                 UsesEvaluationWorkflow = true,
                 UsesDocumentWorkflow = true,
