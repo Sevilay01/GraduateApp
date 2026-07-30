@@ -69,7 +69,7 @@ public sealed class EvaluationCriterionBindingTests
             Assert.Contains("value=\"100\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.Contains("data-val=\"true\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.Contains(
-                "data-val-localizeddecimal=\"Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.\"",
+                "data-val-localizeddecimal=\"Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.\"",
                 decodedMaximumRawScoreInput,
                 StringComparison.Ordinal);
             Assert.Contains(
@@ -78,6 +78,10 @@ public sealed class EvaluationCriterionBindingTests
                 StringComparison.Ordinal);
             Assert.Contains(
                 "data-val-localizeddecimal-max=\"99999\"",
+                maximumRawScoreInput,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-localizeddecimal-scale=\"4\"",
                 maximumRawScoreInput,
                 StringComparison.Ordinal);
             Assert.DoesNotContain("data-val-range", maximumRawScoreInput, StringComparison.Ordinal);
@@ -165,6 +169,10 @@ public sealed class EvaluationCriterionBindingTests
                 "data-val-localizeddecimal-max=\"99999\"",
                 maximumRawScoreInput,
                 StringComparison.Ordinal);
+            Assert.Contains(
+                "data-val-localizeddecimal-scale=\"4\"",
+                maximumRawScoreInput,
+                StringComparison.Ordinal);
             Assert.DoesNotContain("type=\"number\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.Contains(
                 "name=\"WeightBasisPoints\" value=\"55\"",
@@ -239,6 +247,45 @@ public sealed class EvaluationCriterionBindingTests
             Assert.Equal(OfferingId, result.RouteValues!["id"]);
             Assert.Equal("Değerlendirme kriteri bilgileri geçersiz.", controller.TempData["ErrorMessage"]);
             Assert.Equal(0, handler.RequestCount);
+        });
+
+    [Theory]
+    [InlineData("1,23456", false)]
+    [InlineData("1.23456", false)]
+    [InlineData("1,23456", true)]
+    [InlineData("1.23456", true)]
+    public Task Excess_criterion_precision_is_rejected_before_create_or_update_api_call(
+        string attemptedValue,
+        bool existingCriterion) =>
+        ExecuteInTurkishCultureAsync(async () =>
+        {
+            using var host = CreateWebHost();
+            using var scope = host.Services.CreateScope();
+            var values = ValidFormValues(maximumRawScore: attemptedValue);
+            values["Code"] = "ALES";
+            values["DisplayName"] = "ALES";
+            values["SourceType"] = EvaluationCriterionSourceType.ExamScore.ToString();
+            values["ExamId"] = "6";
+            if (existingCriterion)
+            {
+                values["PublicId"] = CriterionPublicId.ToString("D");
+                values["RowVersion"] = "AQIDBAUGBwg=";
+            }
+
+            var (model, actionContext) = await BindAndValidateAsync(
+                scope.ServiceProvider,
+                values);
+            var handler = new CriterionHandler();
+            using var httpClient = Client(handler);
+            var controller = CreateController(httpClient, actionContext);
+
+            await controller.SaveEvaluationCriterion(model, CancellationToken.None);
+
+            Assert.False(controller.ModelState.IsValid);
+            Assert.Equal(0, handler.RequestCount);
+            var state = Assert.NotNull(
+                controller.ModelState[nameof(EvaluationCriterionFormViewModel.MaximumRawScore)]);
+            Assert.NotEmpty(state.Errors);
         });
 
     [Fact]
