@@ -50,6 +50,8 @@ public sealed class StudentExamScoreServiceTests
 
     [Theory]
     [InlineData("ALES")]
+    [InlineData("ÖSYM ALES")]
+    [InlineData("2026 ALES")]
     [InlineData("e-YDS")]
     [InlineData("YÖKDİL")]
     public async Task Hundred_point_exams_reject_scores_over_100(string examName)
