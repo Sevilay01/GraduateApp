@@ -1026,6 +1026,8 @@ public sealed class GraduateUiFoundationRazorTests
         var decodedReactivateHtml = WebUtility.HtmlDecode(reactivateHtml);
 
         Assert.Contains("Taslak olarak yeniden etkinleştir", decodedReactivateHtml, StringComparison.Ordinal);
+        Assert.Contains("Geri çekildi", decodedReactivateHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Değerlendirme sürüyor", decodedReactivateHtml, StringComparison.Ordinal);
         Assert.Contains($"/Panel/Applications/{publicId:D}/Reactivate", reactivateHtml, StringComparison.Ordinal);
         Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", reactivateHtml, StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", reactivateHtml, StringComparison.Ordinal);
