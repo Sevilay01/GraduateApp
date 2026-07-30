@@ -66,7 +66,7 @@ public sealed class EvaluationCriterionBindingTests
             Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
             Assert.Contains("type=\"text\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.Contains("inputmode=\"decimal\"", maximumRawScoreInput, StringComparison.Ordinal);
-            Assert.Contains("value=\"100,00\"", maximumRawScoreInput, StringComparison.Ordinal);
+            Assert.Contains("value=\"100\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.Contains("data-val=\"true\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.Contains(
                 "data-val-localizeddecimal=\"Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.\"",
