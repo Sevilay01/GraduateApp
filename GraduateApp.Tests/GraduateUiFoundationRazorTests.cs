@@ -1010,7 +1010,7 @@ public sealed class GraduateUiFoundationRazorTests
 
         Assert.Contains("Başvuruyu geri çek", decodedWithdrawHtml, StringComparison.Ordinal);
         Assert.Contains($"/Panel/Applications/{publicId:D}/Withdraw", withdrawHtml, StringComparison.Ordinal);
-        Assert.Contains("name="rowVersion" value="AQIDBA=="", withdrawHtml, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", withdrawHtml, StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", withdrawHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("/Reactivate", withdrawHtml, StringComparison.Ordinal);
 
@@ -1027,7 +1027,7 @@ public sealed class GraduateUiFoundationRazorTests
 
         Assert.Contains("Taslak olarak yeniden etkinleştir", decodedReactivateHtml, StringComparison.Ordinal);
         Assert.Contains($"/Panel/Applications/{publicId:D}/Reactivate", reactivateHtml, StringComparison.Ordinal);
-        Assert.Contains("name="rowVersion" value="AQIDBA=="", reactivateHtml, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", reactivateHtml, StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", reactivateHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("/Withdraw", reactivateHtml, StringComparison.Ordinal);
 
