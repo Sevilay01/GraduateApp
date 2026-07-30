@@ -283,8 +283,9 @@ public sealed class EvaluationCriterionBindingTests
 
             Assert.False(controller.ModelState.IsValid);
             Assert.Equal(0, handler.RequestCount);
-            var state = Assert.NotNull(
-                controller.ModelState[nameof(EvaluationCriterionFormViewModel.MaximumRawScore)]);
+            var state =
+                controller.ModelState[nameof(EvaluationCriterionFormViewModel.MaximumRawScore)];
+            Assert.NotNull(state);
             Assert.NotEmpty(state.Errors);
         });
 
