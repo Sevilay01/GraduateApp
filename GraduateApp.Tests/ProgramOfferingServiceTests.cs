@@ -67,7 +67,7 @@ public sealed class ProgramOfferingServiceTests
             AcademicYearStart = baseRequest.AcademicYearStart,
             Term = baseRequest.Term,
             ApplicationStartUtc = baseRequest.ApplicationStartUtc,
-            ApplicationDeadlineUtc = new DateTime(2026, 8, 14, 14, 0, 0, DateTimeKind.Utc),
+            ApplicationDeadlineUtc = new DateTime(2026, 8, 13, 21, 30, 0, DateTimeKind.Utc),
             Quota = baseRequest.Quota,
             ExamRequirements =
             [
