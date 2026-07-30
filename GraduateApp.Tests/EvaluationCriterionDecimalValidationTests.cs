@@ -35,18 +35,22 @@ public sealed class EvaluationCriterionDecimalValidationTests
 
             Assert.Equal("true", attributes["data-val"]);
             Assert.Equal(
-                "Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.",
+                "Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.",
                 attributes["data-val-localizeddecimal"]);
             Assert.Equal("0.0001", attributes["data-val-localizeddecimal-min"]);
             Assert.Equal("99999", attributes["data-val-localizeddecimal-max"]);
+            Assert.Equal("4", attributes["data-val-localizeddecimal-scale"]);
             Assert.DoesNotContain("data-val-range", attributes.Keys);
         });
     }
 
     [Theory]
     [InlineData("0.0001", true)]
+    [InlineData("1.2345", true)]
     [InlineData("99999", true)]
     [InlineData("0", false)]
+    [InlineData("1.23450", false)]
+    [InlineData("1.23456", false)]
     [InlineData("99999.0001", false)]
     public void Web_maximum_raw_score_enforces_inclusive_bounds_under_turkish_culture(
         string invariantValue,
@@ -73,7 +77,7 @@ public sealed class EvaluationCriterionDecimalValidationTests
             {
                 var error = Assert.Single(results);
                 Assert.Equal(
-                    "Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.",
+                    "Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.",
                     error.ErrorMessage);
                 Assert.Contains(
                     nameof(EvaluationCriterionFormViewModel.MaximumRawScore),
