@@ -100,7 +100,8 @@ public sealed class EvaluationCriterionFormViewModel
     [LocalizedDecimalRange(
         "0.0001",
         "99999",
-        ErrorMessage = "Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.")]
+        MaximumFractionalDigits = 4,
+        ErrorMessage = "Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.")]
     public decimal MaximumRawScore { get; set; }
 
     [Range(1, int.MaxValue)]

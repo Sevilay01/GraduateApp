@@ -235,6 +235,14 @@ public sealed class EvaluationPolicyService(
             return ("Değerlendirme ağırlıkları toplamı 10000 basis point değerini aşamaz.", StatusCodes.Status409Conflict);
         }
 
+        if (request.MaximumRawScore is < 0.0001m or > 99999m
+            || DecimalScale(request.MaximumRawScore) > 4)
+        {
+            return (
+                "Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.",
+                StatusCodes.Status400BadRequest);
+        }
+
         return request.SourceType switch
         {
             EvaluationCriterionSourceType.UndergraduateGpa when request.ExamId is not null || request.MaximumRawScore != 4m =>
@@ -253,6 +261,9 @@ public sealed class EvaluationPolicyService(
             _ => null
         };
     }
+
+    private static int DecimalScale(decimal value) =>
+        (decimal.GetBits(value)[3] >> 16) & 0x7F;
 
     private static string? GuardMutable(ProgramOffering offering)
     {

@@ -30,12 +30,27 @@ public sealed class LocalizedDecimalRangeAttribute
 
     public decimal Minimum { get; }
     public decimal Maximum { get; }
+    public int MaximumFractionalDigits { get; set; } = -1;
 
-    public override bool IsValid(object? value) =>
-        value is null
-        || value is decimal decimalValue
-            && decimalValue >= Minimum
-            && decimalValue <= Maximum;
+    public override bool IsValid(object? value)
+    {
+        EnsureValidMaximumFractionalDigits();
+
+        if (value is null)
+        {
+            return true;
+        }
+
+        if (value is not decimal decimalValue
+            || decimalValue < Minimum
+            || decimalValue > Maximum)
+        {
+            return false;
+        }
+
+        return MaximumFractionalDigits < 0
+            || DecimalScale(decimalValue) <= MaximumFractionalDigits;
+    }
 
     public void AddValidation(ClientModelValidationContext context)
     {
@@ -54,7 +69,28 @@ public sealed class LocalizedDecimalRangeAttribute
             context.Attributes,
             "data-val-localizeddecimal-max",
             Maximum.ToString(CultureInfo.InvariantCulture));
+
+        EnsureValidMaximumFractionalDigits();
+        if (MaximumFractionalDigits >= 0)
+        {
+            MergeAttribute(
+                context.Attributes,
+                "data-val-localizeddecimal-scale",
+                MaximumFractionalDigits.ToString(CultureInfo.InvariantCulture));
+        }
     }
+
+    private void EnsureValidMaximumFractionalDigits()
+    {
+        if (MaximumFractionalDigits is < -1 or > 28)
+        {
+            throw new InvalidOperationException(
+                "Ondalık basamak sınırı -1 ile 28 arasında olmalıdır.");
+        }
+    }
+
+    private static int DecimalScale(decimal value) =>
+        (decimal.GetBits(value)[3] >> 16) & 0x7F;
 
     private static void MergeAttribute(
         IDictionary<string, string> attributes,

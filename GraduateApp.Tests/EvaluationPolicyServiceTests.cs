@@ -129,6 +129,87 @@ public sealed class EvaluationPolicyServiceTests
         Assert.Equal(examId, stored.ExamId);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Create_and_update_reject_scores_with_more_than_four_fractional_digits(
+        bool updateExistingCriterion)
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var examId = offering.ExamRequirements.Single().ExamId;
+        ProgramOfferingEvaluationCriterion? existingCriterion = null;
+
+        if (updateExistingCriterion)
+        {
+            existingCriterion = new ProgramOfferingEvaluationCriterion
+            {
+                PublicId = Guid.NewGuid(),
+                Code = "ALES",
+                NormalizedCode = "ALES",
+                DisplayName = "ALES",
+                SourceType = EvaluationCriterionSourceType.ExamScore,
+                ExamId = examId,
+                WeightBasisPoints = 10000,
+                MaximumRawScore = 1.2345m,
+                TieBreakPriority = 1
+            };
+            offering.EvaluationCriteria.Add(existingCriterion);
+            await db.SaveChangesAsync();
+        }
+
+        var auditCount = db.SecurityAuditLogs.Count();
+        var service = Service(db);
+        ServiceResult<ProgramOfferingEvaluationCriterionDto> result;
+        if (existingCriterion is null)
+        {
+            result = await service.CreateAsync(
+                offering.ProgramOfferingId,
+                7,
+                Criterion(
+                    "ales",
+                    EvaluationCriterionSourceType.ExamScore,
+                    10000,
+                    1.23456m,
+                    1,
+                    examId),
+                CancellationToken.None);
+        }
+        else
+        {
+            result = await service.UpdateAsync(
+                offering.ProgramOfferingId,
+                existingCriterion.PublicId,
+                7,
+                new EvaluationCriterionUpdateDto
+                {
+                    Code = existingCriterion.Code,
+                    DisplayName = existingCriterion.DisplayName,
+                    SourceType = existingCriterion.SourceType,
+                    ExamId = existingCriterion.ExamId,
+                    WeightBasisPoints = existingCriterion.WeightBasisPoints,
+                    MaximumRawScore = 1.23456m,
+                    TieBreakPriority = existingCriterion.TieBreakPriority,
+                    RowVersion = Convert.ToBase64String(existingCriterion.RowVersion)
+                },
+                CancellationToken.None);
+        }
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+        Assert.Contains("en fazla 4 ondalık", result.Error, StringComparison.Ordinal);
+        Assert.Equal(auditCount, db.SecurityAuditLogs.Count());
+        if (existingCriterion is null)
+        {
+            Assert.Empty(db.ProgramOfferingEvaluationCriteria);
+        }
+        else
+        {
+            Assert.Equal(1.2345m, existingCriterion.MaximumRawScore);
+            Assert.Same(existingCriterion, Assert.Single(db.ProgramOfferingEvaluationCriteria));
+        }
+    }
+
     [Fact]
     public async Task Weight_total_cannot_exceed_ten_thousand_basis_points()
     {
