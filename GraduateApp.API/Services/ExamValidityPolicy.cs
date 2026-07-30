@@ -6,14 +6,21 @@ internal static class ExamValidityPolicy
 
     private static readonly Lazy<TimeZoneInfo> IstanbulTimeZone = new(ResolveIstanbulTimeZone);
 
-    public static bool IsAles(string examName)
+    public static bool IsAles(string examName) =>
+        NormalizeExamName(examName).Contains("ALES", StringComparison.Ordinal);
+
+    public static bool UsesHundredPointScale(string examName)
     {
-        var normalized = examName.Trim();
-        return normalized.Equals("ALES", StringComparison.OrdinalIgnoreCase)
-            || normalized.StartsWith("ALES ", StringComparison.OrdinalIgnoreCase)
-            || normalized.StartsWith("ALES-", StringComparison.OrdinalIgnoreCase)
-            || normalized.StartsWith("ALES/", StringComparison.OrdinalIgnoreCase);
+        var normalized = NormalizeExamName(examName);
+        return normalized.Contains("ALES", StringComparison.Ordinal)
+            || normalized.Contains("YDS", StringComparison.Ordinal)
+            || normalized.Contains("YOKDIL", StringComparison.Ordinal);
     }
+
+    private static string NormalizeExamName(string examName) =>
+        examName.Trim().ToUpperInvariant()
+            .Replace('Ö', 'O')
+            .Replace('İ', 'I');
 
     public static DateOnly GetAlesEarliestAcceptedResultDate(DateTime applicationDeadlineUtc)
     {
