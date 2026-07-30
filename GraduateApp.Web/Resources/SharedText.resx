@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="Application.Name" xml:space="preserve">
+    <value>Lisansüstü Başvuru Sistemi</value>
+  </data>
+  <data name="University.Name" xml:space="preserve">
+    <value>Çukurova Üniversitesi</value>
+  </data>
+  <data name="Brand.HomeLabel" xml:space="preserve">
+    <value>Çukurova Üniversitesi Lisansüstü Başvuru Sistemi ana sayfa</value>
+  </data>
+  <data name="Navigation.SkipToContent" xml:space="preserve">
+    <value>Ana içeriğe geç</value>
+  </data>
+  <data name="Environment.Development" xml:space="preserve">
+    <value>Geliştirme ortamı</value>
+  </data>
+  <data name="Environment.Warning" xml:space="preserve">
+    <value>Bu ortam gerçek başvuru işlemleri için kullanılmamalıdır.</value>
+  </data>
+  <data name="Navigation.MainMenu" xml:space="preserve">
+    <value>Ana menü</value>
+  </data>
+  <data name="Navigation.Toggle" xml:space="preserve">
+    <value>Menüyü aç veya kapat</value>
+  </data>
+  <data name="Navigation.Home" xml:space="preserve">
+    <value>Ana sayfa</value>
+  </data>
+  <data name="Navigation.MyApplications" xml:space="preserve">
+    <value>Başvurularım</value>
+  </data>
+  <data name="Navigation.MyExamScores" xml:space="preserve">
+    <value>Sınav sonuçlarım</value>
+  </data>
+  <data name="Navigation.MyProfile" xml:space="preserve">
+    <value>Profilim</value>
+  </data>
+  <data name="Navigation.Applications" xml:space="preserve">
+    <value>Başvurular</value>
+  </data>
+  <data name="Navigation.Offerings" xml:space="preserve">
+    <value>İlanlar ve değerlendirme</value>
+  </data>
+  <data name="Navigation.AcademicCatalog" xml:space="preserve">
+    <value>Akademik katalog</value>
+  </data>
+  <data name="Navigation.InstitutesPrograms" xml:space="preserve">
+    <value>Enstitüler ve programlar</value>
+  </data>
+  <data name="Navigation.Universities" xml:space="preserve">
+    <value>Üniversiteler</value>
+  </data>
+  <data name="Navigation.AccountManagement" xml:space="preserve">
+    <value>Hesap yönetimi</value>
+  </data>
+  <data name="Navigation.Students" xml:space="preserve">
+    <value>Öğrenciler</value>
+  </data>
+  <data name="Navigation.Administrators" xml:space="preserve">
+    <value>Yöneticiler</value>
+  </data>
+  <data name="Session.Information" xml:space="preserve">
+    <value>Oturum bilgisi</value>
+  </data>
+  <data name="Session.Account" xml:space="preserve">
+    <value>{0} hesabı</value>
+  </data>
+  <data name="Role.Admin" xml:space="preserve">
+    <value>Yönetici</value>
+  </data>
+  <data name="Role.Student" xml:space="preserve">
+    <value>Öğrenci</value>
+  </data>
+  <data name="Session.ChangePassword" xml:space="preserve">
+    <value>Parola değiştir</value>
+  </data>
+  <data name="Session.SecureLogout" xml:space="preserve">
+    <value>Güvenli çıkış</value>
+  </data>
+  <data name="Session.Actions" xml:space="preserve">
+    <value>Hesap işlemleri</value>
+  </data>
+  <data name="Session.StudentLogin" xml:space="preserve">
+    <value>Öğrenci girişi</value>
+  </data>
+  <data name="Session.AdminLogin" xml:space="preserve">
+    <value>Yönetici girişi</value>
+  </data>
+  <data name="Session.StudentRegistration" xml:space="preserve">
+    <value>Öğrenci kaydı</value>
+  </data>
+  <data name="Alert.Success" xml:space="preserve">
+    <value>İşlem tamamlandı.</value>
+  </data>
+  <data name="Alert.Warning" xml:space="preserve">
+    <value>Dikkat.</value>
+  </data>
+  <data name="Alert.Error" xml:space="preserve">
+    <value>İşlem tamamlanamadı.</value>
+  </data>
+  <data name="Footer.Privacy" xml:space="preserve">
+    <value>Gizlilik ve aydınlatma</value>
+  </data>
+  <data name="Language.Label" xml:space="preserve">
+    <value>Dil</value>
+  </data>
+  <data name="Language.Turkish" xml:space="preserve">
+    <value>Türkçe</value>
+  </data>
+  <data name="Language.English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Language.Apply" xml:space="preserve">
+    <value>Uygula</value>
+  </data>
+  <data name="Login.StudentTitle" xml:space="preserve">
+    <value>Öğrenci girişi</value>
+  </data>
+  <data name="Login.AdminTitle" xml:space="preserve">
+    <value>Yönetici girişi</value>
+  </data>
+  <data name="Login.StudentEyebrow" xml:space="preserve">
+    <value>Öğrenci erişimi</value>
+  </data>
+  <data name="Login.AdminEyebrow" xml:space="preserve">
+    <value>Yetkili erişimi</value>
+  </data>
+  <data name="Login.StudentIntro" xml:space="preserve">
+    <value>Başvurularınızı oluşturmak, belgelerinizi yönetmek ve sonuçlarınızı takip etmek için giriş yapın.</value>
+  </data>
+  <data name="Login.AdminIntro" xml:space="preserve">
+    <value>Bu alan yalnızca yetkilendirilmiş enstitü ve sistem yöneticileri içindir.</value>
+  </data>
+  <data name="Login.StudentContext" xml:space="preserve">
+    <value>Öğrenci hesabı</value>
+  </data>
+  <data name="Login.AdminContext" xml:space="preserve">
+    <value>Yönetici hesabı</value>
+  </data>
+  <data name="Login.StudentHint" xml:space="preserve">
+    <value>TC kimlik numaranızı veya kayıtlı e-posta adresinizi kullanabilirsiniz.</value>
+  </data>
+  <data name="Login.AdminHint" xml:space="preserve">
+    <value>Yöneticiler kurumsal e-posta adresiyle giriş yapar.</value>
+  </data>
+  <data name="Login.ExistingSession" xml:space="preserve">
+    <value>Şu anda {0} hesabıyla oturumunuz açık.</value>
+  </data>
+  <data name="Login.OtherAccount" xml:space="preserve">
+    <value>başka bir</value>
+  </data>
+  <data name="Login.SwitchAccount" xml:space="preserve">
+    <value>Farklı hesapla giriş yap</value>
+  </data>
+  <data name="Login.Username" xml:space="preserve">
+    <value>TC kimlik numarası veya e-posta</value>
+  </data>
+  <data name="Login.Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="Login.RememberMe" xml:space="preserve">
+    <value>Bu cihazda oturumu açık tut</value>
+  </data>
+  <data name="Login.Submit" xml:space="preserve">
+    <value>Giriş yap</value>
+  </data>
+  <data name="Login.ForgotPassword" xml:space="preserve">
+    <value>Parolamı unuttum</value>
+  </data>
+  <data name="Login.GoStudent" xml:space="preserve">
+    <value>Öğrenci girişine geç</value>
+  </data>
+  <data name="Login.GoAdmin" xml:space="preserve">
+    <value>Yönetici girişine geç</value>
+  </data>
+  <data name="Login.NoAccount" xml:space="preserve">
+    <value>Henüz hesabınız yok mu?</value>
+  </data>
+  <data name="Login.CreateRegistration" xml:space="preserve">
+    <value>Öğrenci kaydı oluşturun.</value>
+  </data>
+  <data name="Home.Title" xml:space="preserve">
+    <value>Ana sayfa</value>
+  </data>
+  <data name="Home.Eyebrow" xml:space="preserve">
+    <value>Çukurova Üniversitesi</value>
+  </data>
+  <data name="Home.HeroTitle" xml:space="preserve">
+    <value>Lisansüstü eğitime giden yolunuzu güvenle yönetin</value>
+  </data>
+  <data name="Home.HeroLead" xml:space="preserve">
+    <value>Başvuruya açık programları inceleyin, belgelerinizi güvenli biçimde yükleyin ve başvurunuzun her adımını tek panelden takip edin.</value>
+  </data>
+  <data name="Home.CreateRegistration" xml:space="preserve">
+    <value>Öğrenci kaydı oluştur</value>
+  </data>
+  <data name="Home.StudentLogin" xml:space="preserve">
+    <value>Öğrenci girişi</value>
+  </data>
+  <data name="Home.GoStudentPanel" xml:space="preserve">
+    <value>Öğrenci paneline git</value>
+  </data>
+  <data name="Home.GoAdminPanel" xml:space="preserve">
+    <value>Yönetim paneline git</value>
+  </data>
+  <data name="Home.Period" xml:space="preserve">
+    <value>2026–2027 akademik dönemi</value>
+  </data>
+  <data name="Home.OpenPrograms" xml:space="preserve">
+    <value>Başvuruya açık lisansüstü programlar</value>
+  </data>
+  <data name="Home.Compare" xml:space="preserve">
+    <value>Son başvuru tarihlerini ve temel program bilgilerini karşılaştırın.</value>
+  </data>
+  <data name="Home.SearchAria" xml:space="preserve">
+    <value>Açık programlarda ara</value>
+  </data>
+  <data name="Home.SearchLabel" xml:space="preserve">
+    <value>Program, enstitü veya derece ara</value>
+  </data>
+  <data name="Home.SearchPlaceholder" xml:space="preserve">
+    <value>Örn. Bilgisayar, Fen Bilimleri veya Doktora</value>
+  </data>
+  <data name="Home.YearLabel" xml:space="preserve">
+    <value>Akademik yıl başlangıcı</value>
+  </data>
+  <data name="Home.TermLabel" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Home.AllTerms" xml:space="preserve">
+    <value>Tüm dönemler</value>
+  </data>
+  <data name="Home.SearchButton" xml:space="preserve">
+    <value>Programları ara</value>
+  </data>
+  <data name="Home.ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="Home.LoadError" xml:space="preserve">
+    <value>Program bilgileri alınamadı.</value>
+  </data>
+  <data name="Home.NoMatch" xml:space="preserve">
+    <value>Arama ölçütlerine uygun açık program bulunamadı</value>
+  </data>
+  <data name="Home.TryDifferent" xml:space="preserve">
+    <value>Arama metnini veya akademik dönem filtrelerini değiştirerek yeniden deneyin.</value>
+  </data>
+  <data name="Home.ShowAll" xml:space="preserve">
+    <value>Tüm açık programları göster</value>
+  </data>
+  <data name="Home.NoPrograms" xml:space="preserve">
+    <value>Şu anda açık program bulunmuyor</value>
+  </data>
+  <data name="Home.NoProgramsLead" xml:space="preserve">
+    <value>Yeni başvuru dönemleri açıldığında programlar bu alanda listelenecektir.</value>
+  </data>
+  <data name="Home.AcademicPeriod" xml:space="preserve">
+    <value>Akademik dönem</value>
+  </data>
+  <data name="Home.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="Home.People" xml:space="preserve">
+    <value>{0} kişi</value>
+  </data>
+  <data name="Home.Deadline" xml:space="preserve">
+    <value>Son başvuru</value>
+  </data>
+  <data name="Home.IstanbulTime" xml:space="preserve">
+    <value>İstanbul saati</value>
+  </data>
+  <data name="Home.LoginToApply" xml:space="preserve">
+    <value>Başvuru için giriş yap</value>
+  </data>
+</root>
