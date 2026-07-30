@@ -5,11 +5,31 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace GraduateApp.Web.Validation;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
-public sealed class LocalizedDecimalRangeAttribute(int minimum, int maximum)
+public sealed class LocalizedDecimalRangeAttribute
     : ValidationAttribute, IClientModelValidator
 {
-    public decimal Minimum { get; } = minimum;
-    public decimal Maximum { get; } = maximum;
+    public LocalizedDecimalRangeAttribute(int minimum, int maximum)
+        : this(
+            minimum.ToString(CultureInfo.InvariantCulture),
+            maximum.ToString(CultureInfo.InvariantCulture))
+    {
+    }
+
+    public LocalizedDecimalRangeAttribute(string minimum, string maximum)
+    {
+        Minimum = decimal.Parse(minimum, NumberStyles.Number, CultureInfo.InvariantCulture);
+        Maximum = decimal.Parse(maximum, NumberStyles.Number, CultureInfo.InvariantCulture);
+
+        if (Minimum > Maximum)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(minimum),
+                "Minimum değer maksimum değerden büyük olamaz.");
+        }
+    }
+
+    public decimal Minimum { get; }
+    public decimal Maximum { get; }
 
     public override bool IsValid(object? value) =>
         value is null
