@@ -117,6 +117,24 @@ public sealed class GraduateApiClient(HttpClient httpClient)
     public Task<ApiResult> SubmitApplicationAsync(Guid publicId, CancellationToken cancellationToken) =>
         PostAsync($"api/applications/mine/{publicId:D}/submit", new { }, cancellationToken);
 
+    public Task<ApiResult> WithdrawApplicationAsync(
+        Guid publicId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync(
+            $"api/applications/mine/{publicId:D}/withdraw",
+            new { rowVersion },
+            cancellationToken);
+
+    public Task<ApiResult> ReactivateApplicationAsync(
+        Guid publicId,
+        string rowVersion,
+        CancellationToken cancellationToken) =>
+        PostAsync(
+            $"api/applications/mine/{publicId:D}/reactivate",
+            new { rowVersion },
+            cancellationToken);
+
     public async Task<ApiResult<ApplicationDocumentViewModel>> UploadApplicationDocumentAsync(
         Guid applicationPublicId,
         Guid requirementPublicId,
