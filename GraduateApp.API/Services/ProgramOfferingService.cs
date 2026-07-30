@@ -517,10 +517,27 @@ public sealed class ProgramOfferingService(
         }
 
         var examIds = request.ExamRequirements.Select(item => item.ExamId).Distinct().ToArray();
-        if (examIds.Length > 0
-            && await dbContext.Exams.CountAsync(item => examIds.Contains(item.ExamId), cancellationToken) != examIds.Length)
+        Dictionary<int, string> examNamesById = [];
+        if (examIds.Length > 0)
         {
-            return InvalidRequest("Sınav koşullarından biri bulunamadı.");
+            examNamesById = await dbContext.Exams
+                .Where(item => examIds.Contains(item.ExamId))
+                .ToDictionaryAsync(item => item.ExamId, item => item.ExamName, cancellationToken);
+            if (examNamesById.Count != examIds.Length)
+            {
+                return InvalidRequest("Sınav koşullarından biri bulunamadı.");
+            }
+        }
+
+        var expectedAlesDate = ExamValidityPolicy.GetAlesEarliestAcceptedResultDate(
+            request.ApplicationDeadlineUtc);
+        if (request.ExamRequirements.Any(requirement =>
+            ExamValidityPolicy.IsAles(examNamesById[requirement.ExamId])
+            && requirement.MinimumValidityDate != expectedAlesDate))
+        {
+            return InvalidRequest(
+                $"ALES için en eski kabul edilen sonuç tarihi {expectedAlesDate:dd.MM.yyyy} olmalıdır. "
+                + "Bu tarih son başvuru tarihinden beş yıl öncesidir.");
         }
 
         if (await dbContext.ProgramOfferings.AnyAsync(
