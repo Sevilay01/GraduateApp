@@ -110,6 +110,21 @@
 }
 else
 {
+    @if (Model.CanUpdateDocuments && Model.ApplicationDeadlineUtc.HasValue)
+    {
+        <div class="alert alert-info" role="status">
+            Belgelerinizi son başvuru tarihi olan
+            <strong>@IstanbulTime.FromUtc(Model.ApplicationDeadlineUtc.Value).ToString("dd.MM.yyyy HH:mm")</strong>
+            anına kadar güncelleyebilirsiniz. Yeni sürüm yeniden incelenir.
+        </div>
+    }
+    else if (Model.CurrentStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview)
+    {
+        <div class="alert alert-secondary" role="status">
+            İlan kapalı olduğu veya son başvuru tarihi geçtiği için belgeler artık güncellenemez.
+        </div>
+    }
+
     @if (Model.MissingRequiredDocuments.Count > 0)
     {
         <div class="alert alert-warning" role="alert">
@@ -121,9 +136,7 @@ else
         @foreach (var requirement in Model.DocumentRequirements)
         {
             var document = requirement.CurrentDocument;
-            var canUpload = Model.CurrentStatus == ApplicationStatus.Draft
-                || (Model.CurrentStatus is ApplicationStatus.Pending or ApplicationStatus.UnderReview
-                    && document?.ReviewStatus == DocumentReviewStatus.Rejected);
+            var canUpload = Model.CanUpdateDocuments;
 
             <article class="document-card @(requirement.IsRequired ? "document-card--required" : null)">
                 <header>
@@ -190,6 +203,12 @@ else
 
                 @if (canUpload)
                 {
+                    @if (document?.ReviewStatus == DocumentReviewStatus.Approved)
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            Bu belgeyi güncellerseniz mevcut onay geçersiz olur ve yeni sürüm yeniden incelenir.
+                        </div>
+                    }
                     <form asp-action="UploadDocument"
                           asp-route-publicId="@Model.PublicId"
                           asp-route-requirementPublicId="@requirement.PublicId"
@@ -197,7 +216,7 @@ else
                           enctype="multipart/form-data"
                           class="upload-form">
                         <label class="form-label" for="file-@requirement.PublicId">
-                            @(document is null ? "Belge yükle" : "Yeni sürüm yükle")
+                            @(document is null ? "Belge yükle" : "Belgeyi güncelle")
                         </label>
                         <div class="input-group">
                             <input id="file-@requirement.PublicId"
@@ -206,7 +225,9 @@ else
                                    class="form-control"
                                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                                    required />
-                            <button type="submit" class="btn btn-primary">Yükle</button>
+                            <button type="submit" class="btn btn-primary">
+                                @(document is null ? "Yükle" : "Belgeyi güncelle")
+                            </button>
                         </div>
                     </form>
                 }
