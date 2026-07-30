@@ -997,7 +997,8 @@ public sealed class GraduateUiFoundationRazorTests
             TermName = "Güz",
             CurrentStatus = ApplicationStatus.UnderReview,
             RowVersion = "AQIDBA==",
-            CanWithdraw = true
+            CanWithdraw = true,
+            UsesEvaluationWorkflow = true
         };
 
         var withdrawHtml = await RenderMainViewAsync(
