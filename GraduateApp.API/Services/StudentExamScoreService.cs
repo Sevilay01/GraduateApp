@@ -47,7 +47,7 @@ public sealed class StudentExamScoreService(
         return exams.Select(item => new StudentExamCatalogItemDto(
                 item.ExamId,
                 item.ExamName,
-                UsesHundredPointScale(item.ExamName) ? 100m : 999.99m))
+                ExamValidityPolicy.UsesHundredPointScale(item.ExamName) ? 100m : 999.99m))
             .ToArray();
     }
 
@@ -169,7 +169,7 @@ public sealed class StudentExamScoreService(
             return ScoreValidation.Failure("Seçilen sınav bulunamadı.", StatusCodes.Status404NotFound);
         }
 
-        var maximumScore = UsesHundredPointScale(exam.ExamName) ? 100m : 999.99m;
+        var maximumScore = ExamValidityPolicy.UsesHundredPointScale(exam.ExamName) ? 100m : 999.99m;
         if (request.Score.Value < 0 || request.Score.Value > maximumScore)
         {
             var error = maximumScore == 100m
@@ -192,16 +192,6 @@ public sealed class StudentExamScoreService(
 
     private DateOnly TodayInIstanbul() =>
         DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime.AddHours(3));
-
-    private static bool UsesHundredPointScale(string examName)
-    {
-        var normalized = examName.Trim().ToUpperInvariant()
-            .Replace('Ö', 'O')
-            .Replace('İ', 'I');
-        return normalized.Contains("ALES", StringComparison.Ordinal)
-            || normalized.Contains("YDS", StringComparison.Ordinal)
-            || normalized.Contains("YOKDIL", StringComparison.Ordinal);
-    }
 
     private static StudentExamScoreDto Map(StudentExamScore score) =>
         new(score.ScoreId, score.ExamId, score.Exam.ExamName, score.Score, score.ExamDate);
