@@ -102,6 +102,47 @@ public sealed class ProgramOfferingServiceTests
         }
     }
 
+    [Theory]
+    [InlineData("ÖSYM ALES")]
+    [InlineData("2026 ALES")]
+    public async Task Create_and_catalog_use_canonical_ALES_classification(string examName)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var ales = new Exam { ExamName = examName };
+        db.Exams.Add(ales);
+        await db.SaveChangesAsync();
+        var baseRequest = CreateRequest(program.ProgramId, AcademicTerm.Fall);
+        var request = new ProgramOfferingCreateDto
+        {
+            ProgramId = baseRequest.ProgramId,
+            AcademicYearStart = baseRequest.AcademicYearStart,
+            Term = baseRequest.Term,
+            ApplicationStartUtc = baseRequest.ApplicationStartUtc,
+            ApplicationDeadlineUtc = baseRequest.ApplicationDeadlineUtc,
+            Quota = baseRequest.Quota,
+            ExamRequirements =
+            [
+                new ProgramOfferingRequirementInputDto
+                {
+                    ExamId = ales.ExamId,
+                    MinimumScore = 55m,
+                    IsRequired = true
+                }
+            ]
+        };
+        var service = CreateService(db);
+
+        var catalog = await service.GetCatalogAsync(CancellationToken.None);
+        var result = await service.CreateAsync(1, request, CancellationToken.None);
+
+        Assert.True(Assert.Single(catalog.Exams).IsAles);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+        Assert.Contains("beş yıl öncesidir", result.Error, StringComparison.Ordinal);
+        Assert.Empty(db.ProgramOfferings);
+    }
+
     [Fact]
     public async Task Create_rejects_duplicate_program_year_term_but_allows_another_term()
     {
@@ -662,6 +703,47 @@ public sealed class ProgramOfferingServiceTests
         Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
     }
 
+    [Theory]
+    [InlineData(OfferingEvaluationState.Finalized, false)]
+    [InlineData(OfferingEvaluationState.Finalized, true)]
+    [InlineData(OfferingEvaluationState.Published, false)]
+    [InlineData(OfferingEvaluationState.Published, true)]
+    public async Task Finalized_or_published_legacy_ALES_offering_allows_only_safe_close_or_archive(
+        OfferingEvaluationState state,
+        bool archive)
+    {
+        await using var db = TestDb.Create();
+        var program = await SeedProgramAsync(db);
+        var offering = AddOffering(db, program.ProgramId);
+        AddValidExamEvaluationPolicy(db, offering);
+        offering.ExamRequirements.Single().MinimumValidityDate = null;
+        offering.IsOpen = true;
+        offering.EvaluationState = state;
+        offering.Applications.Add(CreateApplication("10000000146", ApplicationStatus.UnderReview));
+        await db.SaveChangesAsync();
+        var originalApplicationStatus = offering.Applications.Single().CurrentStatus;
+        var originalCriterionCount = offering.EvaluationCriteria.Count;
+
+        var result = await CreateService(db).UpdateAsync(
+            offering.ProgramOfferingId,
+            41,
+            UpdateRequest(offering, isOpen: false, isArchived: archive),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value!.IsOpen);
+        Assert.Equal(archive, result.Value.IsArchived);
+        Assert.Equal(state, result.Value.EvaluationState);
+        Assert.Null(Assert.Single(result.Value.ExamRequirements).MinimumValidityDate);
+        Assert.Equal(originalApplicationStatus, offering.Applications.Single().CurrentStatus);
+        Assert.Equal(originalCriterionCount, offering.EvaluationCriteria.Count);
+        Assert.Single(
+            db.SecurityAuditLogs,
+            item => item.EventType == (archive
+                ? "ProgramOfferingArchived"
+                : "ProgramOfferingUpdated"));
+    }
+
     [Fact]
     public async Task Existing_legacy_offering_can_enable_evaluation_only_before_any_draft_exists()
     {
@@ -838,7 +920,8 @@ public sealed class ProgramOfferingServiceTests
         bool? usesEvaluationWorkflow = null,
         int? quota = null,
         DateTime? applicationDeadlineUtc = null,
-        IReadOnlyList<ProgramOfferingRequirementInputDto>? examRequirements = null) => new()
+        IReadOnlyList<ProgramOfferingRequirementInputDto>? examRequirements = null,
+        bool isArchived = false) => new()
         {
             ProgramId = offering.ProgramId,
             AcademicYearStart = offering.AcademicYearStart,
@@ -847,6 +930,7 @@ public sealed class ProgramOfferingServiceTests
             ApplicationDeadlineUtc = applicationDeadlineUtc ?? offering.ApplicationDeadlineUtc!.Value,
             Quota = quota ?? offering.Quota,
             IsOpen = isOpen,
+            IsArchived = isArchived,
             UsesEvaluationWorkflow = usesEvaluationWorkflow ?? offering.UsesEvaluationWorkflow,
             ExamRequirements = examRequirements
                 ?? offering.ExamRequirements
