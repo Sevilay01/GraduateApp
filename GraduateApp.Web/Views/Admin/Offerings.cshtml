@@ -534,10 +534,7 @@
                     @for (var index = 0; index < Model.Form.Exams.Count; index++)
                     {
                         var exam = Model.Form.Exams[index];
-                        var isAles = exam.ExamName.Trim().Equals("ALES", StringComparison.OrdinalIgnoreCase)
-                            || exam.ExamName.Trim().StartsWith("ALES ", StringComparison.OrdinalIgnoreCase)
-                            || exam.ExamName.Trim().StartsWith("ALES-", StringComparison.OrdinalIgnoreCase)
-                            || exam.ExamName.Trim().StartsWith("ALES/", StringComparison.OrdinalIgnoreCase);
+                        var isAles = exam.IsAles;
                         <div class="admin-summary-card"
                              data-exam-requirement
                              data-ales-validity="@(isAles ? "true" : "false")">
