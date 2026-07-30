@@ -558,8 +558,11 @@ public sealed class ApplicationService(
         CancellationToken cancellationToken)
     {
         var draft = ApplicationStatus.Draft.ToString();
+        var withdrawn = ApplicationStatus.Withdrawn.ToString();
         var candidates = await dbContext.Applications.AsNoTracking()
-            .Where(item => item.UsesDocumentWorkflow && item.CurrentStatus != draft)
+            .Where(item => item.UsesDocumentWorkflow
+                && item.CurrentStatus != draft
+                && item.CurrentStatus != withdrawn)
             .Select(item => new
             {
                 item.PublicId,
