@@ -39,6 +39,47 @@ public sealed class LocalDbConnectionRetryTests
     }
 
     [Fact]
+    public async Task Four_transient_open_failures_use_bounded_backoff_before_fifth_attempt_succeeds()
+    {
+        var connections = new List<FakeConnection>();
+        var delays = new List<TimeSpan>();
+        var openAttempts = 0;
+
+        var result = await LocalDbTestSupport.OpenConnectionWithRetryAsync(
+            () =>
+            {
+                var connection = new FakeConnection();
+                connections.Add(connection);
+                return connection;
+            },
+            (_, _) => ++openAttempts < LocalDbTestSupport.ConnectionOpenMaxAttempts
+                ? Task.FromException(TestSqlExceptionFactory.Create(-2))
+                : Task.CompletedTask,
+            connection => connection.DisposeAsync(),
+            (delay, _) =>
+            {
+                delays.Add(delay);
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.Equal(LocalDbTestSupport.ConnectionOpenMaxAttempts, openAttempts);
+        Assert.Equal(LocalDbTestSupport.ConnectionOpenMaxAttempts, connections.Count);
+        Assert.All(connections[..^1], connection => Assert.True(connection.IsDisposed));
+        Assert.False(connections[^1].IsDisposed);
+        Assert.Same(connections[^1], result);
+        Assert.Equal(
+        [
+            TimeSpan.FromMilliseconds(100),
+            TimeSpan.FromMilliseconds(250),
+            TimeSpan.FromMilliseconds(500),
+            TimeSpan.FromMilliseconds(1000)
+        ],
+            delays);
+        await result.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Transient_open_failure_is_propagated_after_the_bounded_attempt_limit()
     {
         var connections = new List<FakeConnection>();
