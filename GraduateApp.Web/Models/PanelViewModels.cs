@@ -151,7 +151,10 @@ public sealed class StudentApplicationDetailViewModel
     public DateTime ApplicationDateUtc { get; set; }
     public DateTime? ApplicationDeadlineUtc { get; set; }
     public bool CanUpdateDocuments { get; set; }
+    public bool CanWithdraw { get; set; }
+    public bool CanReactivate { get; set; }
     public ApplicationStatus CurrentStatus { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
     public bool UsesDocumentWorkflow { get; set; }
     public bool UsesEvaluationWorkflow { get; set; }
     public PublishedApplicationEvaluationViewModel? PublishedEvaluation { get; set; }

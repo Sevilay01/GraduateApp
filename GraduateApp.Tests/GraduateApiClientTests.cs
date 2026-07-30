@@ -193,6 +193,39 @@ public sealed class GraduateApiClientTests
         Assert.Equal(HttpStatusCode.BadGateway, result.StatusCode);
     }
 
+    [Theory]
+    [InlineData(false, "withdraw")]
+    [InlineData(true, "reactivate")]
+    public async Task Student_application_lifecycle_commands_preserve_route_and_row_version(
+        bool reactivate,
+        string routeSegment)
+    {
+        var publicId = Guid.Parse("0279A8F5-7659-44F5-8891-03AEE20612F0");
+        const string rowVersion = "AQIDBAUGBwg=";
+        var handler = new CaptureHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.example.test/")
+        };
+        var client = new GraduateApiClient(httpClient);
+
+        if (reactivate)
+        {
+            await client.ReactivateApplicationAsync(publicId, rowVersion, CancellationToken.None);
+        }
+        else
+        {
+            await client.WithdrawApplicationAsync(publicId, rowVersion, CancellationToken.None);
+        }
+
+        Assert.Equal(HttpMethod.Post, handler.Method);
+        Assert.Equal(
+            $"/api/applications/mine/{publicId:D}/{routeSegment}",
+            handler.RequestUri?.PathAndQuery);
+        using var body = JsonDocument.Parse(handler.RequestBody!);
+        Assert.Equal(rowVersion, body.RootElement.GetProperty("rowVersion").GetString());
+    }
+
     [Fact]
     public async Task Create_offering_sends_null_row_version()
     {

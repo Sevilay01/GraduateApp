@@ -526,6 +526,156 @@ public sealed class ApplicationServiceTests
     }
 
     [Fact]
+    public async Task Student_can_withdraw_submitted_application_and_reactivate_it_as_a_clean_draft()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        await ConfigureEvaluationAsync(db, offering, "10000000146");
+        var service = CreateService(db);
+        var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        var application = db.Applications.Single();
+        AddCurrentDocument(application);
+        await db.SaveChangesAsync();
+        Assert.True((await service.SubmitAsync(
+            "10000000146",
+            draft.Value!.PublicId,
+            CancellationToken.None)).IsSuccess);
+        application.CurrentStatus = ApplicationStatus.UnderReview.ToString();
+        application.RowVersion = [1, 2, 3];
+        await db.SaveChangesAsync();
+
+        var beforeWithdrawal = await service.GetDetailForStudentAsync(
+            "10000000146",
+            application.PublicId,
+            CancellationToken.None);
+        var withdrawal = await service.WithdrawAsync(
+            "10000000146",
+            application.PublicId,
+            new StudentApplicationCommandDto
+            {
+                RowVersion = Convert.ToBase64String(application.RowVersion)
+            },
+            CancellationToken.None);
+
+        Assert.NotNull(beforeWithdrawal);
+        Assert.True(beforeWithdrawal.CanWithdraw);
+        Assert.False(beforeWithdrawal.CanReactivate);
+        Assert.True(withdrawal.IsSuccess);
+        Assert.Equal(ApplicationStatus.Withdrawn.ToString(), application.CurrentStatus);
+        Assert.NotEmpty(db.ApplicationScoreSnapshots);
+        Assert.NotEmpty(db.ApplicationEvaluations);
+        Assert.Single(application.Documents, item => item.IsCurrent);
+        Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "ApplicationWithdrawnByStudent");
+
+        var withdrawnDetail = await service.GetDetailForStudentAsync(
+            "10000000146",
+            application.PublicId,
+            CancellationToken.None);
+        var reactivation = await service.ReactivateAsync(
+            "10000000146",
+            application.PublicId,
+            new StudentApplicationCommandDto
+            {
+                RowVersion = Convert.ToBase64String(application.RowVersion)
+            },
+            CancellationToken.None);
+
+        Assert.NotNull(withdrawnDetail);
+        Assert.False(withdrawnDetail.CanWithdraw);
+        Assert.True(withdrawnDetail.CanReactivate);
+        Assert.True(reactivation.IsSuccess);
+        Assert.Equal(ApplicationStatus.Draft.ToString(), application.CurrentStatus);
+        Assert.Empty(db.ApplicationScoreSnapshots);
+        Assert.Empty(db.ApplicationEvaluations);
+        Assert.Empty(db.ApplicationEvaluationComponents);
+        Assert.Single(application.Documents, item => item.IsCurrent);
+        Assert.Contains(db.ApplicationStatusHistories, item =>
+            item.PreviousStatus == ApplicationStatus.UnderReview.ToString()
+            && item.StatusName == ApplicationStatus.Withdrawn.ToString());
+        Assert.Contains(db.ApplicationStatusHistories, item =>
+            item.PreviousStatus == ApplicationStatus.Withdrawn.ToString()
+            && item.StatusName == ApplicationStatus.Draft.ToString());
+        Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "ApplicationReactivatedByStudent");
+    }
+
+    [Fact]
+    public async Task Student_application_mutations_are_owner_scoped_and_blocked_after_deadline()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var service = CreateService(db);
+        var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
+        var application = db.Applications.Single();
+        application.CurrentStatus = ApplicationStatus.Pending.ToString();
+        application.RowVersion = [4, 5, 6];
+        await db.SaveChangesAsync();
+        var command = new StudentApplicationCommandDto
+        {
+            RowVersion = Convert.ToBase64String(application.RowVersion)
+        };
+
+        var foreign = await service.WithdrawAsync(
+            "10000000154",
+            application.PublicId,
+            command,
+            CancellationToken.None);
+        offering.ApplicationDeadlineUtc = new DateTime(2026, 7, 16, 23, 59, 0, DateTimeKind.Utc);
+        await db.SaveChangesAsync();
+        var expired = await service.WithdrawAsync(
+            "10000000146",
+            application.PublicId,
+            command,
+            CancellationToken.None);
+
+        Assert.False(foreign.IsSuccess);
+        Assert.Equal(StatusCodes.Status404NotFound, foreign.StatusCode);
+        Assert.False(expired.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, expired.StatusCode);
+        Assert.Equal(ApplicationStatus.Pending.ToString(), application.CurrentStatus);
+        Assert.DoesNotContain(db.SecurityAuditLogs, item =>
+            item.EventType is "ApplicationWithdrawnByStudent" or "ApplicationReactivatedByStudent");
+    }
+
+    [Fact]
+    public async Task Terminal_or_finalized_application_never_exposes_student_lifecycle_capabilities()
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        offering.UsesEvaluationWorkflow = true;
+        offering.EvaluationState = OfferingEvaluationState.Finalized;
+        var application = AddWorkflowApplication(
+            db,
+            offering,
+            "10000000146",
+            ApplicationStatus.Approved,
+            true);
+        application.UsesEvaluationWorkflow = true;
+        application.RowVersion = [7, 8, 9];
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+
+        var detail = await service.GetDetailForStudentAsync(
+            "10000000146",
+            application.PublicId,
+            CancellationToken.None);
+        var withdrawal = await service.WithdrawAsync(
+            "10000000146",
+            application.PublicId,
+            new StudentApplicationCommandDto
+            {
+                RowVersion = Convert.ToBase64String(application.RowVersion)
+            },
+            CancellationToken.None);
+
+        Assert.NotNull(detail);
+        Assert.False(detail.CanWithdraw);
+        Assert.False(detail.CanReactivate);
+        Assert.False(withdrawal.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, withdrawal.StatusCode);
+        Assert.Equal(ApplicationStatus.Approved.ToString(), application.CurrentStatus);
+    }
+
+    [Fact]
     public async Task Read_only_invariant_audit_identifies_all_three_categories_and_excludes_valid_or_draft_records()
     {
         await using var db = TestDb.Create();
@@ -536,12 +686,24 @@ public sealed class ApplicationServiceTests
         var validStudent = CreateStudent("10000000170", "valid@example.test");
         var draftStudent = CreateStudent("10000000189", "draft@example.test");
         var legacyStudent = CreateStudent("10000000197", "legacy@example.test");
-        db.Students.AddRange(missingDocumentStudent, validStudent, draftStudent, legacyStudent);
+        var withdrawnStudent = CreateStudent("10000000200", "withdrawn@example.test");
+        db.Students.AddRange(
+            missingDocumentStudent,
+            validStudent,
+            draftStudent,
+            legacyStudent,
+            withdrawnStudent);
         var missingDocument = AddWorkflowApplication(db, offering, missingDocumentStudent.Tc, ApplicationStatus.Approved, true);
         var valid = AddWorkflowApplication(db, offering, validStudent.Tc, ApplicationStatus.Rejected, true);
         AddCurrentDocument(valid);
         AddWorkflowApplication(db, offering, draftStudent.Tc, ApplicationStatus.Draft, null);
         AddWorkflowApplication(db, offering, legacyStudent.Tc, ApplicationStatus.Pending, null).UsesDocumentWorkflow = false;
+        var withdrawn = AddWorkflowApplication(
+            db,
+            offering,
+            withdrawnStudent.Tc,
+            ApplicationStatus.Withdrawn,
+            true);
         await db.SaveChangesAsync();
         var auditCount = db.SecurityAuditLogs.Count();
         db.ChangeTracker.Clear();
@@ -553,6 +715,7 @@ public sealed class ApplicationServiceTests
         Assert.Equal("NoRequiredRequirementSnapshots", result.Single(item => item.ApplicationPublicId == noRequired.PublicId).ViolationCategory);
         Assert.Equal("MissingRequiredDocuments", result.Single(item => item.ApplicationPublicId == missingDocument.PublicId).ViolationCategory);
         Assert.DoesNotContain(result, item => item.ApplicationPublicId == valid.PublicId);
+        Assert.DoesNotContain(result, item => item.ApplicationPublicId == withdrawn.PublicId);
         Assert.Equal(auditCount, db.SecurityAuditLogs.Count());
         Assert.Empty(db.ChangeTracker.Entries());
     }

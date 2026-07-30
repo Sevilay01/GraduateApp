@@ -984,6 +984,90 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task Student_application_lifecycle_controls_are_capability_gated_and_antiforgery_protected()
+    {
+        using var host = CreateWebHost();
+        var publicId = Guid.Parse("AD1E8726-F34B-4836-959A-EB280EC3FD91");
+        var model = new StudentApplicationDetailViewModel
+        {
+            PublicId = publicId,
+            InstituteName = "Fen Bilimleri Enstitüsü",
+            ProgramName = "Bilgisayar Mühendisliği",
+            AcademicYear = "2026–2027",
+            TermName = "Güz",
+            CurrentStatus = ApplicationStatus.UnderReview,
+            RowVersion = "AQIDBA==",
+            CanWithdraw = true,
+            UsesEvaluationWorkflow = true
+        };
+
+        var withdrawHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        var decodedWithdrawHtml = WebUtility.HtmlDecode(withdrawHtml);
+
+        var withdrawForm = WebUtility.HtmlDecode(
+            FormContaining(withdrawHtml, "name=\"rowVersion\""));
+        Assert.Contains("Başvuruyu geri çek", decodedWithdrawHtml, StringComparison.Ordinal);
+        Assert.Contains("method=\"post\"", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains("/Panel/WithdrawApplication?publicId=", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains($"publicId={publicId:D}", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", withdrawForm, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReactivateApplication", withdrawForm, StringComparison.Ordinal);
+
+        model.CurrentStatus = ApplicationStatus.Withdrawn;
+        model.CanWithdraw = false;
+        model.CanReactivate = true;
+        var reactivateHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        var decodedReactivateHtml = WebUtility.HtmlDecode(reactivateHtml);
+
+        var reactivateForm = WebUtility.HtmlDecode(
+            FormContaining(reactivateHtml, "name=\"rowVersion\""));
+        Assert.Contains("Taslak olarak yeniden etkinleştir", decodedReactivateHtml, StringComparison.Ordinal);
+        Assert.Contains("Geri çekildi", decodedReactivateHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Değerlendirme sürüyor", decodedReactivateHtml, StringComparison.Ordinal);
+        Assert.Contains("method=\"post\"", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains("/Panel/ReactivateApplication?publicId=", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains($"publicId={publicId:D}", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", reactivateForm, StringComparison.Ordinal);
+        Assert.DoesNotContain("WithdrawApplication", reactivateForm, StringComparison.Ordinal);
+
+        var withdrawRoute = Assert.IsType<HttpPostAttribute>(
+            typeof(PanelController)
+                .GetMethod(nameof(PanelController.WithdrawApplication))!
+                .GetCustomAttributes(typeof(HttpPostAttribute), inherit: true)
+                .Single());
+        var reactivateRoute = Assert.IsType<HttpPostAttribute>(
+            typeof(PanelController)
+                .GetMethod(nameof(PanelController.ReactivateApplication))!
+                .GetCustomAttributes(typeof(HttpPostAttribute), inherit: true)
+                .Single());
+        Assert.Equal("Panel/Applications/{publicId:guid}/Withdraw", withdrawRoute.Template);
+        Assert.Equal("Panel/Applications/{publicId:guid}/Reactivate", reactivateRoute.Template);
+
+        model.CurrentStatus = ApplicationStatus.Approved;
+        model.CanReactivate = false;
+        var terminalHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        Assert.DoesNotContain("/Withdraw", terminalHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("/Reactivate", terminalHtml, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Submitted_application_renders_document_replacement_only_while_capability_is_open()
     {
         using var host = CreateWebHost();

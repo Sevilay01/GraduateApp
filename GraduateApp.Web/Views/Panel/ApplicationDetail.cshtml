@@ -16,7 +16,7 @@
 
 <partial name="_ApplicationProgress" model="Model.CurrentStatus" />
 
-@if (Model.UsesEvaluationWorkflow)
+@if (Model.UsesEvaluationWorkflow && Model.CurrentStatus != ApplicationStatus.Withdrawn)
 {
     if (Model.PublishedEvaluation is null)
     {
@@ -256,6 +256,38 @@ else
             <button type="submit" class="btn btn-success" disabled="@(!canSubmit)">Başvuruyu gönder</button>
         </form>
     }
+}
+
+@if (Model.CanWithdraw)
+{
+    <section class="danger-zone" aria-labelledby="withdraw-application-heading">
+        <h2 id="withdraw-application-heading">Başvuruyu geri çek</h2>
+        <p>
+            Geri çekilen başvuru değerlendirme ve kontenjan hesabının dışında kalır.
+            İlan açık ve son tarih geçmemişse daha sonra yeniden etkinleştirebilirsiniz;
+            bu durumda başvuru taslağa döner ve yeniden gönderilmesi gerekir.
+        </p>
+        <form asp-action="WithdrawApplication" asp-route-publicId="@Model.PublicId" method="post">
+            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+            <button type="submit" class="btn btn-danger">Başvuruyu geri çek</button>
+        </form>
+    </section>
+}
+else if (Model.CanReactivate)
+{
+    <section class="submission-panel" aria-labelledby="reactivate-application-heading">
+        <div>
+            <h2 id="reactivate-application-heading">Başvuruyu yeniden etkinleştir</h2>
+            <p>
+                Belgeleriniz korunur. Eski puan ve değerlendirme snapshot’ları temizlenir;
+                güncel bilgileri kontrol ettikten sonra başvuruyu yeniden göndermeniz gerekir.
+            </p>
+        </div>
+        <form asp-action="ReactivateApplication" asp-route-publicId="@Model.PublicId" method="post">
+            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+            <button type="submit" class="btn btn-primary">Taslak olarak yeniden etkinleştir</button>
+        </form>
+    </section>
 }
 
 <a asp-action="Index" class="btn btn-link mt-3">Panele dön</a>

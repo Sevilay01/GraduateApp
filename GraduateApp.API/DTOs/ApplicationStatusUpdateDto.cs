@@ -14,3 +14,10 @@ public sealed class ApplicationStatusUpdateDto
     [StringLength(500)]
     public string? Notes { get; init; }
 }
+
+public sealed class StudentApplicationCommandDto
+{
+    [Required(ErrorMessage = "Eşzamanlılık bilgisi zorunludur.")]
+    [StringLength(64, ErrorMessage = "Eşzamanlılık bilgisi geçersiz.")]
+    public string RowVersion { get; init; } = string.Empty;
+}
