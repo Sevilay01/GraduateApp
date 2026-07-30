@@ -1040,6 +1040,7 @@ public sealed class ApplicationService(
                 item.Documents.Where(document => document.IsCurrent).Select(MapDocument).SingleOrDefault(),
                 []))
             .ToArray();
+        var detailStatus = ParseStatus(application.CurrentStatus);
         return new StudentApplicationDetailDto(
             application.PublicId,
             application.ProgramOffering.Program.ProgramName,
@@ -1054,13 +1055,11 @@ public sealed class ApplicationService(
                 ? DateTime.SpecifyKind(application.ProgramOffering.ApplicationDeadlineUtc.Value, DateTimeKind.Utc)
                 : null,
             CanUpdateDocuments(application, now),
-            ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var detailStatus)
-                && detailStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
+            detailStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
                 && CanChangeStudentApplication(application, now),
-            ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out detailStatus)
-                && detailStatus == ApplicationStatus.Withdrawn
+            detailStatus == ApplicationStatus.Withdrawn
                 && CanChangeStudentApplication(application, now),
-            ParseStatus(application.CurrentStatus),
+            detailStatus,
             Convert.ToBase64String(application.RowVersion),
             application.UsesDocumentWorkflow,
             application.UsesEvaluationWorkflow,
