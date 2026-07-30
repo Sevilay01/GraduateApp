@@ -111,11 +111,17 @@ public sealed class ProgramOfferingService(
                 item.Institute.InstituteName,
                 item.DegreeType))
             .ToListAsync(cancellationToken);
-        var exams = await dbContext.Exams.AsNoTracking()
+        var examRows = await dbContext.Exams.AsNoTracking()
             .OrderBy(item => item.ExamName)
             .ThenBy(item => item.ExamId)
-            .Select(item => new ExamCatalogItemDto(item.ExamId, item.ExamName))
+            .Select(item => new { item.ExamId, item.ExamName })
             .ToListAsync(cancellationToken);
+        var exams = examRows
+            .Select(item => new ExamCatalogItemDto(
+                item.ExamId,
+                item.ExamName,
+                ExamValidityPolicy.IsAles(item.ExamName)))
+            .ToArray();
         return new ProgramOfferingCatalogDto(programs, exams);
     }
 
@@ -135,6 +141,18 @@ public sealed class ProgramOfferingService(
         if (validationError is not null)
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(validationError.Message, validationError.StatusCode);
+        }
+
+        var alesValidationError = await ValidateAlesValidityAsync(
+            request,
+            existingRequirements: null,
+            requireAllAlesDates: true,
+            cancellationToken);
+        if (alesValidationError is not null)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                alesValidationError.Message,
+                alesValidationError.StatusCode);
         }
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
@@ -350,6 +368,20 @@ public sealed class ProgramOfferingService(
         }
 
         var requirementsChanged = !RequirementsAreEquivalent(offering.ExamRequirements, request.ExamRequirements);
+        var proposedIsOpen = request.IsOpen && !request.IsArchived;
+        var deadlineChanged = offering.ApplicationDeadlineUtc != EnsureUtc(request.ApplicationDeadlineUtc);
+        var alesValidationError = await ValidateAlesValidityAsync(
+            request,
+            offering.ExamRequirements,
+            requireAllAlesDates: proposedIsOpen || deadlineChanged,
+            cancellationToken);
+        if (alesValidationError is not null)
+        {
+            return ServiceResult<ProgramOfferingAdminDto>.Failure(
+                alesValidationError.Message,
+                alesValidationError.StatusCode);
+        }
+
         var enablingEvaluationWorkflow = !offering.UsesEvaluationWorkflow && request.UsesEvaluationWorkflow;
         if (offering.UsesEvaluationWorkflow && !request.UsesEvaluationWorkflow)
         {
@@ -378,14 +410,18 @@ public sealed class ProgramOfferingService(
         }
 
         if (offering.UsesEvaluationWorkflow
-            && offering.EvaluationState != OfferingEvaluationState.Configuring)
+            && offering.EvaluationState != OfferingEvaluationState.Configuring
+            && !IsEvaluationLifecycleSafetyOnlyUpdate(
+                offering,
+                request,
+                proposedIsOpen,
+                requirementsChanged))
         {
             return ServiceResult<ProgramOfferingAdminDto>.Failure(
-                "Kesinleştirilmiş veya yayımlanmış bir değerlendirme ilanı değiştirilemez.",
+                "Kesinleştirilmiş veya yayımlanmış bir değerlendirme ilanında yalnız kapatma veya arşivleme yapılabilir.",
                 StatusCodes.Status409Conflict);
         }
 
-        var proposedIsOpen = request.IsOpen && !request.IsArchived;
         var now = timeProvider.GetUtcNow().UtcDateTime;
         if (request.IsOpen && request.ApplicationDeadlineUtc <= now)
         {
@@ -517,27 +553,12 @@ public sealed class ProgramOfferingService(
         }
 
         var examIds = request.ExamRequirements.Select(item => item.ExamId).Distinct().ToArray();
-        Dictionary<int, string> examNamesById = [];
-        if (examIds.Length > 0)
+        if (examIds.Length > 0
+            && await dbContext.Exams.CountAsync(
+                item => examIds.Contains(item.ExamId),
+                cancellationToken) != examIds.Length)
         {
-            examNamesById = await dbContext.Exams
-                .Where(item => examIds.Contains(item.ExamId))
-                .ToDictionaryAsync(item => item.ExamId, item => item.ExamName, cancellationToken);
-            if (examNamesById.Count != examIds.Length)
-            {
-                return InvalidRequest("Sınav koşullarından biri bulunamadı.");
-            }
-        }
-
-        var expectedAlesDate = ExamValidityPolicy.GetAlesEarliestAcceptedResultDate(
-            request.ApplicationDeadlineUtc);
-        if (request.ExamRequirements.Any(requirement =>
-            ExamValidityPolicy.IsAles(examNamesById[requirement.ExamId])
-            && requirement.MinimumValidityDate != expectedAlesDate))
-        {
-            return InvalidRequest(
-                $"ALES için en eski kabul edilen sonuç tarihi {expectedAlesDate:dd.MM.yyyy} olmalıdır. "
-                + "Bu tarih son başvuru tarihinden beş yıl öncesidir.");
+            return InvalidRequest("Sınav koşullarından biri bulunamadı.");
         }
 
         if (await dbContext.ProgramOfferings.AnyAsync(
@@ -550,6 +571,52 @@ public sealed class ProgramOfferingService(
             return new RequestValidationError(
                 "Aynı program, akademik yıl ve dönem için zaten ilan bulunuyor.",
                 StatusCodes.Status409Conflict);
+        }
+
+        return null;
+    }
+
+    private async Task<RequestValidationError?> ValidateAlesValidityAsync(
+        ProgramOfferingCreateDto request,
+        IEnumerable<ProgramOfferingExamRequirement>? existingRequirements,
+        bool requireAllAlesDates,
+        CancellationToken cancellationToken)
+    {
+        var examIds = request.ExamRequirements.Select(item => item.ExamId).Distinct().ToArray();
+        if (examIds.Length == 0)
+        {
+            return null;
+        }
+
+        var examNamesById = await dbContext.Exams.AsNoTracking()
+            .Where(item => examIds.Contains(item.ExamId))
+            .ToDictionaryAsync(item => item.ExamId, item => item.ExamName, cancellationToken);
+        var existingByExamId = existingRequirements?
+            .ToDictionary(item => item.ExamId)
+            ?? new Dictionary<int, ProgramOfferingExamRequirement>();
+        var expectedAlesDate = ExamValidityPolicy.GetAlesEarliestAcceptedResultDate(
+            request.ApplicationDeadlineUtc);
+
+        foreach (var requirement in request.ExamRequirements)
+        {
+            if (!ExamValidityPolicy.IsAles(examNamesById[requirement.ExamId])
+                || requirement.MinimumValidityDate == expectedAlesDate)
+            {
+                continue;
+            }
+
+            var preservesExistingLegacyDate = existingByExamId.TryGetValue(
+                    requirement.ExamId,
+                    out var existing)
+                && existing.MinimumValidityDate == requirement.MinimumValidityDate;
+            if (!requireAllAlesDates && preservesExistingLegacyDate)
+            {
+                continue;
+            }
+
+            return InvalidRequest(
+                $"ALES için en eski kabul edilen sonuç tarihi {expectedAlesDate:dd.MM.yyyy} olmalıdır. "
+                + "Bu tarih son başvuru tarihinden beş yıl öncesidir.");
         }
 
         return null;
@@ -586,6 +653,27 @@ public sealed class ProgramOfferingService(
             }),
             CreatedAtUtc = now
         });
+
+    private static bool IsEvaluationLifecycleSafetyOnlyUpdate(
+        ProgramOffering offering,
+        ProgramOfferingUpdateDto request,
+        bool proposedIsOpen,
+        bool requirementsChanged)
+    {
+        var transitionsToSaferState =
+            (offering.IsOpen && !proposedIsOpen)
+            || (!offering.IsArchived && request.IsArchived);
+        return transitionsToSaferState
+            && !proposedIsOpen
+            && !requirementsChanged
+            && offering.ProgramId == request.ProgramId
+            && offering.AcademicYearStart == request.AcademicYearStart
+            && offering.Term == request.Term
+            && offering.ApplicationStartUtc == EnsureUtc(request.ApplicationStartUtc)
+            && offering.ApplicationDeadlineUtc == EnsureUtc(request.ApplicationDeadlineUtc)
+            && offering.Quota == request.Quota
+            && offering.UsesEvaluationWorkflow == request.UsesEvaluationWorkflow;
+    }
 
     private static bool RequirementsAreEquivalent(
         IEnumerable<ProgramOfferingExamRequirement> existing,
