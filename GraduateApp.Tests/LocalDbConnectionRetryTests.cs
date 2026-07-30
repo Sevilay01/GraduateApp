@@ -69,12 +69,12 @@ public sealed class LocalDbConnectionRetryTests
         Assert.False(connections[^1].IsDisposed);
         Assert.Same(connections[^1], result);
         Assert.Equal(
-        [
-            TimeSpan.FromMilliseconds(100),
-            TimeSpan.FromMilliseconds(250),
-            TimeSpan.FromMilliseconds(500),
-            TimeSpan.FromMilliseconds(1000)
-        ],
+            [
+                TimeSpan.FromMilliseconds(100),
+                TimeSpan.FromMilliseconds(250),
+                TimeSpan.FromMilliseconds(500),
+                TimeSpan.FromMilliseconds(1000)
+            ],
             delays);
         await result.DisposeAsync();
     }
