@@ -3,8 +3,8 @@ using System.Globalization;
 using System.Reflection;
 using GraduateApp.API.DTOs;
 using GraduateApp.Web.Models;
+using GraduateApp.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
@@ -19,17 +19,15 @@ public sealed class EvaluationCriterionDecimalValidationTests
         {
             var property = typeof(EvaluationCriterionFormViewModel)
                 .GetProperty(nameof(EvaluationCriterionFormViewModel.MaximumRawScore))!;
-            var range = property.GetCustomAttribute<RangeAttribute>()!;
+            var localizedDecimal =
+                property.GetCustomAttribute<LocalizedDecimalRangeAttribute>()!;
             var metadataProvider = new EmptyModelMetadataProvider();
             var metadata = metadataProvider.GetMetadataForProperty(
                 typeof(EvaluationCriterionFormViewModel),
                 nameof(EvaluationCriterionFormViewModel.MaximumRawScore));
             var attributes = new Dictionary<string, string>(StringComparer.Ordinal);
-            var adapter = new ValidationAttributeAdapterProvider()
-                .GetAttributeAdapter(range, stringLocalizer: null);
-            var clientValidator = Assert.IsAssignableFrom<IClientModelValidator>(adapter);
 
-            clientValidator.AddValidation(new ClientModelValidationContext(
+            localizedDecimal.AddValidation(new ClientModelValidationContext(
                 new ActionContext(),
                 metadata,
                 metadataProvider,
@@ -37,10 +35,11 @@ public sealed class EvaluationCriterionDecimalValidationTests
 
             Assert.Equal("true", attributes["data-val"]);
             Assert.Equal(
-                "Maksimum ham puan 0,0001 ile 99999 arasında olmalıdır.",
-                attributes["data-val-range"]);
-            Assert.Equal("0.0001", attributes["data-val-range-min"]);
-            Assert.Equal("99999", attributes["data-val-range-max"]);
+                "Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.",
+                attributes["data-val-localizeddecimal"]);
+            Assert.Equal("0.0001", attributes["data-val-localizeddecimal-min"]);
+            Assert.Equal("99999", attributes["data-val-localizeddecimal-max"]);
+            Assert.DoesNotContain("data-val-range", attributes.Keys);
         });
     }
 
@@ -74,7 +73,7 @@ public sealed class EvaluationCriterionDecimalValidationTests
             {
                 var error = Assert.Single(results);
                 Assert.Equal(
-                    "Maksimum ham puan 0,0001 ile 99999 arasında olmalıdır.",
+                    "Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır.",
                     error.ErrorMessage);
                 Assert.Contains(
                     nameof(EvaluationCriterionFormViewModel.MaximumRawScore),
