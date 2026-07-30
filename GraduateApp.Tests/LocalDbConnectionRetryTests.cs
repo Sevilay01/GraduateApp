@@ -128,6 +128,58 @@ public sealed class LocalDbConnectionRetryTests
     }
 
     [Fact]
+    public async Task Fixture_database_command_is_outside_the_open_retry_boundary_and_sent_once()
+    {
+        const string commandText = "CREATE TABLE [dbo].[Probe] ([Id] int NOT NULL);";
+        var connections = new List<SqlConnection>();
+        var openAttempts = 0;
+        var delayCount = 0;
+        var commandCount = 0;
+
+        Task<SqlConnection> OpenDatabaseAsync(
+            string _,
+            CancellationToken cancellationToken) =>
+            LocalDbTestSupport.OpenConnectionWithRetryAsync(
+                () =>
+                {
+                    var connection = new SqlConnection();
+                    connections.Add(connection);
+                    return connection;
+                },
+                (_, _) => ++openAttempts == 1
+                    ? Task.FromException(TestSqlExceptionFactory.Create(-2))
+                    : Task.CompletedTask,
+                static connection => connection.DisposeAsync(),
+                (_, _) =>
+                {
+                    delayCount++;
+                    return Task.CompletedTask;
+                },
+                cancellationToken);
+
+        await using var database = new LocalDbTestDatabase(
+            $"GraduateAppFixtureRetry_{Guid.NewGuid():N}",
+            databaseCollation: null,
+            static _ => Task.FromResult(new SqlConnection()),
+            static (_, _, _) => Task.CompletedTask,
+            OpenDatabaseAsync,
+            (_, actualCommandText, _) =>
+            {
+                commandCount++;
+                Assert.Equal(commandText, actualCommandText);
+                return Task.FromResult(1);
+            });
+
+        var affectedRows = await database.ExecuteAsync(commandText);
+
+        Assert.Equal(1, affectedRows);
+        Assert.Equal(2, openAttempts);
+        Assert.Equal(2, connections.Count);
+        Assert.Equal(1, delayCount);
+        Assert.Equal(1, commandCount);
+    }
+
+    [Fact]
     public async Task Create_database_command_is_outside_the_open_retry_boundary_and_sent_once()
     {
         var openAttempts = 0;
