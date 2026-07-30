@@ -82,6 +82,33 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task English_request_culture_localizes_shared_layout_home_and_language_selector()
+    {
+        using var host = CreateWebHost();
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Home",
+            "Index",
+            new HomeViewModel(),
+            cultureName: "en-US");
+
+        Assert.Contains("<html lang=\"en\">", html, StringComparison.Ordinal);
+        Assert.Contains("Graduate Application System", html, StringComparison.Ordinal);
+        Assert.Contains("Skip to main content", html, StringComparison.Ordinal);
+        Assert.Contains("Student sign in", html, StringComparison.Ordinal);
+        Assert.Contains("Administrator sign in", html, StringComparison.Ordinal);
+        Assert.Contains("Create student registration", html, StringComparison.Ordinal);
+        Assert.Contains("Manage your path to graduate education securely", html, StringComparison.Ordinal);
+        Assert.Contains("There are currently no open programs", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"culture\"", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"en-US\"", html, StringComparison.Ordinal);
+        Assert.Contains("selected=\"selected\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"returnUrl\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Ana sayfa</a>", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Public_and_student_program_discovery_forms_preserve_filters_and_render_filtered_empty_state()
     {
         using var host = CreateWebHost();
@@ -1346,11 +1373,12 @@ public sealed class GraduateUiFoundationRazorTests
         string action,
         TModel model,
         ClaimsPrincipal? user = null,
-        string? viewName = null)
+        string? viewName = null,
+        string cultureName = "tr-TR")
     {
         var previousCulture = CultureInfo.CurrentCulture;
         var previousUiCulture = CultureInfo.CurrentUICulture;
-        var renderCulture = CultureInfo.GetCultureInfo("tr-TR");
+        var renderCulture = CultureInfo.GetCultureInfo(cultureName);
 
         try
         {
