@@ -31,11 +31,13 @@ internal sealed class LocalDbTheoryAttribute : TheoryAttribute
 
 internal static class LocalDbTestSupport
 {
-    internal const int ConnectionOpenMaxAttempts = 3;
+    internal const int ConnectionOpenMaxAttempts = 5;
     private static readonly TimeSpan[] ConnectionOpenRetryDelays =
     [
         TimeSpan.FromMilliseconds(100),
-        TimeSpan.FromMilliseconds(250)
+        TimeSpan.FromMilliseconds(250),
+        TimeSpan.FromMilliseconds(500),
+        TimeSpan.FromMilliseconds(1000)
     ];
     private static readonly HashSet<int> RetryableConnectionOpenErrorNumbers =
     [
@@ -145,9 +147,15 @@ internal static class LocalDbTestSupport
         OpenConnectionWithRetryAsync(
             () => new SqlConnection(connectionString),
             static (connection, token) => connection.OpenAsync(token),
-            static connection => connection.DisposeAsync(),
+            DisposeFailedSqlConnectionAsync,
             static (delay, token) => Task.Delay(delay, token),
             cancellationToken);
+
+    private static async ValueTask DisposeFailedSqlConnectionAsync(SqlConnection connection)
+    {
+        SqlConnection.ClearPool(connection);
+        await connection.DisposeAsync();
+    }
 
     internal static async Task<TConnection> OpenConnectionWithRetryAsync<TConnection>(
         Func<TConnection> connectionFactory,
