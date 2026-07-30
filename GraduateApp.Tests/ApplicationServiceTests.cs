@@ -354,6 +354,68 @@ public sealed class ApplicationServiceTests
         Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "ApplicationSubmitted");
     }
 
+    [Theory]
+    [InlineData(2021, 8, 13, false)]
+    [InlineData(2021, 8, 14, true)]
+    [InlineData(2026, 5, 1, true)]
+    public async Task Submit_checks_ALES_result_date_against_the_inclusive_validity_boundary(
+        int resultYear,
+        int resultMonth,
+        int resultDay,
+        bool expectedSuccess)
+    {
+        await using var db = TestDb.Create();
+        var offering = await SeedAsync(db);
+        var exam = new Exam { ExamName = "ALES" };
+        offering.ExamRequirements.Add(new ProgramOfferingExamRequirement
+        {
+            Exam = exam,
+            MinimumScore = 55m,
+            MinimumValidityDate = new DateOnly(2021, 8, 14),
+            IsRequired = true
+        });
+        db.StudentExamScores.Add(new StudentExamScore
+        {
+            Tc = "10000000146",
+            Exam = exam,
+            Score = 80m,
+            ExamDate = new DateOnly(resultYear, resultMonth, resultDay)
+        });
+        await db.SaveChangesAsync();
+        var service = CreateService(db);
+        var draft = await service.CreateAsync(
+            "10000000146",
+            offering.ProgramOfferingId,
+            CancellationToken.None);
+        AddCurrentDocument(db.Applications.Single());
+        await db.SaveChangesAsync();
+
+        var result = await service.SubmitAsync(
+            "10000000146",
+            draft.Value!.PublicId,
+            CancellationToken.None);
+
+        Assert.Equal(expectedSuccess, result.IsSuccess);
+        if (expectedSuccess)
+        {
+            var snapshot = Assert.Single(db.ApplicationScoreSnapshots);
+            Assert.Equal(new DateOnly(resultYear, resultMonth, resultDay), snapshot.ExamDateSnapshot);
+            Assert.Equal(ApplicationStatus.Pending.ToString(), db.Applications.Single().CurrentStatus);
+        }
+        else
+        {
+            Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+            Assert.Equal(
+                "ALES sonucunuzun tarihi 14.08.2021 veya sonrası olmalıdır.",
+                result.Error);
+            Assert.Empty(db.ApplicationScoreSnapshots);
+            Assert.Equal(ApplicationStatus.Draft.ToString(), db.Applications.Single().CurrentStatus);
+            Assert.DoesNotContain(
+                db.SecurityAuditLogs,
+                item => item.EventType == "ApplicationSubmitted");
+        }
+    }
+
     [Fact]
     public async Task Drafts_do_not_consume_quota_or_appear_in_admin_list()
     {
