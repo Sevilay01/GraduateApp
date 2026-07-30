@@ -148,7 +148,16 @@
                                 </div>
                                 <div class="col-12 col-sm-4 col-md-3">
                                     <label for="maximum-@criterion.PublicId" class="form-label">Maksimum ham puan</label>
-                                    <input id="maximum-@criterion.PublicId" name="MaximumRawScore" value="@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" class="form-control" type="number" step="0.0001" />
+                                    <input id="maximum-@criterion.PublicId"
+                                           name="MaximumRawScore"
+                                           value="@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)"
+                                           class="form-control"
+                                           type="text"
+                                           inputmode="decimal"
+                                           data-val="true"
+                                           data-val-localizeddecimal="Maksimum ham puan 0,0001 ile 99999 arasında geçerli bir ondalık sayı olmalıdır."
+                                           data-val-localizeddecimal-min="0.0001"
+                                           data-val-localizeddecimal-max="99999" />
                                 </div>
                                 <div class="col-12 col-sm-4 col-md-3">
                                     <label for="priority-@criterion.PublicId" class="form-label">Tie-break önceliği</label>
@@ -229,7 +238,11 @@
                     </div>
                     <div class="col-12 col-sm-4 col-md-3">
                         <label asp-for="CriterionForm.MaximumRawScore" class="form-label">Maksimum ham puan</label>
-                        <input asp-for="CriterionForm.MaximumRawScore" name="MaximumRawScore" class="form-control" step="0.0001" />
+                        <input asp-for="CriterionForm.MaximumRawScore"
+                               name="MaximumRawScore"
+                               class="form-control"
+                               type="text"
+                               inputmode="decimal" />
                     </div>
                     <div class="col-12 col-sm-4 col-md-3">
                         <label asp-for="CriterionForm.TieBreakPriority" class="form-label">Tie-break önceliği</label>
