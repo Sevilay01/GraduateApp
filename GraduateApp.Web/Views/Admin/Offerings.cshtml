@@ -509,7 +509,7 @@
                 </div>
                 <div class="col-12 col-md-6">
                     <label asp-for="Form.ApplicationDeadlineLocal" class="form-label"></label>
-                    <input asp-for="Form.ApplicationDeadlineLocal" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control" />
+                    <input asp-for="Form.ApplicationDeadlineLocal" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" class="form-control" id="application-deadline-local" />
                     <span asp-validation-for="Form.ApplicationDeadlineLocal" class="text-danger"></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-3">
@@ -534,7 +534,13 @@
                     @for (var index = 0; index < Model.Form.Exams.Count; index++)
                     {
                         var exam = Model.Form.Exams[index];
-                        <div class="admin-summary-card">
+                        var isAles = exam.ExamName.Trim().Equals("ALES", StringComparison.OrdinalIgnoreCase)
+                            || exam.ExamName.Trim().StartsWith("ALES ", StringComparison.OrdinalIgnoreCase)
+                            || exam.ExamName.Trim().StartsWith("ALES-", StringComparison.OrdinalIgnoreCase)
+                            || exam.ExamName.Trim().StartsWith("ALES/", StringComparison.OrdinalIgnoreCase);
+                        <div class="admin-summary-card"
+                             data-exam-requirement
+                             data-ales-validity="@(isAles ? "true" : "false")">
                             <input asp-for="Form.ExamRequirements[index].ExamId" value="@exam.ExamId" type="hidden" />
                             <h3>@exam.ExamName</h3>
                             <div class="form-check">
@@ -548,8 +554,24 @@
                             <label asp-for="Form.ExamRequirements[index].MinimumScore" class="form-label mt-3">Minimum puan</label>
                             <input asp-for="Form.ExamRequirements[index].MinimumScore" class="form-control" type="number" step="0.01" min="0" />
                             <span asp-validation-for="Form.ExamRequirements[index].MinimumScore" class="text-danger"></span>
-                            <label asp-for="Form.ExamRequirements[index].MinimumValidityDate" class="form-label mt-3">Minimum geçerlilik tarihi</label>
-                            <input asp-for="Form.ExamRequirements[index].MinimumValidityDate" class="form-control" type="date" />
+                            <label asp-for="Form.ExamRequirements[index].MinimumValidityDate" class="form-label mt-3">En eski kabul edilen sonuç tarihi</label>
+                            <input asp-for="Form.ExamRequirements[index].MinimumValidityDate"
+                                   class="form-control"
+                                   type="date"
+                                   data-validity-date />
+                            <div class="form-text">Bu tarihten önceki sonuçlar reddedilir.</div>
+                            @if (isAles)
+                            {
+                                <div class="form-text" data-ales-validity-help>
+                                    ALES sonuçları beş yıl geçerlidir. Tarih, son başvuru gününden beş yıl önce olmalıdır.
+                                    <span class="d-block fw-semibold" data-ales-validity-suggestion></span>
+                                </div>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-secondary mt-2"
+                                        data-apply-ales-validity>
+                                    Beş yıllık tarihi uygula
+                                </button>
+                            }
                         </div>
                     }
                 </div>
@@ -813,4 +835,72 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const deadlineInput = document.getElementById('application-deadline-local');
+            const alesCards = document.querySelectorAll('[data-ales-validity="true"]');
+
+            const subtractYears = (value, years) => {
+                const datePart = value?.slice(0, 10);
+                const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart ?? '');
+                if (!match) {
+                    return null;
+                }
+
+                const targetYear = Number(match[1]) - years;
+                const month = Number(match[2]);
+                const day = Number(match[3]);
+                const lastDay = new Date(targetYear, month, 0).getDate();
+                return [
+                    String(targetYear).padStart(4, '0'),
+                    String(month).padStart(2, '0'),
+                    String(Math.min(day, lastDay)).padStart(2, '0')
+                ].join('-');
+            };
+
+            const formatDate = value => {
+                if (!value) {
+                    return '';
+                }
+
+                const [year, month, day] = value.split('-');
+                return `${day}.${month}.${year}`;
+            };
+
+            const refreshSuggestions = () => {
+                const suggestedDate = subtractYears(deadlineInput?.value, 5);
+                alesCards.forEach(card => {
+                    const suggestion = card.querySelector('[data-ales-validity-suggestion]');
+                    const button = card.querySelector('[data-apply-ales-validity]');
+                    if (suggestion) {
+                        suggestion.textContent = suggestedDate
+                            ? `Önerilen tarih: ${formatDate(suggestedDate)}`
+                            : 'Öneri için son başvuru tarihini girin.';
+                    }
+                    if (button) {
+                        button.disabled = !suggestedDate;
+                        button.dataset.suggestedDate = suggestedDate ?? '';
+                    }
+                });
+            };
+
+            alesCards.forEach(card => {
+                const button = card.querySelector('[data-apply-ales-validity]');
+                const validityInput = card.querySelector('[data-validity-date]');
+                button?.addEventListener('click', () => {
+                    const suggestedDate = button.dataset.suggestedDate;
+                    if (!suggestedDate || !validityInput) {
+                        return;
+                    }
+
+                    validityInput.value = suggestedDate;
+                    validityInput.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            });
+
+            deadlineInput?.addEventListener('input', refreshSuggestions);
+            deadlineInput?.addEventListener('change', refreshSuggestions);
+            refreshSuggestions();
+        })();
+    </script>
 }
