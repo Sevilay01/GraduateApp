@@ -50,6 +50,8 @@ public sealed class StudentExamScoreServiceTests
 
     [Theory]
     [InlineData("ALES")]
+    [InlineData("ÖSYM ALES")]
+    [InlineData("2026 ALES")]
     [InlineData("e-YDS")]
     [InlineData("YÖKDİL")]
     public async Task Hundred_point_exams_reject_scores_over_100(string examName)
@@ -125,7 +127,7 @@ public sealed class StudentExamScoreServiceTests
         Validator.TryValidateObject(request, new ValidationContext(request), results, validateAllProperties: true);
 
         Assert.Contains(results, item => item.ErrorMessage == "Sınav puanı zorunludur.");
-        Assert.Contains(results, item => item.ErrorMessage == "Sınav tarihi zorunludur.");
+        Assert.Contains(results, item => item.ErrorMessage == "Sonuç tarihi zorunludur.");
     }
 
     private static StudentExamScoreService CreateService(GraduateAppDbContext db) =>

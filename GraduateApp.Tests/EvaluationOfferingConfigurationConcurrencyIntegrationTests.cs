@@ -359,6 +359,7 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests(
             {
                 Exam = exam,
                 MinimumScore = 0m,
+                MinimumValidityDate = new DateOnly(2021 + offset, 8, 1),
                 IsRequired = true
             });
             offering.EvaluationCriteria.Add(new ProgramOfferingEvaluationCriterion
@@ -419,6 +420,10 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests(
                 {
                     ExamId = aggregate.ExamId,
                     MinimumScore = 0m,
+                    MinimumValidityDate = new DateOnly(
+                        aggregate.AcademicYearStart - 5,
+                        8,
+                        1),
                     IsRequired = examIsRequired
                 }
             ],

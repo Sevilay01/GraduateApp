@@ -859,7 +859,7 @@ public sealed class ApplicationService(
                 if (requirement.IsRequired)
                 {
                     return ServiceResult<IReadOnlyList<ApplicationScoreSnapshot>>.Failure(
-                        $"{requirement.Exam.ExamName} sınav tarihiniz ilan koşulunu sağlamıyor. En erken {requirement.MinimumValidityDate.Value:dd.MM.yyyy} tarihli sonuç gereklidir.",
+                        $"{requirement.Exam.ExamName} sonucunuzun tarihi {requirement.MinimumValidityDate.Value:dd.MM.yyyy} veya sonrası olmalıdır.",
                         StatusCodes.Status409Conflict);
                 }
 

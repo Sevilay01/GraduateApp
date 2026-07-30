@@ -247,6 +247,71 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task Student_exam_score_form_uses_Turkish_localized_validation_without_native_browser_bubbles()
+    {
+        using var host = CreateWebHost();
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ExamScores",
+            new StudentExamScoresPageViewModel
+            {
+                Scores =
+                [
+                    new StudentExamScoreViewModel
+                    {
+                        ScoreId = 7,
+                        ExamId = 3,
+                        ExamName = "ALES",
+                        Score = 80.5m,
+                        ExamDate = new DateOnly(2026, 5, 1)
+                    }
+                ],
+                Exams =
+                [
+                    new StudentExamCatalogItemViewModel
+                    {
+                        ExamId = 3,
+                        ExamName = "ALES",
+                        MaximumScore = 100m
+                    }
+                ],
+                Form = new StudentExamScoreInputViewModel
+                {
+                    ExamId = 3,
+                    Score = 80.5m,
+                    ExamDate = new DateOnly(2026, 5, 1)
+                }
+            },
+            AuthenticatedUser("Student", "Test Öğrenci"));
+
+        var decoded = WebUtility.HtmlDecode(html);
+        var scoreInput = Assert.Single(
+            Regex.Matches(
+                    html,
+                    "<input\\b[^>]*>",
+                    RegexOptions.CultureInvariant)
+                .Cast<Match>(),
+            match => match.Value.Contains("name=\"Form.Score\"", StringComparison.Ordinal))
+            .Value;
+        var scoreForm = FormContaining(html, "name=\"Form.ScoreId\"");
+
+        Assert.Contains("novalidate", scoreForm, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("type=\"text\"", scoreInput, StringComparison.Ordinal);
+        Assert.Contains("inputmode=\"decimal\"", scoreInput, StringComparison.Ordinal);
+        Assert.Contains("data-val-localizeddecimal-min=\"0\"", scoreInput, StringComparison.Ordinal);
+        Assert.Contains("data-val-localizeddecimal-max=\"999.99\"", scoreInput, StringComparison.Ordinal);
+        Assert.Contains(
+            "Sınav puanı 0 ile 999,99 arasında geçerli bir ondalık sayı olmalıdır.",
+            WebUtility.HtmlDecode(scoreInput),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("type=\"number\"", scoreInput, StringComparison.Ordinal);
+        Assert.Contains("Sonuç tarihi", decoded, StringComparison.Ordinal);
+        Assert.Contains("Sonuç tarihi zorunludur.", decoded, StringComparison.Ordinal);
+        Assert.Contains("data-maximum-score=\"100\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Admin_application_list_renders_grouped_navigation_filters_pagination_and_responsive_statuses()
     {
         using var host = CreateWebHost();
@@ -449,7 +514,7 @@ public sealed class GraduateUiFoundationRazorTests
                         DegreeType = "Tezli Yüksek Lisans"
                     }
                 ],
-                Exams = [new ExamCatalogItemViewModel { ExamId = 3, ExamName = "ALES" }],
+                Exams = [new ExamCatalogItemViewModel { ExamId = 3, ExamName = "ÖSYM ALES", IsAles = true }],
                 ExamRequirements = [new ProgramOfferingRequirementInputViewModel { ExamId = 3 }]
             },
             RequirementOfferingId = 8,
@@ -528,6 +593,13 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("editId=7", decoded, StringComparison.Ordinal);
         Assert.Contains("#exam-requirements-heading", decoded, StringComparison.Ordinal);
         Assert.Contains("#offering-readiness-heading", decoded, StringComparison.Ordinal);
+        Assert.Contains("En eski kabul edilen sonuç tarihi", decoded, StringComparison.Ordinal);
+        Assert.Contains("Bu tarihten önceki sonuçlar reddedilir.", decoded, StringComparison.Ordinal);
+        Assert.Contains("ALES sonuçları beş yıl geçerlidir.", decoded, StringComparison.Ordinal);
+        Assert.Contains("data-ales-validity=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-apply-ales-validity", html, StringComparison.Ordinal);
+        Assert.Contains("Beş yıllık tarihi uygula", decoded, StringComparison.Ordinal);
+        Assert.Contains("subtractYears(deadlineInput?.value, 5)", html, StringComparison.Ordinal);
         Assert.Contains("Koşulu pasifleştir", decoded, StringComparison.Ordinal);
         Assert.Contains("name=\"rowVersion\" value=\"cmVxdWlyZW1lbnQtcm93LXZlcnNpb24=\"", html, StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);

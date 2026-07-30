@@ -128,6 +128,7 @@ public sealed class ExamCatalogItemViewModel
 {
     public int ExamId { get; set; }
     public string ExamName { get; set; } = string.Empty;
+    public bool IsAles { get; set; }
 }
 
 public sealed class ProgramOfferingCatalogViewModel

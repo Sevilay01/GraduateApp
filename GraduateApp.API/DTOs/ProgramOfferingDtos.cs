@@ -125,7 +125,7 @@ public sealed record ProgramCatalogItemDto(
     string ProgramName,
     string InstituteName,
     string DegreeType);
-public sealed record ExamCatalogItemDto(int ExamId, string ExamName);
+public sealed record ExamCatalogItemDto(int ExamId, string ExamName, bool IsAles);
 public sealed record ProgramOfferingCatalogDto(
     IReadOnlyList<ProgramCatalogItemDto> Programs,
     IReadOnlyList<ExamCatalogItemDto> Exams);
