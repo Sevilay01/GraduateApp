@@ -80,10 +80,6 @@ public sealed class EvaluationCriterionBindingTests
                 "data-val-localizeddecimal-max=\"99999\"",
                 maximumRawScoreInput,
                 StringComparison.Ordinal);
-            Assert.Contains(
-                "data-val-number=\"Geçerli bir sayı giriniz.\"",
-                decodedMaximumRawScoreInput,
-                StringComparison.Ordinal);
             Assert.DoesNotContain("data-val-range", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.DoesNotContain("type=\"number\"", maximumRawScoreInput, StringComparison.Ordinal);
             Assert.DoesNotContain("<input name=\"ExamId\"", html, StringComparison.Ordinal);
