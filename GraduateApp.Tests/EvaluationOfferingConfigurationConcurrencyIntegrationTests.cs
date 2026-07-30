@@ -421,7 +421,7 @@ public sealed class EvaluationOfferingConfigurationConcurrencyIntegrationTests(
                     ExamId = aggregate.ExamId,
                     MinimumScore = 0m,
                     MinimumValidityDate = new DateOnly(
-                        aggregate.AcademicYearStart - ExamValidityPolicy.AlesValidityYears,
+                        aggregate.AcademicYearStart - 5,
                         8,
                         1),
                     IsRequired = examIsRequired
