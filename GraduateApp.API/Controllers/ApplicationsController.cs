@@ -76,6 +76,44 @@ public sealed class ApplicationsController(
             : Problem(statusCode: result.StatusCode, detail: result.Error);
     }
 
+    [HttpPost("mine/{publicId:guid}/withdraw")]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
+    public async Task<IActionResult> Withdraw(
+        Guid publicId,
+        StudentApplicationCommandDto request,
+        CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
+        {
+            return Unauthorized();
+        }
+
+        var result = await applicationService.WithdrawAsync(studentTc, publicId, request, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
+    [HttpPost("mine/{publicId:guid}/reactivate")]
+    [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
+    public async Task<IActionResult> Reactivate(
+        Guid publicId,
+        StudentApplicationCommandDto request,
+        CancellationToken cancellationToken)
+    {
+        var studentTc = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(studentTc))
+        {
+            return Unauthorized();
+        }
+
+        var result = await applicationService.ReactivateAsync(studentTc, publicId, request, cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.StatusCode, detail: result.Error);
+    }
+
     [HttpGet("mine/{publicId:guid}/evaluation-result")]
     [Authorize(AuthenticationSchemes = ApiAuthenticationDefaults.Scheme, Roles = ApiAuthenticationDefaults.StudentRole)]
     public async Task<IActionResult> GetMineEvaluationResult(Guid publicId, CancellationToken cancellationToken)
