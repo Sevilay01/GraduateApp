@@ -65,7 +65,7 @@ public sealed class LocalDbConnectionRetryTests
 
         Assert.Equal(LocalDbTestSupport.ConnectionOpenMaxAttempts, openAttempts);
         Assert.Equal(LocalDbTestSupport.ConnectionOpenMaxAttempts, connections.Count);
-        Assert.All(connections[..^1], connection => Assert.True(connection.IsDisposed));
+        Assert.All(connections.Take(connections.Count - 1), connection => Assert.True(connection.IsDisposed));
         Assert.False(connections[^1].IsDisposed);
         Assert.Same(connections[^1], result);
         Assert.Equal(
