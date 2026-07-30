@@ -178,7 +178,9 @@ public sealed class ApplicationService(
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
             .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);
-        return application is null ? null : MapStudentDetail(application);
+        return application is null
+            ? null
+            : MapStudentDetail(application, timeProvider.GetUtcNow().UtcDateTime);
     }
 
     public async Task<ServiceResult> SubmitAsync(
@@ -798,6 +800,13 @@ public sealed class ApplicationService(
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
+    private static bool CanUpdateDocuments(Application application, DateTime now) =>
+        ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var status)
+        && status is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
+        && IsOfferingOpen(application.ProgramOffering, now)
+        && (!application.UsesEvaluationWorkflow
+            || application.ProgramOffering.EvaluationState == OfferingEvaluationState.Configuring);
+
     private static bool IsOfferingOpen(ProgramOffering offering, DateTime now) =>
         offering.Program.IsActive
         && offering.Program.Institute.IsActive
@@ -821,7 +830,7 @@ public sealed class ApplicationService(
         ParseStatus(application.CurrentStatus),
         Convert.ToBase64String(application.RowVersion));
 
-    private static StudentApplicationDetailDto MapStudentDetail(Application application)
+    private static StudentApplicationDetailDto MapStudentDetail(Application application, DateTime now)
     {
         var requirements = application.DocumentRequirementSnapshots
             .OrderBy(item => item.DisplayName)
@@ -846,6 +855,10 @@ public sealed class ApplicationService(
             AcademicPeriodFormatter.FormatTerm(application.ProgramOffering.Term),
             application.ProgramOffering.Quota,
             DateTime.SpecifyKind(application.ApplicationDate, DateTimeKind.Utc),
+            application.ProgramOffering.ApplicationDeadlineUtc.HasValue
+                ? DateTime.SpecifyKind(application.ProgramOffering.ApplicationDeadlineUtc.Value, DateTimeKind.Utc)
+                : null,
+            CanUpdateDocuments(application, now),
             ParseStatus(application.CurrentStatus),
             application.UsesDocumentWorkflow,
             application.UsesEvaluationWorkflow,

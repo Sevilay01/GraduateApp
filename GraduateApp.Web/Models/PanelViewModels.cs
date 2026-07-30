@@ -149,6 +149,8 @@ public sealed class StudentApplicationDetailViewModel
     public string TermName { get; set; } = string.Empty;
     public int Quota { get; set; }
     public DateTime ApplicationDateUtc { get; set; }
+    public DateTime? ApplicationDeadlineUtc { get; set; }
+    public bool CanUpdateDocuments { get; set; }
     public ApplicationStatus CurrentStatus { get; set; }
     public bool UsesDocumentWorkflow { get; set; }
     public bool UsesEvaluationWorkflow { get; set; }

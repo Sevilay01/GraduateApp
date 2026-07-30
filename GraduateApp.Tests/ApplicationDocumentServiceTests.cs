@@ -345,6 +345,81 @@ public sealed class ApplicationDocumentServiceTests
     }
 
     [Fact]
+    public async Task Approved_document_can_be_replaced_before_deadline_and_resets_eligibility()
+    {
+        await using var db = TestDb.Create();
+        var storage = new FakeStorage();
+        var service = CreateService(db, storage);
+        var (application, approvedVersion) = await SeedPendingDocumentAsync(
+            db,
+            service,
+            ApplicationStatus.UnderReview);
+        approvedVersion.ReviewStatus = DocumentReviewStatus.Approved;
+        approvedVersion.ReviewedByAdminId = 7;
+        approvedVersion.ReviewedAtUtc = ReviewTimeUtc.AddMinutes(-5);
+        application.UsesEvaluationWorkflow = true;
+        application.ProgramOffering.UsesEvaluationWorkflow = true;
+        application.Evaluation = new ApplicationEvaluation
+        {
+            ProgramOfferingId = application.ProgramOfferingId,
+            EligibilityStatus = EvaluationEligibilityStatus.Eligible,
+            TotalScore = 82.5m,
+            EligibilityDecidedByAdminId = 7,
+            EligibilityDecidedAtUtc = ReviewTimeUtc.AddMinutes(-4)
+        };
+        await db.SaveChangesAsync();
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("replacement-before-deadline"),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var current = db.ApplicationDocuments.Single(item => item.IsCurrent);
+        Assert.Equal(2, current.VersionNumber);
+        Assert.Equal(DocumentReviewStatus.Pending, current.ReviewStatus);
+        Assert.False(approvedVersion.IsCurrent);
+        Assert.Equal(DocumentReviewStatus.Approved, approvedVersion.ReviewStatus);
+        Assert.Equal(EvaluationEligibilityStatus.Pending, application.Evaluation.EligibilityStatus);
+        Assert.Null(application.Evaluation.TotalScore);
+        Assert.Null(application.Evaluation.EligibilityDecidedByAdminId);
+        Assert.Null(application.Evaluation.EligibilityDecidedAtUtc);
+        Assert.Contains(db.SecurityAuditLogs, item => item.EventType == "DocumentReuploaded");
+    }
+
+    [Fact]
+    public async Task Document_replacement_after_deadline_is_rejected_without_side_effects()
+    {
+        await using var db = TestDb.Create();
+        var storage = new FakeStorage();
+        var service = CreateService(db, storage);
+        var (application, current) = await SeedPendingDocumentAsync(
+            db,
+            service,
+            ApplicationStatus.Pending);
+        application.ProgramOffering.ApplicationDeadlineUtc = ReviewTimeUtc.AddSeconds(-1);
+        await db.SaveChangesAsync();
+        var saveCount = storage.SaveCount;
+        var auditCount = await db.SecurityAuditLogs.CountAsync();
+
+        var result = await service.UploadAsync(
+            application.Tc,
+            application.PublicId,
+            application.DocumentRequirementSnapshots.Single().PublicId,
+            Pdf("replacement-after-deadline"),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        Assert.Equal(saveCount, storage.SaveCount);
+        Assert.Equal(auditCount, await db.SecurityAuditLogs.CountAsync());
+        Assert.True(current.IsCurrent);
+        Assert.Single(db.ApplicationDocuments);
+    }
+
+    [Fact]
     public async Task Pending_document_can_be_approved()
     {
         await using var db = TestDb.Create();
@@ -748,12 +823,42 @@ public sealed class ApplicationDocumentServiceTests
 
     private static async Task<Application> SeedAsync(GraduateAppDbContext db)
     {
+        var institute = new Institute
+        {
+            InstituteId = 1,
+            InstituteName = "Test Enstitüsü",
+            IsActive = true
+        };
+        var program = new GraduateApp.API.Models.Program
+        {
+            ProgramId = 1,
+            InstituteId = institute.InstituteId,
+            ProgramName = "Test Programı",
+            DegreeType = "Tezli Yüksek Lisans",
+            IsActive = true,
+            Institute = institute
+        };
+        var offering = new ProgramOffering
+        {
+            ProgramOfferingId = 1,
+            ProgramId = program.ProgramId,
+            AcademicYearStart = 2026,
+            Term = AcademicTerm.Fall,
+            ApplicationStartUtc = ReviewTimeUtc.AddDays(-1),
+            ApplicationDeadlineUtc = ReviewTimeUtc.AddDays(1),
+            Quota = 10,
+            IsOpen = true,
+            IsArchived = false,
+            EvaluationState = OfferingEvaluationState.Configuring,
+            Program = program
+        };
         var application = new Application
         {
             PublicId = Guid.NewGuid(),
             Tc = "10000000146",
-            ProgramOfferingId = 1,
-            ApplicationDate = DateTime.UtcNow,
+            ProgramOfferingId = offering.ProgramOfferingId,
+            ProgramOffering = offering,
+            ApplicationDate = ReviewTimeUtc,
             CurrentStatus = ApplicationStatus.Draft.ToString(),
             UsesDocumentWorkflow = true
         };

@@ -97,6 +97,8 @@ public sealed record StudentApplicationDetailDto(
     string TermName,
     int Quota,
     DateTime ApplicationDateUtc,
+    DateTime? ApplicationDeadlineUtc,
+    bool CanUpdateDocuments,
     ApplicationStatus CurrentStatus,
     bool UsesDocumentWorkflow,
     bool UsesEvaluationWorkflow,

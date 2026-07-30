@@ -503,6 +503,17 @@ public sealed class ApplicationEvaluationService(
             blockers.Add("Uygunluk kararı verilmemiş başvurular var.");
         }
 
+        if (submitted.Any(item =>
+            item.Evaluation?.EligibilityStatus == EvaluationEligibilityStatus.Eligible
+            && item.UsesDocumentWorkflow
+            && item.DocumentRequirementSnapshots.Any(requirement =>
+                requirement.IsRequired
+                && !requirement.Documents.Any(document =>
+                    document.IsCurrent && document.ReviewStatus == DocumentReviewStatus.Approved))))
+        {
+            blockers.Add("Uygun işaretlenmiş adayların tüm zorunlu güncel belgeleri onaylanmış olmalıdır.");
+        }
+
         foreach (var application in submitted.Where(item =>
             item.Evaluation?.EligibilityStatus == EvaluationEligibilityStatus.Eligible))
         {

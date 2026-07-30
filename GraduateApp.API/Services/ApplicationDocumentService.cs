@@ -56,6 +56,8 @@ public sealed class ApplicationDocumentService(
     {
         await using var transaction = await BeginTransactionIfSupportedAsync(cancellationToken);
         var application = await dbContext.Applications
+            .Include(item => item.ProgramOffering).ThenInclude(item => item.Program).ThenInclude(item => item.Institute)
+            .Include(item => item.Evaluation)
             .Include(item => item.DocumentRequirementSnapshots).ThenInclude(item => item.Documents)
             .AsSplitQuery()
             .SingleOrDefaultAsync(
@@ -73,10 +75,11 @@ public sealed class ApplicationDocumentService(
         }
 
         var current = requirement.Documents.SingleOrDefault(item => item.IsCurrent);
-        if (!CanUpload(application.CurrentStatus, current))
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        if (!CanUpload(application, now))
         {
             return ServiceResult<ApplicationDocumentDto>.Failure(
-                "Bu başvuru durumunda belge yüklenemez. Gönderilmiş başvurularda yalnızca reddedilen belge yeniden yüklenebilir.",
+                "Belgeler yalnızca ilan başvuruya açıkken, son başvuru tarihine kadar ve başvuru taslak, beklemede veya incelemede durumundayken güncellenebilir.",
                 StatusCodes.Status409Conflict);
         }
 
@@ -178,7 +181,20 @@ public sealed class ApplicationDocumentService(
             current.IsCurrent = false;
         }
 
-        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var eligibilityReset = false;
+        if (current is not null
+            && application.UsesEvaluationWorkflow
+            && application.Evaluation is not null
+            && application.Evaluation.EligibilityStatus != EvaluationEligibilityStatus.Pending)
+        {
+            application.Evaluation.EligibilityStatus = EvaluationEligibilityStatus.Pending;
+            application.Evaluation.IneligibilityReason = null;
+            application.Evaluation.TotalScore = null;
+            application.Evaluation.EligibilityDecidedByAdminId = null;
+            application.Evaluation.EligibilityDecidedAtUtc = null;
+            eligibilityReset = true;
+        }
+
         var document = new ApplicationDocument
         {
             PublicId = Guid.NewGuid(),
@@ -199,7 +215,13 @@ public sealed class ApplicationDocumentService(
             null,
             current is null ? "DocumentUploaded" : "DocumentReuploaded",
             document.PublicId,
-            new { ApplicationPublicId = application.PublicId, RequirementPublicId = requirement.PublicId, document.VersionNumber },
+            new
+            {
+                ApplicationPublicId = application.PublicId,
+                RequirementPublicId = requirement.PublicId,
+                document.VersionNumber,
+                EligibilityReset = eligibilityReset
+            },
             now);
 
         try
@@ -488,11 +510,19 @@ public sealed class ApplicationDocumentService(
             ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
-    private static bool CanUpload(string storedStatus, ApplicationDocument? current) =>
-        ApplicationStatusRules.TryParseStoredValue(storedStatus, out var status)
-        && (status == ApplicationStatus.Draft
-            || (status is ApplicationStatus.Pending or ApplicationStatus.UnderReview
-                && current?.ReviewStatus == DocumentReviewStatus.Rejected));
+    private static bool CanUpload(Application application, DateTime now) =>
+        ApplicationStatusRules.TryParseStoredValue(application.CurrentStatus, out var status)
+        && status is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview
+        && application.ProgramOffering.Program.IsActive
+        && application.ProgramOffering.Program.Institute.IsActive
+        && application.ProgramOffering.IsOpen
+        && !application.ProgramOffering.IsArchived
+        && application.ProgramOffering.ApplicationStartUtc.HasValue
+        && application.ProgramOffering.ApplicationDeadlineUtc.HasValue
+        && now >= application.ProgramOffering.ApplicationStartUtc.Value
+        && now <= application.ProgramOffering.ApplicationDeadlineUtc.Value
+        && (!application.UsesEvaluationWorkflow
+            || application.ProgramOffering.EvaluationState == OfferingEvaluationState.Configuring);
 
     private void AddAudit(int? adminId, string eventType, Guid targetId, object details, DateTime now) =>
         dbContext.SecurityAuditLogs.Add(new SecurityAuditLog

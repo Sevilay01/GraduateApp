@@ -947,6 +947,8 @@ public sealed class GraduateUiFoundationRazorTests
                 ProgramName = "Biyoteknoloji",
                 AcademicYear = "2026–2027",
                 TermName = "Güz",
+                ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
+                CanUpdateDocuments = true,
                 CurrentStatus = ApplicationStatus.Draft,
                 UsesEvaluationWorkflow = true,
                 UsesDocumentWorkflow = true,
@@ -979,6 +981,72 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
         Assert.Contains("Başvuruyu gönder", decoded, StringComparison.Ordinal);
         Assert.Contains("disabled=\"disabled\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Submitted_application_renders_document_replacement_only_while_capability_is_open()
+    {
+        using var host = CreateWebHost();
+        var model = new StudentApplicationDetailViewModel
+        {
+            PublicId = Guid.Parse("6ABCE270-B3D5-4ACD-8149-A454B69F2912"),
+            InstituteName = "Fen Bilimleri Enstitüsü",
+            ProgramName = "Bilgisayar Mühendisliği",
+            AcademicYear = "2026–2027",
+            TermName = "Güz",
+            ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
+            CanUpdateDocuments = true,
+            CurrentStatus = ApplicationStatus.UnderReview,
+            UsesDocumentWorkflow = true,
+            DocumentRequirements =
+            [
+                new ApplicationDocumentRequirementViewModel
+                {
+                    PublicId = Guid.Parse("C5749038-25D1-46A1-9FE0-C70675BF1DA1"),
+                    DisplayName = "Transkript",
+                    IsRequired = true,
+                    AllowedContentCategory = DocumentContentCategory.PdfOnly,
+                    MaximumBytes = 5 * 1024 * 1024,
+                    CurrentDocument = new ApplicationDocumentViewModel
+                    {
+                        PublicId = Guid.Parse("3FB80AEC-59D1-4B3F-9853-E08965FBE355"),
+                        VersionNumber = 1,
+                        IsCurrent = true,
+                        OriginalFileName = "transkript.pdf",
+                        VerifiedContentType = "application/pdf",
+                        FileSize = 1024,
+                        ReviewStatus = DocumentReviewStatus.Approved,
+                        UploadedAtUtc = new DateTime(2026, 7, 30, 7, 0, 0, DateTimeKind.Utc)
+                    }
+                }
+            ]
+        };
+
+        var openHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        var decodedOpenHtml = WebUtility.HtmlDecode(openHtml);
+
+        Assert.Contains("Belgeyi güncelle", decodedOpenHtml, StringComparison.Ordinal);
+        Assert.Contains("mevcut onay geçersiz olur", decodedOpenHtml, StringComparison.Ordinal);
+        Assert.Contains("enctype=\"multipart/form-data\"", openHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", openHtml, StringComparison.Ordinal);
+
+        model.CanUpdateDocuments = false;
+        var closedHtml = await RenderMainViewAsync(
+            host.Services,
+            "Panel",
+            "ApplicationDetail",
+            model,
+            AuthenticatedUser("Student", "Test Öğrenci"));
+        var decodedClosedHtml = WebUtility.HtmlDecode(closedHtml);
+
+        Assert.Contains("belgeler artık güncellenemez", decodedClosedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("enctype=\"multipart/form-data\"", closedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("mevcut onay geçersiz olur", decodedClosedHtml, StringComparison.Ordinal);
     }
 
     [Fact]
