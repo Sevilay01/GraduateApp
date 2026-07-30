@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 var turkishCulture = CultureInfo.GetCultureInfo("tr-TR");
+var englishCulture = CultureInfo.GetCultureInfo("en-US");
 CultureInfo.DefaultThreadCurrentCulture = turkishCulture;
 CultureInfo.DefaultThreadCurrentUICulture = turkishCulture;
 
@@ -34,6 +35,7 @@ if (!builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddAuthorization();
+builder.Services.AddLocalization();
 builder.Services.AddControllersWithViews(options =>
 {
     options.ModelBinderProviders.Insert(0, new SafeDecimalModelBinderProvider());
@@ -54,8 +56,9 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
     options.DefaultRequestCulture = new RequestCulture(turkishCulture, turkishCulture);
-    options.SupportedCultures = [turkishCulture];
-    options.SupportedUICultures = [turkishCulture];
+    options.SupportedCultures = [turkishCulture, englishCulture];
+    options.SupportedUICultures = [turkishCulture, englishCulture];
+    options.RequestCultureProviders = [new CookieRequestCultureProvider()];
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<ApiAccessTokenHandler>();
