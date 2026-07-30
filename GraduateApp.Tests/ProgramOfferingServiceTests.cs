@@ -436,7 +436,7 @@ public sealed class ProgramOfferingServiceTests
         var proposedRequirements = orphanedRequirement switch
         {
             OrphanedExamRequirement.OptionalMatchingExam =>
-                new[] { Requirement(ales.ExamId, isRequired: false) },
+                new[] { Requirement(ales.ExamId, isRequired: false, ExpectedAlesValidityDate) },
             OrphanedExamRequirement.MissingMatchingExam =>
                 [],
             OrphanedExamRequirement.DifferentRequiredExam =>
@@ -477,7 +477,7 @@ public sealed class ProgramOfferingServiceTests
         await db.SaveChangesAsync();
         var proposedRequirements = new List<ProgramOfferingRequirementInputDto>
         {
-            Requirement(ales.ExamId, isRequired: true)
+            Requirement(ales.ExamId, isRequired: true, ExpectedAlesValidityDate)
         };
         if (includeOptionalOtherExam)
         {
@@ -514,7 +514,7 @@ public sealed class ProgramOfferingServiceTests
             UpdateRequest(
                 offering,
                 isOpen: false,
-                examRequirements: [Requirement(ales.ExamId, isRequired: false)]),
+                examRequirements: [Requirement(ales.ExamId, isRequired: false, ExpectedAlesValidityDate)]),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -538,7 +538,7 @@ public sealed class ProgramOfferingServiceTests
         var originalAuditCount = db.SecurityAuditLogs.Count();
         ProgramOfferingRequirementInputDto[] proposedRequirements = removeRequirement
             ? []
-            : [Requirement(ales.ExamId, isRequired: false)];
+            : [Requirement(ales.ExamId, isRequired: false, ExpectedAlesValidityDate)];
 
         var result = await CreateService(db).UpdateAsync(
             offering.ProgramOfferingId,
@@ -801,6 +801,7 @@ public sealed class ProgramOfferingServiceTests
         {
             Exam = ales,
             MinimumScore = 0m,
+            MinimumValidityDate = ExpectedAlesValidityDate,
             IsRequired = true
         });
         offering.EvaluationCriteria.Add(new ProgramOfferingEvaluationCriterion
@@ -818,10 +819,16 @@ public sealed class ProgramOfferingServiceTests
         return (ales, yds);
     }
 
-    private static ProgramOfferingRequirementInputDto Requirement(int examId, bool isRequired) => new()
+    private static readonly DateOnly ExpectedAlesValidityDate = new(2021, 8, 1);
+
+    private static ProgramOfferingRequirementInputDto Requirement(
+        int examId,
+        bool isRequired,
+        DateOnly? minimumValidityDate = null) => new()
     {
         ExamId = examId,
         MinimumScore = 0m,
+        MinimumValidityDate = minimumValidityDate,
         IsRequired = isRequired
     };
 
@@ -843,7 +850,10 @@ public sealed class ProgramOfferingServiceTests
             UsesEvaluationWorkflow = usesEvaluationWorkflow ?? offering.UsesEvaluationWorkflow,
             ExamRequirements = examRequirements
                 ?? offering.ExamRequirements
-                    .Select(item => Requirement(item.ExamId, item.IsRequired))
+                    .Select(item => Requirement(
+                        item.ExamId,
+                        item.IsRequired,
+                        item.MinimumValidityDate))
                     .ToArray(),
             RowVersion = Convert.ToBase64String(offering.RowVersion)
         };
