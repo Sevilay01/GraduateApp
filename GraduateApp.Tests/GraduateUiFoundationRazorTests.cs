@@ -1009,11 +1009,15 @@ public sealed class GraduateUiFoundationRazorTests
             AuthenticatedUser("Student", "Test Öğrenci"));
         var decodedWithdrawHtml = WebUtility.HtmlDecode(withdrawHtml);
 
+        var withdrawForm = WebUtility.HtmlDecode(
+            FormContaining(withdrawHtml, "name=\"rowVersion\""));
         Assert.Contains("Başvuruyu geri çek", decodedWithdrawHtml, StringComparison.Ordinal);
-        Assert.Contains($"/Panel/Applications/{publicId:D}/Withdraw", withdrawHtml, StringComparison.Ordinal);
-        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", withdrawHtml, StringComparison.Ordinal);
-        Assert.Contains("__RequestVerificationToken", withdrawHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("/Reactivate", withdrawHtml, StringComparison.Ordinal);
+        Assert.Contains("method=\"post\"", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains("/Panel/WithdrawApplication?publicId=", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains($"publicId={publicId:D}", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", withdrawForm, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", withdrawForm, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReactivateApplication", withdrawForm, StringComparison.Ordinal);
 
         model.CurrentStatus = ApplicationStatus.Withdrawn;
         model.CanWithdraw = false;
@@ -1026,13 +1030,30 @@ public sealed class GraduateUiFoundationRazorTests
             AuthenticatedUser("Student", "Test Öğrenci"));
         var decodedReactivateHtml = WebUtility.HtmlDecode(reactivateHtml);
 
+        var reactivateForm = WebUtility.HtmlDecode(
+            FormContaining(reactivateHtml, "name=\"rowVersion\""));
         Assert.Contains("Taslak olarak yeniden etkinleştir", decodedReactivateHtml, StringComparison.Ordinal);
         Assert.Contains("Geri çekildi", decodedReactivateHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Değerlendirme sürüyor", decodedReactivateHtml, StringComparison.Ordinal);
-        Assert.Contains($"/Panel/Applications/{publicId:D}/Reactivate", reactivateHtml, StringComparison.Ordinal);
-        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", reactivateHtml, StringComparison.Ordinal);
-        Assert.Contains("__RequestVerificationToken", reactivateHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("/Withdraw", reactivateHtml, StringComparison.Ordinal);
+        Assert.Contains("method=\"post\"", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains("/Panel/ReactivateApplication?publicId=", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains($"publicId={publicId:D}", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"AQIDBA==\"", reactivateForm, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", reactivateForm, StringComparison.Ordinal);
+        Assert.DoesNotContain("WithdrawApplication", reactivateForm, StringComparison.Ordinal);
+
+        var withdrawRoute = Assert.IsType<HttpPostAttribute>(
+            typeof(PanelController)
+                .GetMethod(nameof(PanelController.WithdrawApplication))!
+                .GetCustomAttributes(typeof(HttpPostAttribute), inherit: true)
+                .Single());
+        var reactivateRoute = Assert.IsType<HttpPostAttribute>(
+            typeof(PanelController)
+                .GetMethod(nameof(PanelController.ReactivateApplication))!
+                .GetCustomAttributes(typeof(HttpPostAttribute), inherit: true)
+                .Single());
+        Assert.Equal("Panel/Applications/{publicId:guid}/Withdraw", withdrawRoute.Template);
+        Assert.Equal("Panel/Applications/{publicId:guid}/Reactivate", reactivateRoute.Template);
 
         model.CurrentStatus = ApplicationStatus.Approved;
         model.CanReactivate = false;
