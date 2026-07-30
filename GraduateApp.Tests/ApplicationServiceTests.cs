@@ -606,6 +606,7 @@ public sealed class ApplicationServiceTests
         var service = CreateService(db);
         var draft = await service.CreateAsync("10000000146", offering.ProgramOfferingId, CancellationToken.None);
         var application = db.Applications.Single();
+        application.CurrentStatus = ApplicationStatus.Pending.ToString();
         application.RowVersion = [4, 5, 6];
         await db.SaveChangesAsync();
         var command = new StudentApplicationCommandDto
@@ -630,7 +631,7 @@ public sealed class ApplicationServiceTests
         Assert.Equal(StatusCodes.Status404NotFound, foreign.StatusCode);
         Assert.False(expired.IsSuccess);
         Assert.Equal(StatusCodes.Status409Conflict, expired.StatusCode);
-        Assert.Equal(ApplicationStatus.Draft.ToString(), application.CurrentStatus);
+        Assert.Equal(ApplicationStatus.Pending.ToString(), application.CurrentStatus);
         Assert.DoesNotContain(db.SecurityAuditLogs, item =>
             item.EventType is "ApplicationWithdrawnByStudent" or "ApplicationReactivatedByStudent");
     }
