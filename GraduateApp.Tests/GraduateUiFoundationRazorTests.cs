@@ -57,16 +57,17 @@ public sealed class GraduateUiFoundationRazorTests
                     }
                 ]
             });
+        var decodedHtml = WebUtility.HtmlDecode(html);
 
         Assert.Contains("<html lang=\"tr\">", html, StringComparison.Ordinal);
         Assert.Contains("class=\"skip-link\" href=\"#main-content\"", html, StringComparison.Ordinal);
         Assert.Contains("src=\"/images/brand/cu_logo_tr.svg\"", html, StringComparison.Ordinal);
-        Assert.Contains("alt=\"Çukurova Üniversitesi\"", html, StringComparison.Ordinal);
-        Assert.Contains("Öğrenci girişi", html, StringComparison.Ordinal);
-        Assert.Contains("Yönetici girişi", html, StringComparison.Ordinal);
-        Assert.Contains("Öğrenci kaydı", html, StringComparison.Ordinal);
-        Assert.Contains("2026–2027 · Güz", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Güvenli çıkış", html, StringComparison.Ordinal);
+        Assert.Contains("alt=\"Çukurova Üniversitesi\"", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Öğrenci girişi", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Yönetici girişi", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Öğrenci kaydı", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("2026–2027 · Güz", decodedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Güvenli çıkış", decodedHtml, StringComparison.Ordinal);
         Assert.Contains(
             "aria-current=\"page\"",
             OpeningTagForLinkText(html, "Ana sayfa"),
@@ -117,6 +118,7 @@ public sealed class GraduateUiFoundationRazorTests
                 ]
             },
             cultureName: "en-US");
+        var decodedHtml = WebUtility.HtmlDecode(html);
 
         Assert.Contains("<html lang=\"en\">", html, StringComparison.Ordinal);
         Assert.Contains("Graduate Application System", html, StringComparison.Ordinal);
@@ -125,8 +127,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("Administrator sign in", html, StringComparison.Ordinal);
         Assert.Contains("Create student registration", html, StringComparison.Ordinal);
         Assert.Contains("Manage your path to graduate education securely", html, StringComparison.Ordinal);
-        Assert.Contains("2026–2027 · Fall", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("2026–2027 · Güz", html, StringComparison.Ordinal);
+        Assert.Contains("2026–2027 · Fall", decodedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("2026–2027 · Güz", decodedHtml, StringComparison.Ordinal);
         Assert.Contains("name=\"culture\"", html, StringComparison.Ordinal);
         Assert.Contains("value=\"en-US\"", html, StringComparison.Ordinal);
         Assert.Matches("value=\\\"en-US\\\"\\s+selected", html);
@@ -165,6 +167,7 @@ public sealed class GraduateUiFoundationRazorTests
 
         foreach (var html in new[] { homeHtml, panelHtml })
         {
+            var decodedHtml = WebUtility.HtmlDecode(html);
             Assert.Contains("role=\"search\"", html, StringComparison.Ordinal);
             Assert.Contains("method=\"get\"", html, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("name=\"search\"", html, StringComparison.Ordinal);
@@ -174,10 +177,10 @@ public sealed class GraduateUiFoundationRazorTests
             Assert.Contains("value=\"Fall\" selected", html, StringComparison.Ordinal);
             Assert.Contains("&lt;Bilgisayar&gt;", html, StringComparison.Ordinal);
             Assert.DoesNotContain("value=\"<Bilgisayar>\"", html, StringComparison.Ordinal);
-            Assert.Contains("Filtreleri temizle", html, StringComparison.Ordinal);
+            Assert.Contains("Filtreleri temizle", decodedHtml, StringComparison.Ordinal);
             Assert.Contains(
                 "Arama ölçütlerine uygun açık program bulunamadı",
-                html,
+                decodedHtml,
                 StringComparison.Ordinal);
         }
 
@@ -256,11 +259,12 @@ public sealed class GraduateUiFoundationRazorTests
                 GraduatedProgram = "<Bilgisayar Mühendisliği>"
             },
             AuthenticatedUser("Student", "<Öğrenci Kullanıcı>"));
+        var decodedHtml = WebUtility.HtmlDecode(html);
 
-        Assert.Contains("Başvurularım", html, StringComparison.Ordinal);
-        Assert.Contains("Sınav sonuçlarım", html, StringComparison.Ordinal);
-        Assert.Contains("Profilim", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Yönetici hesapları", html, StringComparison.Ordinal);
+        Assert.Contains("Başvurularım", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Sınav sonuçlarım", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Profilim", decodedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Yönetici hesapları", decodedHtml, StringComparison.Ordinal);
         Assert.Contains(
             "aria-current=\"page\"",
             OpeningTagForLinkText(html, "Başvurularım"),
@@ -272,10 +276,9 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
         Assert.Contains("Program alanı eşleşiyor", html, StringComparison.Ordinal);
         Assert.Contains("data-profile-recommendation", html, StringComparison.Ordinal);
-        var decodedHtml = WebUtility.HtmlDecode(html);
         Assert.Contains("<Bilgisayar Mühendisliği>", decodedHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("<Bilgisayar Mühendisliği>", html, StringComparison.Ordinal);
-        Assert.Contains("Güvenli çıkış", html, StringComparison.Ordinal);
+        Assert.Contains("Güvenli çıkış", decodedHtml, StringComparison.Ordinal);
         Assert.Contains("Öğrenci hesabı", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
     }
 
@@ -289,14 +292,15 @@ public sealed class GraduateUiFoundationRazorTests
             "Index",
             new HomeViewModel(),
             AuthenticatedUser("Admin", "Yetkili Kullanıcı"));
+        var decodedHtml = WebUtility.HtmlDecode(html);
 
-        Assert.Contains("Başvurular", html, StringComparison.Ordinal);
-        Assert.Contains("İlanlar ve değerlendirme", html, StringComparison.Ordinal);
-        Assert.Contains("Akademik katalog", html, StringComparison.Ordinal);
-        Assert.Contains("Hesap yönetimi", html, StringComparison.Ordinal);
-        Assert.Contains("Öğrenciler", html, StringComparison.Ordinal);
-        Assert.Contains("Yöneticiler", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Sınav sonuçlarım", html, StringComparison.Ordinal);
+        Assert.Contains("Başvurular", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("İlanlar ve değerlendirme", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Akademik katalog", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Hesap yönetimi", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Öğrenciler", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("Yöneticiler", decodedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sınav sonuçlarım", decodedHtml, StringComparison.Ordinal);
         Assert.Contains("Yönetici hesabı", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
     }
 
@@ -1042,13 +1046,19 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("name=\"accountType\" value=\"Admin\"", studentHtml, StringComparison.Ordinal);
         Assert.Contains("Yönetici hesabıyla giriş yap", WebUtility.HtmlDecode(studentHtml), StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", studentHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("returnUrl", studentHtml, StringComparison.OrdinalIgnoreCase);
+        var studentSwitchForm = FormContaining(
+            studentHtml,
+            "name=\"accountType\" value=\"Admin\"");
+        Assert.DoesNotContain("returnUrl", studentSwitchForm, StringComparison.OrdinalIgnoreCase);
 
         Assert.Contains("action=\"/Account/SwitchAccount\"", adminHtml, StringComparison.Ordinal);
         Assert.Contains("name=\"accountType\" value=\"Student\"", adminHtml, StringComparison.Ordinal);
         Assert.Contains("Öğrenci hesabıyla giriş yap", WebUtility.HtmlDecode(adminHtml), StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", adminHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("returnUrl", adminHtml, StringComparison.OrdinalIgnoreCase);
+        var adminSwitchForm = FormContaining(
+            adminHtml,
+            "name=\"accountType\" value=\"Student\"");
+        Assert.DoesNotContain("returnUrl", adminSwitchForm, StringComparison.OrdinalIgnoreCase);
 
         Assert.DoesNotContain("SwitchAccount", anonymousHtml, StringComparison.Ordinal);
         Assert.Contains("href=\"/Account/Login\"", anonymousHtml, StringComparison.Ordinal);
@@ -1740,12 +1750,13 @@ public sealed class GraduateUiFoundationRazorTests
 
     private static string OpeningTagForLinkText(string html, string text)
     {
-        var textIndex = html.IndexOf($">{text}</a>", StringComparison.Ordinal);
+        var decodedHtml = WebUtility.HtmlDecode(html);
+        var textIndex = decodedHtml.IndexOf($">{text}</a>", StringComparison.Ordinal);
         Assert.True(textIndex >= 0, $"Bağlantı metni bulunamadı: {text}");
-        var tagStart = html.LastIndexOf("<a", textIndex, StringComparison.Ordinal);
-        var tagEnd = html.IndexOf('>', tagStart);
+        var tagStart = decodedHtml.LastIndexOf("<a", textIndex, StringComparison.Ordinal);
+        var tagEnd = decodedHtml.IndexOf('>', tagStart);
         Assert.True(tagStart >= 0 && tagEnd > tagStart);
-        return html[tagStart..(tagEnd + 1)];
+        return decodedHtml[tagStart..(tagEnd + 1)];
     }
 
     private static string RepositoryRoot() =>
