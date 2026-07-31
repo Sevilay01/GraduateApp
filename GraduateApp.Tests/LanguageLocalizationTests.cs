@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
@@ -62,6 +63,9 @@ public sealed class LanguageLocalizationTests
         var httpContext = new DefaultHttpContext();
 
         Assert.Equal("Ana sayfa", UiText.Get(httpContext, "Navigation.Home"));
+        Assert.Equal("Yönetici girişi", UiText.Get(httpContext, "Login.AdminTitle"));
+        Assert.Equal("Öğrenci girişi", UiText.Get(httpContext, "Login.StudentTitle"));
+        Assert.Equal("Farklı hesapla giriş yap", UiText.Get(httpContext, "Login.SwitchAccount"));
         Assert.Equal(UiText.TurkishCultureName, UiText.CurrentCultureName(httpContext));
 
         httpContext.Features.Set<IRequestCultureFeature>(
@@ -81,7 +85,7 @@ public sealed class LanguageLocalizationTests
         var actionContext = new ActionContext(
             httpContext,
             new RouteData(),
-            new ActionDescriptor(),
+            new ControllerActionDescriptor(),
             new ModelStateDictionary());
         var controller = new LanguageController
         {
