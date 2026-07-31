@@ -150,6 +150,7 @@
                           asp-action="Set"
                           method="post"
                           class="d-flex align-items-end gap-2 me-xl-3 my-3 my-xl-0"
+                          data-language-form
                           aria-label="@UiText.Get(Context, "Language.Label")">
                         <div>
                             <label for="site-language" class="visually-hidden">
@@ -157,7 +158,8 @@
                             </label>
                             <select id="site-language"
                                     name="culture"
-                                    class="form-select form-select-sm">
+                                    class="form-select form-select-sm"
+                                    data-auto-submit-on-change="true">
                                 <option value="@UiText.TurkishCultureName"
                                         selected="@(currentCultureName == UiText.TurkishCultureName ? "selected" : null)">
                                     @UiText.Get(Context, "Language.Turkish")
@@ -169,9 +171,11 @@
                             </select>
                         </div>
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
-                        <button type="submit" class="btn btn-sm btn-outline-light">
-                            @UiText.Get(Context, "Language.Apply")
-                        </button>
+                        <noscript>
+                            <button type="submit" class="btn btn-sm btn-outline-light">
+                                @UiText.Get(Context, "Language.Apply")
+                            </button>
+                        </noscript>
                     </form>
 
                     <div class="session-area">
