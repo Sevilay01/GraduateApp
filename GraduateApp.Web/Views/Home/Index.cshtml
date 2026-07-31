@@ -1,28 +1,28 @@
 @model HomeViewModel
 @{
-    ViewData["Title"] = "Ana sayfa";
+    ViewData["Title"] = UiText.Get(Context, "Home.Title");
 }
 
 <section class="hero" aria-labelledby="hero-title">
     <div class="hero__content">
-        <span class="eyebrow">Çukurova Üniversitesi</span>
-        <h1 id="hero-title">Lisansüstü eğitime giden yolunuzu güvenle yönetin</h1>
+        <span class="eyebrow">@UiText.Get(Context, "Home.Eyebrow")</span>
+        <h1 id="hero-title">@UiText.Get(Context, "Home.HeroTitle")</h1>
         <p class="hero__lead">
-            Başvuruya açık programları inceleyin, belgelerinizi güvenli biçimde yükleyin ve başvurunuzun her adımını tek panelden takip edin.
+            @UiText.Get(Context, "Home.HeroLead")
         </p>
         <div class="hero__actions">
             @if (User.Identity?.IsAuthenticated != true)
             {
-                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg">Öğrenci kaydı oluştur</a>
-                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">Öğrenci girişi</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg">@UiText.Get(Context, "Home.CreateRegistration")</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">@UiText.Get(Context, "Home.StudentLogin")</a>
             }
             else if (User.IsInRole("Student"))
             {
-                <a asp-controller="Panel" asp-action="Index" class="btn btn-primary btn-lg">Öğrenci paneline git</a>
+                <a asp-controller="Panel" asp-action="Index" class="btn btn-primary btn-lg">@UiText.Get(Context, "Home.GoStudentPanel")</a>
             }
             else if (User.IsInRole("Admin"))
             {
-                <a asp-controller="Admin" asp-action="Index" class="btn btn-primary btn-lg">Yönetim paneline git</a>
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-primary btn-lg">@UiText.Get(Context, "Home.GoAdminPanel")</a>
             }
         </div>
     </div>
@@ -31,29 +31,29 @@
 <section aria-labelledby="open-programs-title">
     <div class="section-heading">
         <div>
-            <span class="eyebrow">2026–2027 akademik dönemi</span>
-            <h2 id="open-programs-title">Başvuruya açık lisansüstü programlar</h2>
+            <span class="eyebrow">@UiText.Get(Context, "Home.Period")</span>
+            <h2 id="open-programs-title">@UiText.Get(Context, "Home.OpenPrograms")</h2>
         </div>
-        <p>Son başvuru tarihlerini ve temel program bilgilerini karşılaştırın.</p>
+        <p>@UiText.Get(Context, "Home.Compare")</p>
     </div>
 
-    <form asp-action="Index" method="get" class="admin-filter-panel mb-4" role="search" aria-label="Açık programlarda ara">
+    <form asp-action="Index" method="get" class="admin-filter-panel mb-4" role="search" aria-label="@UiText.Get(Context, "Home.SearchAria")">
         @if (!ViewData.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
         }
         <div class="row g-3 align-items-end">
             <div class="col-12 col-lg-6">
-                <label for="open-program-search" class="form-label">Program, enstitü veya derece ara</label>
+                <label for="open-program-search" class="form-label">@UiText.Get(Context, "Home.SearchLabel")</label>
                 <input id="open-program-search"
                        name="search"
                        value="@Model.ProgramSearch.Search"
                        maxlength="@OpenProgramSearchViewModel.MaximumSearchLength"
                        class="form-control"
-                       placeholder="Örn. Bilgisayar, Fen Bilimleri veya Doktora" />
+                       placeholder="@UiText.Get(Context, "Home.SearchPlaceholder")" />
             </div>
             <div class="col-12 col-sm-6 col-lg-3">
-                <label for="open-program-year" class="form-label">Akademik yıl başlangıcı</label>
+                <label for="open-program-year" class="form-label">@UiText.Get(Context, "Home.YearLabel")</label>
                 <input id="open-program-year"
                        name="academicYearStart"
                        value="@Model.ProgramSearch.AcademicYearStart"
@@ -64,21 +64,21 @@
                        placeholder="2026" />
             </div>
             <div class="col-12 col-sm-6 col-lg-3">
-                <label for="open-program-term" class="form-label">Dönem</label>
+                <label for="open-program-term" class="form-label">@UiText.Get(Context, "Home.TermLabel")</label>
                 <select id="open-program-term" name="term" class="form-select">
-                    <option value="">Tüm dönemler</option>
+                    <option value="">@UiText.Get(Context, "Home.AllTerms")</option>
                     @foreach (var term in AcademicTermDisplayExtensions.OfferingValues)
                     {
-                        <option value="@term" selected="@(Model.ProgramSearch.Term == term ? "selected" : null)">@term.DisplayName()</option>
+                        <option value="@term" selected="@(Model.ProgramSearch.Term == term ? "selected" : null)">@UiText.Get(Context, $"AcademicTerm.{term}")</option>
                     }
                 </select>
             </div>
         </div>
         <div class="admin-form-actions mt-3">
-            <button type="submit" class="btn btn-primary">Programları ara</button>
+            <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Home.SearchButton")</button>
             @if (Model.ProgramSearch.HasActiveFilters)
             {
-                <a asp-action="Index" class="btn btn-outline-secondary">Filtreleri temizle</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">@UiText.Get(Context, "Home.ClearFilters")</a>
             }
         </div>
     </form>
@@ -86,7 +86,7 @@
     @if (Model.ErrorMessage is not null)
     {
         <div class="alert alert-warning app-alert" role="alert">
-            <strong>Program bilgileri alınamadı.</strong>
+            <strong>@UiText.Get(Context, "Home.LoadError")</strong>
             <span>@Model.ErrorMessage</span>
         </div>
     }
@@ -95,14 +95,14 @@
         <div class="empty-state">
             @if (Model.ProgramSearch.HasActiveFilters)
             {
-                <h3>Arama ölçütlerine uygun açık program bulunamadı</h3>
-                <p>Arama metnini veya akademik dönem filtrelerini değiştirerek yeniden deneyin.</p>
-                <a asp-action="Index" class="btn btn-outline-primary">Tüm açık programları göster</a>
+                <h3>@UiText.Get(Context, "Home.NoMatch")</h3>
+                <p>@UiText.Get(Context, "Home.TryDifferent")</p>
+                <a asp-action="Index" class="btn btn-outline-primary">@UiText.Get(Context, "Home.ShowAll")</a>
             }
             else
             {
-                <h3>Şu anda açık program bulunmuyor</h3>
-                <p>Yeni başvuru dönemleri açıldığında programlar bu alanda listelenecektir.</p>
+                <h3>@UiText.Get(Context, "Home.NoPrograms")</h3>
+                <p>@UiText.Get(Context, "Home.NoProgramsLead")</p>
             }
         </div>
     }
@@ -119,26 +119,26 @@
                             <p class="program-card__degree">@program.DegreeType</p>
                             <dl class="meta-grid">
                                 <div class="meta-item">
-                                    <dt>Akademik dönem</dt>
-                                    <dd>@program.AcademicYear · @program.TermName</dd>
+                                    <dt>@UiText.Get(Context, "Home.AcademicPeriod")</dt>
+                                    <dd>@program.AcademicYear · @UiText.Get(Context, $"AcademicTerm.{program.Term}")</dd>
                                 </div>
                                 <div class="meta-item">
-                                    <dt>Kontenjan</dt>
-                                    <dd>@program.Quota kişi</dd>
+                                    <dt>@UiText.Get(Context, "Home.Quota")</dt>
+                                    <dd>@UiText.Format(Context, "Home.People", program.Quota)</dd>
                                 </div>
                             </dl>
                             <div class="deadline-callout mt-auto">
                                 <div>
-                                    <div class="deadline-callout__label">Son başvuru</div>
+                                    <div class="deadline-callout__label">@UiText.Get(Context, "Home.Deadline")</div>
                                     <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">
                                         @IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd MMMM yyyy · HH:mm")
                                     </time>
-                                    <span class="visually-hidden"> İstanbul saati</span>
+                                    <span class="visually-hidden"> @UiText.Get(Context, "Home.IstanbulTime")</span>
                                 </div>
                             </div>
                             @if (User.Identity?.IsAuthenticated != true)
                             {
-                                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary w-100">Başvuru için giriş yap</a>
+                                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary w-100">@UiText.Get(Context, "Home.LoginToApply")</a>
                             }
                         </div>
                     </article>

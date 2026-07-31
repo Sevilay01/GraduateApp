@@ -451,13 +451,22 @@ public sealed class ProductionReadinessTests
         {
             builder.UseEnvironment("Testing");
             builder.ConfigureLogging(logging => logging.ClearProviders());
-            builder.UseSetting("GraduateApi:BaseAddress", "https://api.example.test/");
-            builder.UseSetting(
-                "GraduateApi:TimeoutSeconds",
-                timeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            builder.UseSetting(
-                "GraduateApi:InnerDependencyTimeoutSeconds",
-                innerDependencyTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            var testConfiguration = new Dictionary<string, string?>
+            {
+                ["GraduateApi:BaseAddress"] = "https://api.example.test/",
+                ["GraduateApi:TimeoutSeconds"] =
+                    timeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["GraduateApi:InnerDependencyTimeoutSeconds"] =
+                    innerDependencyTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            };
+
+            foreach (var setting in testConfiguration)
+            {
+                builder.UseSetting(setting.Key, setting.Value);
+            }
+
+            builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+                configurationBuilder.AddInMemoryCollection(testConfiguration));
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IDataProtectionProvider>();

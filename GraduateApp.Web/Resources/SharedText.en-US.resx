@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="Application.Name" xml:space="preserve">
+    <value>Graduate Application System</value>
+  </data>
+  <data name="University.Name" xml:space="preserve">
+    <value>Çukurova University</value>
+  </data>
+  <data name="Brand.HomeLabel" xml:space="preserve">
+    <value>Çukurova University Graduate Application System home page</value>
+  </data>
+  <data name="Navigation.SkipToContent" xml:space="preserve">
+    <value>Skip to main content</value>
+  </data>
+  <data name="Environment.Development" xml:space="preserve">
+    <value>Development environment</value>
+  </data>
+  <data name="Environment.Warning" xml:space="preserve">
+    <value>This environment must not be used for real applications.</value>
+  </data>
+  <data name="Navigation.MainMenu" xml:space="preserve">
+    <value>Main menu</value>
+  </data>
+  <data name="Navigation.Toggle" xml:space="preserve">
+    <value>Open or close menu</value>
+  </data>
+  <data name="Navigation.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Navigation.MyApplications" xml:space="preserve">
+    <value>My applications</value>
+  </data>
+  <data name="Navigation.MyExamScores" xml:space="preserve">
+    <value>My exam results</value>
+  </data>
+  <data name="Navigation.MyProfile" xml:space="preserve">
+    <value>My profile</value>
+  </data>
+  <data name="Navigation.Applications" xml:space="preserve">
+    <value>Applications</value>
+  </data>
+  <data name="Navigation.Offerings" xml:space="preserve">
+    <value>Offerings and evaluation</value>
+  </data>
+  <data name="Navigation.AcademicCatalog" xml:space="preserve">
+    <value>Academic catalog</value>
+  </data>
+  <data name="Navigation.InstitutesPrograms" xml:space="preserve">
+    <value>Institutes and programs</value>
+  </data>
+  <data name="Navigation.Universities" xml:space="preserve">
+    <value>Universities</value>
+  </data>
+  <data name="Navigation.AccountManagement" xml:space="preserve">
+    <value>Account management</value>
+  </data>
+  <data name="Navigation.Students" xml:space="preserve">
+    <value>Students</value>
+  </data>
+  <data name="Navigation.Administrators" xml:space="preserve">
+    <value>Administrators</value>
+  </data>
+  <data name="Session.Information" xml:space="preserve">
+    <value>Session information</value>
+  </data>
+  <data name="Session.Account" xml:space="preserve">
+    <value>{0} account</value>
+  </data>
+  <data name="Role.Admin" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="Role.Student" xml:space="preserve">
+    <value>Student</value>
+  </data>
+  <data name="Session.ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Session.SecureLogout" xml:space="preserve">
+    <value>Secure sign out</value>
+  </data>
+  <data name="Session.Actions" xml:space="preserve">
+    <value>Account actions</value>
+  </data>
+  <data name="Session.StudentLogin" xml:space="preserve">
+    <value>Student sign in</value>
+  </data>
+  <data name="Session.AdminLogin" xml:space="preserve">
+    <value>Administrator sign in</value>
+  </data>
+  <data name="Session.StudentRegistration" xml:space="preserve">
+    <value>Student registration</value>
+  </data>
+  <data name="Alert.Success" xml:space="preserve">
+    <value>Operation completed.</value>
+  </data>
+  <data name="Alert.Warning" xml:space="preserve">
+    <value>Attention.</value>
+  </data>
+  <data name="Alert.Error" xml:space="preserve">
+    <value>Operation could not be completed.</value>
+  </data>
+  <data name="Footer.Privacy" xml:space="preserve">
+    <value>Privacy and information notice</value>
+  </data>
+  <data name="Language.Label" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Language.Turkish" xml:space="preserve">
+    <value>Türkçe</value>
+  </data>
+  <data name="Language.English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Language.Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Login.StudentTitle" xml:space="preserve">
+    <value>Student sign in</value>
+  </data>
+  <data name="Login.AdminTitle" xml:space="preserve">
+    <value>Administrator sign in</value>
+  </data>
+  <data name="Login.StudentEyebrow" xml:space="preserve">
+    <value>Student access</value>
+  </data>
+  <data name="Login.AdminEyebrow" xml:space="preserve">
+    <value>Authorized access</value>
+  </data>
+  <data name="Login.StudentIntro" xml:space="preserve">
+    <value>Sign in to create applications, manage your documents, and track your results.</value>
+  </data>
+  <data name="Login.AdminIntro" xml:space="preserve">
+    <value>This area is only for authorized institute and system administrators.</value>
+  </data>
+  <data name="Login.StudentContext" xml:space="preserve">
+    <value>Student account</value>
+  </data>
+  <data name="Login.AdminContext" xml:space="preserve">
+    <value>Administrator account</value>
+  </data>
+  <data name="Login.StudentHint" xml:space="preserve">
+    <value>You can use your Turkish identity number or registered email address.</value>
+  </data>
+  <data name="Login.AdminHint" xml:space="preserve">
+    <value>Administrators sign in with their institutional email address.</value>
+  </data>
+  <data name="Login.ExistingSession" xml:space="preserve">
+    <value>You are currently signed in with a {0} account.</value>
+  </data>
+  <data name="Login.OtherAccount" xml:space="preserve">
+    <value>different</value>
+  </data>
+  <data name="Login.SwitchAccount" xml:space="preserve">
+    <value>Sign in with a different account</value>
+  </data>
+  <data name="Login.Username" xml:space="preserve">
+    <value>Turkish identity number or email</value>
+  </data>
+  <data name="Login.Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Login.RememberMe" xml:space="preserve">
+    <value>Keep me signed in on this device</value>
+  </data>
+  <data name="Login.Submit" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Login.ForgotPassword" xml:space="preserve">
+    <value>Forgot my password</value>
+  </data>
+  <data name="Login.GoStudent" xml:space="preserve">
+    <value>Go to student sign in</value>
+  </data>
+  <data name="Login.GoAdmin" xml:space="preserve">
+    <value>Go to administrator sign in</value>
+  </data>
+  <data name="Login.NoAccount" xml:space="preserve">
+    <value>Do not have an account yet?</value>
+  </data>
+  <data name="Login.CreateRegistration" xml:space="preserve">
+    <value>Create a student registration.</value>
+  </data>
+  <data name="Home.Title" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Home.Eyebrow" xml:space="preserve">
+    <value>Çukurova University</value>
+  </data>
+  <data name="Home.HeroTitle" xml:space="preserve">
+    <value>Manage your path to graduate education securely</value>
+  </data>
+  <data name="Home.HeroLead" xml:space="preserve">
+    <value>Explore programs accepting applications, upload your documents securely, and track every step from one dashboard.</value>
+  </data>
+  <data name="Home.CreateRegistration" xml:space="preserve">
+    <value>Create student registration</value>
+  </data>
+  <data name="Home.StudentLogin" xml:space="preserve">
+    <value>Student sign in</value>
+  </data>
+  <data name="Home.GoStudentPanel" xml:space="preserve">
+    <value>Go to student dashboard</value>
+  </data>
+  <data name="Home.GoAdminPanel" xml:space="preserve">
+    <value>Go to administration dashboard</value>
+  </data>
+  <data name="Home.Period" xml:space="preserve">
+    <value>2026–2027 academic year</value>
+  </data>
+  <data name="Home.OpenPrograms" xml:space="preserve">
+    <value>Graduate programs accepting applications</value>
+  </data>
+  <data name="Home.Compare" xml:space="preserve">
+    <value>Compare application deadlines and essential program information.</value>
+  </data>
+  <data name="Home.SearchAria" xml:space="preserve">
+    <value>Search open programs</value>
+  </data>
+  <data name="Home.SearchLabel" xml:space="preserve">
+    <value>Search by program, institute, or degree</value>
+  </data>
+  <data name="Home.SearchPlaceholder" xml:space="preserve">
+    <value>E.g. Computer, Natural Sciences, or Doctorate</value>
+  </data>
+  <data name="Home.YearLabel" xml:space="preserve">
+    <value>Academic year start</value>
+  </data>
+  <data name="Home.TermLabel" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="Home.AllTerms" xml:space="preserve">
+    <value>All terms</value>
+  </data>
+  <data name="Home.SearchButton" xml:space="preserve">
+    <value>Search programs</value>
+  </data>
+  <data name="Home.ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="Home.LoadError" xml:space="preserve">
+    <value>Program information could not be loaded.</value>
+  </data>
+  <data name="Home.NoMatch" xml:space="preserve">
+    <value>No open program matches your search</value>
+  </data>
+  <data name="Home.TryDifferent" xml:space="preserve">
+    <value>Change the search text or academic term filters and try again.</value>
+  </data>
+  <data name="Home.ShowAll" xml:space="preserve">
+    <value>Show all open programs</value>
+  </data>
+  <data name="Home.NoPrograms" xml:space="preserve">
+    <value>There are currently no open programs</value>
+  </data>
+  <data name="Home.NoProgramsLead" xml:space="preserve">
+    <value>Programs will appear here when a new application period opens.</value>
+  </data>
+  <data name="Home.AcademicPeriod" xml:space="preserve">
+    <value>Academic term</value>
+  </data>
+  <data name="Home.Quota" xml:space="preserve">
+    <value>Quota</value>
+  </data>
+  <data name="Home.People" xml:space="preserve">
+    <value>{0} people</value>
+  </data>
+  <data name="Home.Deadline" xml:space="preserve">
+    <value>Application deadline</value>
+  </data>
+  <data name="Home.IstanbulTime" xml:space="preserve">
+    <value>Istanbul time</value>
+  </data>
+  <data name="Home.LoginToApply" xml:space="preserve">
+    <value>Sign in to apply</value>
+  </data>
+  <data name="AcademicTerm.LegacyUnspecified" xml:space="preserve">
+    <value>Unspecified</value>
+  </data>
+  <data name="AcademicTerm.Fall" xml:space="preserve">
+    <value>Fall</value>
+  </data>
+  <data name="AcademicTerm.Spring" xml:space="preserve">
+    <value>Spring</value>
+  </data>
+  <data name="AcademicTerm.Summer" xml:space="preserve">
+    <value>Summer</value>
+  </data>
+</root>

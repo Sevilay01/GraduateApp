@@ -16,45 +16,50 @@
         && currentAction is "Students" or "ActivateStudent" or "DeactivateStudent";
     var isAdminAccounts = currentController == "Admin" && currentAction == "Accounts";
     var isAdminAccountManagement = isAdminStudents || isAdminAccounts;
-    var roleDisplay = User.IsInRole("Admin") ? "Yönetici" : "Öğrenci";
+    var roleDisplay = User.IsInRole("Admin")
+        ? UiText.Get(Context, "Role.Admin")
+        : UiText.Get(Context, "Role.Student");
+    var currentCultureName = UiText.CurrentCultureName(Context);
+    var htmlLanguage = currentCultureName == UiText.EnglishCultureName ? "en" : "tr";
+    var returnUrl = $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}";
 }
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="@htmlLanguage">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light" />
-    <title>@ViewData["Title"] · Çukurova Üniversitesi Lisansüstü Başvuru Sistemi</title>
+    <title>@ViewData["Title"] · @UiText.Get(Context, "University.Name") @UiText.Get(Context, "Application.Name")</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <a class="skip-link" href="#main-content">Ana içeriğe geç</a>
+    <a class="skip-link" href="#main-content">@UiText.Get(Context, "Navigation.SkipToContent")</a>
 
     @if (HostEnvironment.IsDevelopment())
     {
         <div class="environment-banner" role="status">
             <div class="container">
-                <strong>Geliştirme ortamı</strong>
-                <span>Bu ortam gerçek başvuru işlemleri için kullanılmamalıdır.</span>
+                <strong>@UiText.Get(Context, "Environment.Development")</strong>
+                <span>@UiText.Get(Context, "Environment.Warning")</span>
             </div>
         </div>
     }
 
     <header class="site-header">
-        <nav class="navbar navbar-expand-xl navbar-dark" aria-label="Ana menü">
+        <nav class="navbar navbar-expand-xl navbar-dark" aria-label="@UiText.Get(Context, "Navigation.MainMenu")">
             <div class="container">
                 <a class="site-brand" asp-controller="Home" asp-action="Index"
-                   aria-label="Çukurova Üniversitesi Lisansüstü Başvuru Sistemi ana sayfa">
+                   aria-label="@UiText.Get(Context, "Brand.HomeLabel")">
                     <img src="~/images/brand/cu_logo_tr.svg"
                          width="270" height="72"
-                         alt="Çukurova Üniversitesi"
+                         alt="@UiText.Get(Context, "University.Name")"
                          class="site-brand__logo" />
-                    <span class="site-brand__product">Lisansüstü Başvuru Sistemi</span>
+                    <span class="site-brand__product">@UiText.Get(Context, "Application.Name")</span>
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-                        aria-controls="mainNav" aria-expanded="false" aria-label="Menüyü aç veya kapat">
+                        aria-controls="mainNav" aria-expanded="false" aria-label="@UiText.Get(Context, "Navigation.Toggle")">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -63,24 +68,24 @@
                         <li class="nav-item">
                             <a class="nav-link @(isHome ? "active" : null)"
                                aria-current="@(isHome ? "page" : null)"
-                               asp-controller="Home" asp-action="Index">Ana sayfa</a>
+                               asp-controller="Home" asp-action="Index">@UiText.Get(Context, "Navigation.Home")</a>
                         </li>
                         @if (User.IsInRole("Student"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link @(isStudentPanel ? "active" : null)"
                                    aria-current="@(isStudentPanel ? "page" : null)"
-                                   asp-controller="Panel" asp-action="Index">Başvurularım</a>
+                                   asp-controller="Panel" asp-action="Index">@UiText.Get(Context, "Navigation.MyApplications")</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link @(isExamScores ? "active" : null)"
                                    aria-current="@(isExamScores ? "page" : null)"
-                                   asp-controller="Panel" asp-action="ExamScores">Sınav sonuçlarım</a>
+                                   asp-controller="Panel" asp-action="ExamScores">@UiText.Get(Context, "Navigation.MyExamScores")</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link @(isProfile ? "active" : null)"
                                    aria-current="@(isProfile ? "page" : null)"
-                                   asp-controller="Panel" asp-action="Profile">Profilim</a>
+                                   asp-controller="Panel" asp-action="Profile">@UiText.Get(Context, "Navigation.MyProfile")</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
@@ -88,12 +93,12 @@
                             <li class="nav-item">
                                 <a class="nav-link @(isAdminApplications ? "active" : null)"
                                    aria-current="@(isAdminApplications ? "page" : null)"
-                                   asp-controller="Admin" asp-action="Index">Başvurular</a>
+                                   asp-controller="Admin" asp-action="Index">@UiText.Get(Context, "Navigation.Applications")</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link @(isAdminOfferings ? "active" : null)"
                                    aria-current="@(isAdminOfferings ? "page" : null)"
-                                   asp-controller="Admin" asp-action="Offerings">İlanlar ve değerlendirme</a>
+                                   asp-controller="Admin" asp-action="Offerings">@UiText.Get(Context, "Navigation.Offerings")</a>
                             </li>
                             <li class="nav-item dropdown">
                                 <button class="nav-link dropdown-toggle @(isAdminCatalog ? "active" : null)"
@@ -101,18 +106,18 @@
                                         type="button"
                                         data-bs-toggle="dropdown"
                                         aria-expanded="false">
-                                    Akademik katalog
+                                    @UiText.Get(Context, "Navigation.AcademicCatalog")
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="adminCatalogMenu">
                                     <li>
                                         <a class="dropdown-item @(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "active" : null)"
                                            aria-current="@(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "page" : null)"
-                                           asp-controller="Admin" asp-action="Institutes">Enstitüler ve programlar</a>
+                                           asp-controller="Admin" asp-action="Institutes">@UiText.Get(Context, "Navigation.InstitutesPrograms")</a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item @(currentAction == "Universities" ? "active" : null)"
                                            aria-current="@(currentAction == "Universities" ? "page" : null)"
-                                           asp-controller="Admin" asp-action="Universities">Üniversiteler</a>
+                                           asp-controller="Admin" asp-action="Universities">@UiText.Get(Context, "Navigation.Universities")</a>
                                     </li>
                                 </ul>
                             </li>
@@ -122,46 +127,75 @@
                                         type="button"
                                         data-bs-toggle="dropdown"
                                         aria-expanded="false">
-                                    Hesap yönetimi
+                                    @UiText.Get(Context, "Navigation.AccountManagement")
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="adminAccountsMenu">
                                     <li>
                                         <a class="dropdown-item @(isAdminStudents ? "active" : null)"
                                            aria-current="@(isAdminStudents ? "page" : null)"
-                                           asp-controller="Admin" asp-action="Students">Öğrenciler</a>
+                                           asp-controller="Admin" asp-action="Students">@UiText.Get(Context, "Navigation.Students")</a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item @(isAdminAccounts ? "active" : null)"
                                            aria-current="@(isAdminAccounts ? "page" : null)"
-                                           asp-controller="Admin" asp-action="Accounts">Yöneticiler</a>
+                                           asp-controller="Admin" asp-action="Accounts">@UiText.Get(Context, "Navigation.Administrators")</a>
                                     </li>
                                 </ul>
                             </li>
                         }
                     </ul>
 
+
+                    <form asp-controller="Language"
+                          asp-action="Set"
+                          method="post"
+                          class="d-flex align-items-end gap-2 me-xl-3 my-3 my-xl-0"
+                          aria-label="@UiText.Get(Context, "Language.Label")">
+                        <div>
+                            <label for="site-language" class="visually-hidden">
+                                @UiText.Get(Context, "Language.Label")
+                            </label>
+                            <select id="site-language"
+                                    name="culture"
+                                    class="form-select form-select-sm">
+                                <option value="@UiText.TurkishCultureName"
+                                        selected="@(currentCultureName == UiText.TurkishCultureName ? "selected" : null)">
+                                    @UiText.Get(Context, "Language.Turkish")
+                                </option>
+                                <option value="@UiText.EnglishCultureName"
+                                        selected="@(currentCultureName == UiText.EnglishCultureName ? "selected" : null)">
+                                    @UiText.Get(Context, "Language.English")
+                                </option>
+                            </select>
+                        </div>
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="btn btn-sm btn-outline-light">
+                            @UiText.Get(Context, "Language.Apply")
+                        </button>
+                    </form>
+
                     <div class="session-area">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <div class="session-identity" aria-label="Oturum bilgisi">
+                            <div class="session-identity" aria-label="@UiText.Get(Context, "Session.Information")">
                                 <span class="session-identity__name">@User.Identity.Name</span>
-                                <span class="session-identity__role">@roleDisplay hesabı</span>
+                                <span class="session-identity__role">@UiText.Format(Context, "Session.Account", roleDisplay)</span>
                             </div>
                             <div class="session-actions">
                                 <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="ChangePassword">
-                                    Parola değiştir
+                                    @UiText.Get(Context, "Session.ChangePassword")
                                 </a>
                                 <form asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="btn btn-sm btn-light">Güvenli çıkış</button>
+                                    <button type="submit" class="btn btn-sm btn-light">@UiText.Get(Context, "Session.SecureLogout")</button>
                                 </form>
                             </div>
                         }
                         else
                         {
-                            <div class="session-actions session-actions--anonymous" aria-label="Hesap işlemleri">
-                                <a class="btn btn-sm btn-light" asp-controller="Account" asp-action="Login">Öğrenci girişi</a>
-                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="AdminLogin">Yönetici girişi</a>
-                                <a class="nav-register-link" asp-controller="Account" asp-action="Register">Öğrenci kaydı</a>
+                            <div class="session-actions session-actions--anonymous" aria-label="@UiText.Get(Context, "Session.Actions")">
+                                <a class="btn btn-sm btn-light" asp-controller="Account" asp-action="Login">@UiText.Get(Context, "Session.StudentLogin")</a>
+                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="AdminLogin">@UiText.Get(Context, "Session.AdminLogin")</a>
+                                <a class="nav-register-link" asp-controller="Account" asp-action="Register">@UiText.Get(Context, "Session.StudentRegistration")</a>
                             </div>
                         }
                     </div>
@@ -174,21 +208,21 @@
         @if (TempData["SuccessMessage"] is string successMessage)
         {
             <div class="alert alert-success app-alert" role="status">
-                <strong>İşlem tamamlandı.</strong>
+                <strong>@UiText.Get(Context, "Alert.Success")</strong>
                 <span>@successMessage</span>
             </div>
         }
         @if (TempData["WarningMessage"] is string warningMessage)
         {
             <div class="alert alert-warning app-alert" role="alert">
-                <strong>Dikkat.</strong>
+                <strong>@UiText.Get(Context, "Alert.Warning")</strong>
                 <span>@warningMessage</span>
             </div>
         }
         @if (TempData["ErrorMessage"] is string errorMessage)
         {
             <div class="alert alert-danger app-alert" role="alert">
-                <strong>İşlem tamamlanamadı.</strong>
+                <strong>@UiText.Get(Context, "Alert.Error")</strong>
                 <span>@errorMessage</span>
             </div>
         }
@@ -198,12 +232,12 @@
     <footer class="site-footer mt-auto">
         <div class="container site-footer__content">
             <div>
-                <strong>Çukurova Üniversitesi</strong>
-                <span>Lisansüstü Başvuru Sistemi</span>
+                <strong>@UiText.Get(Context, "University.Name")</strong>
+                <span>@UiText.Get(Context, "Application.Name")</span>
             </div>
             <div>
                 <span>&copy; @DateTime.UtcNow.Year</span>
-                <a asp-controller="Home" asp-action="Privacy">Gizlilik ve aydınlatma</a>
+                <a asp-controller="Home" asp-action="Privacy">@UiText.Get(Context, "Footer.Privacy")</a>
             </div>
         </div>
     </footer>

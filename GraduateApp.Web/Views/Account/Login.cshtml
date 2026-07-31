@@ -2,36 +2,46 @@
 @{
     var isAdminLogin = Model.AccountType == LoginAccountType.Admin;
     var loginAction = isAdminLogin ? "AdminLogin" : "Login";
-    ViewData["Title"] = isAdminLogin ? "Yönetici girişi" : "Öğrenci girişi";
+    ViewData["Title"] = isAdminLogin
+        ? UiText.Get(Context, "Login.AdminTitle")
+        : UiText.Get(Context, "Login.StudentTitle");
+    var existingRoleDisplay = Model.ExistingRoleDisplay == "Yönetici"
+        ? UiText.Get(Context, "Role.Admin")
+        : Model.ExistingRoleDisplay == "Öğrenci"
+            ? UiText.Get(Context, "Role.Student")
+            : UiText.Get(Context, "Login.OtherAccount");
 }
 
 <div class="auth-shell @(isAdminLogin ? "auth-shell--admin" : "auth-shell--student")">
     <section class="auth-intro" aria-labelledby="login-heading">
-        <span class="eyebrow">@(isAdminLogin ? "Yetkili erişimi" : "Öğrenci erişimi")</span>
-        <h1 id="login-heading" class="h2">@(isAdminLogin ? "Yönetici girişi" : "Öğrenci girişi")</h1>
+        <span class="eyebrow">@(isAdminLogin ? UiText.Get(Context, "Login.AdminEyebrow") : UiText.Get(Context, "Login.StudentEyebrow"))</span>
+        <h1 id="login-heading" class="h2">@(isAdminLogin ? UiText.Get(Context, "Login.AdminTitle") : UiText.Get(Context, "Login.StudentTitle"))</h1>
         <p class="mb-0">
             @(isAdminLogin
-                ? "Bu alan yalnızca yetkilendirilmiş enstitü ve sistem yöneticileri içindir."
-                : "Başvurularınızı oluşturmak, belgelerinizi yönetmek ve sonuçlarınızı takip etmek için giriş yapın.")
+                ? UiText.Get(Context, "Login.AdminIntro")
+                : UiText.Get(Context, "Login.StudentIntro"))
         </p>
     </section>
 
-    <section class="card auth-card" aria-label="Giriş bilgileri">
+    <section class="card auth-card" aria-label="@UiText.Get(Context, "Login.Submit")">
         <div class="card-body p-4 p-lg-5">
-            <span class="auth-context">@(isAdminLogin ? "Yönetici hesabı" : "Öğrenci hesabı")</span>
+            <span class="auth-context">@(isAdminLogin ? UiText.Get(Context, "Login.AdminContext") : UiText.Get(Context, "Login.StudentContext"))</span>
             <p class="text-muted">
                 @(isAdminLogin
-                    ? "Yöneticiler kurumsal e-posta adresiyle giriş yapar."
-                    : "TC kimlik numaranızı veya kayıtlı e-posta adresinizi kullanabilirsiniz.")
+                    ? UiText.Get(Context, "Login.AdminHint")
+                    : UiText.Get(Context, "Login.StudentHint"))
             </p>
             @if (Model.HasExistingSession)
             {
                 <div class="alert alert-info" role="status">
-                    Şu anda <strong>@(Model.ExistingRoleDisplay ?? "başka bir")</strong> hesabıyla oturumunuz açık.
+                    @Html.Raw(UiText.Format(
+                        Context,
+                        "Login.ExistingSession",
+                        $"<strong>{Html.Encode(existingRoleDisplay)}</strong>"))
                 </div>
                 <form asp-action="SwitchAccount" method="post">
                     <input type="hidden" name="accountType" value="@Model.AccountType" />
-                    <button type="submit" class="btn btn-outline-primary w-100">Farklı hesapla giriş yap</button>
+                    <button type="submit" class="btn btn-outline-primary w-100">@UiText.Get(Context, "Login.SwitchAccount")</button>
                 </form>
             }
             else
@@ -40,12 +50,12 @@
                     <input asp-for="ReturnUrl" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                     <div class="mb-3">
-                        <label asp-for="Username" class="form-label"></label>
+                        <label for="Username" class="form-label">@UiText.Get(Context, "Login.Username")</label>
                         <input asp-for="Username" class="form-control" autocomplete="username" autofocus />
                         <span asp-validation-for="Username" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
+                        <label for="Password" class="form-label">@UiText.Get(Context, "Login.Password")</label>
                         <div class="password-control">
                             <input asp-for="Password" class="form-control" autocomplete="current-password" data-password-reveal />
                         </div>
@@ -53,26 +63,29 @@
                     </div>
                     <div class="form-check mb-4">
                         <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label"></label>
+                        <label for="RememberMe" class="form-check-label">@UiText.Get(Context, "Login.RememberMe")</label>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg w-100">Giriş yap</button>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">@UiText.Get(Context, "Login.Submit")</button>
                 </form>
             }
             <div class="d-flex flex-wrap justify-content-between gap-2 mt-4 small">
-                <a asp-action="ForgotPassword">Parolamı unuttum</a>
+                <a asp-action="ForgotPassword">@UiText.Get(Context, "Login.ForgotPassword")</a>
                 @if (isAdminLogin)
                 {
-                    <a asp-action="Login">Öğrenci girişine geç</a>
+                    <a asp-action="Login">@UiText.Get(Context, "Login.GoStudent")</a>
                 }
                 else
                 {
-                    <a asp-action="AdminLogin">Yönetici girişine geç</a>
+                    <a asp-action="AdminLogin">@UiText.Get(Context, "Login.GoAdmin")</a>
                 }
             </div>
             @if (!isAdminLogin)
             {
                 <hr class="my-4" />
-                <p class="mb-0 small">Henüz hesabınız yok mu? <a asp-action="Register">Öğrenci kaydı oluşturun.</a></p>
+                <p class="mb-0 small">
+                    @UiText.Get(Context, "Login.NoAccount")
+                    <a asp-action="Register">@UiText.Get(Context, "Login.CreateRegistration")</a>
+                </p>
             }
         </div>
     </section>
