@@ -264,7 +264,7 @@ public sealed class LoginIsolationWebTests
     }
 
     [Fact]
-    public void Login_view_exposes_turkish_role_switching_text()
+    public void Login_view_uses_localized_role_switching_resources()
     {
         var repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
         var view = File.ReadAllText(Path.Combine(
@@ -274,9 +274,9 @@ public sealed class LoginIsolationWebTests
             "Account",
             "Login.cshtml"));
 
-        Assert.Contains("Yönetici girişi", view, StringComparison.Ordinal);
-        Assert.Contains("Öğrenci girişi", view, StringComparison.Ordinal);
-        Assert.Contains("Farklı hesapla giriş yap", view, StringComparison.Ordinal);
+        Assert.Contains("\"Login.AdminTitle\"", view, StringComparison.Ordinal);
+        Assert.Contains("\"Login.StudentTitle\"", view, StringComparison.Ordinal);
+        Assert.Contains("\"Login.SwitchAccount\"", view, StringComparison.Ordinal);
         Assert.DoesNotContain("asp-for=\"AccountType\"", view, StringComparison.Ordinal);
     }
 
