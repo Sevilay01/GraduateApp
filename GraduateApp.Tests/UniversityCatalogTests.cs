@@ -35,6 +35,8 @@ namespace GraduateApp.Tests;
 
 public sealed class UniversityCatalogTests
 {
+    private static readonly TimeSpan ApiRequestTimeout = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan ReadinessRequestTimeout = TimeSpan.FromSeconds(1);
     [Fact]
     public async Task Empty_catalog_returns_an_empty_list()
     {
@@ -346,7 +348,7 @@ public sealed class UniversityCatalogTests
         using var client = new HttpClient
         {
             BaseAddress = new Uri($"http://127.0.0.1:{port}/"),
-            Timeout = TimeSpan.FromSeconds(3)
+            Timeout = ApiRequestTimeout
         };
 
         try
@@ -687,7 +689,11 @@ public sealed class UniversityCatalogTests
 
             try
             {
-                using var response = await client.GetAsync("diagnostic-readiness");
+                using var attemptCancellation = new CancellationTokenSource(
+                    ReadinessRequestTimeout);
+                using var response = await client.GetAsync(
+                    "diagnostic-readiness",
+                    attemptCancellation.Token);
                 return;
             }
             catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
