@@ -285,6 +285,9 @@
   <data name="Home.LoginToApply" xml:space="preserve">
     <value>Sign in to apply</value>
   </data>
+  <data name="AcademicTerm.LegacyUnspecified" xml:space="preserve">
+    <value>Unspecified</value>
+  </data>
   <data name="AcademicTerm.Fall" xml:space="preserve">
     <value>Fall</value>
   </data>
