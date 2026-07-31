@@ -43,6 +43,7 @@ public sealed class GraduateUiFoundationRazorTests
                         InstituteName = "<b>Fen Bilimleri Enstitüsü</b>",
                         DegreeType = "Yüksek lisans",
                         AcademicYear = "2026–2027",
+                        Term = AcademicTerm.Fall,
                         TermName = "Güz",
                         Quota = 12,
                         ApplicationDeadlineUtc = new DateTime(
@@ -64,6 +65,7 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("Öğrenci girişi", html, StringComparison.Ordinal);
         Assert.Contains("Yönetici girişi", html, StringComparison.Ordinal);
         Assert.Contains("Öğrenci kaydı", html, StringComparison.Ordinal);
+        Assert.Contains("2026–2027 · Güz", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Güvenli çıkış", html, StringComparison.Ordinal);
         Assert.Contains(
             "aria-current=\"page\"",
@@ -89,7 +91,31 @@ public sealed class GraduateUiFoundationRazorTests
             host.Services,
             "Home",
             "Index",
-            new HomeViewModel(),
+            new HomeViewModel
+            {
+                OpenPrograms =
+                [
+                    new ProgramViewModel
+                    {
+                        ProgramOfferingId = 18,
+                        ProgramName = "Computer Engineering",
+                        InstituteName = "Institute of Natural Sciences",
+                        DegreeType = "Master's degree",
+                        AcademicYear = "2026–2027",
+                        Term = AcademicTerm.Fall,
+                        TermName = "Güz",
+                        Quota = 10,
+                        ApplicationDeadlineUtc = new DateTime(
+                            2026,
+                            8,
+                            24,
+                            14,
+                            0,
+                            0,
+                            DateTimeKind.Utc)
+                    }
+                ]
+            },
             cultureName: "en-US");
 
         Assert.Contains("<html lang=\"en\">", html, StringComparison.Ordinal);
@@ -99,7 +125,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("Administrator sign in", html, StringComparison.Ordinal);
         Assert.Contains("Create student registration", html, StringComparison.Ordinal);
         Assert.Contains("Manage your path to graduate education securely", html, StringComparison.Ordinal);
-        Assert.Contains("There are currently no open programs", html, StringComparison.Ordinal);
+        Assert.Contains("2026–2027 · Fall", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("2026–2027 · Güz", html, StringComparison.Ordinal);
         Assert.Contains("name=\"culture\"", html, StringComparison.Ordinal);
         Assert.Contains("value=\"en-US\"", html, StringComparison.Ordinal);
         Assert.Matches("value=\\\"en-US\\\"\\s+selected", html);
