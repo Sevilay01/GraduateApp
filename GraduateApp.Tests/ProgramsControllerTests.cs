@@ -123,6 +123,7 @@ public sealed class ProgramsControllerTests
 
     [Theory]
     [InlineData("İstatistik")]
+    [InlineData("Statistics")]
     [InlineData("Sosyal Bilimler")]
     [InlineData("Doktora")]
     public async Task Open_program_search_matches_program_institute_and_degree_in_database_query(string search)
@@ -133,6 +134,7 @@ public sealed class ProgramsControllerTests
             usesEvaluationWorkflow: true,
             includeSubmittedApplication: false);
         expected.Program.ProgramName = "İstatistik";
+        expected.Program.ProgramNameEnglish = "Statistics";
         expected.Program.DegreeType = "Doktora";
         expected.Program.Institute.InstituteName = "Sosyal Bilimler";
 
@@ -152,6 +154,7 @@ public sealed class ProgramsControllerTests
 
         var match = Assert.Single(programs);
         Assert.Equal(expected.ProgramOfferingId, match.ProgramOfferingId);
+        Assert.Equal("Statistics", match.ProgramNameEnglish);
     }
 
     [Fact]
