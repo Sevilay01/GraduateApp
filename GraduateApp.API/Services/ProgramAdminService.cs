@@ -107,7 +107,6 @@ public sealed class ProgramAdminService(
                 item.InstituteId,
                 item.InstituteName,
                 item.ProgramName,
-                item.ProgramNameEnglish,
                 item.DegreeType,
                 item.IsActive,
                 item.IsActive && item.InstituteIsActive,
