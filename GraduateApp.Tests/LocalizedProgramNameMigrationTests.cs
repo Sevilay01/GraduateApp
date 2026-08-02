@@ -37,10 +37,12 @@ public sealed class LocalizedProgramNameMigrationTests
             .Options;
         using var db = new GraduateAppDbContext(options);
 
-        var entity = Assert.NotNull(db.Model.FindEntityType(typeof(Program)));
-        var property = Assert.NotNull(entity.FindProperty(nameof(Program.ProgramNameEnglish)));
+        var entity = db.Model.FindEntityType(typeof(Program));
+        Assert.NotNull(entity);
+        var property = entity!.FindProperty(nameof(Program.ProgramNameEnglish));
+        Assert.NotNull(property);
 
-        Assert.True(property.IsNullable);
+        Assert.True(property!.IsNullable);
         Assert.Equal(100, property.GetMaxLength());
     }
 }
