@@ -405,6 +405,7 @@ public sealed class ProgramAdminViewModel
     public int InstituteId { get; set; }
     public string InstituteName { get; set; } = string.Empty;
     public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
     public string DegreeType { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public bool IsEffectivelyActive { get; set; }
@@ -426,6 +427,10 @@ public sealed class ProgramFormViewModel
     [StringLength(100, MinimumLength = 2, ErrorMessage = "Program adı 2 ile 100 karakter arasında olmalıdır.")]
     [Display(Name = "Program adı")]
     public string ProgramName { get; set; } = string.Empty;
+
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.")]
+    [Display(Name = "İngilizce program adı")]
+    public string? ProgramNameEnglish { get; set; }
 
     [Required(ErrorMessage = "Derece türü zorunludur.")]
     [StringLength(50, ErrorMessage = "Derece türü en fazla 50 karakter olabilir.")]
