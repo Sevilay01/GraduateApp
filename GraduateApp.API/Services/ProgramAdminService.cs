@@ -58,7 +58,9 @@ public sealed class ProgramAdminService(
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
-            query = query.Where(item => item.ProgramName.Contains(term));
+            query = query.Where(item =>
+                item.ProgramName.Contains(term)
+                || (item.ProgramNameEnglish != null && item.ProgramNameEnglish.Contains(term)));
         }
 
         if (isActive.HasValue)
@@ -91,6 +93,7 @@ public sealed class ProgramAdminService(
                 item.Institute.InstituteName,
                 InstituteIsActive = item.Institute.IsActive,
                 item.ProgramName,
+                item.ProgramNameEnglish,
                 item.DegreeType,
                 item.IsActive,
                 item.CreatedAtUtc,
@@ -104,13 +107,17 @@ public sealed class ProgramAdminService(
                 item.InstituteId,
                 item.InstituteName,
                 item.ProgramName,
+                item.ProgramNameEnglish,
                 item.DegreeType,
                 item.IsActive,
                 item.IsActive && item.InstituteIsActive,
                 item.CreatedAtUtc,
                 item.UpdatedAtUtc,
                 Convert.ToBase64String(item.RowVersion),
-                item.OfferingCount))
+                item.OfferingCount)
+            {
+                ProgramNameEnglish = item.ProgramNameEnglish
+            })
             .ToArray();
         return new PagedResult<ProgramAdminDto>(items, page, pageSize, totalCount);
     }
@@ -126,6 +133,7 @@ public sealed class ProgramAdminService(
                 item.Institute.InstituteName,
                 InstituteIsActive = item.Institute.IsActive,
                 item.ProgramName,
+                item.ProgramNameEnglish,
                 item.DegreeType,
                 item.IsActive,
                 item.CreatedAtUtc,
@@ -147,7 +155,10 @@ public sealed class ProgramAdminService(
                 row.CreatedAtUtc,
                 row.UpdatedAtUtc,
                 Convert.ToBase64String(row.RowVersion),
-                row.OfferingCount);
+                row.OfferingCount)
+            {
+                ProgramNameEnglish = row.ProgramNameEnglish
+            };
     }
 
     public async Task<ServiceResult<ProgramAdminDto>> CreateAsync(
@@ -167,6 +178,7 @@ public sealed class ProgramAdminService(
         {
             InstituteId = request.InstituteId,
             ProgramName = normalized.ProgramName,
+            ProgramNameEnglish = normalized.ProgramNameEnglish,
             DegreeType = normalized.DegreeType,
             IsActive = true,
             CreatedAtUtc = now,
@@ -224,6 +236,7 @@ public sealed class ProgramAdminService(
         var now = timeProvider.GetUtcNow().UtcDateTime;
         program.InstituteId = request.InstituteId;
         program.ProgramName = normalized.ProgramName;
+        program.ProgramNameEnglish = normalized.ProgramNameEnglish;
         program.DegreeType = normalized.DegreeType;
         program.UpdatedAtUtc = now;
         AddAudit(adminId, "ProgramUpdated", programId.ToString(), program, now);
@@ -324,6 +337,16 @@ public sealed class ProgramAdminService(
                 StatusCodes.Status400BadRequest);
         }
 
+        var programNameEnglish = string.IsNullOrWhiteSpace(request.ProgramNameEnglish)
+            ? null
+            : request.ProgramNameEnglish.Trim();
+        if (programNameEnglish is not null && programNameEnglish.Length is < 2 or > 100)
+        {
+            return ServiceResult<NormalizedProgramInput>.Failure(
+                "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.",
+                StatusCodes.Status400BadRequest);
+        }
+
         if (!DegreeTypeCatalog.TryCanonicalize(request.DegreeType, out var degreeType))
         {
             return ServiceResult<NormalizedProgramInput>.Failure(
@@ -352,7 +375,8 @@ public sealed class ProgramAdminService(
                 StatusCodes.Status409Conflict);
         }
 
-        return ServiceResult<NormalizedProgramInput>.Success(new(programName, degreeType));
+        return ServiceResult<NormalizedProgramInput>.Success(
+            new(programName, programNameEnglish, degreeType));
     }
 
     private bool TrySetOriginalRowVersion(
@@ -443,5 +467,8 @@ public sealed class ProgramAdminService(
     private static ServiceResult<ProgramAdminDto> NotFoundFailure() =>
         ServiceResult<ProgramAdminDto>.Failure("Program bulunamadı.", StatusCodes.Status404NotFound);
 
-    private sealed record NormalizedProgramInput(string ProgramName, string DegreeType);
+    private sealed record NormalizedProgramInput(
+        string ProgramName,
+        string? ProgramNameEnglish,
+        string DegreeType);
 }
