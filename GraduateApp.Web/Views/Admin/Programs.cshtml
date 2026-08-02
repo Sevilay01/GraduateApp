@@ -23,6 +23,7 @@
 
 <div class="alert alert-info" role="note">
     İlanı veya geçmiş kaydı olan programı silmek yerine pasifleştirin. Bir program kendi kaydı aktif olsa bile bağlı enstitüsü pasifse yeni seçimlerde etkili olarak pasiftir.
+    İngilizce ad girilmemiş eski kayıtlarda İngilizce arayüz güvenli biçimde Türkçe program adına döner.
 </div>
 
 <form method="get" class="admin-filter-panel mb-4" aria-labelledby="program-filter-heading">
@@ -90,7 +91,17 @@
                     {
                         <tr>
                             <td data-label="Enstitü">@program.InstituteName</td>
-                            <td data-label="Program">@program.ProgramName</td>
+                            <td data-label="Program">
+                                <div>@program.ProgramName</div>
+                                @if (string.IsNullOrWhiteSpace(program.ProgramNameEnglish))
+                                {
+                                    <small class="text-warning">İngilizce ad eksik</small>
+                                }
+                                else
+                                {
+                                    <small class="text-body-secondary" lang="en">@program.ProgramNameEnglish</small>
+                                }
+                            </td>
                             <td data-label="Derece">@program.DegreeType</td>
                             <td data-label="İlan">@program.OfferingCount</td>
                             <td data-label="Durum">
@@ -176,6 +187,17 @@
                         <label asp-for="Form.ProgramName" class="form-label"></label>
                         <input asp-for="Form.ProgramName" class="form-control" maxlength="100" autocomplete="off" />
                         <span asp-validation-for="Form.ProgramName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.ProgramNameEnglish" class="form-label"></label>
+                        <input asp-for="Form.ProgramNameEnglish"
+                               class="form-control"
+                               maxlength="100"
+                               autocomplete="off"
+                               lang="en"
+                               placeholder="Computer Engineering" />
+                        <div class="form-text">Boş bırakılırsa İngilizce arayüzde Türkçe ad gösterilir.</div>
+                        <span asp-validation-for="Form.ProgramNameEnglish" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
                         <label asp-for="Form.DegreeType" class="form-label"></label>
