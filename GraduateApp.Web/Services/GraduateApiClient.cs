@@ -602,6 +602,7 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         {
             model.InstituteId,
             model.ProgramName,
+            model.ProgramNameEnglish,
             model.DegreeType
         }, cancellationToken);
 
@@ -612,6 +613,7 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         {
             model.InstituteId,
             model.ProgramName,
+            model.ProgramNameEnglish,
             model.DegreeType,
             model.RowVersion
         }, cancellationToken);
