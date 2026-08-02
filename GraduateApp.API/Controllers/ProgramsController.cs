@@ -49,6 +49,8 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
         {
             query = query.Where(item =>
                 item.Program.ProgramName.Contains(search)
+                || (item.Program.ProgramNameEnglish != null
+                    && item.Program.ProgramNameEnglish.Contains(search))
                 || item.Program.Institute.InstituteName.Contains(search)
                 || (item.Program.DegreeType != null && item.Program.DegreeType.Contains(search)));
         }
@@ -95,7 +97,10 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
                         requirement.MinimumScore,
                         requirement.MinimumValidityDate,
                         requirement.IsRequired))
-                    .ToArray()))
+                    .ToArray())
+            {
+                ProgramNameEnglish = item.Program.ProgramNameEnglish
+            })
             .ToArray());
     }
 
