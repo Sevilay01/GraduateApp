@@ -25,6 +25,9 @@ public class ProgramCreateDto
     [StringLength(100, MinimumLength = 2, ErrorMessage = "Program adı 2 ile 100 karakter arasında olmalıdır.")]
     public string ProgramName { get; init; } = string.Empty;
 
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.")]
+    public string? ProgramNameEnglish { get; init; }
+
     [Required(ErrorMessage = "Derece türü zorunludur.")]
     [StringLength(50, ErrorMessage = "Derece türü en fazla 50 karakter olabilir.")]
     public string DegreeType { get; init; } = string.Empty;
@@ -64,4 +67,7 @@ public sealed record ProgramAdminDto(
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc,
     string RowVersion,
-    int OfferingCount);
+    int OfferingCount)
+{
+    public string? ProgramNameEnglish { get; init; }
+}
