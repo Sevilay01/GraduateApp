@@ -34,7 +34,10 @@ public sealed record OpenProgramDto(
     DateTime ApplicationStartUtc,
     DateTime ApplicationDeadlineUtc,
     int Quota,
-    IReadOnlyList<ExamRequirementDto> ExamRequirements);
+    IReadOnlyList<ExamRequirementDto> ExamRequirements)
+{
+    public string? ProgramNameEnglish { get; init; }
+}
 
 public sealed record ExamRequirementDto(
     int ExamId,
