@@ -99,7 +99,8 @@ public sealed class GraduateUiFoundationRazorTests
                     new ProgramViewModel
                     {
                         ProgramOfferingId = 18,
-                        ProgramName = "Computer Engineering",
+                        ProgramName = "Bilgisayar Mühendisliği",
+                        ProgramNameEnglish = "Computer Engineering",
                         InstituteName = "Institute of Natural Sciences",
                         DegreeType = "Master's degree",
                         AcademicYear = "2026–2027",
@@ -127,6 +128,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("Administrator sign in", html, StringComparison.Ordinal);
         Assert.Contains("Create student registration", html, StringComparison.Ordinal);
         Assert.Contains("Manage your path to graduate education securely", html, StringComparison.Ordinal);
+        Assert.Contains("Computer Engineering", decodedHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Bilgisayar Mühendisliği", decodedHtml, StringComparison.Ordinal);
         Assert.Contains("2026–2027 · Fall", decodedHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("2026–2027 · Güz", decodedHtml, StringComparison.Ordinal);
         Assert.Contains("name=\"culture\"", html, StringComparison.Ordinal);
@@ -134,6 +137,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Matches("value=\\\"en-US\\\"\\s+selected", html);
         Assert.Contains("name=\"returnUrl\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-auto-submit-on-change=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("<noscript>", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Ana sayfa</a>", html, StringComparison.Ordinal);
     }
 
@@ -1378,6 +1383,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("focusRequestedPageContext", siteJavaScript, StringComparison.Ordinal);
         Assert.Contains("data-auto-focus=\"true\"", siteJavaScript, StringComparison.Ordinal);
         Assert.Contains("scrollIntoView", siteJavaScript, StringComparison.Ordinal);
+        Assert.Contains("data-auto-submit-on-change", siteJavaScript, StringComparison.Ordinal);
+        Assert.Contains("requestSubmit", siteJavaScript, StringComparison.Ordinal);
     }
 
     private static IHost CreateWebHost() =>
