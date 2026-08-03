@@ -1360,4 +1360,238 @@
   <data name="Admin.Accounts.InviteSubmit" xml:space="preserve">
     <value>Send administrator invitation</value>
   </data>
+  <data name="Admin.Catalog.Eyebrow" xml:space="preserve">
+    <value>Academic catalog</value>
+  </data>
+  <data name="Admin.Catalog.Institutes" xml:space="preserve">
+    <value>Institutes</value>
+  </data>
+  <data name="Admin.Catalog.Programs" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="Admin.Catalog.ProgramTranslations" xml:space="preserve">
+    <value>Bulk English names</value>
+  </data>
+  <data name="Admin.Catalog.Universities" xml:space="preserve">
+    <value>Universities</value>
+  </data>
+  <data name="Admin.Common.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Common.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Admin.Common.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Admin.Common.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Admin.Common.InactiveSuffix" xml:space="preserve">
+    <value> (inactive)</value>
+  </data>
+  <data name="Admin.Common.Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Admin.Common.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Admin.Common.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Admin.Common.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Admin.Common.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Admin.Common.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Admin.Common.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Admin.Common.Degree" xml:space="preserve">
+    <value>Degree</value>
+  </data>
+  <data name="Admin.Common.DegreeType" xml:space="preserve">
+    <value>Degree type</value>
+  </data>
+  <data name="Admin.Common.Offering" xml:space="preserve">
+    <value>Offering</value>
+  </data>
+  <data name="Admin.Institutes.Title" xml:space="preserve">
+    <value>Institute management</value>
+  </data>
+  <data name="Admin.Institutes.Heading" xml:space="preserve">
+    <value>Institutes and programs</value>
+  </data>
+  <data name="Admin.Institutes.Lead" xml:space="preserve">
+    <value>Create, edit, or close institutes to new selections.</value>
+  </data>
+  <data name="Admin.Institutes.Note" xml:space="preserve">
+    <value>Deactivate an institute that has been used instead of deleting it. Programs in inactive institutes are hidden from new offering and application selections while historical records are preserved.</value>
+  </data>
+  <data name="Admin.Institutes.FilterHeading" xml:space="preserve">
+    <value>Filter institutes</value>
+  </data>
+  <data name="Admin.Institutes.Name" xml:space="preserve">
+    <value>Institute name</value>
+  </data>
+  <data name="Admin.Institutes.SearchPlaceholder" xml:space="preserve">
+    <value>Search by name</value>
+  </data>
+  <data name="Admin.Institutes.EmptyHeading" xml:space="preserve">
+    <value>No institutes found</value>
+  </data>
+  <data name="Admin.Institutes.EmptyLead" xml:space="preserve">
+    <value>Change the filters or use the new institute form.</value>
+  </data>
+  <data name="Admin.Institutes.Caption" xml:space="preserve">
+    <value>Filtered institute records</value>
+  </data>
+  <data name="Admin.Institutes.Institute" xml:space="preserve">
+    <value>Institute</value>
+  </data>
+  <data name="Admin.Institutes.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Institutes.Deactivate" xml:space="preserve">
+    <value>Deactivate institute</value>
+  </data>
+  <data name="Admin.Institutes.Activate" xml:space="preserve">
+    <value>Activate institute</value>
+  </data>
+  <data name="Admin.Institutes.DeleteDetails" xml:space="preserve">
+    <value>Permanent deletion details</value>
+  </data>
+  <data name="Admin.Institutes.Pagination" xml:space="preserve">
+    <value>Institute list pages</value>
+  </data>
+  <data name="Admin.Institutes.EditHeading" xml:space="preserve">
+    <value>Edit institute</value>
+  </data>
+  <data name="Admin.Institutes.NewHeading" xml:space="preserve">
+    <value>New institute</value>
+  </data>
+  <data name="Admin.Institutes.Create" xml:space="preserve">
+    <value>Create institute</value>
+  </data>
+  <data name="Admin.Programs.Title" xml:space="preserve">
+    <value>Program management</value>
+  </data>
+  <data name="Admin.Programs.Heading" xml:space="preserve">
+    <value>Institutes and programs</value>
+  </data>
+  <data name="Admin.Programs.Lead" xml:space="preserve">
+    <value>Manage graduate programs together with their institute and degree type.</value>
+  </data>
+  <data name="Admin.Programs.Note" xml:space="preserve">
+    <value>Deactivate a program with offerings or historical records instead of deleting it. Even if its own record is active, a program is effectively inactive for new selections when its institute is inactive. For legacy records without an English name, the English interface safely falls back to the Turkish program name.</value>
+  </data>
+  <data name="Admin.Programs.FilterHeading" xml:space="preserve">
+    <value>Filter programs</value>
+  </data>
+  <data name="Admin.Programs.Name" xml:space="preserve">
+    <value>Program name</value>
+  </data>
+  <data name="Admin.Programs.NameTurkish" xml:space="preserve">
+    <value>Turkish program name</value>
+  </data>
+  <data name="Admin.Programs.NameEnglish" xml:space="preserve">
+    <value>English program name</value>
+  </data>
+  <data name="Admin.Programs.SearchPlaceholder" xml:space="preserve">
+    <value>Search by name</value>
+  </data>
+  <data name="Admin.Programs.RecordStatus" xml:space="preserve">
+    <value>Record status</value>
+  </data>
+  <data name="Admin.Programs.ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="Admin.Programs.EmptyHeading" xml:space="preserve">
+    <value>No programs found</value>
+  </data>
+  <data name="Admin.Programs.EmptyLead" xml:space="preserve">
+    <value>Change the filters or use the new program form.</value>
+  </data>
+  <data name="Admin.Programs.Caption" xml:space="preserve">
+    <value>Filtered graduate programs</value>
+  </data>
+  <data name="Admin.Programs.MissingEnglish" xml:space="preserve">
+    <value>English name missing</value>
+  </data>
+  <data name="Admin.Programs.InstituteInactive" xml:space="preserve">
+    <value>Institute inactive</value>
+  </data>
+  <data name="Admin.Programs.Deactivate" xml:space="preserve">
+    <value>Deactivate program</value>
+  </data>
+  <data name="Admin.Programs.Activate" xml:space="preserve">
+    <value>Activate program</value>
+  </data>
+  <data name="Admin.Programs.DeleteDetails" xml:space="preserve">
+    <value>Permanent deletion details</value>
+  </data>
+  <data name="Admin.Programs.Pagination" xml:space="preserve">
+    <value>Program list pages</value>
+  </data>
+  <data name="Admin.Programs.EditHeading" xml:space="preserve">
+    <value>Edit program</value>
+  </data>
+  <data name="Admin.Programs.NewHeading" xml:space="preserve">
+    <value>New program</value>
+  </data>
+  <data name="Admin.Programs.EnglishPlaceholder" xml:space="preserve">
+    <value>Computer Engineering</value>
+  </data>
+  <data name="Admin.Programs.EnglishFallbackHelp" xml:space="preserve">
+    <value>If left blank, the Turkish name is shown in the English interface.</value>
+  </data>
+  <data name="Admin.Programs.Create" xml:space="preserve">
+    <value>Create program</value>
+  </data>
+  <data name="Admin.Translations.Title" xml:space="preserve">
+    <value>Bulk program translations</value>
+  </data>
+  <data name="Admin.Translations.Heading" xml:space="preserve">
+    <value>Bulk English program names</value>
+  </data>
+  <data name="Admin.Translations.Lead" xml:space="preserve">
+    <value>Review official English program names on one screen and save them atomically.</value>
+  </data>
+  <data name="Admin.Translations.Note" xml:space="preserve">
+    <value>This area does not generate automatic translations. Enter English names verified by the institution. The English interface safely falls back to the Turkish name for blank records. All changes on the page are saved in one operation; if a concurrent update exists, no row is written partially.</value>
+  </data>
+  <data name="Admin.Translations.FilterHeading" xml:space="preserve">
+    <value>Search programs</value>
+  </data>
+  <data name="Admin.Translations.SearchLabel" xml:space="preserve">
+    <value>Turkish or English program name</value>
+  </data>
+  <data name="Admin.Translations.SearchPlaceholder" xml:space="preserve">
+    <value>For example, Bilgisayar or Computer</value>
+  </data>
+  <data name="Admin.Translations.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Admin.Translations.EmptyLead" xml:space="preserve">
+    <value>Change the search text or check the program catalog.</value>
+  </data>
+  <data name="Admin.Translations.Caption" xml:space="preserve">
+    <value>Official English names for the programs on this page</value>
+  </data>
+  <data name="Admin.Translations.EnglishLabel" xml:space="preserve">
+    <value>English name for {0}</value>
+  </data>
+  <data name="Admin.Translations.ScopeCount" xml:space="preserve">
+    <value>{0} programs are included in this operation.</value>
+  </data>
+  <data name="Admin.Translations.Save" xml:space="preserve">
+    <value>Save translations on this page</value>
+  </data>
+  <data name="Admin.Translations.Pagination" xml:space="preserve">
+    <value>Program translation pages</value>
+  </data>
 </root>
