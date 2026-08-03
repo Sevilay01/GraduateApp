@@ -198,11 +198,7 @@ public sealed class GraduateUiFoundationRazorTests
             panelHtml,
             StringComparison.Ordinal);
         Assert.Contains(
-            "hiçbir ilana başvurmanızı engellemez",
-            panelHtml,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "derece ekleri eşleştirmeyi değiştirmez",
+            "id=\"prefer-undergraduate-program\"",
             panelHtml,
             StringComparison.Ordinal);
     }
@@ -279,7 +275,7 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("name=\"programOfferingId\" value=\"42\"", html, StringComparison.Ordinal);
         Assert.Contains("method=\"post\"", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
-        Assert.Contains("Program alanı eşleşiyor", html, StringComparison.Ordinal);
+        Assert.Contains("data-profile-match", html, StringComparison.Ordinal);
         Assert.Contains("data-profile-recommendation", html, StringComparison.Ordinal);
         Assert.Contains("<Bilgisayar Mühendisliği>", decodedHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("<Bilgisayar Mühendisliği>", html, StringComparison.Ordinal);
@@ -1068,7 +1064,11 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.DoesNotContain("SwitchAccount", anonymousHtml, StringComparison.Ordinal);
         Assert.Contains("href=\"/Account/Login\"", anonymousHtml, StringComparison.Ordinal);
         Assert.Contains("href=\"/Account/AdminLogin\"", anonymousHtml, StringComparison.Ordinal);
-        Assert.Matches("href=\"/(?:Home(?:/Index)?)?\"[^>]*>Ana sayfaya dön</a>", anonymousHtml);
+        var anonymousHomeAction = OpeningTagContaining(
+            anonymousHtml,
+            "btn-outline-secondary",
+            "a");
+        Assert.Matches("href=\"/(?:Home(?:/Index)?)?\"", anonymousHomeAction);
     }
 
     [Fact]
