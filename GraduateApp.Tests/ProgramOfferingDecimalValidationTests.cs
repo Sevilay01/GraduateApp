@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using GraduateApp.API.DTOs;
+using GraduateApp.Web.Localization;
 using GraduateApp.Web.Models;
 
 namespace GraduateApp.Tests;
@@ -59,7 +60,14 @@ public sealed class ProgramOfferingDecimalValidationTests
             Assert.Empty(Validate(validModel));
 
             var error = Assert.Single(Validate(invalidModel));
-            Assert.Equal("Puan 0 ile 999,99 arasında olmalıdır.", error.ErrorMessage);
+            var resolvedMessage = error.ErrorMessage is null
+                ? null
+                : UiText.GetCurrent(error.ErrorMessage);
+            var expectedMessage = invalidModel is ProgramOfferingRequirementInputViewModel
+                ? UiText.GetCurrent("Validation.ScoreRange")
+                : "Puan 0 ile 999,99 arasında olmalıdır.";
+
+            Assert.Equal(expectedMessage, resolvedMessage);
         }
         finally
         {
