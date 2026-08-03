@@ -1360,4 +1360,238 @@
   <data name="Admin.Accounts.InviteSubmit" xml:space="preserve">
     <value>Yönetici daveti gönder</value>
   </data>
+  <data name="Admin.Catalog.Eyebrow" xml:space="preserve">
+    <value>Akademik katalog</value>
+  </data>
+  <data name="Admin.Catalog.Institutes" xml:space="preserve">
+    <value>Enstitüler</value>
+  </data>
+  <data name="Admin.Catalog.Programs" xml:space="preserve">
+    <value>Programlar</value>
+  </data>
+  <data name="Admin.Catalog.ProgramTranslations" xml:space="preserve">
+    <value>Toplu İngilizce adlar</value>
+  </data>
+  <data name="Admin.Catalog.Universities" xml:space="preserve">
+    <value>Üniversiteler</value>
+  </data>
+  <data name="Admin.Common.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Admin.Common.All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="Admin.Common.Active" xml:space="preserve">
+    <value>Aktif</value>
+  </data>
+  <data name="Admin.Common.Inactive" xml:space="preserve">
+    <value>Pasif</value>
+  </data>
+  <data name="Admin.Common.InactiveSuffix" xml:space="preserve">
+    <value> (pasif)</value>
+  </data>
+  <data name="Admin.Common.Filter" xml:space="preserve">
+    <value>Filtrele</value>
+  </data>
+  <data name="Admin.Common.Clear" xml:space="preserve">
+    <value>Temizle</value>
+  </data>
+  <data name="Admin.Common.Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Admin.Common.Actions" xml:space="preserve">
+    <value>İşlemler</value>
+  </data>
+  <data name="Admin.Common.Previous" xml:space="preserve">
+    <value>Önceki</value>
+  </data>
+  <data name="Admin.Common.Next" xml:space="preserve">
+    <value>Sonraki</value>
+  </data>
+  <data name="Admin.Common.SaveChanges" xml:space="preserve">
+    <value>Değişiklikleri kaydet</value>
+  </data>
+  <data name="Admin.Common.Degree" xml:space="preserve">
+    <value>Derece</value>
+  </data>
+  <data name="Admin.Common.DegreeType" xml:space="preserve">
+    <value>Derece türü</value>
+  </data>
+  <data name="Admin.Common.Offering" xml:space="preserve">
+    <value>İlan</value>
+  </data>
+  <data name="Admin.Institutes.Title" xml:space="preserve">
+    <value>Enstitü yönetimi</value>
+  </data>
+  <data name="Admin.Institutes.Heading" xml:space="preserve">
+    <value>Enstitüler ve programlar</value>
+  </data>
+  <data name="Admin.Institutes.Lead" xml:space="preserve">
+    <value>Enstitüleri oluşturun, düzenleyin veya yeni seçimlere kapatın.</value>
+  </data>
+  <data name="Admin.Institutes.Note" xml:space="preserve">
+    <value>Kullanılmış bir enstitüyü silmek yerine pasifleştirin. Pasif enstitülerin programları yeni ilan ve başvuru seçimlerinde gösterilmez; geçmiş kayıtlar korunur.</value>
+  </data>
+  <data name="Admin.Institutes.FilterHeading" xml:space="preserve">
+    <value>Enstitüleri filtrele</value>
+  </data>
+  <data name="Admin.Institutes.Name" xml:space="preserve">
+    <value>Enstitü adı</value>
+  </data>
+  <data name="Admin.Institutes.SearchPlaceholder" xml:space="preserve">
+    <value>Ada göre ara</value>
+  </data>
+  <data name="Admin.Institutes.EmptyHeading" xml:space="preserve">
+    <value>Enstitü bulunamadı</value>
+  </data>
+  <data name="Admin.Institutes.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya yeni enstitü formunu kullanın.</value>
+  </data>
+  <data name="Admin.Institutes.Caption" xml:space="preserve">
+    <value>Filtrelenmiş enstitü kayıtları</value>
+  </data>
+  <data name="Admin.Institutes.Institute" xml:space="preserve">
+    <value>Enstitü</value>
+  </data>
+  <data name="Admin.Institutes.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Institutes.Deactivate" xml:space="preserve">
+    <value>Enstitüyü pasifleştir</value>
+  </data>
+  <data name="Admin.Institutes.Activate" xml:space="preserve">
+    <value>Enstitüyü aktifleştir</value>
+  </data>
+  <data name="Admin.Institutes.DeleteDetails" xml:space="preserve">
+    <value>Kalıcı silme ayrıntısı</value>
+  </data>
+  <data name="Admin.Institutes.Pagination" xml:space="preserve">
+    <value>Enstitü listesi sayfaları</value>
+  </data>
+  <data name="Admin.Institutes.EditHeading" xml:space="preserve">
+    <value>Enstitüyü düzenle</value>
+  </data>
+  <data name="Admin.Institutes.NewHeading" xml:space="preserve">
+    <value>Yeni enstitü</value>
+  </data>
+  <data name="Admin.Institutes.Create" xml:space="preserve">
+    <value>Enstitü oluştur</value>
+  </data>
+  <data name="Admin.Programs.Title" xml:space="preserve">
+    <value>Program yönetimi</value>
+  </data>
+  <data name="Admin.Programs.Heading" xml:space="preserve">
+    <value>Enstitüler ve programlar</value>
+  </data>
+  <data name="Admin.Programs.Lead" xml:space="preserve">
+    <value>Lisansüstü programları enstitü ve derece türüyle birlikte yönetin.</value>
+  </data>
+  <data name="Admin.Programs.Note" xml:space="preserve">
+    <value>İlanı veya geçmiş kaydı olan programı silmek yerine pasifleştirin. Bir program kendi kaydı aktif olsa bile bağlı enstitüsü pasifse yeni seçimlerde etkili olarak pasiftir. İngilizce ad girilmemiş eski kayıtlarda İngilizce arayüz güvenli biçimde Türkçe program adına döner.</value>
+  </data>
+  <data name="Admin.Programs.FilterHeading" xml:space="preserve">
+    <value>Programları filtrele</value>
+  </data>
+  <data name="Admin.Programs.Name" xml:space="preserve">
+    <value>Program adı</value>
+  </data>
+  <data name="Admin.Programs.NameTurkish" xml:space="preserve">
+    <value>Türkçe program adı</value>
+  </data>
+  <data name="Admin.Programs.NameEnglish" xml:space="preserve">
+    <value>İngilizce program adı</value>
+  </data>
+  <data name="Admin.Programs.SearchPlaceholder" xml:space="preserve">
+    <value>Ada göre ara</value>
+  </data>
+  <data name="Admin.Programs.RecordStatus" xml:space="preserve">
+    <value>Kayıt durumu</value>
+  </data>
+  <data name="Admin.Programs.ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="Admin.Programs.EmptyHeading" xml:space="preserve">
+    <value>Program bulunamadı</value>
+  </data>
+  <data name="Admin.Programs.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya yeni program formunu kullanın.</value>
+  </data>
+  <data name="Admin.Programs.Caption" xml:space="preserve">
+    <value>Filtrelenmiş lisansüstü programları</value>
+  </data>
+  <data name="Admin.Programs.MissingEnglish" xml:space="preserve">
+    <value>İngilizce ad eksik</value>
+  </data>
+  <data name="Admin.Programs.InstituteInactive" xml:space="preserve">
+    <value>Enstitü pasif</value>
+  </data>
+  <data name="Admin.Programs.Deactivate" xml:space="preserve">
+    <value>Programı pasifleştir</value>
+  </data>
+  <data name="Admin.Programs.Activate" xml:space="preserve">
+    <value>Programı aktifleştir</value>
+  </data>
+  <data name="Admin.Programs.DeleteDetails" xml:space="preserve">
+    <value>Kalıcı silme ayrıntısı</value>
+  </data>
+  <data name="Admin.Programs.Pagination" xml:space="preserve">
+    <value>Program listesi sayfaları</value>
+  </data>
+  <data name="Admin.Programs.EditHeading" xml:space="preserve">
+    <value>Programı düzenle</value>
+  </data>
+  <data name="Admin.Programs.NewHeading" xml:space="preserve">
+    <value>Yeni program</value>
+  </data>
+  <data name="Admin.Programs.EnglishPlaceholder" xml:space="preserve">
+    <value>Computer Engineering</value>
+  </data>
+  <data name="Admin.Programs.EnglishFallbackHelp" xml:space="preserve">
+    <value>Boş bırakılırsa İngilizce arayüzde Türkçe ad gösterilir.</value>
+  </data>
+  <data name="Admin.Programs.Create" xml:space="preserve">
+    <value>Program oluştur</value>
+  </data>
+  <data name="Admin.Translations.Title" xml:space="preserve">
+    <value>Toplu program çevirileri</value>
+  </data>
+  <data name="Admin.Translations.Heading" xml:space="preserve">
+    <value>Toplu İngilizce program adları</value>
+  </data>
+  <data name="Admin.Translations.Lead" xml:space="preserve">
+    <value>Programların resmî İngilizce adlarını tek ekranda gözden geçirip atomik olarak kaydedin.</value>
+  </data>
+  <data name="Admin.Translations.Note" xml:space="preserve">
+    <value>Bu alan otomatik çeviri üretmez. Kurumca doğrulanmış İngilizce adları girin. Boş bırakılan kayıtlarda İngilizce arayüz Türkçe ada güvenli biçimde geri döner. Sayfadaki tüm değişiklikler tek işlemde kaydedilir; eşzamanlı bir güncelleme varsa hiçbir satır kısmen yazılmaz.</value>
+  </data>
+  <data name="Admin.Translations.FilterHeading" xml:space="preserve">
+    <value>Programları ara</value>
+  </data>
+  <data name="Admin.Translations.SearchLabel" xml:space="preserve">
+    <value>Türkçe veya İngilizce program adı</value>
+  </data>
+  <data name="Admin.Translations.SearchPlaceholder" xml:space="preserve">
+    <value>Örn. Bilgisayar veya Computer</value>
+  </data>
+  <data name="Admin.Translations.Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Admin.Translations.EmptyLead" xml:space="preserve">
+    <value>Arama metnini değiştirin veya program kataloğunu kontrol edin.</value>
+  </data>
+  <data name="Admin.Translations.Caption" xml:space="preserve">
+    <value>Bu sayfadaki programların resmî İngilizce adları</value>
+  </data>
+  <data name="Admin.Translations.EnglishLabel" xml:space="preserve">
+    <value>{0} için İngilizce ad</value>
+  </data>
+  <data name="Admin.Translations.ScopeCount" xml:space="preserve">
+    <value>{0} program bu işlem kapsamındadır.</value>
+  </data>
+  <data name="Admin.Translations.Save" xml:space="preserve">
+    <value>Bu sayfadaki çevirileri kaydet</value>
+  </data>
+  <data name="Admin.Translations.Pagination" xml:space="preserve">
+    <value>Program çevirisi sayfaları</value>
+  </data>
 </root>
