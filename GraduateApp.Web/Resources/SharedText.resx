@@ -3124,4 +3124,26 @@
   <data name="Admin.Message.DocumentRejected" xml:space="preserve">
     <value>Belge gerekçeyle reddedildi.</value>
   </data>
+
+  <data name="Admin.Message.ProgramSaveFailed" xml:space="preserve">
+    <value>Program kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteFailed" xml:space="preserve">
+    <value>Program silinemedi.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreRequired" xml:space="preserve">
+    <value>Manuel puan zorunludur.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaved" xml:space="preserve">
+    <value>Manuel puan kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaveFailed" xml:space="preserve">
+    <value>Manuel puan kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewSaveFailed" xml:space="preserve">
+    <value>Belge incelemesi kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.DocumentDownloadFailed" xml:space="preserve">
+    <value>Belge indirilemedi.</value>
+  </data>
 </root>
