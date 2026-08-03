@@ -1939,4 +1939,490 @@
   <data name="Admin.Detail.RequiredDocumentsWarning" xml:space="preserve">
     <value>Tüm zorunlu güncel belgeler onaylanmadan başvuru onaylanamaz.</value>
   </data>
+  <data name="EvaluationState.Configuring" xml:space="preserve">
+    <value>Yapılandırılıyor</value>
+  </data>
+  <data name="EvaluationState.Finalized" xml:space="preserve">
+    <value>Kesinleştirildi</value>
+  </data>
+  <data name="EvaluationState.Published" xml:space="preserve">
+    <value>Yayımlandı</value>
+  </data>
+  <data name="CriterionSource.UndergraduateGpa" xml:space="preserve">
+    <value>Lisans GNO</value>
+  </data>
+  <data name="CriterionSource.ExamScore" xml:space="preserve">
+    <value>Sınav puanı</value>
+  </data>
+  <data name="CriterionSource.ManualScore" xml:space="preserve">
+    <value>Manuel puan</value>
+  </data>
+  <data name="Eligibility.Pending" xml:space="preserve">
+    <value>Karar bekliyor</value>
+  </data>
+  <data name="Eligibility.Eligible" xml:space="preserve">
+    <value>Uygun</value>
+  </data>
+  <data name="Eligibility.Ineligible" xml:space="preserve">
+    <value>Uygun değil</value>
+  </data>
+  <data name="Admin.Offerings.Title" xml:space="preserve">
+    <value>İlanlar ve değerlendirme</value>
+  </data>
+  <data name="Admin.Offerings.Heading" xml:space="preserve">
+    <value>Dönemsel program ilanları</value>
+  </data>
+  <data name="Admin.Offerings.Lead" xml:space="preserve">
+    <value>İlan tarihlerini, kontenjanı, belge ve sınav koşullarını mevcut güvenlik ve eşzamanlılık sözleşmeleriyle yönetin.</value>
+  </data>
+  <data name="Admin.Offerings.New" xml:space="preserve">
+    <value>Yeni ilan oluştur</value>
+  </data>
+  <data name="Admin.Offerings.Back" xml:space="preserve">
+    <value>Başvurulara dön</value>
+  </data>
+  <data name="Admin.Offerings.LoadFailed" xml:space="preserve">
+    <value>İlan verileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Offerings.FilterHeading" xml:space="preserve">
+    <value>İlanları filtrele</value>
+  </data>
+  <data name="Admin.Offerings.YearStart" xml:space="preserve">
+    <value>Akademik yıl başlangıcı</value>
+  </data>
+  <data name="Admin.Offerings.IncludeArchived" xml:space="preserve">
+    <value>Arşivlenen ilanları göster</value>
+  </data>
+  <data name="Admin.Offerings.ArchivedIncluded" xml:space="preserve">
+    <value>Arşivlenenler dahil</value>
+  </data>
+  <data name="Admin.Offerings.HealthHeading" xml:space="preserve">
+    <value>İlan yapılandırma sağlığı</value>
+  </data>
+  <data name="Admin.Offerings.HealthLead" xml:space="preserve">
+    <value>Salt-okunur özet, açık ilanların aktif ve zorunlu belge koşulu ile mevcut başvuru riskini gösterir.</value>
+  </data>
+  <data name="Admin.Offerings.Health.A" xml:space="preserve">
+    <value>A · Legacy</value>
+  </data>
+  <data name="Admin.Offerings.Health.B" xml:space="preserve">
+    <value>B · Sağlıklı</value>
+  </data>
+  <data name="Admin.Offerings.Health.C" xml:space="preserve">
+    <value>C · Başvuru yok</value>
+  </data>
+  <data name="Admin.Offerings.Health.D" xml:space="preserve">
+    <value>D · Taslak var</value>
+  </data>
+  <data name="Admin.Offerings.Health.E" xml:space="preserve">
+    <value>E · İleri başvuru var</value>
+  </data>
+  <data name="Admin.Offerings.Count" xml:space="preserve">
+    <value>{0} ilan</value>
+  </data>
+  <data name="Admin.Offerings.Health.ALead" xml:space="preserve">
+    <value>Belge iş akışı dışında kalan legacy ilanlar. Mevcut davranışları değiştirilmez.</value>
+  </data>
+  <data name="Admin.Offerings.Health.BLead" xml:space="preserve">
+    <value>Açık ve en az bir aktif zorunlu belge koşulu bulunan ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CLead" xml:space="preserve">
+    <value>Açık, belge akışı etkin, aktif zorunlu koşulu ve başvurusu olmayan ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.DLead" xml:space="preserve">
+    <value>Aktif zorunlu koşulu bulunmayan ve mevcut taslakları olan açık ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.ELead" xml:space="preserve">
+    <value>Aktif zorunlu koşulu bulunmayan ve gönderilmiş veya daha ileri başvuruları olan açık ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Clear" xml:space="preserve">
+    <value>Filtrelenen ilanlarda açık ve eksik belge yapılandırmasına sahip workflow ilanı bulunmuyor.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Risk" xml:space="preserve">
+    <value>{0} açık ilanda yapılandırma riski bulundu.</value>
+  </data>
+  <data name="Admin.Offerings.Health.RiskLead" xml:space="preserve">
+    <value>Bu ilanlar yeni öğrenci program listesinde gösterilmez. Otomatik veri düzeltmesi yapılmaz.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Group" xml:space="preserve">
+    <value>{0} grubu · İlan #{1}</value>
+  </data>
+  <data name="Admin.Offerings.Health.OpenInvalid" xml:space="preserve">
+    <value>Açık · Eksik koşul</value>
+  </data>
+  <data name="Admin.Offerings.Health.ActiveRequired" xml:space="preserve">
+    <value>Aktif zorunlu koşul</value>
+  </data>
+  <data name="Admin.Offerings.Health.TotalRequirements" xml:space="preserve">
+    <value>Toplam belge koşulu</value>
+  </data>
+  <data name="Admin.Offerings.Health.Drafts" xml:space="preserve">
+    <value>Taslak</value>
+  </data>
+  <data name="Admin.Offerings.Health.Submitted" xml:space="preserve">
+    <value>Gönderilmiş ve ileri</value>
+  </data>
+  <data name="Admin.Offerings.Health.SnapshotWarning" xml:space="preserve">
+    <value>Bu ilana daha önce oluşturulmuş taslak veya gönderilmiş başvurular bulunmaktadır. Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez. Mevcut başvurular için enstitü kararı verilmeden otomatik veri değişikliği yapılmamalıdır.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Hidden" xml:space="preserve">
+    <value>İlan öğrenciye gösterilmez ve doğrudan taslak oluşturma API tarafından reddedilir.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CompletedEvaluation" xml:space="preserve">
+    <value>Kesinleştirilmiş veya yayımlanmış değerlendirme, sonuç ve başvurular değiştirilmez. İlan yalnızca yeni başvurulara kapatılır ve manuel incelemeye alınır.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepClose" xml:space="preserve">
+    <value>İlanı güvenli biçimde yeni başvurulara kapatın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReview" xml:space="preserve">
+    <value>Mevcut sonuçları değiştirmeden enstitü kararı için manuel incelemeye alın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepGuide" xml:space="preserve">
+    <value>İlgili enstitünün güncel dönem ve program kılavuzunu doğrulayın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepDocuments" xml:space="preserve">
+    <value>Belge koşullarını mevcut güvenli admin akışından ekleyin.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepRequired" xml:space="preserve">
+    <value>En az bir aktif ve zorunlu koşul bulunduğunu doğrulayın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReopen" xml:space="preserve">
+    <value>İlanı güncel RowVersion ve API invariant kontrolleriyle yeniden açın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CloseReview" xml:space="preserve">
+    <value>Kapat ve manuel incelemeye al</value>
+  </data>
+  <data name="Admin.Offerings.Health.Close" xml:space="preserve">
+    <value>İlanı güvenli biçimde kapat</value>
+  </data>
+  <data name="Admin.Offerings.Health.ConfigureDocuments" xml:space="preserve">
+    <value>Belge koşullarını yapılandır</value>
+  </data>
+  <data name="Admin.Offerings.ListHeading" xml:space="preserve">
+    <value>İlanlar</value>
+  </data>
+  <data name="Admin.Offerings.Showing" xml:space="preserve">
+    <value>{0} ilan gösteriliyor</value>
+  </data>
+  <data name="Admin.Offerings.EmptyHeading" xml:space="preserve">
+    <value>İlan bulunamadı</value>
+  </data>
+  <data name="Admin.Offerings.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya sağlanan formdan yeni ve kapalı bir ilan oluşturun.</value>
+  </data>
+  <data name="Admin.Offerings.State.Archived" xml:space="preserve">
+    <value>Arşivli</value>
+  </data>
+  <data name="Admin.Offerings.State.Open" xml:space="preserve">
+    <value>Açık</value>
+  </data>
+  <data name="Admin.Offerings.State.Closed" xml:space="preserve">
+    <value>Kapalı</value>
+  </data>
+  <data name="Admin.Offerings.Start" xml:space="preserve">
+    <value>Başvuru başlangıcı</value>
+  </data>
+  <data name="Admin.Offerings.Deadline" xml:space="preserve">
+    <value>Son başvuru</value>
+  </data>
+  <data name="Admin.Offerings.Unspecified" xml:space="preserve">
+    <value>Belirtilmemiş</value>
+  </data>
+  <data name="Admin.Offerings.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="Admin.Offerings.DocumentWorkflow" xml:space="preserve">
+    <value>Belge akışı</value>
+  </data>
+  <data name="Admin.Offerings.LegacyOutside" xml:space="preserve">
+    <value>Legacy akış · kapsam dışı</value>
+  </data>
+  <data name="Admin.Offerings.Ready" xml:space="preserve">
+    <value>Hazır</value>
+  </data>
+  <data name="Admin.Offerings.Incomplete" xml:space="preserve">
+    <value>Eksik</value>
+  </data>
+  <data name="Admin.Offerings.RequirementCount" xml:space="preserve">
+    <value>{0} koşul</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationWorkflow" xml:space="preserve">
+    <value>Değerlendirme akışı</value>
+  </data>
+  <data name="Admin.Offerings.NotUsed" xml:space="preserve">
+    <value>Kullanılmıyor</value>
+  </data>
+  <data name="Admin.Offerings.ExamRequirements" xml:space="preserve">
+    <value>Sınav koşulları</value>
+  </data>
+  <data name="Admin.Offerings.ReadinessHeading" xml:space="preserve">
+    <value>İlanı açma önkoşulları</value>
+  </data>
+  <data name="Admin.Offerings.RequiredCondition" xml:space="preserve">
+    <value>Zorunlu belge koşulu:</value>
+  </data>
+  <data name="Admin.Offerings.RequiredReady" xml:space="preserve">
+    <value>En az bir aktif zorunlu koşul var.</value>
+  </data>
+  <data name="Admin.Offerings.RequiredMissing" xml:space="preserve">
+    <value>İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicy" xml:space="preserve">
+    <value>Kriter politikası:</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicyLead" xml:space="preserve">
+    <value>Toplam ağırlık 10.000 bp olmalı ve her sınav puanı kriteri bağlı aktif zorunlu sınav koşuluna sahip olmalıdır.</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicy" xml:space="preserve">
+    <value>Değerlendirme politikası:</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicyLead" xml:space="preserve">
+    <value>Bu ilan sıralamalı değerlendirme akışını kullanmıyor.</value>
+  </data>
+  <data name="Admin.Offerings.ConfigurationLocked" xml:space="preserve">
+    <value>Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.</value>
+  </data>
+  <data name="Admin.Offerings.EditGeneral" xml:space="preserve">
+    <value>Genel bilgileri düzenle</value>
+  </data>
+  <data name="Admin.Offerings.DocumentRequirements" xml:space="preserve">
+    <value>Belge koşulları</value>
+  </data>
+  <data name="Admin.Offerings.Evaluation" xml:space="preserve">
+    <value>Değerlendirme</value>
+  </data>
+  <data name="Admin.Offerings.OpenCheck" xml:space="preserve">
+    <value>İlanı açma kontrolü</value>
+  </data>
+  <data name="Admin.Offerings.EditHeading" xml:space="preserve">
+    <value>İlanı düzenle</value>
+  </data>
+  <data name="Admin.Offerings.NewHeading" xml:space="preserve">
+    <value>Yeni ilan oluştur</value>
+  </data>
+  <data name="Admin.Offerings.NewLead" xml:space="preserve">
+    <value>Yeni ilan güvenli başlangıç davranışı olarak önce kapalı oluşturulur.</value>
+  </data>
+  <data name="Admin.Offerings.Editing" xml:space="preserve">
+    <value>Düzenlenen ilan:</value>
+  </data>
+  <data name="Admin.Offerings.OfferingNumber" xml:space="preserve">
+    <value>İlan #{0}</value>
+  </data>
+  <data name="Admin.Offerings.StepsAria" xml:space="preserve">
+    <value>İlan yapılandırma adımları</value>
+  </data>
+  <data name="Admin.Offerings.Configuration" xml:space="preserve">
+    <value>İlan yapılandırması</value>
+  </data>
+  <data name="Admin.Offerings.General" xml:space="preserve">
+    <value>Genel bilgiler</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationCriteria" xml:space="preserve">
+    <value>Değerlendirme kriterleri</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationNotUsed" xml:space="preserve">
+    <value>Değerlendirme kullanılmıyor</value>
+  </data>
+  <data name="Admin.Offerings.ReviewOpen" xml:space="preserve">
+    <value>Gözden geçir ve aç</value>
+  </data>
+  <data name="Admin.Offerings.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Offerings.Term" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Admin.Offerings.StartIstanbul" xml:space="preserve">
+    <value>Başvuru başlangıcı (İstanbul)</value>
+  </data>
+  <data name="Admin.Offerings.DeadlineIstanbul" xml:space="preserve">
+    <value>Son başvuru (İstanbul)</value>
+  </data>
+  <data name="Admin.Offerings.UseEvaluation" xml:space="preserve">
+    <value>Sıralamalı değerlendirme akışını kullan</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationImmutable" xml:space="preserve">
+    <value>Etkinleştirildikten sonra kapatılamaz; mevcut ilan yalnızca hiç başvurusu yoksa bu akışa geçirilebilir.</value>
+  </data>
+  <data name="Admin.Offerings.ExamLead" xml:space="preserve">
+    <value>Yalnızca seçili sınavlar ilan koşulu olarak gönderilir. Zorunlu sınavlar ExamScore kriterlerine bağlanabilir.</value>
+  </data>
+  <data name="Admin.Offerings.UseCondition" xml:space="preserve">
+    <value>Koşulu kullan</value>
+  </data>
+  <data name="Admin.Offerings.RequiredExam" xml:space="preserve">
+    <value>Zorunlu sınav</value>
+  </data>
+  <data name="Admin.Offerings.MinimumScore" xml:space="preserve">
+    <value>Minimum puan</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDate" xml:space="preserve">
+    <value>En eski kabul edilen sonuç tarihi</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDateHelp" xml:space="preserve">
+    <value>Bu tarihten önceki sonuçlar reddedilir.</value>
+  </data>
+  <data name="Admin.Offerings.AlesHelp" xml:space="preserve">
+    <value>ALES sonuçları beş yıl geçerlidir. Tarih, son başvuru gününden beş yıl önce olmalıdır.</value>
+  </data>
+  <data name="Admin.Offerings.ApplyFiveYears" xml:space="preserve">
+    <value>Beş yıllık tarihi uygula</value>
+  </data>
+  <data name="Admin.Offerings.AlesSuggestion" xml:space="preserve">
+    <value>Önerilen tarih: {0}</value>
+  </data>
+  <data name="Admin.Offerings.AlesNeedDeadline" xml:space="preserve">
+    <value>Öneri için son başvuru tarihini girin.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedHeading" xml:space="preserve">
+    <value>Yeni ilan önce kapalı oluşturulur.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLabel" xml:space="preserve">
+    <value>Yeni ilan kapalı oluşturulacak</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLead" xml:space="preserve">
+    <value>En az bir aktif zorunlu belge koşulu tanımladıktan ve değerlendirme önkoşullarını tamamladıktan sonra ilanı düzenleyerek açabilirsiniz.</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveHeading" xml:space="preserve">
+    <value>Arşivleme alanı</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveLead" xml:space="preserve">
+    <value>Arşivlenen ilan yeni işlemlerde gösterilmez; geçmiş başvuru ve audit kayıtları korunur.</value>
+  </data>
+  <data name="Admin.Offerings.Archive" xml:space="preserve">
+    <value>İlanı arşivle</value>
+  </data>
+  <data name="Admin.Offerings.Save" xml:space="preserve">
+    <value>İlan değişikliklerini kaydet</value>
+  </data>
+  <data name="Admin.Offerings.CreateClosed" xml:space="preserve">
+    <value>Kapalı ilanı oluştur</value>
+  </data>
+  <data name="Admin.Offerings.CancelEdit" xml:space="preserve">
+    <value>Düzenlemeden vazgeç</value>
+  </data>
+  <data name="Admin.Requirements.Heading" xml:space="preserve">
+    <value>İlan belge koşulları</value>
+  </data>
+  <data name="Admin.Requirements.SnapshotLead" xml:space="preserve">
+    <value>Mevcut taslak ve başvuruların snapshot koşulları değişmez. Koşul değişiklikleri yalnızca daha sonra oluşturulan taslakları etkiler.</value>
+  </data>
+  <data name="Admin.Requirements.Invariant" xml:space="preserve">
+    <value>Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler. Açık ilan için son aktif zorunlu koşulu pasifleştirme isteği API tarafından güvenli biçimde reddedilir.</value>
+  </data>
+  <data name="Admin.Requirements.GuideHeading" xml:space="preserve">
+    <value>Kılavuz doğrulaması</value>
+  </data>
+  <data name="Admin.Requirements.GuideLead" xml:space="preserve">
+    <value>Belge koşullarını, ilgili enstitünün güncel ilan kılavuzuna göre tanımlayın. Programlara özel ek belgeler bulunabilir.</value>
+  </data>
+  <data name="Admin.Requirements.GuidePrefix" xml:space="preserve">
+    <value>Evrak listesini bütün ilanlara kopyalamayın.</value>
+  </data>
+  <data name="Admin.Requirements.SocialGuide" xml:space="preserve">
+    <value>Sosyal Bilimler Enstitüsü 2026–2027 Güz kılavuzu</value>
+  </data>
+  <data name="Admin.Requirements.And" xml:space="preserve">
+    <value>ve</value>
+  </data>
+  <data name="Admin.Requirements.InternationalGuide" xml:space="preserve">
+    <value>uluslararası öğrenci duyurusu</value>
+  </data>
+  <data name="Admin.Requirements.GuideSuffix" xml:space="preserve">
+    <value>gibi başvuru türüne uygun resmî kaynağı kullanın.</value>
+  </data>
+  <data name="Admin.Requirements.SelectHeading" xml:space="preserve">
+    <value>Belge koşulları için ilan seçin</value>
+  </data>
+  <data name="Admin.Requirements.SelectLead" xml:space="preserve">
+    <value>Yalnızca yöneteceğiniz ilan kartındaki “Belge koşulları” eylemini kullanın. Tam koşul listesi seçilen ilan için yüklenir.</value>
+  </data>
+  <data name="Admin.Requirements.Selected" xml:space="preserve">
+    <value>Seçili ilan · #{0}</value>
+  </data>
+  <data name="Admin.Requirements.ActiveRequired" xml:space="preserve">
+    <value>{0} aktif zorunlu</value>
+  </data>
+  <data name="Admin.Requirements.Locked" xml:space="preserve">
+    <value>Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir. Belge koşulları salt okunur gösterilir; ilan manuel enstitü incelemesine bırakılmalıdır.</value>
+  </data>
+  <data name="Admin.Requirements.EmptyHeading" xml:space="preserve">
+    <value>Belge koşulu tanımlanmamış</value>
+  </data>
+  <data name="Admin.Requirements.HistoricalLocked" xml:space="preserve">
+    <value>Bu tarihsel ilan için normal belge yapılandırma akışı kullanılamaz.</value>
+  </data>
+  <data name="Admin.Requirements.Caption" xml:space="preserve">
+    <value>{0} ilanının belge koşulları</value>
+  </data>
+  <data name="Admin.Requirements.Requirement" xml:space="preserve">
+    <value>Koşul</value>
+  </data>
+  <data name="Admin.Requirements.Description" xml:space="preserve">
+    <value>Açıklama</value>
+  </data>
+  <data name="Admin.Requirements.TypeLimit" xml:space="preserve">
+    <value>Tür ve sınır</value>
+  </data>
+  <data name="Admin.Requirements.Action" xml:space="preserve">
+    <value>İşlem</value>
+  </data>
+  <data name="Admin.Requirements.Required" xml:space="preserve">
+    <value>Zorunlu</value>
+  </data>
+  <data name="Admin.Requirements.Optional" xml:space="preserve">
+    <value>İsteğe bağlı</value>
+  </data>
+  <data name="Admin.Requirements.NoDescription" xml:space="preserve">
+    <value>Açıklama yok</value>
+  </data>
+  <data name="Admin.Requirements.ConcurrencyProtected" xml:space="preserve">
+    <value>Eşzamanlılık korumalı</value>
+  </data>
+  <data name="Admin.Requirements.ReadOnly" xml:space="preserve">
+    <value>Salt okunur</value>
+  </data>
+  <data name="Admin.Requirements.Edit" xml:space="preserve">
+    <value>Koşulu düzenle</value>
+  </data>
+  <data name="Admin.Requirements.DeactivateAria" xml:space="preserve">
+    <value>Pasifleştir belge koşulu: {0}</value>
+  </data>
+  <data name="Admin.Requirements.ActivateAria" xml:space="preserve">
+    <value>Aktifleştir belge koşulu: {0}</value>
+  </data>
+  <data name="Admin.Requirements.Deactivate" xml:space="preserve">
+    <value>Koşulu pasifleştir</value>
+  </data>
+  <data name="Admin.Requirements.Activate" xml:space="preserve">
+    <value>Koşulu aktifleştir</value>
+  </data>
+  <data name="Admin.Requirements.LastRequired" xml:space="preserve">
+    <value>Açık ilandaki son aktif zorunlu koşul kaldırılamaz.</value>
+  </data>
+  <data name="Admin.Requirements.NewHeading" xml:space="preserve">
+    <value>Yeni belge koşulu</value>
+  </data>
+  <data name="Admin.Requirements.EditHeading" xml:space="preserve">
+    <value>Belge koşulunu düzenle</value>
+  </data>
+  <data name="Admin.Requirements.Code" xml:space="preserve">
+    <value>Belge kodu</value>
+  </data>
+  <data name="Admin.Requirements.DisplayNameTurkish" xml:space="preserve">
+    <value>Türkçe görünen ad</value>
+  </data>
+  <data name="Admin.Requirements.AllowedType" xml:space="preserve">
+    <value>İzin verilen tür</value>
+  </data>
+  <data name="Admin.Requirements.MaximumBytes" xml:space="preserve">
+    <value>Maksimum boyut (bayt)</value>
+  </data>
+  <data name="Admin.Requirements.RequiredDocument" xml:space="preserve">
+    <value>Zorunlu belge</value>
+  </data>
+  <data name="Admin.Requirements.Save" xml:space="preserve">
+    <value>Belge koşulunu kaydet</value>
+  </data>
 </root>
