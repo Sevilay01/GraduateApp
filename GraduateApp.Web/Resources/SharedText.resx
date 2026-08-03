@@ -297,4 +297,188 @@
   <data name="AcademicTerm.Summer" xml:space="preserve">
     <value>Yaz</value>
   </data>
+
+  <data name="Panel.Title" xml:space="preserve">
+    <value>Öğrenci paneli</value>
+  </data>
+  <data name="Panel.Eyebrow" xml:space="preserve">
+    <value>Öğrenci işlemleri</value>
+  </data>
+  <data name="Panel.Lead" xml:space="preserve">
+    <value>Açık programları inceleyin ve başvurularınızın güncel durumunu takip edin.</value>
+  </data>
+  <data name="Panel.ExamScores" xml:space="preserve">
+    <value>Sınav sonuçlarım</value>
+  </data>
+  <data name="Panel.Profile" xml:space="preserve">
+    <value>Profil ve eğitim bilgilerim</value>
+  </data>
+  <data name="Panel.PartialWarning" xml:space="preserve">
+    <value>Panel bilgileri eksik olabilir.</value>
+  </data>
+  <data name="Panel.NewApplication" xml:space="preserve">
+    <value>Yeni başvuru</value>
+  </data>
+  <data name="Panel.OpenPrograms" xml:space="preserve">
+    <value>Başvuruya açık programlar</value>
+  </data>
+  <data name="Panel.OpenProgramsLead" xml:space="preserve">
+    <value>Koşulları karşılaştırın ve başvuru taslağınızı oluşturun.</value>
+  </data>
+  <data name="Panel.SearchAria" xml:space="preserve">
+    <value>Açık programlarda ara</value>
+  </data>
+  <data name="Panel.SearchLabel" xml:space="preserve">
+    <value>Program, enstitü veya derece ara</value>
+  </data>
+  <data name="Panel.SearchPlaceholder" xml:space="preserve">
+    <value>Örn. Bilgisayar, Fen Bilimleri veya Doktora</value>
+  </data>
+  <data name="Panel.YearLabel" xml:space="preserve">
+    <value>Akademik yıl başlangıcı</value>
+  </data>
+  <data name="Panel.TermLabel" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Panel.AllTerms" xml:space="preserve">
+    <value>Tüm dönemler</value>
+  </data>
+  <data name="Panel.PreferLabel" xml:space="preserve">
+    <value>Mezuniyet programımla aynı alanı taşıyan ilanları öne çıkar</value>
+  </data>
+  <data name="Panel.PreferHelp" xml:space="preserve">
+    <value>Program adları karşılaştırılır; ilandaki tezli/tezsiz yüksek lisans veya doktora gibi derece ekleri eşleştirmeyi değiştirmez. Resmî başvuru uygunluğu kararı değildir ve hiçbir ilana başvurmanızı engellemez.</value>
+  </data>
+  <data name="Panel.SearchButton" xml:space="preserve">
+    <value>Programları ara</value>
+  </data>
+  <data name="Panel.ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="Panel.RecommendationHeading" xml:space="preserve">
+    <value>Profil önerisi</value>
+  </data>
+  <data name="Panel.ProfileProgram" xml:space="preserve">
+    <value>Profildeki program: {0}</value>
+  </data>
+  <data name="Panel.NoMatch" xml:space="preserve">
+    <value>Arama ölçütlerine uygun açık program bulunamadı</value>
+  </data>
+  <data name="Panel.TryDifferent" xml:space="preserve">
+    <value>Arama metnini veya akademik dönem filtrelerini değiştirerek yeniden deneyin.</value>
+  </data>
+  <data name="Panel.ShowAll" xml:space="preserve">
+    <value>Tüm açık programları göster</value>
+  </data>
+  <data name="Panel.NoPrograms" xml:space="preserve">
+    <value>Şu anda başvuruya açık program yok</value>
+  </data>
+  <data name="Panel.NoProgramsLead" xml:space="preserve">
+    <value>Yeni ilanlar yayımlandığında bu bölümde görüntülenecektir.</value>
+  </data>
+  <data name="Panel.ProfileMatch" xml:space="preserve">
+    <value>Program alanı eşleşiyor</value>
+  </data>
+  <data name="Panel.AcademicPeriod" xml:space="preserve">
+    <value>Akademik dönem</value>
+  </data>
+  <data name="Panel.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="Panel.Deadline" xml:space="preserve">
+    <value>Son başvuru tarihi</value>
+  </data>
+  <data name="Panel.ExamRequirements" xml:space="preserve">
+    <value>Sınav koşulları</value>
+  </data>
+  <data name="Panel.Minimum" xml:space="preserve">
+    <value>En az</value>
+  </data>
+  <data name="Panel.Required" xml:space="preserve">
+    <value>Zorunlu</value>
+  </data>
+  <data name="Panel.Optional" xml:space="preserve">
+    <value>İsteğe bağlı</value>
+  </data>
+  <data name="Panel.NoExamRequirement" xml:space="preserve">
+    <value>Bu ilan için ayrıca bir sınav koşulu belirtilmemiştir.</value>
+  </data>
+  <data name="Panel.ApplicationCreated" xml:space="preserve">
+    <value>Başvuru oluşturuldu</value>
+  </data>
+  <data name="Panel.CreateDraft" xml:space="preserve">
+    <value>Başvuru taslağı oluştur</value>
+  </data>
+  <data name="Panel.ViewApplication" xml:space="preserve">
+    <value>Başvuruyu görüntüle</value>
+  </data>
+  <data name="Panel.Tracking" xml:space="preserve">
+    <value>Takip</value>
+  </data>
+  <data name="Panel.MyApplications" xml:space="preserve">
+    <value>Başvurularım</value>
+  </data>
+  <data name="Panel.NoApplications" xml:space="preserve">
+    <value>Henüz bir başvurunuz bulunmuyor</value>
+  </data>
+  <data name="Panel.NoApplicationsLead" xml:space="preserve">
+    <value>Yukarıdaki açık programlardan birini seçerek başvuru taslağı oluşturabilirsiniz.</value>
+  </data>
+  <data name="Panel.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Panel.ApplicationDate" xml:space="preserve">
+    <value>Başvuru tarihi</value>
+  </data>
+  <data name="Panel.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Panel.Action" xml:space="preserve">
+    <value>İşlem</value>
+  </data>
+  <data name="Panel.DocumentsDetails" xml:space="preserve">
+    <value>Belgeler ve detay</value>
+  </data>
+  <data name="Panel.Error.ApplicationsLoad" xml:space="preserve">
+    <value>Başvurular yüklenemedi.</value>
+  </data>
+  <data name="Panel.Error.RecommendationsPrograms" xml:space="preserve">
+    <value>Programlar yüklenemediği için profil önerileri şu anda kullanılamıyor.</value>
+  </data>
+  <data name="Panel.Error.ProfileLoad" xml:space="preserve">
+    <value>Eğitim profiliniz yüklenemediği için programlar normal sıralamada gösteriliyor.</value>
+  </data>
+  <data name="Panel.Recommendation.ProfileMissing" xml:space="preserve">
+    <value>Önerileri kullanmak için profilinizde mezun olduğunuz lisans programını belirtin.</value>
+  </data>
+  <data name="Panel.Recommendation.MatchCount" xml:space="preserve">
+    <value>{0} ilan mezuniyet programınızla aynı alan adına sahip ve listenin başına taşındı.</value>
+  </data>
+  <data name="Panel.Recommendation.NoMatch" xml:space="preserve">
+    <value>Mezuniyet programınızla aynı alan adına sahip açık ilan bulunamadı; diğer ilanlar başvuruya açık olmaya devam ediyor.</value>
+  </data>
+  <data name="Panel.Error.Load" xml:space="preserve">
+    <value>Panel bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Panel.Error.InvalidOffering" xml:space="preserve">
+    <value>Geçerli bir dönemsel ilan seçiniz.</value>
+  </data>
+  <data name="Panel.Success.DraftCreated" xml:space="preserve">
+    <value>Başvuru taslağınız oluşturuldu. Zorunlu belgeleri yükledikten sonra başvuruyu gönderin.</value>
+  </data>
+  <data name="Panel.Error.Create" xml:space="preserve">
+    <value>Başvuru oluşturulamadı.</value>
+  </data>
+  <data name="DegreeType.Doctorate" xml:space="preserve">
+    <value>Doktora</value>
+  </data>
+  <data name="DegreeType.ThesisMasters" xml:space="preserve">
+    <value>Tezli Yüksek Lisans</value>
+  </data>
+  <data name="DegreeType.NonThesisMasters" xml:space="preserve">
+    <value>Tezsiz Yüksek Lisans</value>
+  </data>
+  <data name="DegreeType.DistanceNonThesisMasters" xml:space="preserve">
+    <value>Uzaktan Tezsiz Yüksek Lisans</value>
+  </data>
 </root>
