@@ -1,3 +1,4 @@
+using GraduateApp.Web.Localization;
 using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +27,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             },
             Search = search,
             Status = status,
-            ErrorMessage = result.IsSuccess ? null : result.Error
+            ErrorMessage = result.IsSuccess ? null : ApiError(result.Error, "Admin.Message.AdminUpdateFailed")
         });
     }
 
@@ -36,36 +37,36 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Yönetici daveti için geçerli bir e-posta adresi giriniz.";
+            TempData["ErrorMessage"] = T("Admin.Message.InviteEmailInvalid");
             return RedirectToAction(nameof(Accounts));
         }
 
         var result = await apiClient.InviteAdminAsync(model, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Yönetici daveti oluşturuldu."
-            : result.Error ?? "Yönetici daveti oluşturulamadı.";
+            ? T("Admin.Message.InviteCreated")
+            : ApiError(result.Error, "Admin.Message.InviteCreateFailed");
         return RedirectToAction(nameof(Accounts));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> ResendAdminInvitation(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
-        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.ResendAdminInvitationAsync(publicId, rowVersion, token), "Yönetici daveti yeniden oluşturuldu.", cancellationToken);
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.ResendAdminInvitationAsync(publicId, rowVersion, token), T("Admin.Message.InviteResent"), cancellationToken);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> ActivateAdmin(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
-        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.ActivateAdminAsync(publicId, rowVersion, token), "Yönetici hesabı aktifleştirildi.", cancellationToken);
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.ActivateAdminAsync(publicId, rowVersion, token), T("Admin.Message.AdminActivated"), cancellationToken);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> DeactivateAdmin(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
-        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.DeactivateAdminAsync(publicId, rowVersion, token), "Yönetici hesabı pasifleştirildi ve mevcut oturumları iptal edildi.", cancellationToken);
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.DeactivateAdminAsync(publicId, rowVersion, token), T("Admin.Message.AdminDeactivated"), cancellationToken);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> UnlockAdmin(Guid publicId, string rowVersion, CancellationToken cancellationToken) =>
-        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.UnlockAdminAsync(publicId, rowVersion, token), "Yönetici hesabının kilidi açıldı.", cancellationToken);
+        ChangeAdminAccountAsync(publicId, rowVersion, token => apiClient.UnlockAdminAsync(publicId, rowVersion, token), T("Admin.Message.AdminUnlocked"), cancellationToken);
 
     private async Task<IActionResult> ChangeAdminAccountAsync(
         Guid publicId,
@@ -76,14 +77,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (publicId == Guid.Empty || string.IsNullOrWhiteSpace(rowVersion))
         {
-            TempData["ErrorMessage"] = "Yönetici hesap bilgisi geçersiz. Sayfayı yenileyiniz.";
+            TempData["ErrorMessage"] = T("Admin.Message.AdminAccountInvalid");
             return RedirectToAction(nameof(Accounts));
         }
 
         var result = await operation(cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? successMessage
-            : result.Error ?? "Yönetici hesabı güncellenemedi.";
+            : ApiError(result.Error, "Admin.Message.AdminUpdateFailed");
         return RedirectToAction(nameof(Accounts));
     }
 
@@ -103,7 +104,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 PageSize = Math.Clamp(pageSize, 10, 100)
             },
             Search = search,
-            ErrorMessage = result.IsSuccess ? null : result.Error
+            ErrorMessage = result.IsSuccess ? null : ApiError(result.Error, "Admin.Message.StudentNotFound")
         });
     }
 
@@ -112,14 +113,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (publicId == Guid.Empty)
         {
-            TempData["ErrorMessage"] = "Öğrenci seçilmedi.";
+            TempData["ErrorMessage"] = T("Admin.Message.StudentNotSelected");
             return RedirectToAction(nameof(Students));
         }
 
         var result = await apiClient.GetAdminStudentAsync(publicId, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Öğrenci bulunamadı.";
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.StudentNotFound");
             return RedirectToAction(nameof(Students));
         }
 
@@ -132,14 +133,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (publicId == Guid.Empty)
         {
-            TempData["ErrorMessage"] = "Öğrenci seçilmedi.";
+            TempData["ErrorMessage"] = T("Admin.Message.StudentNotSelected");
             return RedirectToAction(nameof(Students));
         }
 
         var result = await apiClient.DeactivateStudentAsync(publicId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Öğrenci pasifleştirildi ve mevcut oturumları iptal edildi."
-            : result.Error ?? "Öğrenci pasifleştirilemedi.";
+            ? T("Admin.Message.StudentDeactivated")
+            : ApiError(result.Error, "Admin.Message.StudentDeactivateFailed");
         return RedirectToAction(nameof(Students));
     }
 
@@ -148,14 +149,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (publicId == Guid.Empty)
         {
-            TempData["ErrorMessage"] = "Öğrenci seçilmedi.";
+            TempData["ErrorMessage"] = T("Admin.Message.StudentNotSelected");
             return RedirectToAction(nameof(Students));
         }
 
         var result = await apiClient.GetAdminStudentAsync(publicId, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Öğrenci bulunamadı.";
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.StudentNotFound");
             return RedirectToAction(nameof(Students));
         }
 
@@ -168,14 +169,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (publicId == Guid.Empty)
         {
-            TempData["ErrorMessage"] = "Öğrenci seçilmedi.";
+            TempData["ErrorMessage"] = T("Admin.Message.StudentNotSelected");
             return RedirectToAction(nameof(Students));
         }
 
         var result = await apiClient.ActivateStudentAsync(publicId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Öğrenci yeniden aktifleştirildi ve önceki oturumları geçersiz kılındı."
-            : result.Error ?? "Öğrenci aktifleştirilemedi.";
+            ? T("Admin.Message.StudentActivated")
+            : ApiError(result.Error, "Admin.Message.StudentActivateFailed");
         return RedirectToAction(nameof(Students));
     }
 
@@ -208,7 +209,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Status = status,
             AcademicYearStart = academicYearStart,
             Term = term,
-            ErrorMessage = result.IsSuccess ? null : result.Error
+            ErrorMessage = result.IsSuccess ? null : ApiError(result.Error, "Admin.Message.ApplicationNotFound")
         });
     }
 
@@ -233,7 +234,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == editId.Value)
             : null;
         var editOfferingError = editId.HasValue && selected is null
-            ? "Düzenlenecek ilan bulunamadı."
+            ? T("Admin.Message.OfferingEditNotFound")
             : null;
         var selectedRequirementOffering = requirementOfferingId.HasValue
             ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == requirementOfferingId.Value)
@@ -248,7 +249,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             if (selectedRequirementOffering is null)
             {
-                documentRequirementError = "Belge koşulları için seçilen ilan bulunamadı.";
+                documentRequirementError = T("Admin.Message.RequirementOfferingNotFound");
             }
             else
             {
@@ -263,13 +264,13 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 else
                 {
                     documentRequirementError =
-                        requirementResult.Error ?? "Belge koşulları yüklenemedi.";
+                        ApiError(requirementResult.Error, "Admin.Message.RequirementsLoadFailed");
                 }
             }
         }
         else if (editRequirementId.HasValue)
         {
-            documentRequirementError = "Belge koşulunu düzenlemek için önce ilan seçiniz.";
+            documentRequirementError = T("Admin.Message.SelectOfferingBeforeRequirement");
         }
 
         OfferingDocumentRequirementViewModel? selectedRequirement = null;
@@ -281,7 +282,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             selectedRequirement = offeringRequirements.SingleOrDefault(item => item.PublicId == editRequirementId.Value);
             if (selectedRequirement is null)
             {
-                documentRequirementError = "Düzenlenecek belge koşulu seçilen ilanda bulunamadı.";
+                documentRequirementError = T("Admin.Message.RequirementNotFound");
             }
         }
 
@@ -314,7 +315,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 RowVersion = selectedRequirement?.RowVersion
             },
             ErrorMessage = !offerings.IsSuccess || !catalog.IsSuccess
-                ? offerings.Error ?? catalog.Error ?? "İlan bilgileri yüklenemedi."
+                ? ApiError(offerings.Error ?? catalog.Error, "Admin.Message.OfferingsLoadFailed")
                 : editOfferingError ?? documentRequirementError
         });
     }
@@ -327,26 +328,26 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (model.Term == AcademicTerm.LegacyUnspecified)
         {
-            ModelState.AddModelError("Form.Term", "Geçerli bir dönem seçiniz.");
+            ModelState.AddModelError("Form.Term", T("Admin.Message.TermInvalid"));
         }
 
         if (model.ApplicationStartLocal >= model.ApplicationDeadlineLocal)
         {
             ModelState.AddModelError(
                 "Form.ApplicationDeadlineLocal",
-                "Son başvuru tarihi başlangıçtan sonra olmalıdır.");
+                T("Admin.Message.DeadlineAfterStart"));
         }
 
         if (model.ProgramOfferingId > 0 && string.IsNullOrWhiteSpace(model.RowVersion))
         {
-            ModelState.AddModelError("Form.RowVersion", "İlan eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.");
+            ModelState.AddModelError("Form.RowVersion", T("Admin.Message.OfferingConcurrencyMissing"));
         }
 
         if (!ModelState.IsValid)
         {
             return await RenderOfferingFormAsync(
                 model,
-                "İlan bilgileri doğrulanamadı.",
+                T("Admin.Message.OfferingValidationFailed"),
                 cancellationToken);
         }
 
@@ -355,11 +356,11 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             : await apiClient.CreateProgramOfferingAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Dönemsel ilan kaydedilemedi.");
+            ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.OfferingSaveFailed"));
             return await RenderOfferingFormAsync(model, null, cancellationToken);
         }
 
-        TempData["SuccessMessage"] = "Dönemsel ilan kaydedildi.";
+        TempData["SuccessMessage"] = T("Admin.Message.OfferingSaved");
         var savedOfferingId = result.Value?.ProgramOfferingId ?? model.ProgramOfferingId;
         return RedirectToAction(
             nameof(Offerings),
@@ -386,7 +387,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (programOfferingId <= 0 || string.IsNullOrWhiteSpace(rowVersion))
         {
-            TempData["ErrorMessage"] = "İlan kapatma bilgisi geçersiz. Sayfayı yenileyiniz.";
+            TempData["ErrorMessage"] = T("Admin.Message.RemediationInvalid");
             return RedirectToAction(
                 nameof(Offerings),
                 controllerName: null,
@@ -399,8 +400,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             rowVersion,
             cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Geçersiz açık ilan güvenli biçimde kapatıldı. Mevcut başvuru ve sonuçlar değiştirilmedi."
-            : result.Error ?? "İlan güvenli düzeltme için kapatılamadı.";
+            ? T("Admin.Message.RemediationClosed")
+            : ApiError(result.Error, "Admin.Message.RemediationFailed");
         return RedirectToAction(
             nameof(Offerings),
             controllerName: null,
@@ -416,17 +417,17 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (model.ProgramOfferingId <= 0)
         {
-            ModelState.AddModelError("DocumentRequirementForm.ProgramOfferingId", "Geçerli bir ilan seçiniz.");
+            ModelState.AddModelError("DocumentRequirementForm.ProgramOfferingId", T("Admin.Message.ValidOfferingRequired"));
         }
 
         if (model.PublicId != Guid.Empty && string.IsNullOrWhiteSpace(model.RowVersion))
         {
-            ModelState.AddModelError("DocumentRequirementForm.RowVersion", "Eşzamanlılık bilgisi eksik. Sayfayı yenileyin.");
+            ModelState.AddModelError("DocumentRequirementForm.RowVersion", T("Admin.Message.RequirementConcurrencyMissing"));
         }
 
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Belge koşulu bilgileri doğrulanamadı.";
+            TempData["ErrorMessage"] = T("Admin.Message.RequirementValidationFailed");
             return RedirectToAction(
                 nameof(Offerings),
                 controllerName: null,
@@ -438,8 +439,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             ? await apiClient.CreateOfferingDocumentRequirementAsync(model, cancellationToken)
             : await apiClient.UpdateOfferingDocumentRequirementAsync(model, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Belge koşulu kaydedildi. Değişiklik yalnızca bundan sonra oluşturulan taslakları etkiler."
-            : result.Error ?? "Belge koşulu kaydedilemedi.";
+            ? T("Admin.Message.RequirementSaved")
+            : ApiError(result.Error, "Admin.Message.RequirementSaveFailed");
         return RedirectToAction(
             nameof(Offerings),
             controllerName: null,
@@ -458,7 +459,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Belge koşulu durumu doğrulanamadı. Sayfayı yenileyip tekrar deneyin.";
+            TempData["ErrorMessage"] = T("Admin.Message.RequirementStateInvalid");
             return RedirectToAction(
                 nameof(Offerings),
                 controllerName: null,
@@ -475,12 +476,12 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         if (result.IsSuccess && result.Value is not null)
         {
             TempData["SuccessMessage"] = result.Value.IsActive
-                ? "Belge koşulu aktifleştirildi."
-                : "Belge koşulu pasifleştirildi.";
+                ? T("Admin.Message.RequirementActivated")
+                : T("Admin.Message.RequirementDeactivated");
         }
         else
         {
-            TempData["ErrorMessage"] = result.Error ?? "Belge koşulu güncellenemedi.";
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.RequirementUpdateFailed");
         }
 
         return RedirectToAction(
@@ -499,7 +500,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Universities = result.Value ?? [],
             ErrorMessage = result.IsSuccess
                 ? null
-                : result.Error ?? "Üniversite kataloğu yüklenemedi."
+                : ApiError(result.Error, "Admin.Message.UniversitiesLoadFailed")
         });
     }
 
@@ -513,18 +514,18 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             return await RenderUniversityFormAsync(
                 model,
-                "Üniversite bilgileri doğrulanamadı.",
+                T("Admin.Message.UniversityValidationFailed"),
                 cancellationToken);
         }
 
         var result = await apiClient.CreateUniversityAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Üniversite oluşturulamadı.");
+            ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.UniversityCreateFailed"));
             return await RenderUniversityFormAsync(model, null, cancellationToken);
         }
 
-        TempData["SuccessMessage"] = "Üniversite kataloğa eklendi.";
+        TempData["SuccessMessage"] = T("Admin.Message.UniversityCreated");
         return RedirectToAction(nameof(Universities));
     }
 
@@ -561,7 +562,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             },
             ErrorMessage = list.IsSuccess && (selectedResult is null || selectedResult.IsSuccess)
                 ? null
-                : list.Error ?? selectedResult?.Error ?? "Enstitü bilgileri yüklenemedi."
+                : ApiError(list.Error ?? selectedResult?.Error, "Admin.Message.InstitutesLoadFailed")
         });
     }
 
@@ -573,12 +574,12 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (model.InstituteId > 0 && string.IsNullOrWhiteSpace(model.RowVersion))
         {
-            ModelState.AddModelError("Form.RowVersion", "Enstitü eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.");
+            ModelState.AddModelError("Form.RowVersion", T("Admin.Message.InstituteConcurrencyMissing"));
         }
 
         if (!ModelState.IsValid)
         {
-            return await RenderInstituteFormAsync(model, "Enstitü bilgileri doğrulanamadı.", cancellationToken);
+            return await RenderInstituteFormAsync(model, T("Admin.Message.InstituteValidationFailed"), cancellationToken);
         }
 
         var result = model.InstituteId > 0
@@ -586,11 +587,11 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             : await apiClient.CreateInstituteAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Enstitü kaydedilemedi.");
+            ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.InstituteSaveFailed"));
             return await RenderInstituteFormAsync(model, null, cancellationToken);
         }
 
-        TempData["SuccessMessage"] = model.InstituteId > 0 ? "Enstitü güncellendi." : "Enstitü oluşturuldu.";
+        TempData["SuccessMessage"] = model.InstituteId > 0 ? T("Admin.Message.InstituteUpdated") : T("Admin.Message.InstituteCreated");
         return RedirectToAction(nameof(Institutes));
     }
 
@@ -604,7 +605,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             id,
             rowVersion,
             token => apiClient.ActivateInstituteAsync(id, rowVersion, token),
-            "Enstitü aktifleştirildi.",
+            T("Admin.Message.InstituteActivated"),
             cancellationToken);
 
     [HttpPost]
@@ -617,7 +618,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             id,
             rowVersion,
             token => apiClient.DeactivateInstituteAsync(id, rowVersion, token),
-            "Enstitü pasifleştirildi. Bağlı programlar yeni seçimlerde gösterilmeyecek.",
+            T("Admin.Message.InstituteDeactivated"),
             cancellationToken);
 
     private async Task<IActionResult> ChangeInstituteActiveAsync(
@@ -629,14 +630,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
         {
-            TempData["ErrorMessage"] = "Enstitü aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.";
+            TempData["ErrorMessage"] = T("Admin.Message.InstituteStateInvalid");
             return RedirectToAction(nameof(Institutes));
         }
 
         var result = await changeActive(cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? successMessage
-            : result.Error ?? "Enstitü durumu değiştirilemedi.";
+            : ApiError(result.Error, "Admin.Message.InstituteStateFailed");
         return RedirectToAction(nameof(Institutes));
     }
 
@@ -646,7 +647,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.GetAdminInstituteAsync(id, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Enstitü bulunamadı.";
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.InstituteNotFound");
             return RedirectToAction(nameof(Institutes));
         }
 
@@ -662,14 +663,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
         {
-            TempData["ErrorMessage"] = "Enstitü silme bilgisi geçersiz. Sayfayı yenileyiniz.";
+            TempData["ErrorMessage"] = T("Admin.Message.InstituteDeleteInvalid");
             return RedirectToAction(nameof(Institutes));
         }
 
         var result = await apiClient.DeleteInstituteAsync(id, rowVersion, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Kullanılmamış enstitü kalıcı olarak silindi."
-            : result.Error ?? "Enstitü silinemedi.";
+            ? T("Admin.Message.InstituteDeleted")
+            : ApiError(result.Error, "Admin.Message.InstituteDeleteFailed");
         return RedirectToAction(nameof(Institutes));
     }
 
@@ -726,7 +727,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             },
             ErrorMessage = programs.IsSuccess && institutes.IsSuccess && (selectedResult is null || selectedResult.IsSuccess)
                 ? null
-                : programs.Error ?? institutes.Error ?? selectedResult?.Error ?? "Program bilgileri yüklenemedi."
+                : ApiError(programs.Error ?? institutes.Error ?? selectedResult?.Error, "Admin.Message.ProgramsLoadFailed")
         });
     }
 
@@ -763,7 +764,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Page = value?.Page ?? page,
             PageSize = value?.PageSize ?? pageSize,
             TotalCount = value?.TotalCount ?? 0,
-            ErrorMessage = result.IsSuccess ? null : result.Error
+            ErrorMessage = result.IsSuccess ? null : ApiError(result.Error, "Admin.Message.TranslationSaveFailed")
         });
     }
 
@@ -777,12 +778,12 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             ModelState.AddModelError(
                 nameof(model.Items),
-                "Tek işlemde 1 ile 100 program çevirisi güncellenebilir.");
+                T("Admin.Message.TranslationBatchRange"));
         }
 
         if (!ModelState.IsValid)
         {
-            model.ErrorMessage = "Program çevirileri doğrulanamadı.";
+            model.ErrorMessage = T("Admin.Message.TranslationValidationFailed");
             return View("ProgramTranslations", model);
         }
 
@@ -793,16 +794,16 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             ModelState.AddModelError(
                 string.Empty,
-                result.Error ?? "Program çevirileri kaydedilemedi.");
-            model.ErrorMessage = "Program çevirileri kaydedilemedi.";
+                ApiError(result.Error, "Admin.Message.TranslationSaveFailed"));
+            model.ErrorMessage = T("Admin.Message.TranslationSaveFailed");
             return View("ProgramTranslations", model);
         }
 
         TempData["SuccessMessage"] = result.Value?.UpdatedCount switch
         {
-            0 => "Program çevirilerinde değişiklik yok.",
-            1 => "1 program çevirisi güncellendi.",
-            var count => $"{count} program çevirisi güncellendi."
+            0 => T("Admin.Message.TranslationNoChanges"),
+            1 => T("Admin.Message.TranslationOneUpdated"),
+            var count => UiText.Format(HttpContext, "Admin.Message.TranslationManyUpdated", count)
         };
         return RedirectToAction(
             nameof(ProgramTranslations),
@@ -817,12 +818,12 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (model.ProgramId > 0 && string.IsNullOrWhiteSpace(model.RowVersion))
         {
-            ModelState.AddModelError("Form.RowVersion", "Program eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.");
+            ModelState.AddModelError("Form.RowVersion", T("Admin.Message.ProgramConcurrencyMissing"));
         }
 
         if (!ModelState.IsValid)
         {
-            return await RenderProgramFormAsync(model, "Program bilgileri doğrulanamadı.", cancellationToken);
+            return await RenderProgramFormAsync(model, T("Admin.Message.ProgramValidationFailed"), cancellationToken);
         }
 
         var result = model.ProgramId > 0
@@ -830,11 +831,11 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             : await apiClient.CreateProgramAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Program kaydedilemedi.");
+            ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.ProgramSaveFailed"));
             return await RenderProgramFormAsync(model, null, cancellationToken);
         }
 
-        TempData["SuccessMessage"] = model.ProgramId > 0 ? "Program güncellendi." : "Program oluşturuldu.";
+        TempData["SuccessMessage"] = model.ProgramId > 0 ? T("Admin.Message.ProgramUpdated") : T("Admin.Message.ProgramCreated");
         return RedirectToAction(nameof(Programs));
     }
 
@@ -848,7 +849,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             id,
             rowVersion,
             token => apiClient.ActivateProgramAsync(id, rowVersion, token),
-            "Program aktifleştirildi.",
+            T("Admin.Message.ProgramActivated"),
             cancellationToken);
 
     [HttpPost]
@@ -861,7 +862,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             id,
             rowVersion,
             token => apiClient.DeactivateProgramAsync(id, rowVersion, token),
-            "Program pasifleştirildi. Mevcut ilan ve başvurular korunuyor.",
+            T("Admin.Message.ProgramDeactivated"),
             cancellationToken);
 
     private async Task<IActionResult> ChangeProgramActiveAsync(
@@ -873,14 +874,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
         {
-            TempData["ErrorMessage"] = "Program aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.";
+            TempData["ErrorMessage"] = T("Admin.Message.ProgramStateInvalid");
             return RedirectToAction(nameof(Programs));
         }
 
         var result = await changeActive(cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? successMessage
-            : result.Error ?? "Program durumu değiştirilemedi.";
+            : ApiError(result.Error, "Admin.Message.ProgramStateFailed");
         return RedirectToAction(nameof(Programs));
     }
 
@@ -890,7 +891,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.GetAdminProgramAsync(id, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Program bulunamadı.";
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.ProgramNotFound");
             return RedirectToAction(nameof(Programs));
         }
 
@@ -906,14 +907,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (id <= 0 || string.IsNullOrWhiteSpace(rowVersion))
         {
-            TempData["ErrorMessage"] = "Program silme bilgisi geçersiz. Sayfayı yenileyiniz.";
+            TempData["ErrorMessage"] = T("Admin.Message.ProgramDeleteInvalid");
             return RedirectToAction(nameof(Programs));
         }
 
         var result = await apiClient.DeleteProgramAsync(id, rowVersion, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "İlanı bulunmayan program kalıcı olarak silindi."
-            : result.Error ?? "Program silinemedi.";
+            ? T("Admin.Message.ProgramDeleted")
+            : ApiError(result.Error, "Admin.Message.ProgramDeleteFailed");
         return RedirectToAction(nameof(Programs));
     }
 
@@ -927,7 +928,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var preview = await previewTask;
         if (!evaluation.IsSuccess || evaluation.Value is null)
         {
-            TempData["ErrorMessage"] = evaluation.Error ?? "Değerlendirme ilanı bulunamadı.";
+            TempData["ErrorMessage"] = ApiError(evaluation.Error, "Admin.Message.EvaluationNotFound");
             return RedirectToAction(nameof(Offerings));
         }
 
@@ -942,7 +943,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 MaximumRawScore = 100m,
                 TieBreakPriority = evaluation.Value.Criteria.Count + 1
             },
-            ErrorMessage = preview.IsSuccess ? null : preview.Error
+            ErrorMessage = preview.IsSuccess ? null : ApiError(preview.Error, "Admin.Message.EvaluationFinalizeFailed")
         });
     }
 
@@ -956,7 +957,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             || (model.PublicId != Guid.Empty && string.IsNullOrWhiteSpace(model.RowVersion))
             || !ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Değerlendirme kriteri bilgileri geçersiz.";
+            TempData["ErrorMessage"] = T("Admin.Message.CriterionInvalid");
             return RedirectToAction(nameof(Evaluation), new { id = model.ProgramOfferingId });
         }
 
@@ -964,8 +965,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             ? await apiClient.CreateEvaluationCriterionAsync(model, cancellationToken)
             : await apiClient.UpdateEvaluationCriterionAsync(model, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Değerlendirme kriteri kaydedildi."
-            : result.Error ?? "Değerlendirme kriteri kaydedilemedi.";
+            ? T("Admin.Message.CriterionSaved")
+            : ApiError(result.Error, "Admin.Message.CriterionSaveFailed");
         return RedirectToAction(nameof(Evaluation), new { id = model.ProgramOfferingId });
     }
 
@@ -979,7 +980,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (programOfferingId <= 0 || publicId == Guid.Empty || string.IsNullOrWhiteSpace(rowVersion))
         {
-            TempData["ErrorMessage"] = "Değerlendirme kriteri silme bilgileri geçersiz.";
+            TempData["ErrorMessage"] = T("Admin.Message.CriterionDeleteInvalid");
             return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
         }
 
@@ -989,8 +990,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             rowVersion,
             cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Değerlendirme kriteri kaldırıldı."
-            : result.Error ?? "Değerlendirme kriteri kaldırılamadı.";
+            ? T("Admin.Message.CriterionDeleted")
+            : ApiError(result.Error, "Admin.Message.CriterionDeleteFailed");
         return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
     }
 
@@ -1011,8 +1012,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             rowVersion,
             cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Aday uygunluk kararı kaydedildi."
-            : result.Error ?? "Aday uygunluk kararı kaydedilemedi.";
+            ? T("Admin.Message.EligibilitySaved")
+            : ApiError(result.Error, "Admin.Message.EligibilitySaveFailed");
         return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
     }
 
@@ -1028,7 +1029,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (!rawScore.HasValue)
         {
-            TempData["ErrorMessage"] = "Manuel puan zorunludur.";
+            TempData["ErrorMessage"] = T("Admin.Message.ManualScoreRequired");
             return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
         }
 
@@ -1039,8 +1040,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             rowVersion,
             cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Manuel puan kaydedildi."
-            : result.Error ?? "Manuel puan kaydedilemedi.";
+            ? T("Admin.Message.ManualScoreSaved")
+            : ApiError(result.Error, "Admin.Message.ManualScoreSaveFailed");
         return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
     }
 
@@ -1053,8 +1054,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         var result = await apiClient.FinalizeEvaluationAsync(programOfferingId, rowVersion, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Değerlendirme sonuçları kesinleştirildi; henüz öğrencilere yayımlanmadı."
-            : result.Error ?? "Değerlendirme kesinleştirilemedi.";
+            ? T("Admin.Message.EvaluationFinalized")
+            : ApiError(result.Error, "Admin.Message.EvaluationFinalizeFailed");
         return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
     }
 
@@ -1068,14 +1069,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var summary = await summaryTask;
         if (!evaluation.IsSuccess || evaluation.Value is null || !summary.IsSuccess || summary.Value is null)
         {
-            TempData["ErrorMessage"] = summary.Error ?? evaluation.Error ?? "Yayımlanabilir sonuç bulunamadı.";
+            TempData["ErrorMessage"] = ApiError(summary.Error ?? evaluation.Error, "Admin.Message.NoPublishableResults");
             return RedirectToAction(nameof(Evaluation), new { id });
         }
 
         return View(new EvaluationPublishPageViewModel
         {
             ProgramOfferingId = id,
-            ProgramName = $"{evaluation.Value.ProgramName} · {evaluation.Value.AcademicYear} · {evaluation.Value.TermName}",
+            ProgramName = $"{evaluation.Value.ProgramName} · {evaluation.Value.AcademicYear} · {UiText.LocalizeAcademicTerm(HttpContext, evaluation.Value.TermName)}",
             Evaluation = evaluation.Value,
             Summary = summary.Value
         });
@@ -1091,8 +1092,8 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         var result = await apiClient.PublishEvaluationAsync(programOfferingId, rowVersion, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Değerlendirme sonuçları öğrencilere yayımlandı."
-            : result.Error ?? "Sonuçlar yayımlanamadı.";
+            ? T("Admin.Message.EvaluationPublished")
+            : ApiError(result.Error, "Admin.Message.PublishFailed");
         return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
     }
 
@@ -1102,7 +1103,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.GetAdminApplicationDetailAsync(id, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Başvuru bulunamadı.";
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.ApplicationNotFound");
             return RedirectToAction(nameof(Index));
         }
 
@@ -1115,14 +1116,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Durum güncelleme bilgileri geçersiz.";
+            TempData["ErrorMessage"] = T("Admin.Message.StatusInvalid");
             return RedirectToAction(nameof(Detail), new { id = model.PublicId });
         }
 
         var result = await apiClient.UpdateApplicationStatusAsync(model, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Başvuru durumu güncellendi."
-            : result.Error ?? "Başvuru durumu güncellenemedi.";
+            ? T("Admin.Message.StatusUpdated")
+            : ApiError(result.Error, "Admin.Message.StatusUpdateFailed");
         return RedirectToAction(nameof(Detail), new { id = model.PublicId });
     }
 
@@ -1134,14 +1135,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Belge inceleme bilgileri geçersiz.";
+            TempData["ErrorMessage"] = T("Admin.Message.DocumentReviewInvalid");
             return RedirectToAction(nameof(Detail), new { id = model.ApplicationPublicId });
         }
 
         var result = await apiClient.ReviewApplicationDocumentAsync(model, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? (model.ReviewStatus == DocumentReviewStatus.Approved ? "Belge onaylandı." : "Belge gerekçeyle reddedildi.")
-            : result.Error ?? "Belge incelemesi kaydedilemedi.";
+            ? (model.ReviewStatus == DocumentReviewStatus.Approved ? T("Admin.Message.DocumentApproved") : T("Admin.Message.DocumentRejected"))
+            : ApiError(result.Error, "Admin.Message.DocumentReviewSaveFailed");
         return RedirectToAction(nameof(Detail), new { id = model.ApplicationPublicId });
     }
 
@@ -1154,7 +1155,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.DownloadAdminDocumentAsync(applicationPublicId, documentPublicId, cancellationToken);
         if (!result.IsSuccess || result.Content is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Belge indirilemedi.";
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.DocumentDownloadFailed");
             return RedirectToAction(nameof(Detail), new { id = applicationPublicId });
         }
 
@@ -1236,7 +1237,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Form = form,
             AutoFocusTarget = "offering-form-heading",
             ErrorMessage = errorMessage
-                ?? offerings.Error
+                ?? ApiError(offerings.Error, "Admin.Message.OfferingsLoadFailed")
                 ?? catalog.Error
         });
     }
@@ -1251,7 +1252,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             Result = list.Value ?? new PagedResultViewModel<InstituteAdminViewModel> { Page = 1, PageSize = 20 },
             Form = form,
-            ErrorMessage = errorMessage ?? list.Error
+            ErrorMessage = errorMessage ?? ApiError(list.Error, "Admin.Message.InstitutesLoadFailed")
         });
     }
 
@@ -1265,7 +1266,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         {
             Universities = list.Value ?? [],
             Form = form,
-            ErrorMessage = errorMessage ?? list.Error
+            ErrorMessage = errorMessage ?? ApiError(list.Error, "Admin.Message.UniversitiesLoadFailed")
         });
     }
 
@@ -1284,7 +1285,16 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             Result = programs.Value ?? new PagedResultViewModel<ProgramAdminViewModel> { Page = 1, PageSize = 20 },
             Institutes = institutes.Value?.Items ?? [],
             Form = form,
-            ErrorMessage = errorMessage ?? programs.Error ?? institutes.Error
+            ErrorMessage = errorMessage ?? ApiError(programs.Error ?? institutes.Error, "Admin.Message.ProgramsLoadFailed")
         });
     }
+
+    private string T(string key) => UiText.Get(HttpContext, key);
+
+    private string ApiError(string? apiError, string fallbackKey) =>
+        UiText.CurrentCultureName(HttpContext) == UiText.TurkishCultureName
+        && !string.IsNullOrWhiteSpace(apiError)
+            ? apiError
+            : T(fallbackKey);
+
 }
