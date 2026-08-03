@@ -2793,4 +2793,45 @@
   <data name="Admin.PublishEvaluation.Cancel" xml:space="preserve">
     <value>Yayımlamadan vazgeç</value>
   </data>
+
+  <!-- Evaluation API summary localization -->
+  <data name="Admin.Evaluation.DocumentReviewLegacy" xml:space="preserve">
+    <value>Legacy belge akışı</value>
+  </data>
+  <data name="Admin.Evaluation.DocumentReviewProgress" xml:space="preserve">
+    <value>{0}/{1} zorunlu belge onaylı</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AlreadyFinalized" xml:space="preserve">
+    <value>İlan sonuçları zaten kesinleştirilmiş veya yayımlanmış.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.CloseOffering" xml:space="preserve">
+    <value>İlan önce kapatılmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DeadlineNotPassed" xml:space="preserve">
+    <value>Son başvuru tarihi henüz geçmedi.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PositiveQuota" xml:space="preserve">
+    <value>Kontenjan pozitif olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.ValidPolicy" xml:space="preserve">
+    <value>Değerlendirme politikası geçerli ve 10000 basis point olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.NoSubmittedApplications" xml:space="preserve">
+    <value>Kesinleştirilecek gönderilmiş başvuru bulunmuyor.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PendingApplications" xml:space="preserve">
+    <value>İncelemeye alınmamış bekleyen başvurular var.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AllUnderReview" xml:space="preserve">
+    <value>Tüm değerlendirilecek başvurular incelemede olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.EligibilityPending" xml:space="preserve">
+    <value>Uygunluk kararı verilmemiş başvurular var.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DocumentsPending" xml:space="preserve">
+    <value>Uygun işaretlenmiş adayların tüm zorunlu güncel belgeleri onaylanmış olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.MissingCriteria" xml:space="preserve">
+    <value>{0} başvurusunda eksik kriterler: {1}.</value>
+  </data>
 </root>
