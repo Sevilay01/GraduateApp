@@ -1111,4 +1111,43 @@
   <data name="ExamScores.DeleteFailed" xml:space="preserve">
     <value>Sınav sonucu silinemedi.</value>
   </data>
+  <data name="Account.LoginFailed" xml:space="preserve">
+    <value>Giriş yapılamadı.</value>
+  </data>
+  <data name="Account.InvalidAuthResponse" xml:space="preserve">
+    <value>Kimlik doğrulama yanıtı geçersiz.</value>
+  </data>
+  <data name="Account.FirstLoginPassword" xml:space="preserve">
+    <value>İlk girişinizde parolanızı değiştirmeniz gerekiyor.</value>
+  </data>
+  <data name="Account.RegisterFailed" xml:space="preserve">
+    <value>Kayıt oluşturulamadı.</value>
+  </data>
+  <data name="Account.Registered" xml:space="preserve">
+    <value>Kaydınız oluşturuldu. Şimdi giriş yapabilirsiniz.</value>
+  </data>
+  <data name="Account.RequestFailed" xml:space="preserve">
+    <value>İstek şu anda tamamlanamadı.</value>
+  </data>
+  <data name="Account.ResetFailed" xml:space="preserve">
+    <value>Parola sıfırlanamadı.</value>
+  </data>
+  <data name="Account.InvalidResetResponse" xml:space="preserve">
+    <value>Parola sıfırlama yanıtı doğrulanamadı.</value>
+  </data>
+  <data name="Account.ResetSuccess" xml:space="preserve">
+    <value>Parolanız güncellendi. Yeni parolanızla giriş yapabilirsiniz.</value>
+  </data>
+  <data name="Account.InvitationFailed" xml:space="preserve">
+    <value>Yönetici daveti kabul edilemedi.</value>
+  </data>
+  <data name="Account.InvitationSuccess" xml:space="preserve">
+    <value>Yönetici hesabınız etkinleştirildi. Yeni parolanızla giriş yapabilirsiniz.</value>
+  </data>
+  <data name="Account.ChangeFailed" xml:space="preserve">
+    <value>Parola değiştirilemedi.</value>
+  </data>
+  <data name="Account.ChangeSuccess" xml:space="preserve">
+    <value>Parolanız değiştirildi. Lütfen tekrar giriş yapın.</value>
+  </data>
 </root>
