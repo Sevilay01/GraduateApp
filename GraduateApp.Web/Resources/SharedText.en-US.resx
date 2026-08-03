@@ -1150,4 +1150,7 @@
   <data name="Account.ChangeSuccess" xml:space="preserve">
     <value>Your password was changed. Please sign in again.</value>
   </data>
+  <data name="Navigation.ProgramTranslations" xml:space="preserve">
+    <value>Bulk English program names</value>
+  </data>
 </root>
