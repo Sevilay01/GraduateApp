@@ -110,9 +110,14 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="adminCatalogMenu">
                                     <li>
-                                        <a class="dropdown-item @(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "active" : null)"
-                                           aria-current="@(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "page" : null)"
+                                        <a class="dropdown-item @(currentAction is "Institutes" or "Programs" or "ProgramTranslations" or "DeleteInstitute" or "DeleteProgram" ? "active" : null)"
+                                           aria-current="@(currentAction is "Institutes" or "Programs" or "ProgramTranslations" or "DeleteInstitute" or "DeleteProgram" ? "page" : null)"
                                            asp-controller="Admin" asp-action="Institutes">@UiText.Get(Context, "Navigation.InstitutesPrograms")</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item @(currentAction == "ProgramTranslations" ? "active" : null)"
+                                           aria-current="@(currentAction == "ProgramTranslations" ? "page" : null)"
+                                           asp-controller="Admin" asp-action="ProgramTranslations">@UiText.Get(Context, "Navigation.ProgramTranslations")</a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item @(currentAction == "Universities" ? "active" : null)"
