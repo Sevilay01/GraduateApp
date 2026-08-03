@@ -158,7 +158,7 @@
                               class="language-switcher"
                               data-language-form
                               aria-label="@UiText.Get(Context, "Language.Label")">
-                            <span class="language-switcher__label">@UiText.Get(Context, "Language.Label")</span>
+                            <span class="visually-hidden">@UiText.Get(Context, "Language.Label")</span>
                             <div class="language-switcher__options"
                                  role="group"
                                  aria-label="@UiText.Get(Context, "Language.Label")">
@@ -171,6 +171,7 @@
                                         title="@UiText.Get(Context, "Language.Turkish")">
                                     TR
                                 </button>
+                                <span class="language-switcher__separator" aria-hidden="true">|</span>
                                 <button type="submit"
                                         name="culture"
                                         value="@UiText.EnglishCultureName"
