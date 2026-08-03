@@ -481,4 +481,130 @@
   <data name="DegreeType.DistanceNonThesisMasters" xml:space="preserve">
     <value>Distance non-thesis master's</value>
   </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Profile and education information</value>
+  </data>
+  <data name="Profile.Eyebrow" xml:space="preserve">
+    <value>Student profile</value>
+  </data>
+  <data name="Profile.IdentityNumber" xml:space="preserve">
+    <value>Identity number:</value>
+  </data>
+  <data name="Profile.Back" xml:space="preserve">
+    <value>Return to student dashboard</value>
+  </data>
+  <data name="Profile.SnapshotHeading" xml:space="preserve">
+    <value>Snapshot information:</value>
+  </data>
+  <data name="Profile.SnapshotMessage" xml:space="preserve">
+    <value>Profile changes do not affect the evaluation data captured for existing applications.</value>
+  </data>
+  <data name="Profile.ContactHeading" xml:space="preserve">
+    <value>Personal and contact information</value>
+  </data>
+  <data name="Profile.ContactLead" xml:space="preserve">
+    <value>Keep your contact information up to date so we can reach you.</value>
+  </data>
+  <data name="Profile.UniversityLoadHeading" xml:space="preserve">
+    <value>The university catalog could not be loaded.</value>
+  </data>
+  <data name="Profile.UniversityLoadMessage" xml:space="preserve">
+    <value>Education fields cannot be saved right now; you can still update the other profile fields.</value>
+  </data>
+  <data name="Profile.UniversityEmptyHeading" xml:space="preserve">
+    <value>The university catalog has not been configured yet. Please contact an administrator.</value>
+  </data>
+  <data name="Profile.UniversityEmptyMessage" xml:space="preserve">
+    <value>Education fields cannot be saved until the catalog is configured; you can still update the other profile fields.</value>
+  </data>
+  <data name="Profile.EducationHeading" xml:space="preserve">
+    <value>Undergraduate education</value>
+  </data>
+  <data name="Profile.EducationLead" xml:space="preserve">
+    <value>Enter the current graduation information to use in future applications.</value>
+  </data>
+  <data name="Profile.SelectUniversity" xml:space="preserve">
+    <value>Select a university</value>
+  </data>
+  <data name="Profile.Save" xml:space="preserve">
+    <value>Save information</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ExamScores.Title" xml:space="preserve">
+    <value>My exam scores</value>
+  </data>
+  <data name="ExamScores.Eyebrow" xml:space="preserve">
+    <value>Application data</value>
+  </data>
+  <data name="ExamScores.Lead" xml:space="preserve">
+    <value>Manage the current exam scores and result dates used in applications.</value>
+  </data>
+  <data name="ExamScores.ValidityNote" xml:space="preserve">
+    <value>An exam score is evaluated against the exam type and earliest accepted result date configured for the program offering.</value>
+  </data>
+  <data name="ExamScores.PartialWarning" xml:space="preserve">
+    <value>Some exam scores may be unavailable.</value>
+  </data>
+  <data name="ExamScores.Registered" xml:space="preserve">
+    <value>Saved results</value>
+  </data>
+  <data name="ExamScores.Empty" xml:space="preserve">
+    <value>You have not added an exam result yet</value>
+  </data>
+  <data name="ExamScores.EmptyLead" xml:space="preserve">
+    <value>Use the new-result form to save the exam type, score, and exam date.</value>
+  </data>
+  <data name="ExamScores.ExamType" xml:space="preserve">
+    <value>Exam type</value>
+  </data>
+  <data name="ExamScores.Score" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="ExamScores.ResultDate" xml:space="preserve">
+    <value>Result date</value>
+  </data>
+  <data name="ExamScores.Validity" xml:space="preserve">
+    <value>Validity</value>
+  </data>
+  <data name="ExamScores.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="ExamScores.NotSpecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="ExamScores.ByOffering" xml:space="preserve">
+    <value>Depends on the program offering</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ExamScores.DeleteConfirm" xml:space="preserve">
+    <value>Are you sure you want to delete this exam result?</value>
+  </data>
+  <data name="ExamScores.UpdateEyebrow" xml:space="preserve">
+    <value>Update record</value>
+  </data>
+  <data name="ExamScores.NewEyebrow" xml:space="preserve">
+    <value>New record</value>
+  </data>
+  <data name="ExamScores.UpdateTitle" xml:space="preserve">
+    <value>Update exam result</value>
+  </data>
+  <data name="ExamScores.NewTitle" xml:space="preserve">
+    <value>Add a new exam result</value>
+  </data>
+  <data name="ExamScores.SelectExam" xml:space="preserve">
+    <value>Select an exam</value>
+  </data>
+  <data name="ExamScores.ScoreHelp" xml:space="preserve">
+    <value>ALES, YDS, and YÖKDİL scores must be between 0 and 100.</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
 </root>
