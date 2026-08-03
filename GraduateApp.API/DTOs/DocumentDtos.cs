@@ -106,7 +106,10 @@ public sealed record StudentApplicationDetailDto(
     bool UsesDocumentWorkflow,
     bool UsesEvaluationWorkflow,
     IReadOnlyList<ApplicationDocumentRequirementDto> DocumentRequirements,
-    IReadOnlyList<string> MissingRequiredDocuments);
+    IReadOnlyList<string> MissingRequiredDocuments)
+{
+    public string? ProgramNameEnglish { get; init; }
+}
 
 public sealed record DocumentWorkflowInvariantViolationDto(
     Guid ApplicationPublicId,
