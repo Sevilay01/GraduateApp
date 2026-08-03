@@ -1,3 +1,4 @@
+using ApiProgram = GraduateApp.API.Models.Program;
 using GraduateApp.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -37,9 +38,9 @@ public sealed class LocalizedProgramNameMigrationTests
             .Options;
         using var db = new GraduateAppDbContext(options);
 
-        var entity = db.Model.FindEntityType(typeof(Program));
+        var entity = db.Model.FindEntityType(typeof(ApiProgram));
         Assert.NotNull(entity);
-        var property = entity!.FindProperty(nameof(Program.ProgramNameEnglish));
+        var property = entity!.FindProperty(nameof(ApiProgram.ProgramNameEnglish));
         Assert.NotNull(property);
 
         Assert.True(property!.IsNullable);
