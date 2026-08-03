@@ -55,12 +55,12 @@ public sealed class DocumentWorkflowInvariantWebTests
 
         Assert.Contains("item.IsActive && item.IsRequired", view, StringComparison.Ordinal);
         Assert.Contains("disabled=\"@(!formOfferingHasActiveRequiredRequirement)\"", view, StringComparison.Ordinal);
-        Assert.Contains("Yeni ilan önce kapalı oluşturulur.", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Offerings.NewClosedHeading", view, StringComparison.Ordinal);
         Assert.Contains(
-            "İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.",
+            "Admin.Offerings.RequiredMissing",
             view,
             StringComparison.Ordinal);
-        Assert.Contains("Mevcut taslak ve başvuruların snapshot koşulları değişmez.", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Requirements.SnapshotLead", view, StringComparison.Ordinal);
     }
 
     private static StudentApplicationDetailViewModel Draft(
