@@ -185,29 +185,29 @@
                         </form>
 
                         <div class="session-area">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <div class="session-identity" aria-label="@UiText.Get(Context, "Session.Information")">
-                                <span class="session-identity__name">@User.Identity.Name</span>
-                                <span class="session-identity__role">@UiText.Format(Context, "Session.Account", roleDisplay)</span>
-                            </div>
-                            <div class="session-actions">
-                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="ChangePassword">
-                                    @UiText.Get(Context, "Session.ChangePassword")
-                                </a>
-                                <form asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="btn btn-sm btn-light">@UiText.Get(Context, "Session.SecureLogout")</button>
-                                </form>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="session-actions session-actions--anonymous" aria-label="@UiText.Get(Context, "Session.Actions")">
-                                <a class="btn btn-sm btn-light" asp-controller="Account" asp-action="Login">@UiText.Get(Context, "Session.StudentLogin")</a>
-                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="AdminLogin">@UiText.Get(Context, "Session.AdminLogin")</a>
-                                <a class="nav-register-link" asp-controller="Account" asp-action="Register">@UiText.Get(Context, "Session.StudentRegistration")</a>
-                            </div>
-                        }
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <div class="session-identity" aria-label="@UiText.Get(Context, "Session.Information")">
+                                    <span class="session-identity__name">@User.Identity.Name</span>
+                                    <span class="session-identity__role">@UiText.Format(Context, "Session.Account", roleDisplay)</span>
+                                </div>
+                                <div class="session-actions">
+                                    <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="ChangePassword">
+                                        @UiText.Get(Context, "Session.ChangePassword")
+                                    </a>
+                                    <form asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="btn btn-sm btn-light">@UiText.Get(Context, "Session.SecureLogout")</button>
+                                    </form>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="session-actions session-actions--anonymous" aria-label="@UiText.Get(Context, "Session.Actions")">
+                                    <a class="btn btn-sm btn-light" asp-controller="Account" asp-action="Login">@UiText.Get(Context, "Session.StudentLogin")</a>
+                                    <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="AdminLogin">@UiText.Get(Context, "Session.AdminLogin")</a>
+                                    <a class="nav-register-link" asp-controller="Account" asp-action="Register">@UiText.Get(Context, "Session.StudentRegistration")</a>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
