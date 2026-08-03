@@ -83,7 +83,7 @@
                     <input asp-for="Form.ScoreId" type="hidden" />
 
                     <div class="mb-3">
-                        <label asp-for="Form.ExamId" class="form-label"></label>
+                        <label asp-for="Form.ExamId" class="form-label">@UiText.Get(Context, "Field.Exam")</label>
                         <select asp-for="Form.ExamId" class="form-select" id="exam-select">
                             <option value="0">@UiText.Get(Context, "ExamScores.SelectExam")</option>
                             @foreach (var exam in Model.Exams)
@@ -97,14 +97,14 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Form.Score" class="form-label"></label>
+                        <label asp-for="Form.Score" class="form-label">@UiText.Get(Context, "Field.Score")</label>
                         <input asp-for="Form.Score" class="form-control" type="text" inputmode="decimal" id="score-input" />
                         <div class="form-text" id="score-help">@UiText.Get(Context, "ExamScores.ScoreHelp")</div>
                         <span asp-validation-for="Form.Score" class="text-danger"></span>
                     </div>
 
                     <div class="mb-4">
-                        <label asp-for="Form.ExamDate" class="form-label"></label>
+                        <label asp-for="Form.ExamDate" class="form-label">@UiText.Get(Context, "Field.ResultDate")</label>
                         <input asp-for="Form.ExamDate" class="form-control" type="date" max="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3)).ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="Form.ExamDate" class="text-danger"></span>
                     </div>
