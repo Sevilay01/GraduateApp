@@ -26,7 +26,11 @@ public sealed class OfferingDocumentRequirementWebTests
             view,
             StringComparison.Ordinal);
         Assert.Contains(
-            "@(requirement.IsActive ? \"Pasifleştir\" : \"Aktifleştir\")",
+            "requirement.IsActive ? UiText.Get(Context, \"Admin.Requirements.Deactivate\")",
+            view,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "UiText.Get(Context, \"Admin.Requirements.Activate\")",
             view,
             StringComparison.Ordinal);
         Assert.DoesNotContain("value=\"@(!requirement.IsActive)\"", view, StringComparison.Ordinal);
