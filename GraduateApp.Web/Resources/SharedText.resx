@@ -1237,4 +1237,127 @@
   <data name="Admin.Common.AccountManagement" xml:space="preserve">
     <value>Hesap yönetimi</value>
   </data>
+  <data name="Admin.Accounts.Title" xml:space="preserve">
+    <value>Yönetici hesapları</value>
+  </data>
+  <data name="Admin.Accounts.Eyebrow" xml:space="preserve">
+    <value>Hesap yönetimi</value>
+  </data>
+  <data name="Admin.Accounts.Heading" xml:space="preserve">
+    <value>Yöneticiler</value>
+  </data>
+  <data name="Admin.Accounts.Lead" xml:space="preserve">
+    <value>Yöneticileri tek kullanımlık bağlantıyla davet edin; hesapları silmeden güvenli biçimde yönetin.</value>
+  </data>
+  <data name="Admin.Accounts.Students" xml:space="preserve">
+    <value>Öğrenciler</value>
+  </data>
+  <data name="Admin.Accounts.LastAdminRule" xml:space="preserve">
+    <value>Son aktif ve davetini tamamlamış yönetici pasifleştirilemez. Bu kural her istekte API tarafından yeniden doğrulanır.</value>
+  </data>
+  <data name="Admin.Accounts.FilterHeading" xml:space="preserve">
+    <value>Yönetici hesaplarını filtrele</value>
+  </data>
+  <data name="Admin.Accounts.EmailPlaceholder" xml:space="preserve">
+    <value>E-postaya göre ara</value>
+  </data>
+  <data name="Admin.Accounts.StatusLabel" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Admin.Accounts.Status.All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="Admin.Accounts.Status.Active" xml:space="preserve">
+    <value>Aktif</value>
+  </data>
+  <data name="Admin.Accounts.Status.Inactive" xml:space="preserve">
+    <value>Pasif</value>
+  </data>
+  <data name="Admin.Accounts.Status.InvitationPending" xml:space="preserve">
+    <value>Davet bekliyor</value>
+  </data>
+  <data name="Admin.Accounts.Status.Locked" xml:space="preserve">
+    <value>Kilitli</value>
+  </data>
+  <data name="Admin.Accounts.Filter" xml:space="preserve">
+    <value>Filtrele</value>
+  </data>
+  <data name="Admin.Accounts.Clear" xml:space="preserve">
+    <value>Temizle</value>
+  </data>
+  <data name="Admin.Accounts.ActiveFilters" xml:space="preserve">
+    <value>Aktif filtreler</value>
+  </data>
+  <data name="Admin.Accounts.EmailFilter" xml:space="preserve">
+    <value>E-posta: {0}</value>
+  </data>
+  <data name="Admin.Accounts.StatusFilter" xml:space="preserve">
+    <value>Durum: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResultsHeading" xml:space="preserve">
+    <value>Yönetici hesapları</value>
+  </data>
+  <data name="Admin.Accounts.ResultCount" xml:space="preserve">
+    <value>{0} hesap bulundu</value>
+  </data>
+  <data name="Admin.Accounts.EmptyHeading" xml:space="preserve">
+    <value>Yönetici hesabı bulunamadı</value>
+  </data>
+  <data name="Admin.Accounts.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya sağdaki formdan yeni bir yönetici davet edin.</value>
+  </data>
+  <data name="Admin.Accounts.TableCaption" xml:space="preserve">
+    <value>Filtrelenmiş yönetici hesapları</value>
+  </data>
+  <data name="Admin.Accounts.SignInSecurity" xml:space="preserve">
+    <value>Giriş güvenliği</value>
+  </data>
+  <data name="Admin.Accounts.Dates" xml:space="preserve">
+    <value>Tarihler</value>
+  </data>
+  <data name="Admin.Accounts.Actions" xml:space="preserve">
+    <value>İşlemler</value>
+  </data>
+  <data name="Admin.Accounts.Current" xml:space="preserve">
+    <value>Mevcut hesap</value>
+  </data>
+  <data name="Admin.Accounts.FailedSignIns" xml:space="preserve">
+    <value>Başarısız giriş: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Created" xml:space="preserve">
+    <value>Oluşturma: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Updated" xml:space="preserve">
+    <value>Güncelleme: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResendInvitation" xml:space="preserve">
+    <value>Yönetici davetini yeniden gönder</value>
+  </data>
+  <data name="Admin.Accounts.Unlock" xml:space="preserve">
+    <value>Yönetici kilidini aç</value>
+  </data>
+  <data name="Admin.Accounts.Deactivate" xml:space="preserve">
+    <value>Yöneticiyi pasifleştir</value>
+  </data>
+  <data name="Admin.Accounts.Activate" xml:space="preserve">
+    <value>Yöneticiyi aktifleştir</value>
+  </data>
+  <data name="Admin.Accounts.Pagination" xml:space="preserve">
+    <value>Yönetici hesapları sayfaları</value>
+  </data>
+  <data name="Admin.Accounts.Previous" xml:space="preserve">
+    <value>Önceki</value>
+  </data>
+  <data name="Admin.Accounts.Next" xml:space="preserve">
+    <value>Sonraki</value>
+  </data>
+  <data name="Admin.Accounts.InviteHeading" xml:space="preserve">
+    <value>Yönetici davet et</value>
+  </data>
+  <data name="Admin.Accounts.InviteLead" xml:space="preserve">
+    <value>Parola oluşturulmaz veya gösterilmez. Yönetici parolasını tek kullanımlık bağlantıdan belirler.</value>
+  </data>
+  <data name="Admin.Accounts.InviteSubmit" xml:space="preserve">
+    <value>Yönetici daveti gönder</value>
+  </data>
 </root>
