@@ -114,9 +114,9 @@ public sealed class ProgramAdminService(
                 item.UpdatedAtUtc,
                 Convert.ToBase64String(item.RowVersion),
                 item.OfferingCount)
-            {
-                ProgramNameEnglish = item.ProgramNameEnglish
-            })
+        {
+            ProgramNameEnglish = item.ProgramNameEnglish
+        })
             .ToArray();
         return new PagedResult<ProgramAdminDto>(items, page, pageSize, totalCount);
     }
