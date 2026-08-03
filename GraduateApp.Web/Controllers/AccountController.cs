@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Net;
+using GraduateApp.Web.Localization;
 using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -72,13 +73,13 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
                 Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             }
 
-            ModelState.AddModelError(string.Empty, result.Error ?? "Giriş yapılamadı.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "Account.LoginFailed"));
             return View("Login", model);
         }
 
         if (result.Value.Role != expectedRole || string.IsNullOrWhiteSpace(result.Value.AccessToken))
         {
-            ModelState.AddModelError(string.Empty, "Kimlik doğrulama yanıtı geçersiz.");
+            ModelState.AddModelError(string.Empty, UiText.Get(HttpContext, "Account.InvalidAuthResponse"));
             return View("Login", model);
         }
 
@@ -106,7 +107,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
 
         if (result.Value.MustChangePassword)
         {
-            TempData["WarningMessage"] = "İlk girişinizde parolanızı değiştirmeniz gerekiyor.";
+            TempData["WarningMessage"] = UiText.Get(HttpContext, "Account.FirstLoginPassword");
             return RedirectToAction(nameof(ChangePassword));
         }
 
@@ -138,12 +139,12 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.RegisterAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Kayıt oluşturulamadı.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "Account.RegisterFailed"));
             ClearRegistrationPasswords(model);
             return View(model);
         }
 
-        TempData["SuccessMessage"] = "Kaydınız oluşturuldu. Şimdi giriş yapabilirsiniz.";
+        TempData["SuccessMessage"] = UiText.Get(HttpContext, "Account.Registered");
         return RedirectToAction(nameof(Login));
     }
 
@@ -164,7 +165,7 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.ForgotPasswordAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "İstek şu anda tamamlanamadı.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "Account.RequestFailed"));
             return View(model);
         }
 
@@ -191,17 +192,17 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.ResetPasswordAsync(model, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Parola sıfırlanamadı.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "Account.ResetFailed"));
             return View(model);
         }
 
         if (result.Value.AccountType is not (LoginAccountType.Student or LoginAccountType.Admin))
         {
-            ModelState.AddModelError(string.Empty, "Parola sıfırlama yanıtı doğrulanamadı.");
+            ModelState.AddModelError(string.Empty, UiText.Get(HttpContext, "Account.InvalidResetResponse"));
             return View(model);
         }
 
-        TempData["SuccessMessage"] = "Parolanız güncellendi. Yeni parolanızla giriş yapabilirsiniz.";
+        TempData["SuccessMessage"] = UiText.Get(HttpContext, "Account.ResetSuccess");
         return result.Value.AccountType == LoginAccountType.Admin
             ? RedirectToAction(nameof(AdminLogin))
             : RedirectToAction(nameof(Login));
@@ -228,12 +229,12 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.AcceptAdminInvitationAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Yönetici daveti kabul edilemedi.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "Account.InvitationFailed"));
             ClearInvitationPasswords(model);
             return View(model);
         }
 
-        TempData["SuccessMessage"] = "Yönetici hesabınız etkinleştirildi. Yeni parolanızla giriş yapabilirsiniz.";
+        TempData["SuccessMessage"] = UiText.Get(HttpContext, "Account.InvitationSuccess");
         return RedirectToAction(nameof(AdminLogin));
     }
 
@@ -255,12 +256,12 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.ChangePasswordAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Parola değiştirilemedi.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "Account.ChangeFailed"));
             return View(model);
         }
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        TempData["SuccessMessage"] = "Parolanız değiştirildi. Lütfen tekrar giriş yapın.";
+        TempData["SuccessMessage"] = UiText.Get(HttpContext, "Account.ChangeSuccess");
         return currentRole == "Admin"
             ? RedirectToAction(nameof(AdminLogin))
             : RedirectToAction(nameof(Login));
@@ -302,8 +303,8 @@ public sealed class AccountController(GraduateApiClient apiClient) : Controller
     {
         model.HasExistingSession = User.Identity?.IsAuthenticated == true;
         model.ExistingRoleDisplay = User.IsInRole("Admin")
-            ? "Yönetici"
-            : User.IsInRole("Student") ? "Öğrenci" : null;
+            ? UiText.Get(HttpContext, "Role.Admin")
+            : User.IsInRole("Student") ? UiText.Get(HttpContext, "Role.Student") : null;
     }
 
     private string? NormalizeReturnUrl(string? returnUrl) =>
