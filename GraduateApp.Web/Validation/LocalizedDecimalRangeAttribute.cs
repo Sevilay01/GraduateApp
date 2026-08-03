@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using GraduateApp.Web.Localization;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace GraduateApp.Web.Validation;
@@ -31,6 +32,20 @@ public sealed class LocalizedDecimalRangeAttribute
     public decimal Minimum { get; }
     public decimal Maximum { get; }
     public int MaximumFractionalDigits { get; set; } = -1;
+
+    public override string FormatErrorMessage(string name)
+    {
+        var messageKey = ErrorMessage;
+        if (string.IsNullOrWhiteSpace(messageKey))
+        {
+            return base.FormatErrorMessage(name);
+        }
+
+        return string.Format(
+            CultureInfo.CurrentCulture,
+            UiText.GetCurrent(messageKey),
+            name);
+    }
 
     public override bool IsValid(object? value)
     {
