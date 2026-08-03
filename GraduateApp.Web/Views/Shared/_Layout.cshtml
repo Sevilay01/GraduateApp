@@ -11,7 +11,7 @@
     var isAdminOfferings = currentController == "Admin"
         && currentAction is "Offerings" or "Evaluation" or "PublishEvaluation";
     var isAdminCatalog = currentController == "Admin"
-        && currentAction is "Institutes" or "Programs" or "Universities" or "DeleteInstitute" or "DeleteProgram";
+        && currentAction is "Institutes" or "Programs" or "ProgramTranslations" or "Universities" or "DeleteInstitute" or "DeleteProgram";
     var isAdminStudents = currentController == "Admin"
         && currentAction is "Students" or "ActivateStudent" or "DeactivateStudent";
     var isAdminAccounts = currentController == "Admin" && currentAction == "Accounts";
