@@ -60,6 +60,16 @@ public static class UiText
     public static string LocalizeDocumentCategory(HttpContext context, DocumentContentCategory category) =>
         Get(context, $"DocumentCategory.{category}");
 
+    public static string LocalizeAcademicTerm(HttpContext context, string? termName) =>
+        termName switch
+        {
+            "Güz" => Get(context, "AcademicTerm.Fall"),
+            "Bahar" => Get(context, "AcademicTerm.Spring"),
+            "Yaz" => Get(context, "AcademicTerm.Summer"),
+            "Belirtilmemiş" => Get(context, "AcademicTerm.LegacyUnspecified"),
+            _ => termName ?? string.Empty
+        };
+
     private static CultureInfo ResolveCulture(HttpContext context)
     {
         var requestedCulture = context.Features
