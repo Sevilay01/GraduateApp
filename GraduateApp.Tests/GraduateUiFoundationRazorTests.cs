@@ -132,13 +132,15 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.DoesNotContain("Bilgisayar Mühendisliği", decodedHtml, StringComparison.Ordinal);
         Assert.Contains("2026–2027 · Fall", decodedHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("2026–2027 · Güz", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("data-language-form", html, StringComparison.Ordinal);
         Assert.Contains("name=\"culture\"", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"tr-TR\"", html, StringComparison.Ordinal);
         Assert.Contains("value=\"en-US\"", html, StringComparison.Ordinal);
-        Assert.Matches("value=\\\"en-US\\\"\\s+selected", html);
+        Assert.Matches("value=\\\"en-US\\\"[^>]*aria-pressed=\\\"true\\\"", html);
         Assert.Contains("name=\"returnUrl\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
-        Assert.Contains("data-auto-submit-on-change=\"true\"", html, StringComparison.Ordinal);
-        Assert.Contains("<noscript>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<select id=\"site-language\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<noscript>", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Ana sayfa</a>", html, StringComparison.Ordinal);
     }
 
@@ -1368,6 +1370,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("@media (prefers-reduced-motion: reduce)", css, StringComparison.Ordinal);
         Assert.Contains("--cu-focus-ring", css, StringComparison.Ordinal);
         Assert.Contains(".configuration-steps", css, StringComparison.Ordinal);
+        Assert.Contains(".language-switcher__options", css, StringComparison.Ordinal);
+        Assert.Contains(".language-switcher__option.active", css, StringComparison.Ordinal);
         Assert.Contains("max-width: 100%;", css, StringComparison.Ordinal);
         Assert.Contains(".admin-item-card__actions .btn", css, StringComparison.Ordinal);
 
