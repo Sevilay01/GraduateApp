@@ -1153,4 +1153,88 @@
   <data name="Navigation.ProgramTranslations" xml:space="preserve">
     <value>Bulk English program names</value>
   </data>
+  <data name="Admin.ActivateStudent.Title" xml:space="preserve">
+    <value>Activate student</value>
+  </data>
+  <data name="Admin.ActivateStudent.Heading" xml:space="preserve">
+    <value>Activate student account</value>
+  </data>
+  <data name="Admin.ActivateStudent.Lead" xml:space="preserve">
+    <value>Verify the masked student information before restoring account access.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Summary" xml:space="preserve">
+    <value>Activation summary</value>
+  </data>
+  <data name="Admin.ActivateStudent.SummarySuffix" xml:space="preserve">
+    <value>student account will be activated. Existing sessions will no longer be valid because the security stamp will be renewed.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Submit" xml:space="preserve">
+    <value>Activate student account</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Title" xml:space="preserve">
+    <value>Deactivate student</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Heading" xml:space="preserve">
+    <value>Deactivate student account</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Lead" xml:space="preserve">
+    <value>This security action invalidates the student&apos;s current sessions; it does not delete historical data.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Summary" xml:space="preserve">
+    <value>Deactivation summary</value>
+  </data>
+  <data name="Admin.DeactivateStudent.SummarySuffix" xml:space="preserve">
+    <value>student account will be deactivated. Existing API tokens and the web session will be invalidated by renewing the security stamp.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Warning" xml:space="preserve">
+    <value>This action does not delete catalog data or the student&apos;s historical application records.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Submit" xml:space="preserve">
+    <value>Deactivate student account</value>
+  </data>
+  <data name="Admin.Student.ApplicationCount" xml:space="preserve">
+    <value>Application count</value>
+  </data>
+  <data name="Admin.Student.ExamScoreCount" xml:space="preserve">
+    <value>Exam score count</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Title" xml:space="preserve">
+    <value>Delete institute</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Heading" xml:space="preserve">
+    <value>Permanently delete institute</value>
+  </data>
+  <data name="Admin.DeleteInstitute.IntroSuffix" xml:space="preserve">
+    <value>institute is about to be deleted.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.LinkedPrograms" xml:space="preserve">
+    <value>This institute has {0} linked programs. Permanent deletion will be blocked to preserve data integrity; deactivate the institute instead.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Irreversible" xml:space="preserve">
+    <value>This action cannot be undone. Only institutes that have never been used can be permanently deleted.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Title" xml:space="preserve">
+    <value>Delete program</value>
+  </data>
+  <data name="Admin.DeleteProgram.Heading" xml:space="preserve">
+    <value>Permanently delete program</value>
+  </data>
+  <data name="Admin.DeleteProgram.IntroSuffix" xml:space="preserve">
+    <value>program is about to be deleted.</value>
+  </data>
+  <data name="Admin.DeleteProgram.LinkedOfferings" xml:space="preserve">
+    <value>This program has {0} linked term offerings. Permanent deletion will be blocked to preserve historical records; deactivate the program instead.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Irreversible" xml:space="preserve">
+    <value>This action cannot be undone. Only programs with no offerings can be permanently deleted.</value>
+  </data>
+  <data name="Admin.Delete.Permanent" xml:space="preserve">
+    <value>Delete permanently</value>
+  </data>
+  <data name="Admin.Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Admin.Common.AccountManagement" xml:space="preserve">
+    <value>Account management</value>
+  </data>
 </root>
