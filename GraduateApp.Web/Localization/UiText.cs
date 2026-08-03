@@ -69,6 +69,60 @@ public static class UiText
     public static string LocalizeEligibility(HttpContext context, EvaluationEligibilityStatus status) =>
         Get(context, $"Eligibility.{status}");
 
+    public static string LocalizeDocumentReviewSummary(HttpContext context, string? summary)
+    {
+        if (string.Equals(summary, "Legacy belge akışı", StringComparison.Ordinal))
+        {
+            return Get(context, "Admin.Evaluation.DocumentReviewLegacy");
+        }
+
+        var match = System.Text.RegularExpressions.Regex.Match(
+            summary ?? string.Empty,
+            @"^(?<approved>\d+)/(?<required>\d+) zorunlu belge onaylı$",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        return match.Success
+            ? Format(
+                context,
+                "Admin.Evaluation.DocumentReviewProgress",
+                match.Groups["approved"].Value,
+                match.Groups["required"].Value)
+            : summary ?? string.Empty;
+    }
+
+    public static string LocalizeEvaluationBlockingReason(HttpContext context, string reason)
+    {
+        var key = reason switch
+        {
+            "İlan sonuçları zaten kesinleştirilmiş veya yayımlanmış." => "Admin.Evaluation.Blocker.AlreadyFinalized",
+            "İlan önce kapatılmalıdır." => "Admin.Evaluation.Blocker.CloseOffering",
+            "Son başvuru tarihi henüz geçmedi." => "Admin.Evaluation.Blocker.DeadlineNotPassed",
+            "Kontenjan pozitif olmalıdır." => "Admin.Evaluation.Blocker.PositiveQuota",
+            "Değerlendirme politikası geçerli ve 10000 basis point olmalıdır." => "Admin.Evaluation.Blocker.ValidPolicy",
+            "Kesinleştirilecek gönderilmiş başvuru bulunmuyor." => "Admin.Evaluation.Blocker.NoSubmittedApplications",
+            "İncelemeye alınmamış bekleyen başvurular var." => "Admin.Evaluation.Blocker.PendingApplications",
+            "Tüm değerlendirilecek başvurular incelemede olmalıdır." => "Admin.Evaluation.Blocker.AllUnderReview",
+            "Uygunluk kararı verilmemiş başvurular var." => "Admin.Evaluation.Blocker.EligibilityPending",
+            "Uygun işaretlenmiş adayların tüm zorunlu güncel belgeleri onaylanmış olmalıdır." => "Admin.Evaluation.Blocker.DocumentsPending",
+            _ => null
+        };
+        if (key is not null)
+        {
+            return Get(context, key);
+        }
+
+        var match = System.Text.RegularExpressions.Regex.Match(
+            reason,
+            @"^(?<application>[0-9a-fA-F-]{36}) başvurusunda eksik kriterler: (?<criteria>.+)\.$",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        return match.Success
+            ? Format(
+                context,
+                "Admin.Evaluation.Blocker.MissingCriteria",
+                match.Groups["application"].Value,
+                match.Groups["criteria"].Value)
+            : reason;
+    }
+
     public static string LocalizeAcademicTerm(HttpContext context, string? termName) =>
         termName switch
         {
