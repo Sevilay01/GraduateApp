@@ -1594,4 +1594,175 @@
   <data name="Admin.Translations.Pagination" xml:space="preserve">
     <value>Program çevirisi sayfaları</value>
   </data>
+  <data name="Admin.Universities.Title" xml:space="preserve">
+    <value>Üniversite kataloğu</value>
+  </data>
+  <data name="Admin.Universities.Heading" xml:space="preserve">
+    <value>Üniversiteler</value>
+  </data>
+  <data name="Admin.Universities.Lead" xml:space="preserve">
+    <value>Öğrencilerin profilinde seçebileceği üniversiteleri güvenli ve encode edilmiş katalog kayıtları olarak yönetin.</value>
+  </data>
+  <data name="Admin.Universities.ListHeading" xml:space="preserve">
+    <value>Tanımlı üniversiteler</value>
+  </data>
+  <data name="Admin.Universities.Count" xml:space="preserve">
+    <value>{0} katalog kaydı</value>
+  </data>
+  <data name="Admin.Universities.EmptyHeading" xml:space="preserve">
+    <value>Üniversite kataloğu boş</value>
+  </data>
+  <data name="Admin.Universities.EmptyLead" xml:space="preserve">
+    <value>İlk üniversite kaydını eklemek için formu kullanın.</value>
+  </data>
+  <data name="Admin.Universities.Caption" xml:space="preserve">
+    <value>Tanımlı üniversite kataloğu</value>
+  </data>
+  <data name="Admin.Universities.Name" xml:space="preserve">
+    <value>Üniversite adı</value>
+  </data>
+  <data name="Admin.Universities.University" xml:space="preserve">
+    <value>Üniversite</value>
+  </data>
+  <data name="Admin.Universities.NewHeading" xml:space="preserve">
+    <value>Yeni üniversite ekle</value>
+  </data>
+  <data name="Admin.Universities.NewLead" xml:space="preserve">
+    <value>Aynı adla ikinci kayıt oluşturma isteği güvenli bir hata mesajıyla gösterilir.</value>
+  </data>
+  <data name="Admin.Universities.Add" xml:space="preserve">
+    <value>Üniversiteyi kataloğa ekle</value>
+  </data>
+  <data name="Admin.Students.Title" xml:space="preserve">
+    <value>Öğrenci yönetimi</value>
+  </data>
+  <data name="Admin.Students.Heading" xml:space="preserve">
+    <value>Öğrenciler</value>
+  </data>
+  <data name="Admin.Students.Lead" xml:space="preserve">
+    <value>Maskelenmiş kimlik bilgileriyle öğrenci hesaplarını bulun ve erişim durumunu güvenli onay ekranlarından yönetin.</value>
+  </data>
+  <data name="Admin.Students.Administrators" xml:space="preserve">
+    <value>Yöneticiler</value>
+  </data>
+  <data name="Admin.Students.SearchHeading" xml:space="preserve">
+    <value>Öğrenci ara</value>
+  </data>
+  <data name="Admin.Students.SearchLabel" xml:space="preserve">
+    <value>Ad, soyad veya e-posta</value>
+  </data>
+  <data name="Admin.Students.Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Admin.Students.ActiveFilter" xml:space="preserve">
+    <value>Aktif filtre</value>
+  </data>
+  <data name="Admin.Students.SearchFilter" xml:space="preserve">
+    <value>Arama: {0}</value>
+  </data>
+  <data name="Admin.Students.ResultsHeading" xml:space="preserve">
+    <value>Öğrenci hesapları</value>
+  </data>
+  <data name="Admin.Students.ResultCount" xml:space="preserve">
+    <value>{0} öğrenci bulundu</value>
+  </data>
+  <data name="Admin.Students.EmptyHeading" xml:space="preserve">
+    <value>Öğrenci bulunamadı</value>
+  </data>
+  <data name="Admin.Students.EmptyLead" xml:space="preserve">
+    <value>Arama ifadesini değiştirin veya tüm öğrencileri görmek için filtreyi temizleyin.</value>
+  </data>
+  <data name="Admin.Students.Caption" xml:space="preserve">
+    <value>Filtrelenmiş öğrenci hesapları</value>
+  </data>
+  <data name="Admin.Students.Student" xml:space="preserve">
+    <value>Öğrenci</value>
+  </data>
+  <data name="Admin.Students.MaskedIdentity" xml:space="preserve">
+    <value>Maskelenmiş TC</value>
+  </data>
+  <data name="Admin.Students.Action" xml:space="preserve">
+    <value>İşlem</value>
+  </data>
+  <data name="Admin.Students.Pagination" xml:space="preserve">
+    <value>Öğrenci listesi sayfaları</value>
+  </data>
+  <data name="Admin.Applications.Title" xml:space="preserve">
+    <value>Başvuru yönetimi</value>
+  </data>
+  <data name="Admin.Applications.Eyebrow" xml:space="preserve">
+    <value>Başvurular</value>
+  </data>
+  <data name="Admin.Applications.Heading" xml:space="preserve">
+    <value>Başvuru yönetimi</value>
+  </data>
+  <data name="Admin.Applications.Lead" xml:space="preserve">
+    <value>Adayları güvenli filtrelerle bulun, başvuru yaşam döngüsünü ve belgeleri tek yerden inceleyin.</value>
+  </data>
+  <data name="Admin.Applications.Offerings" xml:space="preserve">
+    <value>İlanlar ve değerlendirme</value>
+  </data>
+  <data name="Admin.Applications.FilterHeading" xml:space="preserve">
+    <value>Başvuruları filtrele</value>
+  </data>
+  <data name="Admin.Applications.SearchLabel" xml:space="preserve">
+    <value>Ad, e-posta veya program</value>
+  </data>
+  <data name="Admin.Applications.Status" xml:space="preserve">
+    <value>Başvuru durumu</value>
+  </data>
+  <data name="Admin.Applications.AcademicYear" xml:space="preserve">
+    <value>Akademik yıl</value>
+  </data>
+  <data name="Admin.Applications.Term" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Admin.Applications.ApplyFilters" xml:space="preserve">
+    <value>Filtreleri uygula</value>
+  </data>
+  <data name="Admin.Applications.ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="Admin.Applications.ActiveFilters" xml:space="preserve">
+    <value>Aktif filtreler</value>
+  </data>
+  <data name="Admin.Applications.SearchFilter" xml:space="preserve">
+    <value>Arama: {0}</value>
+  </data>
+  <data name="Admin.Applications.StatusFilter" xml:space="preserve">
+    <value>Durum: {0}</value>
+  </data>
+  <data name="Admin.Applications.YearFilter" xml:space="preserve">
+    <value>Yıl: {0}</value>
+  </data>
+  <data name="Admin.Applications.TermFilter" xml:space="preserve">
+    <value>Dönem: {0}</value>
+  </data>
+  <data name="Admin.Applications.ResultsHeading" xml:space="preserve">
+    <value>Başvuru sonuçları</value>
+  </data>
+  <data name="Admin.Applications.ResultCount" xml:space="preserve">
+    <value>{0} başvuru bulundu</value>
+  </data>
+  <data name="Admin.Applications.LoadFailed" xml:space="preserve">
+    <value>Başvurular yüklenemedi.</value>
+  </data>
+  <data name="Admin.Applications.EmptyHeading" xml:space="preserve">
+    <value>Başvuru bulunamadı</value>
+  </data>
+  <data name="Admin.Applications.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya tüm başvuruları görmek için filtreleri temizleyin.</value>
+  </data>
+  <data name="Admin.Applications.Caption" xml:space="preserve">
+    <value>Filtrelenmiş lisansüstü başvuruları</value>
+  </data>
+  <data name="Admin.Applications.ApplicationDate" xml:space="preserve">
+    <value>Başvuru tarihi</value>
+  </data>
+  <data name="Admin.Applications.Detail" xml:space="preserve">
+    <value>Başvuru detayı</value>
+  </data>
+  <data name="Admin.Applications.Pagination" xml:space="preserve">
+    <value>Başvuru sayfaları</value>
+  </data>
 </root>
