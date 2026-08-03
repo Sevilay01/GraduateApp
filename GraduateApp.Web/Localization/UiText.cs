@@ -20,20 +20,20 @@ public static class UiText
     public static IReadOnlyList<CultureInfo> SupportedCultures { get; } =
         [TurkishCulture, EnglishCulture];
 
-    public static string Get(HttpContext context, string key) =>
+    public static string Get(HttpContext? context, string key) =>
         Resources.GetString(key, ResolveCulture(context)) ?? key;
 
     public static string GetCurrent(string key) =>
         Resources.GetString(key, ResolveCulture(CultureInfo.CurrentUICulture)) ?? key;
 
-    public static string Format(HttpContext context, string key, params object?[] arguments) =>
+    public static string Format(HttpContext? context, string key, params object?[] arguments) =>
         string.Format(ResolveCulture(context), Get(context, key), arguments);
 
-    public static string CurrentCultureName(HttpContext context) =>
+    public static string CurrentCultureName(HttpContext? context) =>
         ResolveCulture(context).Name;
 
     public static string SelectLocalized(
-        HttpContext context,
+        HttpContext? context,
         string defaultValue,
         string? englishValue) =>
         CurrentCultureName(context) == EnglishCultureName
@@ -41,7 +41,7 @@ public static class UiText
             ? englishValue
             : defaultValue;
 
-    public static string LocalizeDegreeType(HttpContext context, string? degreeType) =>
+    public static string LocalizeDegreeType(HttpContext? context, string? degreeType) =>
         degreeType switch
         {
             "Doktora" => Get(context, "DegreeType.Doctorate"),
@@ -51,28 +51,28 @@ public static class UiText
             _ => degreeType ?? string.Empty
         };
 
-    public static string LocalizeApplicationStatus(HttpContext context, ApplicationStatus status) =>
+    public static string LocalizeApplicationStatus(HttpContext? context, ApplicationStatus status) =>
         Get(context, $"Status.{status}");
 
-    public static string LocalizeEvaluationOutcome(HttpContext context, EvaluationOutcome outcome) =>
+    public static string LocalizeEvaluationOutcome(HttpContext? context, EvaluationOutcome outcome) =>
         Get(context, $"Outcome.{outcome}");
 
-    public static string LocalizeDocumentReview(HttpContext context, DocumentReviewStatus status) =>
+    public static string LocalizeDocumentReview(HttpContext? context, DocumentReviewStatus status) =>
         Get(context, $"DocumentReview.{status}");
 
-    public static string LocalizeDocumentCategory(HttpContext context, DocumentContentCategory category) =>
+    public static string LocalizeDocumentCategory(HttpContext? context, DocumentContentCategory category) =>
         Get(context, $"DocumentCategory.{category}");
 
-    public static string LocalizeEvaluationState(HttpContext context, OfferingEvaluationState state) =>
+    public static string LocalizeEvaluationState(HttpContext? context, OfferingEvaluationState state) =>
         Get(context, $"EvaluationState.{state}");
 
-    public static string LocalizeCriterionSource(HttpContext context, EvaluationCriterionSourceType sourceType) =>
+    public static string LocalizeCriterionSource(HttpContext? context, EvaluationCriterionSourceType sourceType) =>
         Get(context, $"CriterionSource.{sourceType}");
 
-    public static string LocalizeEligibility(HttpContext context, EvaluationEligibilityStatus status) =>
+    public static string LocalizeEligibility(HttpContext? context, EvaluationEligibilityStatus status) =>
         Get(context, $"Eligibility.{status}");
 
-    public static string LocalizeDocumentReviewSummary(HttpContext context, string? summary)
+    public static string LocalizeDocumentReviewSummary(HttpContext? context, string? summary)
     {
         if (string.Equals(summary, "Legacy belge akışı", StringComparison.Ordinal))
         {
@@ -92,7 +92,7 @@ public static class UiText
             : summary ?? string.Empty;
     }
 
-    public static string LocalizeEvaluationBlockingReason(HttpContext context, string reason)
+    public static string LocalizeEvaluationBlockingReason(HttpContext? context, string reason)
     {
         var key = reason switch
         {
@@ -126,7 +126,7 @@ public static class UiText
             : reason;
     }
 
-    public static string LocalizeAcademicTerm(HttpContext context, string? termName) =>
+    public static string LocalizeAcademicTerm(HttpContext? context, string? termName) =>
         termName switch
         {
             "Güz" => Get(context, "AcademicTerm.Fall"),
@@ -144,18 +144,16 @@ public static class UiText
             ? EnglishCulture
             : TurkishCulture;
 
-    private static CultureInfo ResolveCulture(HttpContext context)
+    private static CultureInfo ResolveCulture(HttpContext? context)
     {
-        var requestedCulture = context.Features
+        var requestedCulture = context?
+            .Features
             .Get<IRequestCultureFeature>()?
             .RequestCulture
             .UICulture;
 
-        return string.Equals(
-            requestedCulture?.Name,
-            EnglishCultureName,
-            StringComparison.OrdinalIgnoreCase)
-            ? EnglishCulture
-            : TurkishCulture;
+        return requestedCulture is null
+            ? TurkishCulture
+            : ResolveCulture(requestedCulture);
     }
 }
