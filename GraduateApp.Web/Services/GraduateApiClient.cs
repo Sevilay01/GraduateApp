@@ -634,6 +634,13 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             },
             cancellationToken);
 
+    public Task<ApiResult<ProgramTranslationBatchResultViewModel>> AutoFillProgramTranslationsAsync(
+        CancellationToken cancellationToken) =>
+        PostAsync<ProgramTranslationBatchResultViewModel>(
+            "api/admin/programs/translations/auto-fill",
+            new { },
+            cancellationToken);
+
     public Task<ApiResult<ProgramAdminViewModel>> ActivateProgramAsync(
         int programId,
         string rowVersion,
