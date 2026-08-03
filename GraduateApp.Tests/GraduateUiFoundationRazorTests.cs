@@ -1492,8 +1492,14 @@ public sealed class GraduateUiFoundationRazorTests
                 .ConfigureServices(services =>
                 {
                     services.AddDataProtection().UseEphemeralDataProtectionProvider();
+                    services.AddLocalization(options => options.ResourcesPath = "Resources");
                     services.AddControllersWithViews()
-                        .AddApplicationPart(typeof(HomeController).Assembly);
+                        .AddApplicationPart(typeof(HomeController).Assembly)
+                        .AddDataAnnotationsLocalization(options =>
+                        {
+                            options.DataAnnotationLocalizerProvider = (_, factory) =>
+                                factory.Create(typeof(GraduateApp.Web.SharedText));
+                        });
                 })
                 .Configure(_ => { }))
             .Build();
