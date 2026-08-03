@@ -1,13 +1,13 @@
 @model AdminStudentDetailViewModel
 @{
-    ViewData["Title"] = "Öğrenciyi aktifleştir";
+    ViewData["Title"] = UiText.Get(Context, "Admin.ActivateStudent.Title");
 }
 
 <header class="page-heading">
     <div>
-        <span class="eyebrow">Hesap yönetimi</span>
-        <h1 class="page-heading__title">Öğrenci hesabını aktifleştir</h1>
-        <p class="page-heading__description">Hesap erişimini geri vermeden önce maskelenmiş öğrenci bilgilerini doğrulayın.</p>
+        <span class="eyebrow">@UiText.Get(Context, "Admin.Common.AccountManagement")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "Admin.ActivateStudent.Heading")</h1>
+        <p class="page-heading__description">@UiText.Get(Context, "Admin.ActivateStudent.Lead")</p>
     </div>
 </header>
 
@@ -15,20 +15,19 @@
     <div class="col-12 col-lg-7">
         <section class="admin-section border-success" aria-labelledby="confirmation-heading">
             <div class="card-body">
-                <h2 id="confirmation-heading" class="h3 text-success">Aktifleştirme özeti</h2>
+                <h2 id="confirmation-heading" class="h3 text-success">@UiText.Get(Context, "Admin.ActivateStudent.Summary")</h2>
                 <p>
-                    <strong>@Model.FullName</strong> (@Model.MaskedTc) öğrencisinin hesabı yeniden aktifleştirilecek.
-                    Güvenlik damgası yenileneceği için önceki oturumlar geçerli olmayacak.
+                    <strong>@Model.FullName</strong> (@Model.MaskedTc) @UiText.Get(Context, "Admin.ActivateStudent.SummarySuffix")
                 </p>
                 <dl class="row">
-                    <dt class="col-sm-4">E-posta</dt><dd class="col-sm-8">@Model.Email</dd>
-                    <dt class="col-sm-4">Başvuru sayısı</dt><dd class="col-sm-8">@Model.ApplicationCount</dd>
-                    <dt class="col-sm-4">Sınav sonucu sayısı</dt><dd class="col-sm-8">@Model.ExamScoreCount</dd>
+                    <dt class="col-sm-4">@UiText.Get(Context, "Field.Email")</dt><dd class="col-sm-8">@Model.Email</dd>
+                    <dt class="col-sm-4">@UiText.Get(Context, "Admin.Student.ApplicationCount")</dt><dd class="col-sm-8">@Model.ApplicationCount</dd>
+                    <dt class="col-sm-4">@UiText.Get(Context, "Admin.Student.ExamScoreCount")</dt><dd class="col-sm-8">@Model.ExamScoreCount</dd>
                 </dl>
                 <form asp-action="ConfirmActivateStudent" method="post">
                     <input type="hidden" name="publicId" value="@Model.PublicId" />
-                    <button type="submit" class="btn btn-success">Öğrenci hesabını aktifleştir</button>
-                    <a asp-action="Students" class="btn btn-outline-secondary">Vazgeç</a>
+                    <button type="submit" class="btn btn-success">@UiText.Get(Context, "Admin.ActivateStudent.Submit")</button>
+                    <a asp-action="Students" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Cancel")</a>
                 </form>
             </div>
         </section>

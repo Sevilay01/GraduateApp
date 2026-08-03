@@ -85,26 +85,26 @@ public sealed class EvaluationCriterionFormViewModel
     public int ProgramOfferingId { get; set; }
     public Guid PublicId { get; set; }
 
-    [Required, StringLength(64, MinimumLength = 2)]
+    [Required(ErrorMessage = "Validation.Required"), StringLength(64, MinimumLength = 2, ErrorMessage = "Validation.InvalidValue")]
     public string Code { get; set; } = string.Empty;
 
-    [Required, StringLength(150, MinimumLength = 2)]
+    [Required(ErrorMessage = "Validation.Required"), StringLength(150, MinimumLength = 2, ErrorMessage = "Validation.InvalidValue")]
     public string DisplayName { get; set; } = string.Empty;
 
     public EvaluationCriterionSourceType SourceType { get; set; }
     public int? ExamId { get; set; }
 
-    [Range(1, 10000)]
+    [Range(1, 10000, ErrorMessage = "Validation.InvalidValue")]
     public int WeightBasisPoints { get; set; }
 
     [LocalizedDecimalRange(
         "0.0001",
         "99999",
         MaximumFractionalDigits = 4,
-        ErrorMessage = "Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.")]
+        ErrorMessage = "Validation.MaximumRawScore")]
     public decimal MaximumRawScore { get; set; }
 
-    [Range(1, int.MaxValue)]
+    [Range(1, int.MaxValue, ErrorMessage = "Validation.InvalidValue")]
     public int TieBreakPriority { get; set; }
     public string? RowVersion { get; set; }
 }

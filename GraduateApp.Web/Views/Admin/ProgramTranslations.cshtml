@@ -1,28 +1,26 @@
 @model ProgramTranslationPageViewModel
 @{
-    ViewData["Title"] = "Toplu program çevirileri";
+    ViewData["Title"] = UiText.Get(Context, "Admin.Translations.Title");
 }
 
 <header class="page-heading">
     <div>
-        <span class="eyebrow">Akademik katalog</span>
-        <h1 class="page-heading__title">Toplu İngilizce program adları</h1>
+        <span class="eyebrow">@UiText.Get(Context, "Admin.Catalog.Eyebrow")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Translations.Heading")</h1>
         <p class="page-heading__description">
-            Programların resmî İngilizce adlarını tek ekranda gözden geçirip atomik olarak kaydedin.
+            @UiText.Get(Context, "Admin.Translations.Lead")
         </p>
     </div>
     <div class="page-heading__actions admin-tab-links">
-        <a asp-action="Institutes" class="btn btn-outline-primary">Enstitüler</a>
-        <a asp-action="Programs" class="btn btn-outline-primary">Programlar</a>
-        <a asp-action="ProgramTranslations" class="btn btn-outline-primary" aria-current="page">Toplu İngilizce adlar</a>
-        <a asp-action="Universities" class="btn btn-outline-primary">Üniversiteler</a>
+        <a asp-action="Institutes" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.Institutes")</a>
+        <a asp-action="Programs" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.Programs")</a>
+        <a asp-action="ProgramTranslations" class="btn btn-outline-primary" aria-current="page">@UiText.Get(Context, "Admin.Catalog.ProgramTranslations")</a>
+        <a asp-action="Universities" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.Universities")</a>
     </div>
 </header>
 
 <div class="alert alert-info" role="note">
-    Bu alan otomatik çeviri üretmez. Kurumca doğrulanmış İngilizce adları girin.
-    Boş bırakılan kayıtlarda İngilizce arayüz Türkçe ada güvenli biçimde geri döner.
-    Sayfadaki tüm değişiklikler tek işlemde kaydedilir; eşzamanlı bir güncelleme varsa hiçbir satır kısmen yazılmaz.
+    @UiText.Get(Context, "Admin.Translations.Note")
 </div>
 
 @if (Model.ErrorMessage is not null)
@@ -31,15 +29,15 @@
 }
 
 <form method="get" class="admin-filter-panel mb-4" aria-labelledby="translation-filter-heading">
-    <h2 id="translation-filter-heading" class="admin-filter-panel__heading">Programları ara</h2>
+    <h2 id="translation-filter-heading" class="admin-filter-panel__heading">@UiText.Get(Context, "Admin.Translations.FilterHeading")</h2>
     <div class="row g-3 align-items-end">
         <div class="col-12 col-lg-8">
-            <label asp-for="Search" class="form-label">Türkçe veya İngilizce program adı</label>
-            <input asp-for="Search" class="form-control" maxlength="100" placeholder="Örn. Bilgisayar veya Computer" />
+            <label asp-for="Search" class="form-label">@UiText.Get(Context, "Admin.Translations.SearchLabel")</label>
+            <input asp-for="Search" class="form-control" maxlength="100" placeholder="@UiText.Get(Context, "Admin.Translations.SearchPlaceholder")" />
         </div>
         <div class="col-12 col-lg-4 d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Ara</button>
-            <a asp-action="ProgramTranslations" class="btn btn-outline-secondary">Temizle</a>
+            <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Translations.Search")</button>
+            <a asp-action="ProgramTranslations" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Clear")</a>
         </div>
     </div>
 </form>
@@ -47,8 +45,8 @@
 @if (Model.Items.Count == 0)
 {
     <div class="empty-state">
-        <h2>Program bulunamadı</h2>
-        <p>Arama metnini değiştirin veya program kataloğunu kontrol edin.</p>
+        <h2>@UiText.Get(Context, "Admin.Programs.EmptyHeading")</h2>
+        <p>@UiText.Get(Context, "Admin.Translations.EmptyLead")</p>
     </div>
 }
 else
@@ -64,36 +62,36 @@ else
         <div class="table-shell">
             <div class="table-responsive">
                 <table class="table table-hover align-middle responsive-table">
-                    <caption>Bu sayfadaki programların resmî İngilizce adları</caption>
+                    <caption>@UiText.Get(Context, "Admin.Translations.Caption")</caption>
                     <thead>
                         <tr>
-                            <th scope="col">Enstitü</th>
-                            <th scope="col">Türkçe program adı</th>
-                            <th scope="col">Derece</th>
-                            <th scope="col">İngilizce program adı</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Institutes.Institute")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Programs.NameTurkish")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Common.Degree")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Programs.NameEnglish")</th>
                         </tr>
                     </thead>
                     <tbody>
                         @for (var index = 0; index < Model.Items.Count; index++)
                         {
                             <tr>
-                                <td data-label="Enstitü">
+                                <td data-label="@UiText.Get(Context, "Admin.Institutes.Institute")">
                                     @Model.Items[index].InstituteName
                                     <input asp-for="Items[index].InstituteName" type="hidden" />
                                 </td>
-                                <td data-label="Türkçe program adı">
+                                <td data-label="@UiText.Get(Context, "Admin.Programs.NameTurkish")">
                                     <strong>@Model.Items[index].ProgramName</strong>
                                     <input asp-for="Items[index].ProgramId" type="hidden" />
                                     <input asp-for="Items[index].ProgramName" type="hidden" />
                                     <input asp-for="Items[index].RowVersion" type="hidden" />
                                 </td>
-                                <td data-label="Derece">
-                                    @Model.Items[index].DegreeType
+                                <td data-label="@UiText.Get(Context, "Admin.Common.Degree")">
+                                    @UiText.LocalizeDegreeType(Context, Model.Items[index].DegreeType)
                                     <input asp-for="Items[index].DegreeType" type="hidden" />
                                 </td>
-                                <td data-label="İngilizce program adı">
+                                <td data-label="@UiText.Get(Context, "Admin.Programs.NameEnglish")">
                                     <label class="visually-hidden" asp-for="Items[index].ProgramNameEnglish">
-                                        @Model.Items[index].ProgramName için İngilizce ad
+                                        @UiText.Format(Context, "Admin.Translations.EnglishLabel", Model.Items[index].ProgramName)
                                     </label>
                                     <input asp-for="Items[index].ProgramNameEnglish"
                                            class="form-control"
@@ -111,22 +109,22 @@ else
         </div>
 
         <div class="admin-sticky-actions mt-3">
-            <span class="text-body-secondary">@Model.Items.Count program bu işlem kapsamındadır.</span>
-            <button class="btn btn-primary" type="submit">Bu sayfadaki çevirileri kaydet</button>
+            <span class="text-body-secondary">@UiText.Format(Context, "Admin.Translations.ScopeCount", Model.Items.Count)</span>
+            <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Translations.Save")</button>
         </div>
     </form>
 }
 
 @if (Model.TotalPages > 1)
 {
-    <nav class="mt-4" aria-label="Program çevirisi sayfaları">
+    <nav class="mt-4" aria-label="@UiText.Get(Context, "Admin.Translations.Pagination")">
         <ul class="pagination justify-content-center">
             <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
                 <a class="page-link"
                    asp-action="ProgramTranslations"
                    asp-route-search="@Model.Search"
                    asp-route-page="@(Model.Page - 1)"
-                   asp-route-pageSize="@Model.PageSize">Önceki</a>
+                   asp-route-pageSize="@Model.PageSize">@UiText.Get(Context, "Admin.Common.Previous")</a>
             </li>
             <li class="page-item disabled">
                 <span class="page-link">@Model.Page / @Model.TotalPages</span>
@@ -136,7 +134,7 @@ else
                    asp-action="ProgramTranslations"
                    asp-route-search="@Model.Search"
                    asp-route-page="@(Model.Page + 1)"
-                   asp-route-pageSize="@Model.PageSize">Sonraki</a>
+                   asp-route-pageSize="@Model.PageSize">@UiText.Get(Context, "Admin.Common.Next")</a>
             </li>
         </ul>
     </nav>

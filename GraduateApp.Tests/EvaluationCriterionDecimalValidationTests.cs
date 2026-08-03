@@ -12,10 +12,18 @@ namespace GraduateApp.Tests;
 
 public sealed class EvaluationCriterionDecimalValidationTests
 {
-    [Fact]
-    public void Web_maximum_raw_score_client_validation_metadata_is_generated_under_turkish_culture()
+    [Theory]
+    [InlineData(
+        "tr-TR",
+        "Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.")]
+    [InlineData(
+        "en-US",
+        "The maximum raw score must be between 0.0001 and 99999 with no more than 4 decimal places.")]
+    public void Web_maximum_raw_score_client_validation_metadata_is_localized(
+        string cultureName,
+        string expectedMessage)
     {
-        ExecuteInCulture("tr-TR", () =>
+        ExecuteInCulture(cultureName, () =>
         {
             var property = typeof(EvaluationCriterionFormViewModel)
                 .GetProperty(nameof(EvaluationCriterionFormViewModel.MaximumRawScore))!;
@@ -35,7 +43,7 @@ public sealed class EvaluationCriterionDecimalValidationTests
 
             Assert.Equal("true", attributes["data-val"]);
             Assert.Equal(
-                "Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.",
+                expectedMessage,
                 attributes["data-val-localizeddecimal"]);
             Assert.Equal("0.0001", attributes["data-val-localizeddecimal-min"]);
             Assert.Equal("99999", attributes["data-val-localizeddecimal-max"]);

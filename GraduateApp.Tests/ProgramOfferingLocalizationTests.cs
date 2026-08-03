@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Reflection;
 using GraduateApp.API.DTOs;
 using GraduateApp.Web.Controllers;
+using GraduateApp.Web.Localization;
 using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Http;
@@ -154,16 +155,18 @@ public sealed class ProgramOfferingLocalizationTests
         Assert.Contains("İlan eşzamanlılık bilgisi geçersiz.", webMessages);
         Assert.Equal(
             "Başvuru başlangıç tarihi zorunludur.",
-            typeof(ProgramOfferingFormViewModel)
-                .GetProperty(nameof(ProgramOfferingFormViewModel.ApplicationStartLocal))!
-                .GetCustomAttribute<RequiredAttribute>()!
-                .ErrorMessage);
+            Turkish(
+                typeof(ProgramOfferingFormViewModel)
+                    .GetProperty(nameof(ProgramOfferingFormViewModel.ApplicationStartLocal))!
+                    .GetCustomAttribute<RequiredAttribute>()!
+                    .ErrorMessage));
         Assert.Equal(
             "Son başvuru tarihi zorunludur.",
-            typeof(ProgramOfferingFormViewModel)
-                .GetProperty(nameof(ProgramOfferingFormViewModel.ApplicationDeadlineLocal))!
-                .GetCustomAttribute<RequiredAttribute>()!
-                .ErrorMessage);
+            Turkish(
+                typeof(ProgramOfferingFormViewModel)
+                    .GetProperty(nameof(ProgramOfferingFormViewModel.ApplicationDeadlineLocal))!
+                    .GetCustomAttribute<RequiredAttribute>()!
+                    .ErrorMessage));
 
         var apiCreate = new ProgramOfferingCreateDto
         {
@@ -226,8 +229,15 @@ public sealed class ProgramOfferingLocalizationTests
     {
         var results = new List<ValidationResult>();
         Validator.TryValidateObject(model, new ValidationContext(model), results, validateAllProperties: true);
-        return results.Select(result => result.ErrorMessage).ToArray();
+        return results
+            .Select(result => Turkish(result.ErrorMessage))
+            .ToArray();
     }
+
+    private static string? Turkish(string? keyOrText) =>
+        keyOrText is null
+            ? null
+            : UiText.Get(new DefaultHttpContext(), keyOrText);
 
     private sealed class OfferingPageHandler : HttpMessageHandler
     {

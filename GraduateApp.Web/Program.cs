@@ -1,4 +1,5 @@
 using System.Globalization;
+using GraduateApp.Web.Localization;
 using GraduateApp.Web.ModelBinding;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -35,24 +36,29 @@ if (!builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddAuthorization();
-builder.Services.AddLocalization();
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddControllersWithViews(options =>
 {
     options.ModelBinderProviders.Insert(0, new SafeDecimalModelBinderProvider());
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
     var messages = options.ModelBindingMessageProvider;
-    messages.SetMissingBindRequiredValueAccessor(_ => "Bu alan zorunludur.");
-    messages.SetMissingKeyOrValueAccessor(() => "Bu alan zorunludur.");
-    messages.SetMissingRequestBodyRequiredValueAccessor(() => "Gerekli bilgiler gönderilmedi.");
-    messages.SetValueMustNotBeNullAccessor(_ => "Bu alan zorunludur.");
-    messages.SetAttemptedValueIsInvalidAccessor((_, _) => "Girilen değer geçerli bir sayı veya tarih biçiminde değil.");
-    messages.SetNonPropertyAttemptedValueIsInvalidAccessor(_ => "Girilen değer geçerli bir sayı veya tarih biçiminde değil.");
-    messages.SetUnknownValueIsInvalidAccessor(_ => "Girilen değer geçersiz.");
-    messages.SetNonPropertyUnknownValueIsInvalidAccessor(() => "Girilen değer geçersiz.");
-    messages.SetValueIsInvalidAccessor(_ => "Girilen değer geçersiz.");
-    messages.SetValueMustBeANumberAccessor(_ => "Geçerli bir sayı giriniz.");
-    messages.SetNonPropertyValueMustBeANumberAccessor(() => "Geçerli bir sayı giriniz.");
-});
+    messages.SetMissingBindRequiredValueAccessor(_ => UiText.GetCurrent("Validation.Required"));
+    messages.SetMissingKeyOrValueAccessor(() => UiText.GetCurrent("Validation.Required"));
+    messages.SetMissingRequestBodyRequiredValueAccessor(() => UiText.GetCurrent("Validation.RequestBodyRequired"));
+    messages.SetValueMustNotBeNullAccessor(_ => UiText.GetCurrent("Validation.Required"));
+    messages.SetAttemptedValueIsInvalidAccessor((_, _) => UiText.GetCurrent("Validation.InvalidNumberOrDate"));
+    messages.SetNonPropertyAttemptedValueIsInvalidAccessor(_ => UiText.GetCurrent("Validation.InvalidNumberOrDate"));
+    messages.SetUnknownValueIsInvalidAccessor(_ => UiText.GetCurrent("Validation.InvalidValue"));
+    messages.SetNonPropertyUnknownValueIsInvalidAccessor(() => UiText.GetCurrent("Validation.InvalidValue"));
+    messages.SetValueIsInvalidAccessor(_ => UiText.GetCurrent("Validation.InvalidValue"));
+    messages.SetValueMustBeANumberAccessor(_ => UiText.GetCurrent("Validation.NumberRequired"));
+    messages.SetNonPropertyValueMustBeANumberAccessor(() => UiText.GetCurrent("Validation.NumberRequired"));
+})
+    .AddDataAnnotationsLocalization(options =>
+    {
+        options.DataAnnotationLocalizerProvider = (_, factory) =>
+            factory.Create(typeof(GraduateApp.Web.SharedText));
+    });
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
     options.DefaultRequestCulture = new RequestCulture(turkishCulture, turkishCulture);

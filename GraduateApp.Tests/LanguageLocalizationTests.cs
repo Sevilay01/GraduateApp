@@ -89,6 +89,55 @@ public sealed class LanguageLocalizationTests
                 null));
     }
 
+    [Fact]
+    public void Turkish_and_English_resource_catalogs_have_identical_keys()
+    {
+        var manager = new System.Resources.ResourceManager(
+            "GraduateApp.Web.Resources.SharedText",
+            typeof(UiText).Assembly);
+        var turkish = manager.GetResourceSet(
+            System.Globalization.CultureInfo.InvariantCulture,
+            createIfNotExists: true,
+            tryParents: false);
+        var english = manager.GetResourceSet(
+            System.Globalization.CultureInfo.GetCultureInfo(UiText.EnglishCultureName),
+            createIfNotExists: true,
+            tryParents: false);
+
+        Assert.NotNull(turkish);
+        Assert.NotNull(english);
+
+        static string[] Keys(System.Resources.ResourceSet resources) =>
+            resources.Cast<System.Collections.DictionaryEntry>()
+                .Select(item => Assert.IsType<string>(item.Key))
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+
+        Assert.Equal(Keys(turkish!), Keys(english!));
+    }
+
+    [Fact]
+    public void English_request_localizes_evaluation_summaries_and_blockers()
+    {
+        var httpContext = new DefaultHttpContext();
+        httpContext.Features.Set<IRequestCultureFeature>(
+            new RequestCultureFeature(
+                new RequestCulture(UiText.EnglishCultureName),
+                new CookieRequestCultureProvider()));
+
+        Assert.Equal(
+            "2/3 required documents approved",
+            UiText.LocalizeDocumentReviewSummary(httpContext, "2/3 zorunlu belge onaylı"));
+        Assert.Equal(
+            "The offering must be closed first.",
+            UiText.LocalizeEvaluationBlockingReason(httpContext, "İlan önce kapatılmalıdır."));
+        Assert.Equal(
+            "Application 00000000-0000-0000-0000-000000000001 has missing criteria: GPA.",
+            UiText.LocalizeEvaluationBlockingReason(
+                httpContext,
+                "00000000-0000-0000-0000-000000000001 başvurusunda eksik kriterler: GPA."));
+    }
+
     private static (LanguageController Controller, DefaultHttpContext HttpContext) CreateController()
     {
         var httpContext = new DefaultHttpContext();

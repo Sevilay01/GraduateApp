@@ -1,6 +1,6 @@
 @model EvaluationPublishPageViewModel
 @{
-    ViewData["Title"] = "Sonuçları yayımla";
+    ViewData["Title"] = UiText.Get(Context, "Admin.PublishEvaluation.PageTitle");
     var rankedApplications = Model.Evaluation.Applications
         .Where(item => item.Rank.HasValue)
         .OrderBy(item => item.Rank)
@@ -10,31 +10,31 @@
 <div class="admin-page">
     <header class="page-heading">
         <div>
-            <span class="eyebrow">İlanlar ve değerlendirme</span>
-            <h1 class="page-heading__title">Sonuçları yayımla</h1>
+            <span class="eyebrow">@UiText.Get(Context, "Admin.Evaluation.Area")</span>
+            <h1 class="page-heading__title">@UiText.Get(Context, "Admin.PublishEvaluation.PageTitle")</h1>
             <p class="page-heading__description">@Model.ProgramName</p>
         </div>
         <div class="page-heading__actions">
-            <span class="admin-state admin-state--info">Kesinleştirildi</span>
-            <a asp-action="Evaluation" asp-route-id="@Model.ProgramOfferingId" class="btn btn-outline-secondary">Değerlendirmeye dön</a>
+            <span class="admin-state admin-state--info">@UiText.LocalizeEvaluationState(Context, OfferingEvaluationState.Finalized)</span>
+            <a asp-action="Evaluation" asp-route-id="@Model.ProgramOfferingId" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.PublishEvaluation.Back")</a>
         </div>
     </header>
 
-    <section class="admin-summary-grid" aria-label="Yayımlama özeti">
+    <section class="admin-summary-grid" aria-label="@UiText.Get(Context, "Admin.PublishEvaluation.SummaryAria")">
         <article class="admin-summary-card">
-            <h2>Kontenjan</h2>
+            <h2>@UiText.Get(Context, "Admin.Evaluation.Quota")</h2>
             <p class="display-6 mb-0">@Model.Summary.Quota</p>
         </article>
         <article class="admin-summary-card">
-            <h2>Kabul</h2>
+            <h2>@UiText.Get(Context, "Admin.PublishEvaluation.Admitted")</h2>
             <p class="display-6 mb-0">@Model.Summary.AdmittedCount</p>
         </article>
         <article class="admin-summary-card">
-            <h2>Kontenjan dışında</h2>
+            <h2>@UiText.Get(Context, "Admin.PublishEvaluation.NotAdmitted")</h2>
             <p class="display-6 mb-0">@Model.Summary.NotAdmittedCount</p>
         </article>
         <article class="admin-summary-card">
-            <h2>Uygun bulunmadı</h2>
+            <h2>@UiText.Get(Context, "Admin.PublishEvaluation.Ineligible")</h2>
             <p class="display-6 mb-0">@Model.Summary.IneligibleCount</p>
         </article>
     </section>
@@ -42,15 +42,15 @@
     <section class="admin-section" aria-labelledby="final-ranking-heading">
         <div class="admin-section-heading">
             <div>
-                <h2 id="final-ranking-heading">Kesinleştirilmiş sıralama</h2>
-                <p>Bu sıralama yayımlama sırasında başvuru durumları ve öğrenci sonuç snapshot’ları için kullanılır.</p>
+                <h2 id="final-ranking-heading">@UiText.Get(Context, "Admin.PublishEvaluation.FinalRanking")</h2>
+                <p>@UiText.Get(Context, "Admin.PublishEvaluation.FinalRankingDescription")</p>
             </div>
         </div>
         @if (rankedApplications.Length == 0)
         {
             <div class="empty-state">
-                <h3>Sıralama satırı bulunamadı</h3>
-                <p>Yayımlamadan önce değerlendirme ekranına dönerek kesinleştirilmiş verileri doğrulayın.</p>
+                <h3>@UiText.Get(Context, "Admin.PublishEvaluation.NoRows")</h3>
+                <p>@UiText.Get(Context, "Admin.PublishEvaluation.NoRowsBody")</p>
             </div>
         }
         else
@@ -58,23 +58,23 @@
             <div class="table-shell">
                 <div class="table-responsive">
                     <table class="table responsive-table">
-                        <caption class="visually-hidden">Kesinleştirilmiş aday sıralaması</caption>
+                        <caption class="visually-hidden">@UiText.Get(Context, "Admin.PublishEvaluation.RankingCaption")</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Sıra</th>
-                                <th scope="col">Maskelenmiş aday</th>
-                                <th scope="col">Toplam puan</th>
-                                <th scope="col">Sonuç</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Rank")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Evaluation.MaskedCandidate")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Evaluation.TotalScore")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.PublishEvaluation.Outcome")</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var application in rankedApplications)
                             {
                                 <tr>
-                                    <td data-label="Sıra">@application.Rank</td>
-                                    <td data-label="Maskelenmiş aday">@application.StudentFullName · @application.MaskedTc</td>
-                                    <td data-label="Toplam puan">@(application.TotalScore?.ToString("0.0000") ?? "-")</td>
-                                    <td data-label="Sonuç"><strong>@(application.Outcome?.DisplayName() ?? "Belirlenmedi")</strong></td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Evaluation.Rank")">@application.Rank</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Evaluation.MaskedCandidate")">@application.StudentFullName · @application.MaskedTc</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Evaluation.TotalScore")">@(application.TotalScore?.ToString("0.0000") ?? "-")</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.PublishEvaluation.Outcome")"><strong>@(application.Outcome.HasValue ? UiText.LocalizeEvaluationOutcome(Context, application.Outcome.Value) : UiText.Get(Context, "Admin.PublishEvaluation.Undetermined"))</strong></td>
                                 </tr>
                             }
                         </tbody>
@@ -85,22 +85,22 @@
     </section>
 
     <section class="danger-zone" aria-labelledby="publish-confirmation-heading" data-publish-confirmation>
-        <h2 id="publish-confirmation-heading" class="h4">Geri alınamaz yayımlama onayı</h2>
+        <h2 id="publish-confirmation-heading" class="h4">@UiText.Get(Context, "Admin.PublishEvaluation.ConfirmationHeading")</h2>
         <div class="alert alert-danger" role="alert">
-            <strong>İşlem geri alınamaz.</strong>
-            Kesinleştirilmiş sonuçlar öğrencilere açılır ve başvuru durumları atomik olarak Onaylandı/Reddedildi yapılır.
+            <strong>@UiText.Get(Context, "Admin.PublishEvaluation.Irreversible")</strong>
+            @UiText.Get(Context, "Admin.PublishEvaluation.IrreversibleBody")
         </div>
         <ul>
-            <li>Yayımlama öncesinde öğrenciler puan, sıra ve sonucu göremez.</li>
-            <li>Publish işlemi başvuru statüsü, history, audit ve sonuç snapshot kayıtlarını tek atomik işlemde oluşturur.</li>
-            <li>Sunucu tarafındaki lifecycle, antiforgery ve RowVersion kontrolleri yeniden uygulanır.</li>
+            <li>@UiText.Get(Context, "Admin.PublishEvaluation.BeforePublication")</li>
+            <li>@UiText.Get(Context, "Admin.PublishEvaluation.AtomicEffect")</li>
+            <li>@UiText.Get(Context, "Admin.PublishEvaluation.ServerChecks")</li>
         </ul>
         <form asp-action="PublishEvaluation" method="post" data-disable-on-submit="true">
             <input type="hidden" name="programOfferingId" value="@Model.ProgramOfferingId" />
             <input type="hidden" name="rowVersion" value="@Model.Summary.OfferingRowVersion" />
             <div class="admin-form-actions">
-                <button class="btn btn-danger" type="submit">Sonuçları yayımla</button>
-                <a asp-action="Evaluation" asp-route-id="@Model.ProgramOfferingId" class="btn btn-outline-secondary">Yayımlamadan vazgeç</a>
+                <button class="btn btn-danger" type="submit">@UiText.Get(Context, "Admin.PublishEvaluation.PublishAction")</button>
+                <a asp-action="Evaluation" asp-route-id="@Model.ProgramOfferingId" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.PublishEvaluation.Cancel")</a>
             </div>
         </form>
     </section>

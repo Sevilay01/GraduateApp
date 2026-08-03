@@ -1153,4 +1153,2139 @@
   <data name="Navigation.ProgramTranslations" xml:space="preserve">
     <value>Toplu İngilizce program adları</value>
   </data>
+  <data name="Admin.ActivateStudent.Title" xml:space="preserve">
+    <value>Öğrenciyi aktifleştir</value>
+  </data>
+  <data name="Admin.ActivateStudent.Heading" xml:space="preserve">
+    <value>Öğrenci hesabını aktifleştir</value>
+  </data>
+  <data name="Admin.ActivateStudent.Lead" xml:space="preserve">
+    <value>Hesap erişimini geri vermeden önce maskelenmiş öğrenci bilgilerini doğrulayın.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Summary" xml:space="preserve">
+    <value>Aktifleştirme özeti</value>
+  </data>
+  <data name="Admin.ActivateStudent.SummarySuffix" xml:space="preserve">
+    <value>öğrencisinin hesabı yeniden aktifleştirilecek. Güvenlik damgası yenileneceği için önceki oturumlar geçerli olmayacak.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Submit" xml:space="preserve">
+    <value>Öğrenci hesabını aktifleştir</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Title" xml:space="preserve">
+    <value>Öğrenciyi pasifleştir</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Heading" xml:space="preserve">
+    <value>Öğrenci hesabını pasifleştir</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Lead" xml:space="preserve">
+    <value>Bu güvenlik eylemi öğrencinin mevcut oturumlarını geçersiz kılar; geçmiş verileri silmez.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Summary" xml:space="preserve">
+    <value>Pasifleştirme özeti</value>
+  </data>
+  <data name="Admin.DeactivateStudent.SummarySuffix" xml:space="preserve">
+    <value>öğrencisinin hesabı pasifleştirilecek. Mevcut API tokenları ve Web oturumu güvenlik damgası yenilenerek geçersiz kılınacak.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Warning" xml:space="preserve">
+    <value>Bu işlem katalog verilerini veya öğrencinin geçmiş başvuru kayıtlarını silmez.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Submit" xml:space="preserve">
+    <value>Öğrenci hesabını pasifleştir</value>
+  </data>
+  <data name="Admin.Student.ApplicationCount" xml:space="preserve">
+    <value>Başvuru sayısı</value>
+  </data>
+  <data name="Admin.Student.ExamScoreCount" xml:space="preserve">
+    <value>Sınav sonucu sayısı</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Title" xml:space="preserve">
+    <value>Enstitüyü sil</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Heading" xml:space="preserve">
+    <value>Enstitüyü kalıcı olarak sil</value>
+  </data>
+  <data name="Admin.DeleteInstitute.IntroSuffix" xml:space="preserve">
+    <value>enstitüsünü silmek üzeresiniz.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.LinkedPrograms" xml:space="preserve">
+    <value>Bu enstitüye bağlı {0} program var. Veri bütünlüğünü korumak için kalıcı silme engellenecektir; enstitüyü pasifleştirin.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Irreversible" xml:space="preserve">
+    <value>Bu işlem geri alınamaz. Yalnızca hiç kullanılmamış enstitüler kalıcı olarak silinebilir.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Title" xml:space="preserve">
+    <value>Programı sil</value>
+  </data>
+  <data name="Admin.DeleteProgram.Heading" xml:space="preserve">
+    <value>Programı kalıcı olarak sil</value>
+  </data>
+  <data name="Admin.DeleteProgram.IntroSuffix" xml:space="preserve">
+    <value>programını silmek üzeresiniz.</value>
+  </data>
+  <data name="Admin.DeleteProgram.LinkedOfferings" xml:space="preserve">
+    <value>Bu programa bağlı {0} dönemsel ilan var. Geçmiş kayıtları korumak için kalıcı silme engellenecektir; programı pasifleştirin.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Irreversible" xml:space="preserve">
+    <value>Bu işlem geri alınamaz. Yalnızca hiç ilanı olmayan programlar kalıcı olarak silinebilir.</value>
+  </data>
+  <data name="Admin.Delete.Permanent" xml:space="preserve">
+    <value>Kalıcı olarak sil</value>
+  </data>
+  <data name="Admin.Common.Cancel" xml:space="preserve">
+    <value>Vazgeç</value>
+  </data>
+  <data name="Admin.Common.AccountManagement" xml:space="preserve">
+    <value>Hesap yönetimi</value>
+  </data>
+  <data name="Admin.Accounts.Title" xml:space="preserve">
+    <value>Yönetici hesapları</value>
+  </data>
+  <data name="Admin.Accounts.Eyebrow" xml:space="preserve">
+    <value>Hesap yönetimi</value>
+  </data>
+  <data name="Admin.Accounts.Heading" xml:space="preserve">
+    <value>Yöneticiler</value>
+  </data>
+  <data name="Admin.Accounts.Lead" xml:space="preserve">
+    <value>Yöneticileri tek kullanımlık bağlantıyla davet edin; hesapları silmeden güvenli biçimde yönetin.</value>
+  </data>
+  <data name="Admin.Accounts.Students" xml:space="preserve">
+    <value>Öğrenciler</value>
+  </data>
+  <data name="Admin.Accounts.LastAdminRule" xml:space="preserve">
+    <value>Son aktif ve davetini tamamlamış yönetici pasifleştirilemez. Bu kural her istekte API tarafından yeniden doğrulanır.</value>
+  </data>
+  <data name="Admin.Accounts.FilterHeading" xml:space="preserve">
+    <value>Yönetici hesaplarını filtrele</value>
+  </data>
+  <data name="Admin.Accounts.EmailPlaceholder" xml:space="preserve">
+    <value>E-postaya göre ara</value>
+  </data>
+  <data name="Admin.Accounts.StatusLabel" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Admin.Accounts.Status.All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="Admin.Accounts.Status.Active" xml:space="preserve">
+    <value>Aktif</value>
+  </data>
+  <data name="Admin.Accounts.Status.Inactive" xml:space="preserve">
+    <value>Pasif</value>
+  </data>
+  <data name="Admin.Accounts.Status.InvitationPending" xml:space="preserve">
+    <value>Davet bekliyor</value>
+  </data>
+  <data name="Admin.Accounts.Status.Locked" xml:space="preserve">
+    <value>Kilitli</value>
+  </data>
+  <data name="Admin.Accounts.Filter" xml:space="preserve">
+    <value>Filtrele</value>
+  </data>
+  <data name="Admin.Accounts.Clear" xml:space="preserve">
+    <value>Temizle</value>
+  </data>
+  <data name="Admin.Accounts.ActiveFilters" xml:space="preserve">
+    <value>Aktif filtreler</value>
+  </data>
+  <data name="Admin.Accounts.EmailFilter" xml:space="preserve">
+    <value>E-posta: {0}</value>
+  </data>
+  <data name="Admin.Accounts.StatusFilter" xml:space="preserve">
+    <value>Durum: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResultsHeading" xml:space="preserve">
+    <value>Yönetici hesapları</value>
+  </data>
+  <data name="Admin.Accounts.ResultCount" xml:space="preserve">
+    <value>{0} hesap bulundu</value>
+  </data>
+  <data name="Admin.Accounts.EmptyHeading" xml:space="preserve">
+    <value>Yönetici hesabı bulunamadı</value>
+  </data>
+  <data name="Admin.Accounts.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya sağdaki formdan yeni bir yönetici davet edin.</value>
+  </data>
+  <data name="Admin.Accounts.TableCaption" xml:space="preserve">
+    <value>Filtrelenmiş yönetici hesapları</value>
+  </data>
+  <data name="Admin.Accounts.SignInSecurity" xml:space="preserve">
+    <value>Giriş güvenliği</value>
+  </data>
+  <data name="Admin.Accounts.Dates" xml:space="preserve">
+    <value>Tarihler</value>
+  </data>
+  <data name="Admin.Accounts.Actions" xml:space="preserve">
+    <value>İşlemler</value>
+  </data>
+  <data name="Admin.Accounts.Current" xml:space="preserve">
+    <value>Mevcut hesap</value>
+  </data>
+  <data name="Admin.Accounts.FailedSignIns" xml:space="preserve">
+    <value>Başarısız giriş: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Created" xml:space="preserve">
+    <value>Oluşturma: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Updated" xml:space="preserve">
+    <value>Güncelleme: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResendInvitation" xml:space="preserve">
+    <value>Yönetici davetini yeniden gönder</value>
+  </data>
+  <data name="Admin.Accounts.Unlock" xml:space="preserve">
+    <value>Yönetici kilidini aç</value>
+  </data>
+  <data name="Admin.Accounts.Deactivate" xml:space="preserve">
+    <value>Yöneticiyi pasifleştir</value>
+  </data>
+  <data name="Admin.Accounts.Activate" xml:space="preserve">
+    <value>Yöneticiyi aktifleştir</value>
+  </data>
+  <data name="Admin.Accounts.Pagination" xml:space="preserve">
+    <value>Yönetici hesapları sayfaları</value>
+  </data>
+  <data name="Admin.Accounts.Previous" xml:space="preserve">
+    <value>Önceki</value>
+  </data>
+  <data name="Admin.Accounts.Next" xml:space="preserve">
+    <value>Sonraki</value>
+  </data>
+  <data name="Admin.Accounts.InviteHeading" xml:space="preserve">
+    <value>Yönetici davet et</value>
+  </data>
+  <data name="Admin.Accounts.InviteLead" xml:space="preserve">
+    <value>Parola oluşturulmaz veya gösterilmez. Yönetici parolasını tek kullanımlık bağlantıdan belirler.</value>
+  </data>
+  <data name="Admin.Accounts.InviteSubmit" xml:space="preserve">
+    <value>Yönetici daveti gönder</value>
+  </data>
+  <data name="Admin.Catalog.Eyebrow" xml:space="preserve">
+    <value>Akademik katalog</value>
+  </data>
+  <data name="Admin.Catalog.Institutes" xml:space="preserve">
+    <value>Enstitüler</value>
+  </data>
+  <data name="Admin.Catalog.Programs" xml:space="preserve">
+    <value>Programlar</value>
+  </data>
+  <data name="Admin.Catalog.ProgramTranslations" xml:space="preserve">
+    <value>Toplu İngilizce adlar</value>
+  </data>
+  <data name="Admin.Catalog.Universities" xml:space="preserve">
+    <value>Üniversiteler</value>
+  </data>
+  <data name="Admin.Common.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Admin.Common.All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="Admin.Common.Active" xml:space="preserve">
+    <value>Aktif</value>
+  </data>
+  <data name="Admin.Common.Inactive" xml:space="preserve">
+    <value>Pasif</value>
+  </data>
+  <data name="Admin.Common.InactiveSuffix" xml:space="preserve">
+    <value> (pasif)</value>
+  </data>
+  <data name="Admin.Common.Filter" xml:space="preserve">
+    <value>Filtrele</value>
+  </data>
+  <data name="Admin.Common.Clear" xml:space="preserve">
+    <value>Temizle</value>
+  </data>
+  <data name="Admin.Common.Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Admin.Common.Actions" xml:space="preserve">
+    <value>İşlemler</value>
+  </data>
+  <data name="Admin.Common.Previous" xml:space="preserve">
+    <value>Önceki</value>
+  </data>
+  <data name="Admin.Common.Next" xml:space="preserve">
+    <value>Sonraki</value>
+  </data>
+  <data name="Admin.Common.SaveChanges" xml:space="preserve">
+    <value>Değişiklikleri kaydet</value>
+  </data>
+  <data name="Admin.Common.Degree" xml:space="preserve">
+    <value>Derece</value>
+  </data>
+  <data name="Admin.Common.DegreeType" xml:space="preserve">
+    <value>Derece türü</value>
+  </data>
+  <data name="Admin.Common.Offering" xml:space="preserve">
+    <value>İlan</value>
+  </data>
+  <data name="Admin.Institutes.Title" xml:space="preserve">
+    <value>Enstitü yönetimi</value>
+  </data>
+  <data name="Admin.Institutes.Heading" xml:space="preserve">
+    <value>Enstitüler ve programlar</value>
+  </data>
+  <data name="Admin.Institutes.Lead" xml:space="preserve">
+    <value>Enstitüleri oluşturun, düzenleyin veya yeni seçimlere kapatın.</value>
+  </data>
+  <data name="Admin.Institutes.Note" xml:space="preserve">
+    <value>Kullanılmış bir enstitüyü silmek yerine pasifleştirin. Pasif enstitülerin programları yeni ilan ve başvuru seçimlerinde gösterilmez; geçmiş kayıtlar korunur.</value>
+  </data>
+  <data name="Admin.Institutes.FilterHeading" xml:space="preserve">
+    <value>Enstitüleri filtrele</value>
+  </data>
+  <data name="Admin.Institutes.Name" xml:space="preserve">
+    <value>Enstitü adı</value>
+  </data>
+  <data name="Admin.Institutes.SearchPlaceholder" xml:space="preserve">
+    <value>Ada göre ara</value>
+  </data>
+  <data name="Admin.Institutes.EmptyHeading" xml:space="preserve">
+    <value>Enstitü bulunamadı</value>
+  </data>
+  <data name="Admin.Institutes.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya yeni enstitü formunu kullanın.</value>
+  </data>
+  <data name="Admin.Institutes.Caption" xml:space="preserve">
+    <value>Filtrelenmiş enstitü kayıtları</value>
+  </data>
+  <data name="Admin.Institutes.Institute" xml:space="preserve">
+    <value>Enstitü</value>
+  </data>
+  <data name="Admin.Institutes.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Institutes.Deactivate" xml:space="preserve">
+    <value>Enstitüyü pasifleştir</value>
+  </data>
+  <data name="Admin.Institutes.Activate" xml:space="preserve">
+    <value>Enstitüyü aktifleştir</value>
+  </data>
+  <data name="Admin.Institutes.DeleteDetails" xml:space="preserve">
+    <value>Kalıcı silme ayrıntısı</value>
+  </data>
+  <data name="Admin.Institutes.Pagination" xml:space="preserve">
+    <value>Enstitü listesi sayfaları</value>
+  </data>
+  <data name="Admin.Institutes.EditHeading" xml:space="preserve">
+    <value>Enstitüyü düzenle</value>
+  </data>
+  <data name="Admin.Institutes.NewHeading" xml:space="preserve">
+    <value>Yeni enstitü</value>
+  </data>
+  <data name="Admin.Institutes.Create" xml:space="preserve">
+    <value>Enstitü oluştur</value>
+  </data>
+  <data name="Admin.Programs.Title" xml:space="preserve">
+    <value>Program yönetimi</value>
+  </data>
+  <data name="Admin.Programs.Heading" xml:space="preserve">
+    <value>Enstitüler ve programlar</value>
+  </data>
+  <data name="Admin.Programs.Lead" xml:space="preserve">
+    <value>Lisansüstü programları enstitü ve derece türüyle birlikte yönetin.</value>
+  </data>
+  <data name="Admin.Programs.Note" xml:space="preserve">
+    <value>İlanı veya geçmiş kaydı olan programı silmek yerine pasifleştirin. Bir program kendi kaydı aktif olsa bile bağlı enstitüsü pasifse yeni seçimlerde etkili olarak pasiftir. İngilizce ad girilmemiş eski kayıtlarda İngilizce arayüz güvenli biçimde Türkçe program adına döner.</value>
+  </data>
+  <data name="Admin.Programs.FilterHeading" xml:space="preserve">
+    <value>Programları filtrele</value>
+  </data>
+  <data name="Admin.Programs.Name" xml:space="preserve">
+    <value>Program adı</value>
+  </data>
+  <data name="Admin.Programs.NameTurkish" xml:space="preserve">
+    <value>Türkçe program adı</value>
+  </data>
+  <data name="Admin.Programs.NameEnglish" xml:space="preserve">
+    <value>İngilizce program adı</value>
+  </data>
+  <data name="Admin.Programs.SearchPlaceholder" xml:space="preserve">
+    <value>Ada göre ara</value>
+  </data>
+  <data name="Admin.Programs.RecordStatus" xml:space="preserve">
+    <value>Kayıt durumu</value>
+  </data>
+  <data name="Admin.Programs.ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="Admin.Programs.EmptyHeading" xml:space="preserve">
+    <value>Program bulunamadı</value>
+  </data>
+  <data name="Admin.Programs.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya yeni program formunu kullanın.</value>
+  </data>
+  <data name="Admin.Programs.Caption" xml:space="preserve">
+    <value>Filtrelenmiş lisansüstü programları</value>
+  </data>
+  <data name="Admin.Programs.MissingEnglish" xml:space="preserve">
+    <value>İngilizce ad eksik</value>
+  </data>
+  <data name="Admin.Programs.InstituteInactive" xml:space="preserve">
+    <value>Enstitü pasif</value>
+  </data>
+  <data name="Admin.Programs.Deactivate" xml:space="preserve">
+    <value>Programı pasifleştir</value>
+  </data>
+  <data name="Admin.Programs.Activate" xml:space="preserve">
+    <value>Programı aktifleştir</value>
+  </data>
+  <data name="Admin.Programs.DeleteDetails" xml:space="preserve">
+    <value>Kalıcı silme ayrıntısı</value>
+  </data>
+  <data name="Admin.Programs.Pagination" xml:space="preserve">
+    <value>Program listesi sayfaları</value>
+  </data>
+  <data name="Admin.Programs.EditHeading" xml:space="preserve">
+    <value>Programı düzenle</value>
+  </data>
+  <data name="Admin.Programs.NewHeading" xml:space="preserve">
+    <value>Yeni program</value>
+  </data>
+  <data name="Admin.Programs.EnglishPlaceholder" xml:space="preserve">
+    <value>Computer Engineering</value>
+  </data>
+  <data name="Admin.Programs.EnglishFallbackHelp" xml:space="preserve">
+    <value>Boş bırakılırsa İngilizce arayüzde Türkçe ad gösterilir.</value>
+  </data>
+  <data name="Admin.Programs.Create" xml:space="preserve">
+    <value>Program oluştur</value>
+  </data>
+  <data name="Admin.Translations.Title" xml:space="preserve">
+    <value>Toplu program çevirileri</value>
+  </data>
+  <data name="Admin.Translations.Heading" xml:space="preserve">
+    <value>Toplu İngilizce program adları</value>
+  </data>
+  <data name="Admin.Translations.Lead" xml:space="preserve">
+    <value>Programların resmî İngilizce adlarını tek ekranda gözden geçirip atomik olarak kaydedin.</value>
+  </data>
+  <data name="Admin.Translations.Note" xml:space="preserve">
+    <value>Bu alan otomatik çeviri üretmez. Kurumca doğrulanmış İngilizce adları girin. Boş bırakılan kayıtlarda İngilizce arayüz Türkçe ada güvenli biçimde geri döner. Sayfadaki tüm değişiklikler tek işlemde kaydedilir; eşzamanlı bir güncelleme varsa hiçbir satır kısmen yazılmaz.</value>
+  </data>
+  <data name="Admin.Translations.FilterHeading" xml:space="preserve">
+    <value>Programları ara</value>
+  </data>
+  <data name="Admin.Translations.SearchLabel" xml:space="preserve">
+    <value>Türkçe veya İngilizce program adı</value>
+  </data>
+  <data name="Admin.Translations.SearchPlaceholder" xml:space="preserve">
+    <value>Örn. Bilgisayar veya Computer</value>
+  </data>
+  <data name="Admin.Translations.Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Admin.Translations.EmptyLead" xml:space="preserve">
+    <value>Arama metnini değiştirin veya program kataloğunu kontrol edin.</value>
+  </data>
+  <data name="Admin.Translations.Caption" xml:space="preserve">
+    <value>Bu sayfadaki programların resmî İngilizce adları</value>
+  </data>
+  <data name="Admin.Translations.EnglishLabel" xml:space="preserve">
+    <value>{0} için İngilizce ad</value>
+  </data>
+  <data name="Admin.Translations.ScopeCount" xml:space="preserve">
+    <value>{0} program bu işlem kapsamındadır.</value>
+  </data>
+  <data name="Admin.Translations.Save" xml:space="preserve">
+    <value>Bu sayfadaki çevirileri kaydet</value>
+  </data>
+  <data name="Admin.Translations.Pagination" xml:space="preserve">
+    <value>Program çevirisi sayfaları</value>
+  </data>
+  <data name="Admin.Universities.Title" xml:space="preserve">
+    <value>Üniversite kataloğu</value>
+  </data>
+  <data name="Admin.Universities.Heading" xml:space="preserve">
+    <value>Üniversiteler</value>
+  </data>
+  <data name="Admin.Universities.Lead" xml:space="preserve">
+    <value>Öğrencilerin profilinde seçebileceği üniversiteleri güvenli ve encode edilmiş katalog kayıtları olarak yönetin.</value>
+  </data>
+  <data name="Admin.Universities.ListHeading" xml:space="preserve">
+    <value>Tanımlı üniversiteler</value>
+  </data>
+  <data name="Admin.Universities.Count" xml:space="preserve">
+    <value>{0} katalog kaydı</value>
+  </data>
+  <data name="Admin.Universities.EmptyHeading" xml:space="preserve">
+    <value>Üniversite kataloğu boş</value>
+  </data>
+  <data name="Admin.Universities.EmptyLead" xml:space="preserve">
+    <value>İlk üniversite kaydını eklemek için formu kullanın.</value>
+  </data>
+  <data name="Admin.Universities.Caption" xml:space="preserve">
+    <value>Tanımlı üniversite kataloğu</value>
+  </data>
+  <data name="Admin.Universities.Name" xml:space="preserve">
+    <value>Üniversite adı</value>
+  </data>
+  <data name="Admin.Universities.University" xml:space="preserve">
+    <value>Üniversite</value>
+  </data>
+  <data name="Admin.Universities.NewHeading" xml:space="preserve">
+    <value>Yeni üniversite ekle</value>
+  </data>
+  <data name="Admin.Universities.NewLead" xml:space="preserve">
+    <value>Aynı adla ikinci kayıt oluşturma isteği güvenli bir hata mesajıyla gösterilir.</value>
+  </data>
+  <data name="Admin.Universities.Add" xml:space="preserve">
+    <value>Üniversiteyi kataloğa ekle</value>
+  </data>
+  <data name="Admin.Students.Title" xml:space="preserve">
+    <value>Öğrenci yönetimi</value>
+  </data>
+  <data name="Admin.Students.Heading" xml:space="preserve">
+    <value>Öğrenciler</value>
+  </data>
+  <data name="Admin.Students.Lead" xml:space="preserve">
+    <value>Maskelenmiş kimlik bilgileriyle öğrenci hesaplarını bulun ve erişim durumunu güvenli onay ekranlarından yönetin.</value>
+  </data>
+  <data name="Admin.Students.Administrators" xml:space="preserve">
+    <value>Yöneticiler</value>
+  </data>
+  <data name="Admin.Students.SearchHeading" xml:space="preserve">
+    <value>Öğrenci ara</value>
+  </data>
+  <data name="Admin.Students.SearchLabel" xml:space="preserve">
+    <value>Ad, soyad veya e-posta</value>
+  </data>
+  <data name="Admin.Students.Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Admin.Students.ActiveFilter" xml:space="preserve">
+    <value>Aktif filtre</value>
+  </data>
+  <data name="Admin.Students.SearchFilter" xml:space="preserve">
+    <value>Arama: {0}</value>
+  </data>
+  <data name="Admin.Students.ResultsHeading" xml:space="preserve">
+    <value>Öğrenci hesapları</value>
+  </data>
+  <data name="Admin.Students.ResultCount" xml:space="preserve">
+    <value>{0} öğrenci bulundu</value>
+  </data>
+  <data name="Admin.Students.EmptyHeading" xml:space="preserve">
+    <value>Öğrenci bulunamadı</value>
+  </data>
+  <data name="Admin.Students.EmptyLead" xml:space="preserve">
+    <value>Arama ifadesini değiştirin veya tüm öğrencileri görmek için filtreyi temizleyin.</value>
+  </data>
+  <data name="Admin.Students.Caption" xml:space="preserve">
+    <value>Filtrelenmiş öğrenci hesapları</value>
+  </data>
+  <data name="Admin.Students.Student" xml:space="preserve">
+    <value>Öğrenci</value>
+  </data>
+  <data name="Admin.Students.MaskedIdentity" xml:space="preserve">
+    <value>Maskelenmiş TC</value>
+  </data>
+  <data name="Admin.Students.Action" xml:space="preserve">
+    <value>İşlem</value>
+  </data>
+  <data name="Admin.Students.Pagination" xml:space="preserve">
+    <value>Öğrenci listesi sayfaları</value>
+  </data>
+  <data name="Admin.Applications.Title" xml:space="preserve">
+    <value>Başvuru yönetimi</value>
+  </data>
+  <data name="Admin.Applications.Eyebrow" xml:space="preserve">
+    <value>Başvurular</value>
+  </data>
+  <data name="Admin.Applications.Heading" xml:space="preserve">
+    <value>Başvuru yönetimi</value>
+  </data>
+  <data name="Admin.Applications.Lead" xml:space="preserve">
+    <value>Adayları güvenli filtrelerle bulun, başvuru yaşam döngüsünü ve belgeleri tek yerden inceleyin.</value>
+  </data>
+  <data name="Admin.Applications.Offerings" xml:space="preserve">
+    <value>İlanlar ve değerlendirme</value>
+  </data>
+  <data name="Admin.Applications.FilterHeading" xml:space="preserve">
+    <value>Başvuruları filtrele</value>
+  </data>
+  <data name="Admin.Applications.SearchLabel" xml:space="preserve">
+    <value>Ad, e-posta veya program</value>
+  </data>
+  <data name="Admin.Applications.Status" xml:space="preserve">
+    <value>Başvuru durumu</value>
+  </data>
+  <data name="Admin.Applications.AcademicYear" xml:space="preserve">
+    <value>Akademik yıl</value>
+  </data>
+  <data name="Admin.Applications.Term" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Admin.Applications.ApplyFilters" xml:space="preserve">
+    <value>Filtreleri uygula</value>
+  </data>
+  <data name="Admin.Applications.ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="Admin.Applications.ActiveFilters" xml:space="preserve">
+    <value>Aktif filtreler</value>
+  </data>
+  <data name="Admin.Applications.SearchFilter" xml:space="preserve">
+    <value>Arama: {0}</value>
+  </data>
+  <data name="Admin.Applications.StatusFilter" xml:space="preserve">
+    <value>Durum: {0}</value>
+  </data>
+  <data name="Admin.Applications.YearFilter" xml:space="preserve">
+    <value>Yıl: {0}</value>
+  </data>
+  <data name="Admin.Applications.TermFilter" xml:space="preserve">
+    <value>Dönem: {0}</value>
+  </data>
+  <data name="Admin.Applications.ResultsHeading" xml:space="preserve">
+    <value>Başvuru sonuçları</value>
+  </data>
+  <data name="Admin.Applications.ResultCount" xml:space="preserve">
+    <value>{0} başvuru bulundu</value>
+  </data>
+  <data name="Admin.Applications.LoadFailed" xml:space="preserve">
+    <value>Başvurular yüklenemedi.</value>
+  </data>
+  <data name="Admin.Applications.EmptyHeading" xml:space="preserve">
+    <value>Başvuru bulunamadı</value>
+  </data>
+  <data name="Admin.Applications.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya tüm başvuruları görmek için filtreleri temizleyin.</value>
+  </data>
+  <data name="Admin.Applications.Caption" xml:space="preserve">
+    <value>Filtrelenmiş lisansüstü başvuruları</value>
+  </data>
+  <data name="Admin.Applications.ApplicationDate" xml:space="preserve">
+    <value>Başvuru tarihi</value>
+  </data>
+  <data name="Admin.Applications.Detail" xml:space="preserve">
+    <value>Başvuru detayı</value>
+  </data>
+  <data name="Admin.Applications.Pagination" xml:space="preserve">
+    <value>Başvuru sayfaları</value>
+  </data>
+  <data name="Admin.Detail.Title" xml:space="preserve">
+    <value>Başvuru detayı</value>
+  </data>
+  <data name="Admin.Detail.Back" xml:space="preserve">
+    <value>Başvuru listesine dön</value>
+  </data>
+  <data name="Admin.Detail.SummaryAria" xml:space="preserve">
+    <value>Başvuru özeti</value>
+  </data>
+  <data name="Admin.Detail.SummaryHeading" xml:space="preserve">
+    <value>Başvuru özeti</value>
+  </data>
+  <data name="Admin.Detail.CurrentStatus" xml:space="preserve">
+    <value>Güncel durum</value>
+  </data>
+  <data name="Admin.Detail.DocumentWorkflow" xml:space="preserve">
+    <value>Belge akışı</value>
+  </data>
+  <data name="Admin.Detail.WorkflowEnabled" xml:space="preserve">
+    <value>Etkin</value>
+  </data>
+  <data name="Admin.Detail.LegacyWorkflow" xml:space="preserve">
+    <value>Legacy akış</value>
+  </data>
+  <data name="Admin.Detail.Evaluation" xml:space="preserve">
+    <value>Değerlendirme</value>
+  </data>
+  <data name="Admin.Detail.RankedWorkflow" xml:space="preserve">
+    <value>Sıralamalı iş akışı</value>
+  </data>
+  <data name="Admin.Detail.StandardWorkflow" xml:space="preserve">
+    <value>Standart karar akışı</value>
+  </data>
+  <data name="Admin.Detail.StudentHeading" xml:space="preserve">
+    <value>Öğrenci bilgileri</value>
+  </data>
+  <data name="Admin.Detail.FullName" xml:space="preserve">
+    <value>Ad soyad</value>
+  </data>
+  <data name="Admin.Detail.ProgramHeading" xml:space="preserve">
+    <value>Program bilgileri</value>
+  </data>
+  <data name="Admin.Detail.AcademicPeriod" xml:space="preserve">
+    <value>Akademik dönem</value>
+  </data>
+  <data name="Admin.Detail.LifecycleHeading" xml:space="preserve">
+    <value>Başvuru yaşam döngüsü</value>
+  </data>
+  <data name="Admin.Detail.LifecycleLead" xml:space="preserve">
+    <value>Durum değişiklikleri ve yönetici notları kronolojik kayıt olarak korunur.</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryHeading" xml:space="preserve">
+    <value>Henüz durum kaydı yok</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryLead" xml:space="preserve">
+    <value>İlk durum değişikliği burada tarih ve notuyla görüntülenecek.</value>
+  </data>
+  <data name="Admin.Detail.IstanbulTime" xml:space="preserve">
+    <value>İstanbul</value>
+  </data>
+  <data name="Admin.Detail.ScoresHeading" xml:space="preserve">
+    <value>Başvuru anındaki sınav sonuçları</value>
+  </data>
+  <data name="Admin.Detail.ScoresLead" xml:space="preserve">
+    <value>Bu değerler başvuru oluşturulurken alınan snapshot kayıtlarıdır.</value>
+  </data>
+  <data name="Admin.Detail.NoScoresHeading" xml:space="preserve">
+    <value>Sınav sonucu bulunmuyor</value>
+  </data>
+  <data name="Admin.Detail.NoScoresLead" xml:space="preserve">
+    <value>Bu başvuru için kaydedilmiş sınav sonucu snapshot’ı yok.</value>
+  </data>
+  <data name="Admin.Detail.ScoresCaption" xml:space="preserve">
+    <value>Başvuru anındaki sınav sonucu snapshot’ları</value>
+  </data>
+  <data name="Admin.Detail.Exam" xml:space="preserve">
+    <value>Sınav</value>
+  </data>
+  <data name="Admin.Detail.Score" xml:space="preserve">
+    <value>Puan</value>
+  </data>
+  <data name="Admin.Detail.ExamDate" xml:space="preserve">
+    <value>Sınav tarihi</value>
+  </data>
+  <data name="Admin.Detail.DocumentsHeading" xml:space="preserve">
+    <value>Belge gereksinimleri ve inceleme</value>
+  </data>
+  <data name="Admin.Detail.DocumentsLead" xml:space="preserve">
+    <value>Yalnızca Pending veya UnderReview başvurulardaki inceleme bekleyen güncel belgeler için karar verilebilir.</value>
+  </data>
+  <data name="Admin.Detail.LegacyDocumentExempt" xml:space="preserve">
+    <value>Bu legacy başvuru yeni belge onay koşullarından muaftır.</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsHeading" xml:space="preserve">
+    <value>Belge gereksinimi bulunmuyor</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsLead" xml:space="preserve">
+    <value>Başvurunun belge snapshot’ında bir gereksinim yer almıyor.</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocument" xml:space="preserve">
+    <value>Zorunlu belge</value>
+  </data>
+  <data name="Admin.Detail.OptionalDocument" xml:space="preserve">
+    <value>İsteğe bağlı belge</value>
+  </data>
+  <data name="Admin.Detail.NotUploaded" xml:space="preserve">
+    <value>Belge yüklenmedi</value>
+  </data>
+  <data name="Admin.Detail.NoCurrentDocument" xml:space="preserve">
+    <value>Güncel belge bulunmuyor.</value>
+  </data>
+  <data name="Admin.Detail.FileName" xml:space="preserve">
+    <value>Dosya adı</value>
+  </data>
+  <data name="Admin.Detail.Version" xml:space="preserve">
+    <value>Sürüm</value>
+  </data>
+  <data name="Admin.Detail.UploadedAt" xml:space="preserve">
+    <value>Yüklenme zamanı</value>
+  </data>
+  <data name="Admin.Detail.ReviewStatus" xml:space="preserve">
+    <value>İnceleme durumu</value>
+  </data>
+  <data name="Admin.Detail.RejectionReason" xml:space="preserve">
+    <value>Ret gerekçesi:</value>
+  </data>
+  <data name="Admin.Detail.DownloadCurrent" xml:space="preserve">
+    <value>Güncel belgeyi güvenli indir</value>
+  </data>
+  <data name="Admin.Detail.ApproveDocument" xml:space="preserve">
+    <value>Belgeyi onayla</value>
+  </data>
+  <data name="Admin.Detail.TurkishRejectionReason" xml:space="preserve">
+    <value>Türkçe ret gerekçesi</value>
+  </data>
+  <data name="Admin.Detail.RejectDocument" xml:space="preserve">
+    <value>Belgeyi reddet</value>
+  </data>
+  <data name="Admin.Detail.ReviewReadonly" xml:space="preserve">
+    <value>Bu belge için işlem formu gösterilmiyor. Belge kararı tamamlanmış veya başvuru incelemeye açık bir durumda değil.</value>
+  </data>
+  <data name="Admin.Detail.PreviousVersions" xml:space="preserve">
+    <value>Geçmiş belge sürümleri</value>
+  </data>
+  <data name="Admin.Detail.VersionSummary" xml:space="preserve">
+    <value>Sürüm {0} · {1} · {2}</value>
+  </data>
+  <data name="Admin.Detail.DownloadVersion" xml:space="preserve">
+    <value>Sürümü güvenli indir</value>
+  </data>
+  <data name="Admin.Detail.ActionsHeading" xml:space="preserve">
+    <value>İzin verilen eylemler</value>
+  </data>
+  <data name="Admin.Detail.ActionsLead" xml:space="preserve">
+    <value>Sunucu tarafındaki yaşam döngüsü, belge ve eşzamanlılık kontrolleri her istekte yeniden uygulanır.</value>
+  </data>
+  <data name="Admin.Detail.EvaluationDecisionNote" xml:space="preserve">
+    <value>Onay ve ret kararı, ilan değerlendirmesi kesinleştirilip yayımlandığında atomik olarak uygulanır.</value>
+  </data>
+  <data name="Admin.Detail.NoTransitions" xml:space="preserve">
+    <value>Bu durumdan yönetici tarafından yapılabilecek başka bir geçiş yok.</value>
+  </data>
+  <data name="Admin.Detail.NewStatus" xml:space="preserve">
+    <value>Yeni durum</value>
+  </data>
+  <data name="Admin.Detail.AdminNote" xml:space="preserve">
+    <value>Yönetici notu</value>
+  </data>
+  <data name="Admin.Detail.UpdateStatus" xml:space="preserve">
+    <value>Başvuru durumunu güncelle</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocumentsWarning" xml:space="preserve">
+    <value>Tüm zorunlu güncel belgeler onaylanmadan başvuru onaylanamaz.</value>
+  </data>
+  <data name="EvaluationState.Configuring" xml:space="preserve">
+    <value>Yapılandırılıyor</value>
+  </data>
+  <data name="EvaluationState.Finalized" xml:space="preserve">
+    <value>Kesinleştirildi</value>
+  </data>
+  <data name="EvaluationState.Published" xml:space="preserve">
+    <value>Yayımlandı</value>
+  </data>
+  <data name="CriterionSource.UndergraduateGpa" xml:space="preserve">
+    <value>Lisans GNO</value>
+  </data>
+  <data name="CriterionSource.ExamScore" xml:space="preserve">
+    <value>Sınav puanı</value>
+  </data>
+  <data name="CriterionSource.ManualScore" xml:space="preserve">
+    <value>Manuel puan</value>
+  </data>
+  <data name="Eligibility.Pending" xml:space="preserve">
+    <value>Karar bekliyor</value>
+  </data>
+  <data name="Eligibility.Eligible" xml:space="preserve">
+    <value>Uygun</value>
+  </data>
+  <data name="Eligibility.Ineligible" xml:space="preserve">
+    <value>Uygun değil</value>
+  </data>
+  <data name="Admin.Offerings.Title" xml:space="preserve">
+    <value>İlanlar ve değerlendirme</value>
+  </data>
+  <data name="Admin.Offerings.Heading" xml:space="preserve">
+    <value>Dönemsel program ilanları</value>
+  </data>
+  <data name="Admin.Offerings.Lead" xml:space="preserve">
+    <value>İlan tarihlerini, kontenjanı, belge ve sınav koşullarını mevcut güvenlik ve eşzamanlılık sözleşmeleriyle yönetin.</value>
+  </data>
+  <data name="Admin.Offerings.New" xml:space="preserve">
+    <value>Yeni ilan oluştur</value>
+  </data>
+  <data name="Admin.Offerings.Back" xml:space="preserve">
+    <value>Başvurulara dön</value>
+  </data>
+  <data name="Admin.Offerings.LoadFailed" xml:space="preserve">
+    <value>İlan verileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Offerings.FilterHeading" xml:space="preserve">
+    <value>İlanları filtrele</value>
+  </data>
+  <data name="Admin.Offerings.YearStart" xml:space="preserve">
+    <value>Akademik yıl başlangıcı</value>
+  </data>
+  <data name="Admin.Offerings.IncludeArchived" xml:space="preserve">
+    <value>Arşivlenen ilanları göster</value>
+  </data>
+  <data name="Admin.Offerings.ArchivedIncluded" xml:space="preserve">
+    <value>Arşivlenenler dahil</value>
+  </data>
+  <data name="Admin.Offerings.HealthHeading" xml:space="preserve">
+    <value>İlan yapılandırma sağlığı</value>
+  </data>
+  <data name="Admin.Offerings.HealthLead" xml:space="preserve">
+    <value>Salt-okunur özet, açık ilanların aktif ve zorunlu belge koşulu ile mevcut başvuru riskini gösterir.</value>
+  </data>
+  <data name="Admin.Offerings.Health.A" xml:space="preserve">
+    <value>A · Legacy</value>
+  </data>
+  <data name="Admin.Offerings.Health.B" xml:space="preserve">
+    <value>B · Sağlıklı</value>
+  </data>
+  <data name="Admin.Offerings.Health.C" xml:space="preserve">
+    <value>C · Başvuru yok</value>
+  </data>
+  <data name="Admin.Offerings.Health.D" xml:space="preserve">
+    <value>D · Taslak var</value>
+  </data>
+  <data name="Admin.Offerings.Health.E" xml:space="preserve">
+    <value>E · İleri başvuru var</value>
+  </data>
+  <data name="Admin.Offerings.Count" xml:space="preserve">
+    <value>{0} ilan</value>
+  </data>
+  <data name="Admin.Offerings.Health.ALead" xml:space="preserve">
+    <value>Belge iş akışı dışında kalan legacy ilanlar. Mevcut davranışları değiştirilmez.</value>
+  </data>
+  <data name="Admin.Offerings.Health.BLead" xml:space="preserve">
+    <value>Açık ve en az bir aktif zorunlu belge koşulu bulunan ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CLead" xml:space="preserve">
+    <value>Açık, belge akışı etkin, aktif zorunlu koşulu ve başvurusu olmayan ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.DLead" xml:space="preserve">
+    <value>Aktif zorunlu koşulu bulunmayan ve mevcut taslakları olan açık ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.ELead" xml:space="preserve">
+    <value>Aktif zorunlu koşulu bulunmayan ve gönderilmiş veya daha ileri başvuruları olan açık ilanlar.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Clear" xml:space="preserve">
+    <value>Filtrelenen ilanlarda açık ve eksik belge yapılandırmasına sahip workflow ilanı bulunmuyor.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Risk" xml:space="preserve">
+    <value>{0} açık ilanda yapılandırma riski bulundu.</value>
+  </data>
+  <data name="Admin.Offerings.Health.RiskLead" xml:space="preserve">
+    <value>Bu ilanlar yeni öğrenci program listesinde gösterilmez. Otomatik veri düzeltmesi yapılmaz.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Group" xml:space="preserve">
+    <value>{0} grubu · İlan #{1}</value>
+  </data>
+  <data name="Admin.Offerings.Health.OpenInvalid" xml:space="preserve">
+    <value>Açık · Eksik koşul</value>
+  </data>
+  <data name="Admin.Offerings.Health.ActiveRequired" xml:space="preserve">
+    <value>Aktif zorunlu koşul</value>
+  </data>
+  <data name="Admin.Offerings.Health.TotalRequirements" xml:space="preserve">
+    <value>Toplam belge koşulu</value>
+  </data>
+  <data name="Admin.Offerings.Health.Drafts" xml:space="preserve">
+    <value>Taslak</value>
+  </data>
+  <data name="Admin.Offerings.Health.Submitted" xml:space="preserve">
+    <value>Gönderilmiş ve ileri</value>
+  </data>
+  <data name="Admin.Offerings.Health.SnapshotWarning" xml:space="preserve">
+    <value>Bu ilana daha önce oluşturulmuş taslak veya gönderilmiş başvurular bulunmaktadır. Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez. Mevcut başvurular için enstitü kararı verilmeden otomatik veri değişikliği yapılmamalıdır.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Hidden" xml:space="preserve">
+    <value>İlan öğrenciye gösterilmez ve doğrudan taslak oluşturma API tarafından reddedilir.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CompletedEvaluation" xml:space="preserve">
+    <value>Kesinleştirilmiş veya yayımlanmış değerlendirme, sonuç ve başvurular değiştirilmez. İlan yalnızca yeni başvurulara kapatılır ve manuel incelemeye alınır.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepClose" xml:space="preserve">
+    <value>İlanı güvenli biçimde yeni başvurulara kapatın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReview" xml:space="preserve">
+    <value>Mevcut sonuçları değiştirmeden enstitü kararı için manuel incelemeye alın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepGuide" xml:space="preserve">
+    <value>İlgili enstitünün güncel dönem ve program kılavuzunu doğrulayın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepDocuments" xml:space="preserve">
+    <value>Belge koşullarını mevcut güvenli admin akışından ekleyin.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepRequired" xml:space="preserve">
+    <value>En az bir aktif ve zorunlu koşul bulunduğunu doğrulayın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReopen" xml:space="preserve">
+    <value>İlanı güncel RowVersion ve API invariant kontrolleriyle yeniden açın.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CloseReview" xml:space="preserve">
+    <value>Kapat ve manuel incelemeye al</value>
+  </data>
+  <data name="Admin.Offerings.Health.Close" xml:space="preserve">
+    <value>İlanı güvenli biçimde kapat</value>
+  </data>
+  <data name="Admin.Offerings.Health.ConfigureDocuments" xml:space="preserve">
+    <value>Belge koşullarını yapılandır</value>
+  </data>
+  <data name="Admin.Offerings.ListHeading" xml:space="preserve">
+    <value>İlanlar</value>
+  </data>
+  <data name="Admin.Offerings.Showing" xml:space="preserve">
+    <value>{0} ilan gösteriliyor</value>
+  </data>
+  <data name="Admin.Offerings.EmptyHeading" xml:space="preserve">
+    <value>İlan bulunamadı</value>
+  </data>
+  <data name="Admin.Offerings.EmptyLead" xml:space="preserve">
+    <value>Filtreleri değiştirin veya sağlanan formdan yeni ve kapalı bir ilan oluşturun.</value>
+  </data>
+  <data name="Admin.Offerings.State.Archived" xml:space="preserve">
+    <value>Arşivli</value>
+  </data>
+  <data name="Admin.Offerings.State.Open" xml:space="preserve">
+    <value>Açık</value>
+  </data>
+  <data name="Admin.Offerings.State.Closed" xml:space="preserve">
+    <value>Kapalı</value>
+  </data>
+  <data name="Admin.Offerings.Start" xml:space="preserve">
+    <value>Başvuru başlangıcı</value>
+  </data>
+  <data name="Admin.Offerings.Deadline" xml:space="preserve">
+    <value>Son başvuru</value>
+  </data>
+  <data name="Admin.Offerings.Unspecified" xml:space="preserve">
+    <value>Belirtilmemiş</value>
+  </data>
+  <data name="Admin.Offerings.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="Admin.Offerings.DocumentWorkflow" xml:space="preserve">
+    <value>Belge akışı</value>
+  </data>
+  <data name="Admin.Offerings.LegacyOutside" xml:space="preserve">
+    <value>Legacy akış · kapsam dışı</value>
+  </data>
+  <data name="Admin.Offerings.Ready" xml:space="preserve">
+    <value>Hazır</value>
+  </data>
+  <data name="Admin.Offerings.Incomplete" xml:space="preserve">
+    <value>Eksik</value>
+  </data>
+  <data name="Admin.Offerings.RequirementCount" xml:space="preserve">
+    <value>{0} koşul</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationWorkflow" xml:space="preserve">
+    <value>Değerlendirme akışı</value>
+  </data>
+  <data name="Admin.Offerings.NotUsed" xml:space="preserve">
+    <value>Kullanılmıyor</value>
+  </data>
+  <data name="Admin.Offerings.ExamRequirements" xml:space="preserve">
+    <value>Sınav koşulları</value>
+  </data>
+  <data name="Admin.Offerings.ReadinessHeading" xml:space="preserve">
+    <value>İlanı açma önkoşulları</value>
+  </data>
+  <data name="Admin.Offerings.RequiredCondition" xml:space="preserve">
+    <value>Zorunlu belge koşulu:</value>
+  </data>
+  <data name="Admin.Offerings.RequiredReady" xml:space="preserve">
+    <value>En az bir aktif zorunlu koşul var.</value>
+  </data>
+  <data name="Admin.Offerings.RequiredMissing" xml:space="preserve">
+    <value>İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın.</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicy" xml:space="preserve">
+    <value>Kriter politikası:</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicyLead" xml:space="preserve">
+    <value>Toplam ağırlık 10.000 bp olmalı ve her sınav puanı kriteri bağlı aktif zorunlu sınav koşuluna sahip olmalıdır.</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicy" xml:space="preserve">
+    <value>Değerlendirme politikası:</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicyLead" xml:space="preserve">
+    <value>Bu ilan sıralamalı değerlendirme akışını kullanmıyor.</value>
+  </data>
+  <data name="Admin.Offerings.ConfigurationLocked" xml:space="preserve">
+    <value>Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.</value>
+  </data>
+  <data name="Admin.Offerings.EditGeneral" xml:space="preserve">
+    <value>Genel bilgileri düzenle</value>
+  </data>
+  <data name="Admin.Offerings.DocumentRequirements" xml:space="preserve">
+    <value>Belge koşulları</value>
+  </data>
+  <data name="Admin.Offerings.Evaluation" xml:space="preserve">
+    <value>Değerlendirme</value>
+  </data>
+  <data name="Admin.Offerings.OpenCheck" xml:space="preserve">
+    <value>İlanı açma kontrolü</value>
+  </data>
+  <data name="Admin.Offerings.EditHeading" xml:space="preserve">
+    <value>İlanı düzenle</value>
+  </data>
+  <data name="Admin.Offerings.NewHeading" xml:space="preserve">
+    <value>Yeni ilan oluştur</value>
+  </data>
+  <data name="Admin.Offerings.NewLead" xml:space="preserve">
+    <value>Yeni ilan güvenli başlangıç davranışı olarak önce kapalı oluşturulur.</value>
+  </data>
+  <data name="Admin.Offerings.Editing" xml:space="preserve">
+    <value>Düzenlenen ilan:</value>
+  </data>
+  <data name="Admin.Offerings.OfferingNumber" xml:space="preserve">
+    <value>İlan #{0}</value>
+  </data>
+  <data name="Admin.Offerings.StepsAria" xml:space="preserve">
+    <value>İlan yapılandırma adımları</value>
+  </data>
+  <data name="Admin.Offerings.Configuration" xml:space="preserve">
+    <value>İlan yapılandırması</value>
+  </data>
+  <data name="Admin.Offerings.General" xml:space="preserve">
+    <value>Genel bilgiler</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationCriteria" xml:space="preserve">
+    <value>Değerlendirme kriterleri</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationNotUsed" xml:space="preserve">
+    <value>Değerlendirme kullanılmıyor</value>
+  </data>
+  <data name="Admin.Offerings.ReviewOpen" xml:space="preserve">
+    <value>Gözden geçir ve aç</value>
+  </data>
+  <data name="Admin.Offerings.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Offerings.Term" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Admin.Offerings.StartIstanbul" xml:space="preserve">
+    <value>Başvuru başlangıcı (İstanbul)</value>
+  </data>
+  <data name="Admin.Offerings.DeadlineIstanbul" xml:space="preserve">
+    <value>Son başvuru (İstanbul)</value>
+  </data>
+  <data name="Admin.Offerings.UseEvaluation" xml:space="preserve">
+    <value>Sıralamalı değerlendirme akışını kullan</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationImmutable" xml:space="preserve">
+    <value>Etkinleştirildikten sonra kapatılamaz; mevcut ilan yalnızca hiç başvurusu yoksa bu akışa geçirilebilir.</value>
+  </data>
+  <data name="Admin.Offerings.ExamLead" xml:space="preserve">
+    <value>Yalnızca seçili sınavlar ilan koşulu olarak gönderilir. Zorunlu sınavlar ExamScore kriterlerine bağlanabilir.</value>
+  </data>
+  <data name="Admin.Offerings.UseCondition" xml:space="preserve">
+    <value>Koşulu kullan</value>
+  </data>
+  <data name="Admin.Offerings.RequiredExam" xml:space="preserve">
+    <value>Zorunlu sınav</value>
+  </data>
+  <data name="Admin.Offerings.MinimumScore" xml:space="preserve">
+    <value>Minimum puan</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDate" xml:space="preserve">
+    <value>En eski kabul edilen sonuç tarihi</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDateHelp" xml:space="preserve">
+    <value>Bu tarihten önceki sonuçlar reddedilir.</value>
+  </data>
+  <data name="Admin.Offerings.AlesHelp" xml:space="preserve">
+    <value>ALES sonuçları beş yıl geçerlidir. Tarih, son başvuru gününden beş yıl önce olmalıdır.</value>
+  </data>
+  <data name="Admin.Offerings.ApplyFiveYears" xml:space="preserve">
+    <value>Beş yıllık tarihi uygula</value>
+  </data>
+  <data name="Admin.Offerings.AlesSuggestion" xml:space="preserve">
+    <value>Önerilen tarih: {0}</value>
+  </data>
+  <data name="Admin.Offerings.AlesNeedDeadline" xml:space="preserve">
+    <value>Öneri için son başvuru tarihini girin.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedHeading" xml:space="preserve">
+    <value>Yeni ilan önce kapalı oluşturulur.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLabel" xml:space="preserve">
+    <value>Yeni ilan kapalı oluşturulacak</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLead" xml:space="preserve">
+    <value>En az bir aktif zorunlu belge koşulu tanımladıktan ve değerlendirme önkoşullarını tamamladıktan sonra ilanı düzenleyerek açabilirsiniz.</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveHeading" xml:space="preserve">
+    <value>Arşivleme alanı</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveLead" xml:space="preserve">
+    <value>Arşivlenen ilan yeni işlemlerde gösterilmez; geçmiş başvuru ve audit kayıtları korunur.</value>
+  </data>
+  <data name="Admin.Offerings.Archive" xml:space="preserve">
+    <value>İlanı arşivle</value>
+  </data>
+  <data name="Admin.Offerings.Save" xml:space="preserve">
+    <value>İlan değişikliklerini kaydet</value>
+  </data>
+  <data name="Admin.Offerings.CreateClosed" xml:space="preserve">
+    <value>Kapalı ilanı oluştur</value>
+  </data>
+  <data name="Admin.Offerings.CancelEdit" xml:space="preserve">
+    <value>Düzenlemeden vazgeç</value>
+  </data>
+  <data name="Admin.Requirements.Heading" xml:space="preserve">
+    <value>İlan belge koşulları</value>
+  </data>
+  <data name="Admin.Requirements.SnapshotLead" xml:space="preserve">
+    <value>Mevcut taslak ve başvuruların snapshot koşulları değişmez. Koşul değişiklikleri yalnızca daha sonra oluşturulan taslakları etkiler.</value>
+  </data>
+  <data name="Admin.Requirements.Invariant" xml:space="preserve">
+    <value>Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler. Açık ilan için son aktif zorunlu koşulu pasifleştirme isteği API tarafından güvenli biçimde reddedilir.</value>
+  </data>
+  <data name="Admin.Requirements.GuideHeading" xml:space="preserve">
+    <value>Kılavuz doğrulaması</value>
+  </data>
+  <data name="Admin.Requirements.GuideLead" xml:space="preserve">
+    <value>Belge koşullarını, ilgili enstitünün güncel ilan kılavuzuna göre tanımlayın. Programlara özel ek belgeler bulunabilir.</value>
+  </data>
+  <data name="Admin.Requirements.GuidePrefix" xml:space="preserve">
+    <value>Evrak listesini bütün ilanlara kopyalamayın.</value>
+  </data>
+  <data name="Admin.Requirements.SocialGuide" xml:space="preserve">
+    <value>Sosyal Bilimler Enstitüsü 2026–2027 Güz kılavuzu</value>
+  </data>
+  <data name="Admin.Requirements.And" xml:space="preserve">
+    <value>ve</value>
+  </data>
+  <data name="Admin.Requirements.InternationalGuide" xml:space="preserve">
+    <value>uluslararası öğrenci duyurusu</value>
+  </data>
+  <data name="Admin.Requirements.GuideSuffix" xml:space="preserve">
+    <value>gibi başvuru türüne uygun resmî kaynağı kullanın.</value>
+  </data>
+  <data name="Admin.Requirements.SelectHeading" xml:space="preserve">
+    <value>Belge koşulları için ilan seçin</value>
+  </data>
+  <data name="Admin.Requirements.SelectLead" xml:space="preserve">
+    <value>Yalnızca yöneteceğiniz ilan kartındaki “Belge koşulları” eylemini kullanın. Tam koşul listesi seçilen ilan için yüklenir.</value>
+  </data>
+  <data name="Admin.Requirements.Selected" xml:space="preserve">
+    <value>Seçili ilan · #{0}</value>
+  </data>
+  <data name="Admin.Requirements.ActiveRequired" xml:space="preserve">
+    <value>{0} aktif zorunlu</value>
+  </data>
+  <data name="Admin.Requirements.Locked" xml:space="preserve">
+    <value>Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir. Belge koşulları salt okunur gösterilir; ilan manuel enstitü incelemesine bırakılmalıdır.</value>
+  </data>
+  <data name="Admin.Requirements.EmptyHeading" xml:space="preserve">
+    <value>Belge koşulu tanımlanmamış</value>
+  </data>
+  <data name="Admin.Requirements.HistoricalLocked" xml:space="preserve">
+    <value>Bu tarihsel ilan için normal belge yapılandırma akışı kullanılamaz.</value>
+  </data>
+  <data name="Admin.Requirements.Caption" xml:space="preserve">
+    <value>{0} ilanının belge koşulları</value>
+  </data>
+  <data name="Admin.Requirements.Requirement" xml:space="preserve">
+    <value>Koşul</value>
+  </data>
+  <data name="Admin.Requirements.Description" xml:space="preserve">
+    <value>Açıklama</value>
+  </data>
+  <data name="Admin.Requirements.TypeLimit" xml:space="preserve">
+    <value>Tür ve sınır</value>
+  </data>
+  <data name="Admin.Requirements.Action" xml:space="preserve">
+    <value>İşlem</value>
+  </data>
+  <data name="Admin.Requirements.Required" xml:space="preserve">
+    <value>Zorunlu</value>
+  </data>
+  <data name="Admin.Requirements.Optional" xml:space="preserve">
+    <value>İsteğe bağlı</value>
+  </data>
+  <data name="Admin.Requirements.NoDescription" xml:space="preserve">
+    <value>Açıklama yok</value>
+  </data>
+  <data name="Admin.Requirements.ConcurrencyProtected" xml:space="preserve">
+    <value>Eşzamanlılık korumalı</value>
+  </data>
+  <data name="Admin.Requirements.ReadOnly" xml:space="preserve">
+    <value>Salt okunur</value>
+  </data>
+  <data name="Admin.Requirements.Edit" xml:space="preserve">
+    <value>Koşulu düzenle</value>
+  </data>
+  <data name="Admin.Requirements.DeactivateAria" xml:space="preserve">
+    <value>Pasifleştir belge koşulu: {0}</value>
+  </data>
+  <data name="Admin.Requirements.ActivateAria" xml:space="preserve">
+    <value>Aktifleştir belge koşulu: {0}</value>
+  </data>
+  <data name="Admin.Requirements.Deactivate" xml:space="preserve">
+    <value>Koşulu pasifleştir</value>
+  </data>
+  <data name="Admin.Requirements.Activate" xml:space="preserve">
+    <value>Koşulu aktifleştir</value>
+  </data>
+  <data name="Admin.Requirements.LastRequired" xml:space="preserve">
+    <value>Açık ilandaki son aktif zorunlu koşul kaldırılamaz.</value>
+  </data>
+  <data name="Admin.Requirements.NewHeading" xml:space="preserve">
+    <value>Yeni belge koşulu</value>
+  </data>
+  <data name="Admin.Requirements.EditHeading" xml:space="preserve">
+    <value>Belge koşulunu düzenle</value>
+  </data>
+  <data name="Admin.Requirements.Code" xml:space="preserve">
+    <value>Belge kodu</value>
+  </data>
+  <data name="Admin.Requirements.DisplayNameTurkish" xml:space="preserve">
+    <value>Türkçe görünen ad</value>
+  </data>
+  <data name="Admin.Requirements.AllowedType" xml:space="preserve">
+    <value>İzin verilen tür</value>
+  </data>
+  <data name="Admin.Requirements.MaximumBytes" xml:space="preserve">
+    <value>Maksimum boyut (bayt)</value>
+  </data>
+  <data name="Admin.Requirements.RequiredDocument" xml:space="preserve">
+    <value>Zorunlu belge</value>
+  </data>
+  <data name="Admin.Requirements.Save" xml:space="preserve">
+    <value>Belge koşulunu kaydet</value>
+  </data>
+
+  <!-- Admin evaluation localization -->
+  <data name="Admin.Evaluation.PageTitle" xml:space="preserve">
+    <value>Başvuru değerlendirmesi</value>
+  </data>
+  <data name="Admin.Evaluation.Area" xml:space="preserve">
+    <value>İlanlar ve değerlendirme</value>
+  </data>
+  <data name="Admin.Evaluation.BackToOfferings" xml:space="preserve">
+    <value>İlanlara dön</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedTitle" xml:space="preserve">
+    <value>Sonuçlar kesinleştirildi; değerlendirme verileri değiştirilemez.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedBody" xml:space="preserve">
+    <value>Öğrenciler sonuçları yayımlama işlemi tamamlanana kadar göremez.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedTitle" xml:space="preserve">
+    <value>Sonuçlar yayımlandı; değerlendirme verileri değiştirilemez.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedBody" xml:space="preserve">
+    <value>Başvuru durumları ve sonuç snapshot’ları yayımlanmış haldedir.</value>
+  </data>
+  <data name="Admin.Evaluation.LifecycleAria" xml:space="preserve">
+    <value>Değerlendirme yaşam döngüsü ve yetkileri</value>
+  </data>
+  <data name="Admin.Evaluation.Lifecycle" xml:space="preserve">
+    <value>Yaşam döngüsü</value>
+  </data>
+  <data name="Admin.Evaluation.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Admin.Evaluation.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="Admin.Evaluation.Deadline" xml:space="preserve">
+    <value>Son başvuru</value>
+  </data>
+  <data name="Admin.Evaluation.Unspecified" xml:space="preserve">
+    <value>Belirtilmemiş</value>
+  </data>
+  <data name="Admin.Evaluation.Permissions" xml:space="preserve">
+    <value>Mevcut işlem yetkileri</value>
+  </data>
+  <data name="Admin.Evaluation.Policy" xml:space="preserve">
+    <value>Politika</value>
+  </data>
+  <data name="Admin.Evaluation.Eligibility" xml:space="preserve">
+    <value>Uygunluk</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScore" xml:space="preserve">
+    <value>Manuel puan</value>
+  </data>
+  <data name="Admin.Evaluation.Finalization" xml:space="preserve">
+    <value>Kesinleştirme</value>
+  </data>
+  <data name="Admin.Evaluation.Publication" xml:space="preserve">
+    <value>Yayımlama</value>
+  </data>
+  <data name="Admin.Evaluation.Editable" xml:space="preserve">
+    <value>Düzenlenebilir</value>
+  </data>
+  <data name="Admin.Evaluation.DecisionAllowed" xml:space="preserve">
+    <value>Karar verilebilir</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreAllowed" xml:space="preserve">
+    <value>Girilebilir</value>
+  </data>
+  <data name="Admin.Evaluation.ReadOnly" xml:space="preserve">
+    <value>Salt okunur</value>
+  </data>
+  <data name="Admin.Evaluation.PrerequisiteDependent" xml:space="preserve">
+    <value>Önkoşullara bağlı</value>
+  </data>
+  <data name="Admin.Evaluation.Open" xml:space="preserve">
+    <value>Açık</value>
+  </data>
+  <data name="Admin.Evaluation.Closed" xml:space="preserve">
+    <value>Kapalı</value>
+  </data>
+  <data name="Admin.Evaluation.PermissionMatrix" xml:space="preserve">
+    <value>Yaşam döngüsü yetki matrisi</value>
+  </data>
+  <data name="Admin.Evaluation.ConfiguringMatrix" xml:space="preserve">
+    <value>politika, uygunluk ve manuel puan; önkoşullarla kesinleştirme.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedMatrix" xml:space="preserve">
+    <value>yalnızca yayımlama.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedMatrix" xml:space="preserve">
+    <value>tüm değişiklik işlemleri kapalı.</value>
+  </data>
+  <data name="Admin.Evaluation.Step1" xml:space="preserve">
+    <value>1. Politika ve kriterler</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyHeading" xml:space="preserve">
+    <value>Değerlendirme politikası</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyDescription" xml:space="preserve">
+    <value>Kriterler ilk taslak başvuru oluştuğunda kilitlenir. Eşitlikte küçük tie-break önceliği önce uygulanır.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightValid" xml:space="preserve">
+    <value>Toplam ağırlık geçerli.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightInvalid" xml:space="preserve">
+    <value>Toplam ağırlık 10.000 bp olmalı.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteria" xml:space="preserve">
+    <value>Henüz kriter tanımlanmadı</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteriaBody" xml:space="preserve">
+    <value>İlan kesinleştirilmeden önce toplamı 10.000 bp olan geçerli bir politika oluşturun.</value>
+  </data>
+  <data name="Admin.Evaluation.Code" xml:space="preserve">
+    <value>Kod</value>
+  </data>
+  <data name="Admin.Evaluation.DisplayName" xml:space="preserve">
+    <value>Görünen ad</value>
+  </data>
+  <data name="Admin.Evaluation.SourceType" xml:space="preserve">
+    <value>Kaynak türü</value>
+  </data>
+  <data name="Admin.Evaluation.RequiredExam" xml:space="preserve">
+    <value>Bağlı zorunlu sınav</value>
+  </data>
+  <data name="Admin.Evaluation.SelectExam" xml:space="preserve">
+    <value>Sınav seçiniz</value>
+  </data>
+  <data name="Admin.Evaluation.MinimumFormat" xml:space="preserve">
+    <value>En az {0}</value>
+  </data>
+  <data name="Admin.Evaluation.WeightBp" xml:space="preserve">
+    <value>Ağırlık (bp)</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScore" xml:space="preserve">
+    <value>Maksimum ham puan</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScoreValidation" xml:space="preserve">
+    <value>Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.TieBreakPriority" xml:space="preserve">
+    <value>Tie-break önceliği</value>
+  </data>
+  <data name="Admin.Evaluation.SaveCriterion" xml:space="preserve">
+    <value>Kriteri kaydet</value>
+  </data>
+  <data name="Admin.Evaluation.CriterionDangerZone" xml:space="preserve">
+    <value>Kriter silme alanı</value>
+  </data>
+  <data name="Admin.Evaluation.DeleteCriterion" xml:space="preserve">
+    <value>Kriteri sil</value>
+  </data>
+  <data name="Admin.Evaluation.Name" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Admin.Evaluation.Source" xml:space="preserve">
+    <value>Kaynak</value>
+  </data>
+  <data name="Admin.Evaluation.Exam" xml:space="preserve">
+    <value>Sınav</value>
+  </data>
+  <data name="Admin.Evaluation.Weight" xml:space="preserve">
+    <value>Ağırlık</value>
+  </data>
+  <data name="Admin.Evaluation.Maximum" xml:space="preserve">
+    <value>Maksimum</value>
+  </data>
+  <data name="Admin.Evaluation.Priority" xml:space="preserve">
+    <value>Öncelik</value>
+  </data>
+  <data name="Admin.Evaluation.NewCriterion" xml:space="preserve">
+    <value>Yeni kriter</value>
+  </data>
+  <data name="Admin.Evaluation.AddCriterion" xml:space="preserve">
+    <value>Yeni kriteri ekle</value>
+  </data>
+  <data name="Admin.Evaluation.Step2" xml:space="preserve">
+    <value>2. Aday değerlendirmeleri</value>
+  </data>
+  <data name="Admin.Evaluation.Candidates" xml:space="preserve">
+    <value>Adaylar</value>
+  </data>
+  <data name="Admin.Evaluation.CandidatesDescription" xml:space="preserve">
+    <value>Maskelenmiş kimlik, belge uygunluğu, otomatik bileşenler ve izin verilen manuel işlemler birlikte gösterilir.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidates" xml:space="preserve">
+    <value>Değerlendirilecek aday yok</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidatesBody" xml:space="preserve">
+    <value>Bu ilanda henüz değerlendirme kapsamına alınmış bir başvuru bulunmuyor.</value>
+  </data>
+  <data name="Admin.Evaluation.OpenApplication" xml:space="preserve">
+    <value>Başvuruyu aç</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityFormat" xml:space="preserve">
+    <value>Uygunluk: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.TotalFormat" xml:space="preserve">
+    <value>Toplam: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.MissingPrerequisites" xml:space="preserve">
+    <value>Eksik önkoşullar:</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityPending" xml:space="preserve">
+    <value>Uygunluk kararı bekliyor.</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreMissing" xml:space="preserve">
+    <value>Bir veya daha fazla puan bileşeni eksik.</value>
+  </data>
+  <data name="Admin.Evaluation.ComponentsCaption" xml:space="preserve">
+    <value>{0} adayının puan bileşenleri</value>
+  </data>
+  <data name="Admin.Evaluation.Component" xml:space="preserve">
+    <value>Bileşen</value>
+  </data>
+  <data name="Admin.Evaluation.RawScore" xml:space="preserve">
+    <value>Ham puan</value>
+  </data>
+  <data name="Admin.Evaluation.Normalized" xml:space="preserve">
+    <value>Normalize</value>
+  </data>
+  <data name="Admin.Evaluation.Contribution" xml:space="preserve">
+    <value>Katkı</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityDecision" xml:space="preserve">
+    <value>Uygunluk kararı</value>
+  </data>
+  <data name="Admin.Evaluation.Decision" xml:space="preserve">
+    <value>Karar</value>
+  </data>
+  <data name="Admin.Evaluation.IneligibleReason" xml:space="preserve">
+    <value>Uygun değilse gerekçe</value>
+  </data>
+  <data name="Admin.Evaluation.SaveEligibility" xml:space="preserve">
+    <value>Uygunluk kararını kaydet</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScoreHeading" xml:space="preserve">
+    <value>{0} manuel puanı</value>
+  </data>
+  <data name="Admin.Evaluation.SaveManualScore" xml:space="preserve">
+    <value>Manuel puanı kaydet</value>
+  </data>
+  <data name="Admin.Evaluation.Step3" xml:space="preserve">
+    <value>3. Sıralama ve sonuç işlemleri</value>
+  </data>
+  <data name="Admin.Evaluation.RankingHeading" xml:space="preserve">
+    <value>Deterministik sıralama önizlemesi</value>
+  </data>
+  <data name="Admin.Evaluation.RankingDescription" xml:space="preserve">
+    <value>Kabul ve kontenjan dışı ayrımı metinle belirtilir; kontenjan çizgisi tabloda ayrıca işaretlenir.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeBlocked" xml:space="preserve">
+    <value>Kesinleştirme önkoşulları tamamlanmadı.</value>
+  </data>
+  <data name="Admin.Evaluation.RankingCaption" xml:space="preserve">
+    <value>Aday sıralaması ve öngörülen sonuçlar</value>
+  </data>
+  <data name="Admin.Evaluation.Rank" xml:space="preserve">
+    <value>Sıra</value>
+  </data>
+  <data name="Admin.Evaluation.MaskedCandidate" xml:space="preserve">
+    <value>Maskelenmiş aday</value>
+  </data>
+  <data name="Admin.Evaluation.TotalScore" xml:space="preserve">
+    <value>Toplam puan</value>
+  </data>
+  <data name="Admin.Evaluation.ProjectedOutcome" xml:space="preserve">
+    <value>Öngörülen sonuç</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaBoundary" xml:space="preserve">
+    <value>Kontenjan çizgisi</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHeading" xml:space="preserve">
+    <value>Sonuçları kesinleştirme</value>
+  </data>
+  <data name="Admin.Evaluation.DeadlineFormat" xml:space="preserve">
+    <value>Son başvuru tarihi: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyTotalFormat" xml:space="preserve">
+    <value>Politika toplamı: {0} bp</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaFormat" xml:space="preserve">
+    <value>Kontenjan: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeEffect" xml:space="preserve">
+    <value>Kesinleştirme sıralama ve kararları dondurur; öğrenciler sonuçları henüz göremez.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeAction" xml:space="preserve">
+    <value>Sonuçları kesinleştir</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHidden" xml:space="preserve">
+    <value>Kesinleştirme formu, tüm önkoşullar tamamlanana kadar gösterilmez.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishHeading" xml:space="preserve">
+    <value>Sonuçları yayımlama</value>
+  </data>
+  <data name="Admin.Evaluation.PublishDescription" xml:space="preserve">
+    <value>Kesinleştirilmiş sonuçları ve geri alınamaz yayımlama etkilerini ayrı onay ekranında inceleyin.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishConfirmation" xml:space="preserve">
+    <value>Yayımlama onayına geç</value>
+  </data>
+  <data name="Admin.Evaluation.AlreadyPublished" xml:space="preserve">
+    <value>Sonuçlar yayımlandı; başka bir sonuç değişiklik işlemi gösterilmiyor.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PageTitle" xml:space="preserve">
+    <value>Sonuçları yayımla</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Back" xml:space="preserve">
+    <value>Değerlendirmeye dön</value>
+  </data>
+  <data name="Admin.PublishEvaluation.SummaryAria" xml:space="preserve">
+    <value>Yayımlama özeti</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Admitted" xml:space="preserve">
+    <value>Kabul</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NotAdmitted" xml:space="preserve">
+    <value>Kontenjan dışında</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Ineligible" xml:space="preserve">
+    <value>Uygun bulunmadı</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRanking" xml:space="preserve">
+    <value>Kesinleştirilmiş sıralama</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRankingDescription" xml:space="preserve">
+    <value>Bu sıralama yayımlama sırasında başvuru durumları ve öğrenci sonuç snapshot’ları için kullanılır.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRows" xml:space="preserve">
+    <value>Sıralama satırı bulunamadı</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRowsBody" xml:space="preserve">
+    <value>Yayımlamadan önce değerlendirme ekranına dönerek kesinleştirilmiş verileri doğrulayın.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.RankingCaption" xml:space="preserve">
+    <value>Kesinleştirilmiş aday sıralaması</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Outcome" xml:space="preserve">
+    <value>Sonuç</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Undetermined" xml:space="preserve">
+    <value>Belirlenmedi</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ConfirmationHeading" xml:space="preserve">
+    <value>Geri alınamaz yayımlama onayı</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Irreversible" xml:space="preserve">
+    <value>İşlem geri alınamaz.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.IrreversibleBody" xml:space="preserve">
+    <value>Kesinleştirilmiş sonuçlar öğrencilere açılır ve başvuru durumları atomik olarak Onaylandı/Reddedildi yapılır.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.BeforePublication" xml:space="preserve">
+    <value>Yayımlama öncesinde öğrenciler puan, sıra ve sonucu göremez.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.AtomicEffect" xml:space="preserve">
+    <value>Yayımlama işlemi başvuru statüsü, history, audit ve sonuç snapshot kayıtlarını tek atomik işlemde oluşturur.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ServerChecks" xml:space="preserve">
+    <value>Sunucu tarafındaki yaşam döngüsü, antiforgery ve RowVersion kontrolleri yeniden uygulanır.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PublishAction" xml:space="preserve">
+    <value>Sonuçları yayımla</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Cancel" xml:space="preserve">
+    <value>Yayımlamadan vazgeç</value>
+  </data>
+
+  <!-- Evaluation API summary localization -->
+  <data name="Admin.Evaluation.DocumentReviewLegacy" xml:space="preserve">
+    <value>Legacy belge akışı</value>
+  </data>
+  <data name="Admin.Evaluation.DocumentReviewProgress" xml:space="preserve">
+    <value>{0}/{1} zorunlu belge onaylı</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AlreadyFinalized" xml:space="preserve">
+    <value>İlan sonuçları zaten kesinleştirilmiş veya yayımlanmış.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.CloseOffering" xml:space="preserve">
+    <value>İlan önce kapatılmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DeadlineNotPassed" xml:space="preserve">
+    <value>Son başvuru tarihi henüz geçmedi.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PositiveQuota" xml:space="preserve">
+    <value>Kontenjan pozitif olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.ValidPolicy" xml:space="preserve">
+    <value>Değerlendirme politikası geçerli ve 10000 basis point olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.NoSubmittedApplications" xml:space="preserve">
+    <value>Kesinleştirilecek gönderilmiş başvuru bulunmuyor.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PendingApplications" xml:space="preserve">
+    <value>İncelemeye alınmamış bekleyen başvurular var.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AllUnderReview" xml:space="preserve">
+    <value>Tüm değerlendirilecek başvurular incelemede olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.EligibilityPending" xml:space="preserve">
+    <value>Uygunluk kararı verilmemiş başvurular var.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DocumentsPending" xml:space="preserve">
+    <value>Uygun işaretlenmiş adayların tüm zorunlu güncel belgeleri onaylanmış olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.MissingCriteria" xml:space="preserve">
+    <value>{0} başvurusunda eksik kriterler: {1}.</value>
+  </data>
+
+  <!-- Localized admin controller messages -->
+  <data name="Admin.Message.InviteEmailInvalid" xml:space="preserve">
+    <value>Yönetici daveti için geçerli bir e-posta adresi giriniz.</value>
+  </data>
+  <data name="Admin.Message.InviteCreated" xml:space="preserve">
+    <value>Yönetici daveti oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.InviteCreateFailed" xml:space="preserve">
+    <value>Yönetici daveti oluşturulamadı.</value>
+  </data>
+  <data name="Admin.Message.InviteResent" xml:space="preserve">
+    <value>Yönetici daveti yeniden oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.AdminActivated" xml:space="preserve">
+    <value>Yönetici hesabı aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.AdminDeactivated" xml:space="preserve">
+    <value>Yönetici hesabı pasifleştirildi ve mevcut oturumları iptal edildi.</value>
+  </data>
+  <data name="Admin.Message.AdminUnlocked" xml:space="preserve">
+    <value>Yönetici hesabının kilidi açıldı.</value>
+  </data>
+  <data name="Admin.Message.AdminAccountInvalid" xml:space="preserve">
+    <value>Yönetici hesap bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.AdminUpdateFailed" xml:space="preserve">
+    <value>Yönetici hesabı güncellenemedi.</value>
+  </data>
+  <data name="Admin.Message.StudentNotSelected" xml:space="preserve">
+    <value>Öğrenci seçilmedi.</value>
+  </data>
+  <data name="Admin.Message.StudentNotFound" xml:space="preserve">
+    <value>Öğrenci bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivated" xml:space="preserve">
+    <value>Öğrenci pasifleştirildi ve mevcut oturumları iptal edildi.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivateFailed" xml:space="preserve">
+    <value>Öğrenci pasifleştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.StudentActivated" xml:space="preserve">
+    <value>Öğrenci yeniden aktifleştirildi ve önceki oturumları geçersiz kılındı.</value>
+  </data>
+  <data name="Admin.Message.StudentActivateFailed" xml:space="preserve">
+    <value>Öğrenci aktifleştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.OfferingEditNotFound" xml:space="preserve">
+    <value>Düzenlenecek ilan bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.RequirementOfferingNotFound" xml:space="preserve">
+    <value>Belge koşulları için seçilen ilan bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.RequirementsLoadFailed" xml:space="preserve">
+    <value>Belge koşulları yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.SelectOfferingBeforeRequirement" xml:space="preserve">
+    <value>Belge koşulunu düzenlemek için önce ilan seçiniz.</value>
+  </data>
+  <data name="Admin.Message.RequirementNotFound" xml:space="preserve">
+    <value>Düzenlenecek belge koşulu seçilen ilanda bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.OfferingsLoadFailed" xml:space="preserve">
+    <value>İlan bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.TermInvalid" xml:space="preserve">
+    <value>Geçerli bir dönem seçiniz.</value>
+  </data>
+  <data name="Admin.Message.DeadlineAfterStart" xml:space="preserve">
+    <value>Son başvuru tarihi başlangıçtan sonra olmalıdır.</value>
+  </data>
+  <data name="Admin.Message.OfferingConcurrencyMissing" xml:space="preserve">
+    <value>İlan eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.OfferingValidationFailed" xml:space="preserve">
+    <value>İlan bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaveFailed" xml:space="preserve">
+    <value>Dönemsel ilan kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaved" xml:space="preserve">
+    <value>Dönemsel ilan kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.RemediationInvalid" xml:space="preserve">
+    <value>İlan kapatma bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.RemediationClosed" xml:space="preserve">
+    <value>Geçersiz açık ilan güvenli biçimde kapatıldı. Mevcut başvuru ve sonuçlar değiştirilmedi.</value>
+  </data>
+  <data name="Admin.Message.RemediationFailed" xml:space="preserve">
+    <value>İlan güvenli düzeltme için kapatılamadı.</value>
+  </data>
+  <data name="Admin.Message.ValidOfferingRequired" xml:space="preserve">
+    <value>Geçerli bir ilan seçiniz.</value>
+  </data>
+  <data name="Admin.Message.RequirementConcurrencyMissing" xml:space="preserve">
+    <value>Eşzamanlılık bilgisi eksik. Sayfayı yenileyin.</value>
+  </data>
+  <data name="Admin.Message.RequirementValidationFailed" xml:space="preserve">
+    <value>Belge koşulu bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaved" xml:space="preserve">
+    <value>Belge koşulu kaydedildi. Değişiklik yalnızca bundan sonra oluşturulan taslakları etkiler.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaveFailed" xml:space="preserve">
+    <value>Belge koşulu kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.RequirementStateInvalid" xml:space="preserve">
+    <value>Belge koşulu durumu doğrulanamadı. Sayfayı yenileyip tekrar deneyin.</value>
+  </data>
+  <data name="Admin.Message.RequirementActivated" xml:space="preserve">
+    <value>Belge koşulu aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.RequirementDeactivated" xml:space="preserve">
+    <value>Belge koşulu pasifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.RequirementUpdateFailed" xml:space="preserve">
+    <value>Belge koşulu güncellenemedi.</value>
+  </data>
+  <data name="Admin.Message.UniversitiesLoadFailed" xml:space="preserve">
+    <value>Üniversite kataloğu yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.UniversityValidationFailed" xml:space="preserve">
+    <value>Üniversite bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreateFailed" xml:space="preserve">
+    <value>Üniversite oluşturulamadı.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreated" xml:space="preserve">
+    <value>Üniversite kataloğa eklendi.</value>
+  </data>
+  <data name="Admin.Message.InstitutesLoadFailed" xml:space="preserve">
+    <value>Enstitü bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.InstituteConcurrencyMissing" xml:space="preserve">
+    <value>Enstitü eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.InstituteValidationFailed" xml:space="preserve">
+    <value>Enstitü bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.InstituteSaveFailed" xml:space="preserve">
+    <value>Enstitü kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.InstituteUpdated" xml:space="preserve">
+    <value>Enstitü güncellendi.</value>
+  </data>
+  <data name="Admin.Message.InstituteCreated" xml:space="preserve">
+    <value>Enstitü oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.InstituteActivated" xml:space="preserve">
+    <value>Enstitü aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeactivated" xml:space="preserve">
+    <value>Enstitü pasifleştirildi. Bağlı programlar yeni seçimlerde gösterilmeyecek.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateInvalid" xml:space="preserve">
+    <value>Enstitü aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateFailed" xml:space="preserve">
+    <value>Enstitü durumu değiştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.InstituteNotFound" xml:space="preserve">
+    <value>Enstitü bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteInvalid" xml:space="preserve">
+    <value>Enstitü silme bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleted" xml:space="preserve">
+    <value>Kullanılmamış enstitü kalıcı olarak silindi.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteFailed" xml:space="preserve">
+    <value>Enstitü silinemedi.</value>
+  </data>
+  <data name="Admin.Message.ProgramsLoadFailed" xml:space="preserve">
+    <value>Program bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.TranslationBatchRange" xml:space="preserve">
+    <value>Tek işlemde 1 ile 100 program çevirisi güncellenebilir.</value>
+  </data>
+  <data name="Admin.Message.TranslationValidationFailed" xml:space="preserve">
+    <value>Program çevirileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.TranslationSaveFailed" xml:space="preserve">
+    <value>Program çevirileri kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.TranslationNoChanges" xml:space="preserve">
+    <value>Program çevirilerinde değişiklik yok.</value>
+  </data>
+  <data name="Admin.Message.TranslationOneUpdated" xml:space="preserve">
+    <value>1 program çevirisi güncellendi.</value>
+  </data>
+  <data name="Admin.Message.TranslationManyUpdated" xml:space="preserve">
+    <value>{0} program çevirisi güncellendi.</value>
+  </data>
+  <data name="Admin.Message.ProgramConcurrencyMissing" xml:space="preserve">
+    <value>Program eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.ProgramValidationFailed" xml:space="preserve">
+    <value>Program bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.ProgramUpdated" xml:space="preserve">
+    <value>Program güncellendi.</value>
+  </data>
+  <data name="Admin.Message.ProgramCreated" xml:space="preserve">
+    <value>Program oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.ProgramActivated" xml:space="preserve">
+    <value>Program aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeactivated" xml:space="preserve">
+    <value>Program pasifleştirildi. Mevcut ilan ve başvurular korunuyor.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateInvalid" xml:space="preserve">
+    <value>Program aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateFailed" xml:space="preserve">
+    <value>Program durumu değiştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.ProgramNotFound" xml:space="preserve">
+    <value>Program bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteInvalid" xml:space="preserve">
+    <value>Program silme bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleted" xml:space="preserve">
+    <value>İlanı bulunmayan program kalıcı olarak silindi.</value>
+  </data>
+  <data name="Admin.Message.EvaluationNotFound" xml:space="preserve">
+    <value>Değerlendirme ilanı bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.CriterionInvalid" xml:space="preserve">
+    <value>Değerlendirme kriteri bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaved" xml:space="preserve">
+    <value>Değerlendirme kriteri kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaveFailed" xml:space="preserve">
+    <value>Değerlendirme kriteri kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteInvalid" xml:space="preserve">
+    <value>Değerlendirme kriteri silme bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleted" xml:space="preserve">
+    <value>Değerlendirme kriteri kaldırıldı.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteFailed" xml:space="preserve">
+    <value>Değerlendirme kriteri kaldırılamadı.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaved" xml:space="preserve">
+    <value>Aday uygunluk kararı kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaveFailed" xml:space="preserve">
+    <value>Aday uygunluk kararı kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalized" xml:space="preserve">
+    <value>Değerlendirme sonuçları kesinleştirildi; henüz öğrencilere yayımlanmadı.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalizeFailed" xml:space="preserve">
+    <value>Değerlendirme kesinleştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.NoPublishableResults" xml:space="preserve">
+    <value>Yayımlanabilir sonuç bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.EvaluationPublished" xml:space="preserve">
+    <value>Değerlendirme sonuçları öğrencilere yayımlandı.</value>
+  </data>
+  <data name="Admin.Message.PublishFailed" xml:space="preserve">
+    <value>Sonuçlar yayımlanamadı.</value>
+  </data>
+  <data name="Admin.Message.ApplicationNotFound" xml:space="preserve">
+    <value>Başvuru bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.StatusInvalid" xml:space="preserve">
+    <value>Durum güncelleme bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdated" xml:space="preserve">
+    <value>Başvuru durumu güncellendi.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdateFailed" xml:space="preserve">
+    <value>Başvuru durumu güncellenemedi.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewInvalid" xml:space="preserve">
+    <value>Belge inceleme bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.DocumentApproved" xml:space="preserve">
+    <value>Belge onaylandı.</value>
+  </data>
+  <data name="Admin.Message.DocumentRejected" xml:space="preserve">
+    <value>Belge gerekçeyle reddedildi.</value>
+  </data>
+
+  <data name="Admin.Message.ProgramSaveFailed" xml:space="preserve">
+    <value>Program kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteFailed" xml:space="preserve">
+    <value>Program silinemedi.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreRequired" xml:space="preserve">
+    <value>Manuel puan zorunludur.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaved" xml:space="preserve">
+    <value>Manuel puan kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaveFailed" xml:space="preserve">
+    <value>Manuel puan kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewSaveFailed" xml:space="preserve">
+    <value>Belge incelemesi kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.DocumentDownloadFailed" xml:space="preserve">
+    <value>Belge indirilemedi.</value>
+  </data>
+
+  <!-- Model binding and validation localization -->
+  <data name="Validation.Required" xml:space="preserve">
+    <value>Bu alan zorunludur.</value>
+  </data>
+  <data name="Validation.RequestBodyRequired" xml:space="preserve">
+    <value>Gerekli bilgiler gönderilmedi.</value>
+  </data>
+  <data name="Validation.InvalidNumberOrDate" xml:space="preserve">
+    <value>Girilen değer geçerli bir sayı veya tarih biçiminde değil.</value>
+  </data>
+  <data name="Validation.InvalidValue" xml:space="preserve">
+    <value>Girilen değer geçersiz.</value>
+  </data>
+  <data name="Validation.NumberRequired" xml:space="preserve">
+    <value>Geçerli bir sayı giriniz.</value>
+  </data>
+  <data name="Validation.ValidExam" xml:space="preserve">
+    <value>Geçerli bir sınav seçiniz.</value>
+  </data>
+  <data name="Validation.ScoreRange" xml:space="preserve">
+    <value>Puan 0 ile 999,99 arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.ValidProgram" xml:space="preserve">
+    <value>Geçerli bir program seçiniz.</value>
+  </data>
+  <data name="Validation.AcademicYearRange" xml:space="preserve">
+    <value>Akademik yıl başlangıcı 2000 ile 2200 arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.ValidTerm" xml:space="preserve">
+    <value>Geçerli bir dönem seçiniz.</value>
+  </data>
+  <data name="Validation.StartRequired" xml:space="preserve">
+    <value>Başvuru başlangıç tarihi zorunludur.</value>
+  </data>
+  <data name="Validation.DeadlineRequired" xml:space="preserve">
+    <value>Son başvuru tarihi zorunludur.</value>
+  </data>
+  <data name="Validation.QuotaRange" xml:space="preserve">
+    <value>Kontenjan 1 ile 100000 arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.OfferingConcurrency" xml:space="preserve">
+    <value>İlan eşzamanlılık bilgisi geçersiz.</value>
+  </data>
+  <data name="Validation.DisplayNameRequired" xml:space="preserve">
+    <value>Görünen ad zorunludur.</value>
+  </data>
+  <data name="Validation.MaximumSize" xml:space="preserve">
+    <value>Maksimum boyut geçersiz.</value>
+  </data>
+  <data name="Validation.ValidEmail" xml:space="preserve">
+    <value>Geçerli bir e-posta adresi giriniz.</value>
+  </data>
+  <data name="Validation.UniversityNameRequired" xml:space="preserve">
+    <value>Üniversite adı zorunludur.</value>
+  </data>
+  <data name="Validation.UniversityNameLength" xml:space="preserve">
+    <value>Üniversite adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.InstituteNameRequired" xml:space="preserve">
+    <value>Enstitü adı zorunludur.</value>
+  </data>
+  <data name="Validation.InstituteNameLength" xml:space="preserve">
+    <value>Enstitü adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.InstituteConcurrency" xml:space="preserve">
+    <value>Enstitü eşzamanlılık bilgisi geçersiz.</value>
+  </data>
+  <data name="Validation.ValidInstitute" xml:space="preserve">
+    <value>Geçerli bir enstitü seçiniz.</value>
+  </data>
+  <data name="Validation.ProgramNameRequired" xml:space="preserve">
+    <value>Program adı zorunludur.</value>
+  </data>
+  <data name="Validation.ProgramNameLength" xml:space="preserve">
+    <value>Program adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.ProgramEnglishNameLength" xml:space="preserve">
+    <value>İngilizce program adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.DegreeTypeRequired" xml:space="preserve">
+    <value>Derece türü zorunludur.</value>
+  </data>
+  <data name="Validation.DegreeTypeLength" xml:space="preserve">
+    <value>Derece türü en fazla 50 karakter olabilir.</value>
+  </data>
+  <data name="Validation.ProgramConcurrency" xml:space="preserve">
+    <value>Program eşzamanlılık bilgisi geçersiz.</value>
+  </data>
+  <data name="Validation.MaximumRawScore" xml:space="preserve">
+    <value>Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.</value>
+  </data>
+  <data name="Field.AcademicYearStart" xml:space="preserve">
+    <value>Akademik yıl başlangıcı</value>
+  </data>
+  <data name="Field.Term" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Field.ApplicationStartIstanbul" xml:space="preserve">
+    <value>Başvuru başlangıcı (İstanbul)</value>
+  </data>
+  <data name="Field.ApplicationDeadlineIstanbul" xml:space="preserve">
+    <value>Son başvuru (İstanbul)</value>
+  </data>
+  <data name="Field.OfferingOpen" xml:space="preserve">
+    <value>İlan açık</value>
+  </data>
+  <data name="Field.Archive" xml:space="preserve">
+    <value>Arşivle</value>
+  </data>
+  <data name="Field.RankedWorkflow" xml:space="preserve">
+    <value>Sıralamalı değerlendirme iş akışı</value>
+  </data>
+  <data name="Field.AdminEmail" xml:space="preserve">
+    <value>Yeni yöneticinin e-posta adresi</value>
+  </data>
+  <data name="Field.UniversityName" xml:space="preserve">
+    <value>Üniversite adı</value>
+  </data>
+  <data name="Field.InstituteName" xml:space="preserve">
+    <value>Enstitü adı</value>
+  </data>
+  <data name="Field.Institute" xml:space="preserve">
+    <value>Enstitü</value>
+  </data>
+  <data name="Field.ProgramName" xml:space="preserve">
+    <value>Program adı</value>
+  </data>
+  <data name="Field.ProgramNameEnglish" xml:space="preserve">
+    <value>İngilizce program adı</value>
+  </data>
+  <data name="Field.DegreeType" xml:space="preserve">
+    <value>Derece türü</value>
+  </data>
+
+  <!-- Administrator invitation validation -->
+  <data name="Validation.EmailRequired" xml:space="preserve">
+    <value>E-posta zorunludur.</value>
+  </data>
+  <data name="Validation.EmailMaximumLength" xml:space="preserve">
+    <value>E-posta en fazla 254 karakter olabilir.</value>
+  </data>
 </root>

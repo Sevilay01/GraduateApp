@@ -1,18 +1,18 @@
 @model InstitutePageViewModel
 @{
-    ViewData["Title"] = "Enstitü yönetimi";
+    ViewData["Title"] = UiText.Get(Context, "Admin.Institutes.Title");
 }
 
 <header class="page-heading">
     <div>
-        <span class="eyebrow">Akademik katalog</span>
-        <h1 class="page-heading__title">Enstitüler ve programlar</h1>
-        <p class="page-heading__description">Enstitüleri oluşturun, düzenleyin veya yeni seçimlere kapatın.</p>
+        <span class="eyebrow">@UiText.Get(Context, "Admin.Catalog.Eyebrow")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Institutes.Heading")</h1>
+        <p class="page-heading__description">@UiText.Get(Context, "Admin.Institutes.Lead")</p>
     </div>
     <div class="page-heading__actions admin-tab-links">
-        <a asp-action="Institutes" class="btn btn-outline-primary" aria-current="page">Enstitüler</a>
-        <a asp-action="Programs" class="btn btn-outline-primary">Programlar</a>
-        <a asp-action="Universities" class="btn btn-outline-primary">Üniversiteler</a>
+        <a asp-action="Institutes" class="btn btn-outline-primary" aria-current="page">@UiText.Get(Context, "Admin.Catalog.Institutes")</a>
+        <a asp-action="Programs" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.Programs")</a>
+        <a asp-action="Universities" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.Universities")</a>
     </div>
 </header>
 
@@ -22,27 +22,27 @@
 }
 
 <div class="alert alert-info" role="note">
-    Kullanılmış bir enstitüyü silmek yerine pasifleştirin. Pasif enstitülerin programları yeni ilan ve başvuru seçimlerinde gösterilmez; geçmiş kayıtlar korunur.
+    @UiText.Get(Context, "Admin.Institutes.Note")
 </div>
 
 <form method="get" class="admin-filter-panel mb-4" aria-labelledby="institute-filter-heading">
-    <h2 id="institute-filter-heading" class="admin-filter-panel__heading">Enstitüleri filtrele</h2>
+    <h2 id="institute-filter-heading" class="admin-filter-panel__heading">@UiText.Get(Context, "Admin.Institutes.FilterHeading")</h2>
     <div class="row g-3 align-items-end">
         <div class="col-12 col-md-6">
-            <label asp-for="Search" class="form-label">Enstitü adı</label>
-            <input asp-for="Search" class="form-control" placeholder="Ada göre ara" />
+            <label asp-for="Search" class="form-label">@UiText.Get(Context, "Admin.Institutes.Name")</label>
+            <input asp-for="Search" class="form-control" placeholder="@UiText.Get(Context, "Admin.Institutes.SearchPlaceholder")" />
         </div>
         <div class="col-12 col-md-3">
-            <label asp-for="IsActive" class="form-label">Durum</label>
+            <label asp-for="IsActive" class="form-label">@UiText.Get(Context, "Admin.Common.Status")</label>
             <select asp-for="IsActive" class="form-select">
-                <option value="">Tümü</option>
-                <option value="true">Aktif</option>
-                <option value="false">Pasif</option>
+                <option value="">@UiText.Get(Context, "Admin.Common.All")</option>
+                <option value="true">@UiText.Get(Context, "Admin.Common.Active")</option>
+                <option value="false">@UiText.Get(Context, "Admin.Common.Inactive")</option>
             </select>
         </div>
         <div class="col-12 col-md-3 d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Filtrele</button>
-            <a asp-action="Institutes" class="btn btn-outline-secondary">Temizle</a>
+            <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Common.Filter")</button>
+            <a asp-action="Institutes" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Clear")</a>
         </div>
     </div>
 </form>
@@ -52,8 +52,8 @@
         @if (Model.Result.Items.Count == 0)
         {
             <div class="empty-state">
-                <h2>Enstitü bulunamadı</h2>
-                <p>Filtreleri değiştirin veya yeni enstitü formunu kullanın.</p>
+                <h2>@UiText.Get(Context, "Admin.Institutes.EmptyHeading")</h2>
+                <p>@UiText.Get(Context, "Admin.Institutes.EmptyLead")</p>
             </div>
         }
         else
@@ -61,27 +61,27 @@
         <div class="table-shell">
             <div class="table-responsive">
             <table class="table table-hover align-middle responsive-table">
-                <caption class="visually-hidden">Filtrelenmiş enstitü kayıtları</caption>
+                <caption class="visually-hidden">@UiText.Get(Context, "Admin.Institutes.Caption")</caption>
                 <thead>
-                    <tr><th scope="col">Enstitü</th><th scope="col">Program</th><th scope="col">Durum</th><th scope="col" class="text-end">İşlemler</th></tr>
+                    <tr><th scope="col">@UiText.Get(Context, "Admin.Institutes.Institute")</th><th scope="col">@UiText.Get(Context, "Admin.Institutes.Program")</th><th scope="col">@UiText.Get(Context, "Admin.Common.Status")</th><th scope="col" class="text-end">@UiText.Get(Context, "Admin.Common.Actions")</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var institute in Model.Result.Items)
                     {
                         <tr>
-                            <td data-label="Enstitü">@institute.InstituteName</td>
-                            <td data-label="Program">@institute.ProgramCount</td>
-                            <td data-label="Durum"><span class="admin-state @(institute.IsActive ? "admin-state--success" : null)">@(institute.IsActive ? "Aktif" : "Pasif")</span></td>
+                            <td data-label="@UiText.Get(Context, "Admin.Institutes.Institute")">@institute.InstituteName</td>
+                            <td data-label="@UiText.Get(Context, "Admin.Institutes.Program")">@institute.ProgramCount</td>
+                            <td data-label="@UiText.Get(Context, "Admin.Common.Status")"><span class="admin-state @(institute.IsActive ? "admin-state--success" : null)">@(institute.IsActive ? UiText.Get(Context, "Admin.Common.Active") : UiText.Get(Context, "Admin.Common.Inactive"))</span></td>
                             <td data-label="">
                                 <div class="admin-action-stack">
-                                    <a asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@institute.InstituteId" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                    <a asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@institute.InstituteId" class="btn btn-sm btn-outline-primary">@UiText.Get(Context, "Admin.Common.Edit")</a>
                                     @if (institute.IsActive)
                                     {
                                         <form asp-action="DeactivateInstitute" method="post" data-disable-on-submit="true">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@institute.InstituteId" />
                                             <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-danger" type="submit">Enstitüyü pasifleştir</button>
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">@UiText.Get(Context, "Admin.Institutes.Deactivate")</button>
                                         </form>
                                     }
                                     else
@@ -90,10 +90,10 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@institute.InstituteId" />
                                             <input type="hidden" name="rowVersion" value="@institute.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-success" type="submit">Enstitüyü aktifleştir</button>
+                                            <button class="btn btn-sm btn-outline-success" type="submit">@UiText.Get(Context, "Admin.Institutes.Activate")</button>
                                         </form>
                                     }
-                                    <a asp-action="DeleteInstitute" asp-route-id="@institute.InstituteId" class="btn btn-sm btn-outline-danger">Kalıcı silme ayrıntısı</a>
+                                    <a asp-action="DeleteInstitute" asp-route-id="@institute.InstituteId" class="btn btn-sm btn-outline-danger">@UiText.Get(Context, "Admin.Institutes.DeleteDetails")</a>
                                 </div>
                             </td>
                         </tr>
@@ -106,11 +106,11 @@
 
         @if (Model.Result.TotalPages > 1)
         {
-            <nav aria-label="Enstitü listesi sayfaları">
+            <nav aria-label="@UiText.Get(Context, "Admin.Institutes.Pagination")">
                 <ul class="pagination justify-content-center">
-                    <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">Önceki</a></li>
+                    <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">@UiText.Get(Context, "Admin.Common.Previous")</a></li>
                     <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
-                    <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">Sonraki</a></li>
+                    <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Institutes" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">@UiText.Get(Context, "Admin.Common.Next")</a></li>
                 </ul>
             </nav>
         }
@@ -118,7 +118,7 @@
 
     <div class="col-12 col-xl-4">
         <section class="admin-section">
-                <h2 class="h4">@(Model.Form.InstituteId > 0 ? "Enstitüyü düzenle" : "Yeni enstitü")</h2>
+                <h2 class="h4">@(Model.Form.InstituteId > 0 ? UiText.Get(Context, "Admin.Institutes.EditHeading") : UiText.Get(Context, "Admin.Institutes.NewHeading"))</h2>
                 <form asp-action="SaveInstitute" method="post" novalidate>
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
@@ -128,15 +128,15 @@
                         <input asp-for="Form.RowVersion" type="hidden" />
                     }
                     <div class="mb-3">
-                        <label asp-for="Form.InstituteName" class="form-label"></label>
+                        <label asp-for="Form.InstituteName" class="form-label">@UiText.Get(Context, "Admin.Institutes.Name")</label>
                         <input asp-for="Form.InstituteName" class="form-control" maxlength="100" autocomplete="off" />
                         <span asp-validation-for="Form.InstituteName" class="text-danger"></span>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-primary" type="submit">@(Model.Form.InstituteId > 0 ? "Değişiklikleri kaydet" : "Enstitü oluştur")</button>
+                        <button class="btn btn-primary" type="submit">@(Model.Form.InstituteId > 0 ? UiText.Get(Context, "Admin.Common.SaveChanges") : UiText.Get(Context, "Admin.Institutes.Create"))</button>
                         @if (Model.Form.InstituteId > 0)
                         {
-                            <a asp-action="Institutes" class="btn btn-outline-secondary">Vazgeç</a>
+                            <a asp-action="Institutes" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Cancel")</a>
                         }
                     </div>
                 </form>

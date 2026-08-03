@@ -1,19 +1,19 @@
 @model ProgramPageViewModel
 @{
-    ViewData["Title"] = "Program yönetimi";
+    ViewData["Title"] = UiText.Get(Context, "Admin.Programs.Title");
 }
 
 <header class="page-heading">
     <div>
-        <span class="eyebrow">Akademik katalog</span>
-        <h1 class="page-heading__title">Enstitüler ve programlar</h1>
-        <p class="page-heading__description">Lisansüstü programları enstitü ve derece türüyle birlikte yönetin.</p>
+        <span class="eyebrow">@UiText.Get(Context, "Admin.Catalog.Eyebrow")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Programs.Heading")</h1>
+        <p class="page-heading__description">@UiText.Get(Context, "Admin.Programs.Lead")</p>
     </div>
     <div class="page-heading__actions admin-tab-links">
-        <a asp-action="Institutes" class="btn btn-outline-primary">Enstitüler</a>
-        <a asp-action="Programs" class="btn btn-outline-primary" aria-current="page">Programlar</a>
-        <a asp-action="ProgramTranslations" class="btn btn-outline-primary">Toplu İngilizce adlar</a>
-        <a asp-action="Universities" class="btn btn-outline-primary">Üniversiteler</a>
+        <a asp-action="Institutes" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.Institutes")</a>
+        <a asp-action="Programs" class="btn btn-outline-primary" aria-current="page">@UiText.Get(Context, "Admin.Catalog.Programs")</a>
+        <a asp-action="ProgramTranslations" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.ProgramTranslations")</a>
+        <a asp-action="Universities" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Catalog.Universities")</a>
     </div>
 </header>
 
@@ -23,50 +23,49 @@
 }
 
 <div class="alert alert-info" role="note">
-    İlanı veya geçmiş kaydı olan programı silmek yerine pasifleştirin. Bir program kendi kaydı aktif olsa bile bağlı enstitüsü pasifse yeni seçimlerde etkili olarak pasiftir.
-    İngilizce ad girilmemiş eski kayıtlarda İngilizce arayüz güvenli biçimde Türkçe program adına döner.
+    @UiText.Get(Context, "Admin.Programs.Note")
 </div>
 
 <form method="get" class="admin-filter-panel mb-4" aria-labelledby="program-filter-heading">
-    <h2 id="program-filter-heading" class="admin-filter-panel__heading">Programları filtrele</h2>
+    <h2 id="program-filter-heading" class="admin-filter-panel__heading">@UiText.Get(Context, "Admin.Programs.FilterHeading")</h2>
     <div class="row g-3 align-items-end">
         <div class="col-12 col-lg-3">
-            <label asp-for="Search" class="form-label">Program adı</label>
-            <input asp-for="Search" class="form-control" placeholder="Ada göre ara" />
+            <label asp-for="Search" class="form-label">@UiText.Get(Context, "Admin.Programs.Name")</label>
+            <input asp-for="Search" class="form-control" placeholder="@UiText.Get(Context, "Admin.Programs.SearchPlaceholder")" />
         </div>
         <div class="col-12 col-md-4 col-lg-3">
-            <label asp-for="InstituteId" class="form-label">Enstitü</label>
+            <label asp-for="InstituteId" class="form-label">@UiText.Get(Context, "Admin.Institutes.Institute")</label>
             <select asp-for="InstituteId" class="form-select">
-                <option value="">Tümü</option>
+                <option value="">@UiText.Get(Context, "Admin.Common.All")</option>
                 @foreach (var institute in Model.Institutes)
                 {
-                    <option value="@institute.InstituteId">@institute.InstituteName@(!institute.IsActive ? " (pasif)" : string.Empty)</option>
+                    <option value="@institute.InstituteId">@institute.InstituteName@(!institute.IsActive ? UiText.Get(Context, "Admin.Common.InactiveSuffix") : string.Empty)</option>
                 }
             </select>
         </div>
         <div class="col-12 col-md-4 col-lg-3">
-            <label asp-for="DegreeType" class="form-label">Derece türü</label>
+            <label asp-for="DegreeType" class="form-label">@UiText.Get(Context, "Admin.Common.DegreeType")</label>
             <select asp-for="DegreeType" class="form-select">
-                <option value="">Tümü</option>
+                <option value="">@UiText.Get(Context, "Admin.Common.All")</option>
                 @foreach (var degreeType in Model.DegreeTypes)
                 {
-                    <option value="@degreeType">@degreeType</option>
+                    <option value="@degreeType">@UiText.LocalizeDegreeType(Context, degreeType)</option>
                 }
             </select>
         </div>
         <div class="col-12 col-md-4 col-lg-2">
-            <label asp-for="IsActive" class="form-label">Kayıt durumu</label>
+            <label asp-for="IsActive" class="form-label">@UiText.Get(Context, "Admin.Programs.RecordStatus")</label>
             <select asp-for="IsActive" class="form-select">
-                <option value="">Tümü</option>
-                <option value="true">Aktif</option>
-                <option value="false">Pasif</option>
+                <option value="">@UiText.Get(Context, "Admin.Common.All")</option>
+                <option value="true">@UiText.Get(Context, "Admin.Common.Active")</option>
+                <option value="false">@UiText.Get(Context, "Admin.Common.Inactive")</option>
             </select>
         </div>
         <div class="col-12 col-lg-1 d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Filtrele</button>
+            <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Common.Filter")</button>
         </div>
     </div>
-    <div class="mt-3"><a asp-action="Programs" class="link-secondary">Filtreleri temizle</a></div>
+    <div class="mt-3"><a asp-action="Programs" class="link-secondary">@UiText.Get(Context, "Admin.Programs.ClearFilters")</a></div>
 </form>
 
 <div class="row g-4">
@@ -74,8 +73,8 @@
         @if (Model.Result.Items.Count == 0)
         {
             <div class="empty-state">
-                <h2>Program bulunamadı</h2>
-                <p>Filtreleri değiştirin veya yeni program formunu kullanın.</p>
+                <h2>@UiText.Get(Context, "Admin.Programs.EmptyHeading")</h2>
+                <p>@UiText.Get(Context, "Admin.Programs.EmptyLead")</p>
             </div>
         }
         else
@@ -83,52 +82,52 @@
         <div class="table-shell">
             <div class="table-responsive">
             <table class="table table-hover align-middle responsive-table">
-                <caption class="visually-hidden">Filtrelenmiş lisansüstü programları</caption>
+                <caption class="visually-hidden">@UiText.Get(Context, "Admin.Programs.Caption")</caption>
                 <thead>
-                    <tr><th scope="col">Enstitü</th><th scope="col">Program</th><th scope="col">Derece</th><th scope="col">İlan</th><th scope="col">Durum</th><th scope="col" class="text-end">İşlemler</th></tr>
+                    <tr><th scope="col">@UiText.Get(Context, "Admin.Institutes.Institute")</th><th scope="col">@UiText.Get(Context, "Admin.Institutes.Program")</th><th scope="col">@UiText.Get(Context, "Admin.Common.Degree")</th><th scope="col">@UiText.Get(Context, "Admin.Common.Offering")</th><th scope="col">@UiText.Get(Context, "Admin.Common.Status")</th><th scope="col" class="text-end">@UiText.Get(Context, "Admin.Common.Actions")</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var program in Model.Result.Items)
                     {
                         <tr>
-                            <td data-label="Enstitü">@program.InstituteName</td>
-                            <td data-label="Program">
+                            <td data-label="@UiText.Get(Context, "Admin.Institutes.Institute")">@program.InstituteName</td>
+                            <td data-label="@UiText.Get(Context, "Admin.Institutes.Program")">
                                 <div>@program.ProgramName</div>
                                 @if (string.IsNullOrWhiteSpace(program.ProgramNameEnglish))
                                 {
-                                    <small class="text-warning">İngilizce ad eksik</small>
+                                    <small class="text-warning">@UiText.Get(Context, "Admin.Programs.MissingEnglish")</small>
                                 }
                                 else
                                 {
                                     <small class="text-body-secondary" lang="en">@program.ProgramNameEnglish</small>
                                 }
                             </td>
-                            <td data-label="Derece">@program.DegreeType</td>
-                            <td data-label="İlan">@program.OfferingCount</td>
-                            <td data-label="Durum">
+                            <td data-label="@UiText.Get(Context, "Admin.Common.Degree")">@UiText.LocalizeDegreeType(Context, program.DegreeType)</td>
+                            <td data-label="@UiText.Get(Context, "Admin.Common.Offering")">@program.OfferingCount</td>
+                            <td data-label="@UiText.Get(Context, "Admin.Common.Status")">
                                 @if (program.IsEffectivelyActive)
                                 {
-                                    <span class="admin-state admin-state--success">Aktif</span>
+                                    <span class="admin-state admin-state--success">@UiText.Get(Context, "Admin.Common.Active")</span>
                                 }
                                 else if (program.IsActive)
                                 {
-                                    <span class="admin-state admin-state--warning">Enstitü pasif</span>
+                                    <span class="admin-state admin-state--warning">@UiText.Get(Context, "Admin.Programs.InstituteInactive")</span>
                                 }
                                 else
                                 {
-                                    <span class="admin-state">Pasif</span>
+                                    <span class="admin-state">@UiText.Get(Context, "Admin.Common.Inactive")</span>
                                 }
                             </td>
                             <td data-label="">
                                 <div class="admin-action-stack">
-                                    <a asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@program.ProgramId" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                    <a asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@Model.Result.Page" asp-route-pageSize="@Model.Result.PageSize" asp-route-editId="@program.ProgramId" class="btn btn-sm btn-outline-primary">@UiText.Get(Context, "Admin.Common.Edit")</a>
                                     @if (program.IsActive)
                                     {
                                         <form asp-action="DeactivateProgram" method="post" data-disable-on-submit="true">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@program.ProgramId" />
                                             <input type="hidden" name="rowVersion" value="@program.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-danger" type="submit">Programı pasifleştir</button>
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">@UiText.Get(Context, "Admin.Programs.Deactivate")</button>
                                         </form>
                                     }
                                     else
@@ -137,10 +136,10 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@program.ProgramId" />
                                             <input type="hidden" name="rowVersion" value="@program.RowVersion" />
-                                            <button class="btn btn-sm btn-outline-success" type="submit">Programı aktifleştir</button>
+                                            <button class="btn btn-sm btn-outline-success" type="submit">@UiText.Get(Context, "Admin.Programs.Activate")</button>
                                         </form>
                                     }
-                                    <a asp-action="DeleteProgram" asp-route-id="@program.ProgramId" class="btn btn-sm btn-outline-danger">Kalıcı silme ayrıntısı</a>
+                                    <a asp-action="DeleteProgram" asp-route-id="@program.ProgramId" class="btn btn-sm btn-outline-danger">@UiText.Get(Context, "Admin.Programs.DeleteDetails")</a>
                                 </div>
                             </td>
                         </tr>
@@ -153,11 +152,11 @@
 
         @if (Model.Result.TotalPages > 1)
         {
-            <nav aria-label="Program listesi sayfaları">
+            <nav aria-label="@UiText.Get(Context, "Admin.Programs.Pagination")">
                 <ul class="pagination justify-content-center">
-                    <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">Önceki</a></li>
+                    <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">@UiText.Get(Context, "Admin.Common.Previous")</a></li>
                     <li class="page-item disabled"><span class="page-link">@Model.Result.Page / @Model.Result.TotalPages</span></li>
-                    <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">Sonraki</a></li>
+                    <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Programs" asp-route-search="@Model.Search" asp-route-isActive="@Model.IsActive" asp-route-instituteId="@Model.InstituteId" asp-route-degreeType="@Model.DegreeType" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">@UiText.Get(Context, "Admin.Common.Next")</a></li>
                 </ul>
             </nav>
         }
@@ -165,7 +164,7 @@
 
     <div class="col-12 col-xxl-4">
         <section class="admin-section">
-                <h2 class="h4">@(Model.Form.ProgramId > 0 ? "Programı düzenle" : "Yeni program")</h2>
+                <h2 class="h4">@(Model.Form.ProgramId > 0 ? UiText.Get(Context, "Admin.Programs.EditHeading") : UiText.Get(Context, "Admin.Programs.NewHeading"))</h2>
                 <form asp-action="SaveProgram" method="post" novalidate>
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
@@ -175,46 +174,46 @@
                         <input asp-for="Form.RowVersion" type="hidden" />
                     }
                     <div class="mb-3">
-                        <label asp-for="Form.InstituteId" class="form-label"></label>
+                        <label asp-for="Form.InstituteId" class="form-label">@UiText.Get(Context, "Admin.Institutes.Institute")</label>
                         <select asp-for="Form.InstituteId" class="form-select">
                             @foreach (var institute in Model.Institutes)
                             {
-                                <option value="@institute.InstituteId">@institute.InstituteName@(!institute.IsActive ? " (pasif)" : string.Empty)</option>
+                                <option value="@institute.InstituteId">@institute.InstituteName@(!institute.IsActive ? UiText.Get(Context, "Admin.Common.InactiveSuffix") : string.Empty)</option>
                             }
                         </select>
                         <span asp-validation-for="Form.InstituteId" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Form.ProgramName" class="form-label"></label>
+                        <label asp-for="Form.ProgramName" class="form-label">@UiText.Get(Context, "Admin.Programs.NameTurkish")</label>
                         <input asp-for="Form.ProgramName" class="form-control" maxlength="100" autocomplete="off" />
                         <span asp-validation-for="Form.ProgramName" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Form.ProgramNameEnglish" class="form-label"></label>
+                        <label asp-for="Form.ProgramNameEnglish" class="form-label">@UiText.Get(Context, "Admin.Programs.NameEnglish")</label>
                         <input asp-for="Form.ProgramNameEnglish"
                                class="form-control"
                                maxlength="100"
                                autocomplete="off"
                                lang="en"
-                               placeholder="Computer Engineering" />
-                        <div class="form-text">Boş bırakılırsa İngilizce arayüzde Türkçe ad gösterilir.</div>
+                               placeholder="@UiText.Get(Context, "Admin.Programs.EnglishPlaceholder")" />
+                        <div class="form-text">@UiText.Get(Context, "Admin.Programs.EnglishFallbackHelp")</div>
                         <span asp-validation-for="Form.ProgramNameEnglish" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Form.DegreeType" class="form-label"></label>
+                        <label asp-for="Form.DegreeType" class="form-label">@UiText.Get(Context, "Admin.Common.DegreeType")</label>
                         <select asp-for="Form.DegreeType" class="form-select">
                             @foreach (var degreeType in Model.DegreeTypes)
                             {
-                                <option value="@degreeType">@degreeType</option>
+                                <option value="@degreeType">@UiText.LocalizeDegreeType(Context, degreeType)</option>
                             }
                         </select>
                         <span asp-validation-for="Form.DegreeType" class="text-danger"></span>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-primary" type="submit">@(Model.Form.ProgramId > 0 ? "Değişiklikleri kaydet" : "Program oluştur")</button>
+                        <button class="btn btn-primary" type="submit">@(Model.Form.ProgramId > 0 ? UiText.Get(Context, "Admin.Common.SaveChanges") : UiText.Get(Context, "Admin.Programs.Create"))</button>
                         @if (Model.Form.ProgramId > 0)
                         {
-                            <a asp-action="Programs" class="btn btn-outline-secondary">Vazgeç</a>
+                            <a asp-action="Programs" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Cancel")</a>
                         }
                     </div>
                 </form>

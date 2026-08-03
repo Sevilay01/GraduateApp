@@ -1,17 +1,17 @@
 @model AdminStudentListViewModel
 @{
-    ViewData["Title"] = "Öğrenci yönetimi";
+    ViewData["Title"] = UiText.Get(Context, "Admin.Students.Title");
 }
 
 <div class="admin-page">
     <header class="page-heading">
         <div>
-            <span class="eyebrow">Hesap yönetimi</span>
-            <h1 class="page-heading__title">Öğrenciler</h1>
-            <p class="page-heading__description">Maskelenmiş kimlik bilgileriyle öğrenci hesaplarını bulun ve erişim durumunu güvenli onay ekranlarından yönetin.</p>
+            <span class="eyebrow">@UiText.Get(Context, "Admin.Common.AccountManagement")</span>
+            <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Students.Heading")</h1>
+            <p class="page-heading__description">@UiText.Get(Context, "Admin.Students.Lead")</p>
         </div>
         <div class="page-heading__actions">
-            <a asp-action="Accounts" class="btn btn-outline-primary">Yöneticiler</a>
+            <a asp-action="Accounts" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Students.Administrators")</a>
         </div>
     </header>
 
@@ -21,22 +21,22 @@
     }
 
     <form method="get" class="admin-filter-panel" role="search" aria-labelledby="student-filter-heading">
-        <h2 id="student-filter-heading" class="admin-filter-panel__heading">Öğrenci ara</h2>
+        <h2 id="student-filter-heading" class="admin-filter-panel__heading">@UiText.Get(Context, "Admin.Students.SearchHeading")</h2>
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-8">
-                <label for="student-search" class="form-label">Ad, soyad veya e-posta</label>
+                <label for="student-search" class="form-label">@UiText.Get(Context, "Admin.Students.SearchLabel")</label>
                 <input id="student-search" name="search" value="@Model.Search" class="form-control" autocomplete="off" />
             </div>
             <div class="col-12 col-md-4 admin-form-actions">
-                <button type="submit" class="btn btn-primary">Ara</button>
-                <a asp-action="Students" class="btn btn-outline-secondary">Temizle</a>
+                <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Admin.Students.Search")</button>
+                <a asp-action="Students" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Clear")</a>
             </div>
         </div>
         @if (!string.IsNullOrWhiteSpace(Model.Search))
         {
-            <div class="active-filters" aria-label="Aktif filtreler">
-                <span class="active-filters__label">Aktif filtre</span>
-                <span class="filter-chip">Arama: @Model.Search</span>
+            <div class="active-filters" aria-label="@UiText.Get(Context, "Admin.Applications.ActiveFilters")">
+                <span class="active-filters__label">@UiText.Get(Context, "Admin.Students.ActiveFilter")</span>
+                <span class="filter-chip">@UiText.Format(Context, "Admin.Students.SearchFilter", Model.Search)</span>
             </div>
         }
     </form>
@@ -44,15 +44,15 @@
     <section aria-labelledby="student-results-heading">
         <div class="admin-results-heading mb-3">
             <div>
-                <h2 id="student-results-heading">Öğrenci hesapları</h2>
-                <p class="admin-results-count" role="status">@Model.Result.TotalCount öğrenci bulundu</p>
+                <h2 id="student-results-heading">@UiText.Get(Context, "Admin.Students.ResultsHeading")</h2>
+                <p class="admin-results-count" role="status">@UiText.Format(Context, "Admin.Students.ResultCount", Model.Result.TotalCount)</p>
             </div>
         </div>
         @if (Model.Result.Items.Count == 0)
         {
             <div class="empty-state">
-                <h3>Öğrenci bulunamadı</h3>
-                <p>Arama ifadesini değiştirin veya tüm öğrencileri görmek için filtreyi temizleyin.</p>
+                <h3>@UiText.Get(Context, "Admin.Students.EmptyHeading")</h3>
+                <p>@UiText.Get(Context, "Admin.Students.EmptyLead")</p>
             </div>
         }
         else
@@ -60,34 +60,34 @@
             <div class="table-shell">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle responsive-table">
-                        <caption class="visually-hidden">Filtrelenmiş öğrenci hesapları</caption>
+                        <caption class="visually-hidden">@UiText.Get(Context, "Admin.Students.Caption")</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Öğrenci</th>
-                                <th scope="col">Maskelenmiş TC</th>
-                                <th scope="col">E-posta</th>
-                                <th scope="col">Durum</th>
-                                <th scope="col"><span class="visually-hidden">İşlem</span></th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Students.Student")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Students.MaskedIdentity")</th>
+                                <th scope="col">@UiText.Get(Context, "Field.Email")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Common.Status")</th>
+                                <th scope="col"><span class="visually-hidden">@UiText.Get(Context, "Admin.Students.Action")</span></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var student in Model.Result.Items)
                             {
                                 <tr>
-                                    <td data-label="Öğrenci">@student.FullName</td>
-                                    <td data-label="Maskelenmiş TC">@student.MaskedTc</td>
-                                    <td data-label="E-posta">@student.Email</td>
-                                    <td data-label="Durum">
-                                        <span class="admin-state @(student.IsActive ? "admin-state--success" : null)">@(student.IsActive ? "Aktif" : "Pasif")</span>
+                                    <td data-label="@UiText.Get(Context, "Admin.Students.Student")">@student.FullName</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Students.MaskedIdentity")">@student.MaskedTc</td>
+                                    <td data-label="@UiText.Get(Context, "Field.Email")">@student.Email</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Common.Status")">
+                                        <span class="admin-state @(student.IsActive ? "admin-state--success" : null)">@(student.IsActive ? UiText.Get(Context, "Admin.Common.Active") : UiText.Get(Context, "Admin.Common.Inactive"))</span>
                                     </td>
                                     <td data-label="">
                                         @if (student.IsActive)
                                         {
-                                            <a asp-action="DeactivateStudent" asp-route-publicId="@student.PublicId" class="btn btn-sm btn-outline-danger">Öğrenci hesabını pasifleştir</a>
+                                            <a asp-action="DeactivateStudent" asp-route-publicId="@student.PublicId" class="btn btn-sm btn-outline-danger">@UiText.Get(Context, "Admin.DeactivateStudent.Submit")</a>
                                         }
                                         else
                                         {
-                                            <a asp-action="ActivateStudent" asp-route-publicId="@student.PublicId" class="btn btn-sm btn-outline-success">Öğrenci hesabını aktifleştir</a>
+                                            <a asp-action="ActivateStudent" asp-route-publicId="@student.PublicId" class="btn btn-sm btn-outline-success">@UiText.Get(Context, "Admin.ActivateStudent.Submit")</a>
                                         }
                                     </td>
                                 </tr>
@@ -101,7 +101,7 @@
 
     @if (Model.Result.TotalPages > 1)
     {
-        <nav aria-label="Öğrenci listesi sayfaları">
+        <nav aria-label="@UiText.Get(Context, "Admin.Students.Pagination")">
             <ul class="pagination justify-content-center">
                 @for (var pageNumber = 1; pageNumber <= Model.Result.TotalPages; pageNumber++)
                 {

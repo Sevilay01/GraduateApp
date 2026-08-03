@@ -68,14 +68,14 @@ public sealed class AdminApplicationDetailPresentationTests
     }
 
     [Fact]
-    public void Detail_view_uses_istanbul_time_and_turkish_exam_results_heading()
+    public void Detail_view_uses_istanbul_time_and_localized_exam_results_heading()
     {
         var view = ReadDetailView();
 
         Assert.Contains("IstanbulTime.FromUtc(history.ChangedAtUtc)", view, StringComparison.Ordinal);
-        Assert.Contains("(İstanbul)", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Detail.IstanbulTime", view, StringComparison.Ordinal);
         Assert.DoesNotContain(">UTC</time>", view, StringComparison.Ordinal);
-        Assert.Contains("Başvuru anındaki sınav sonuçları", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Detail.ScoresHeading", view, StringComparison.Ordinal);
         Assert.Contains("@Model.MaskedTc", view, StringComparison.Ordinal);
         Assert.DoesNotContain("@Model.Tc", view, StringComparison.Ordinal);
         Assert.Contains(

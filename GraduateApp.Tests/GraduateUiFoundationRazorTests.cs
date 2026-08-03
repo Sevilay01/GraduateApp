@@ -429,7 +429,7 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("Aktif filtreler", decoded, StringComparison.Ordinal);
         Assert.Contains("41 başvuru bulundu", decoded, StringComparison.Ordinal);
         Assert.Contains("responsive-table", html, StringComparison.Ordinal);
-        Assert.Contains("data-label=\"Maskelenmiş TC\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-label=\"Maskelenmiş TC\"", decoded, StringComparison.Ordinal);
         Assert.Contains("status-badge--pending", html, StringComparison.Ordinal);
         Assert.Contains("page=3", decoded, StringComparison.Ordinal);
         Assert.Contains("pageSize=20", decoded, StringComparison.Ordinal);
@@ -897,10 +897,104 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("method=\"post\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaC1yb3ctdmVyc2lvbg==\"", html, StringComparison.Ordinal);
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
-        Assert.Contains(">Sonuçları yayımla</button>", html, StringComparison.Ordinal);
+        Assert.Contains(">Sonuçları yayımla</button>", decoded, StringComparison.Ordinal);
         Assert.Contains("responsive-table", html, StringComparison.Ordinal);
         Assert.DoesNotContain("window.confirm", html, StringComparison.Ordinal);
         Assert.DoesNotContain("<script>alert('candidate')</script>", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task English_admin_evaluation_and_publication_render_localized_labels_without_changing_post_contracts()
+    {
+        using var host = CreateWebHost();
+        var model = EvaluationPageModel(OfferingEvaluationState.Configuring);
+        model.Evaluation.Applications[0].DocumentReviewSummary = "1/1 zorunlu belge onaylı";
+
+        var evaluationHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Evaluation",
+            model,
+            AuthenticatedUser("Admin", "Test Administrator"),
+            cultureName: "en-US");
+        var decodedEvaluation = WebUtility.HtmlDecode(evaluationHtml);
+
+        Assert.Contains("Application evaluation", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("2026–2027 · Fall", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Evaluation policy", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Candidate evaluations", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Eligibility: Eligible", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("1/1 required documents approved", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Quota boundary", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Finalize results", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("SaveEvaluationCriterion", evaluationHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", evaluationHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Başvuru değerlendirmesi", decodedEvaluation, StringComparison.Ordinal);
+        Assert.DoesNotContain("Kontenjan çizgisi", decodedEvaluation, StringComparison.Ordinal);
+
+        model.Evaluation.EvaluationState = OfferingEvaluationState.Finalized;
+        var publishHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "PublishEvaluation",
+            new EvaluationPublishPageViewModel
+            {
+                ProgramOfferingId = model.Evaluation.ProgramOfferingId,
+                ProgramName = model.Evaluation.ProgramName,
+                Evaluation = model.Evaluation,
+                Summary = new EvaluationPublicationSummaryViewModel
+                {
+                    Quota = 1,
+                    AdmittedCount = 1,
+                    NotAdmittedCount = 1,
+                    IneligibleCount = 0,
+                    OfferingRowVersion = "cHVibGlzaC1yb3ctdmVyc2lvbg=="
+                }
+            },
+            AuthenticatedUser("Admin", "Test Administrator"),
+            cultureName: "en-US");
+        var decodedPublish = WebUtility.HtmlDecode(publishHtml);
+
+        Assert.Contains("Publish results", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("Finalized ranking", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("Irreversible publication confirmation", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("This action cannot be undone", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaC1yb3ctdmVyc2lvbg==\"", publishHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", publishHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sonuçları yayımla", decodedPublish, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task English_admin_invitation_renders_localized_required_email_and_length_metadata()
+    {
+        using var host = CreateWebHost();
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Accounts",
+            new AdminAccountPageViewModel
+            {
+                Result = new PagedResultViewModel<AdminAccountViewModel>
+                {
+                    Page = 1,
+                    PageSize = 20
+                }
+            },
+            AuthenticatedUser("Admin", "current-admin@example.test"),
+            cultureName: "en-US");
+        var decoded = WebUtility.HtmlDecode(html);
+
+        Assert.Contains("data-val-required=\"Email is required.\"", decoded, StringComparison.Ordinal);
+        Assert.Contains(
+            "data-val-length=\"Email can contain at most 254 characters.\"",
+            decoded,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "data-val-email=\"Enter a valid email address.\"",
+            decoded,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("E-posta zorunludur.", decoded, StringComparison.Ordinal);
+        Assert.DoesNotContain("E-posta en fazla 254 karakter olabilir.", decoded, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1398,8 +1492,14 @@ public sealed class GraduateUiFoundationRazorTests
                 .ConfigureServices(services =>
                 {
                     services.AddDataProtection().UseEphemeralDataProtectionProvider();
+                    services.AddLocalization(options => options.ResourcesPath = "Resources");
                     services.AddControllersWithViews()
-                        .AddApplicationPart(typeof(HomeController).Assembly);
+                        .AddApplicationPart(typeof(HomeController).Assembly)
+                        .AddDataAnnotationsLocalization(options =>
+                        {
+                            options.DataAnnotationLocalizerProvider = (_, factory) =>
+                                factory.Create(typeof(GraduateApp.Web.SharedText));
+                        });
                 })
                 .Configure(_ => { }))
             .Build();

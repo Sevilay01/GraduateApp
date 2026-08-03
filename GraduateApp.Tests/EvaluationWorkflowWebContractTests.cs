@@ -54,7 +54,7 @@ public sealed class EvaluationWorkflowWebContractTests
 
         Assert.Contains("Model.UsesEvaluationWorkflow", view, StringComparison.Ordinal);
         Assert.Contains("item == ApplicationStatus.UnderReview", view, StringComparison.Ordinal);
-        Assert.Contains("kesinleştirilip yayımlandığında atomik olarak uygulanır", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Detail.EvaluationDecisionNote", view, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class EvaluationWorkflowWebContractTests
         var publishView = ReadView("Admin", "PublishEvaluation.cshtml");
 
         Assert.Contains("asp-action=\"PublishEvaluation\"", evaluationView, StringComparison.Ordinal);
-        Assert.Contains("İşlem geri alınamaz", publishView, StringComparison.Ordinal);
+        Assert.Contains("Admin.PublishEvaluation.Irreversible", publishView, StringComparison.Ordinal);
         Assert.Contains("name=\"rowVersion\"", publishView, StringComparison.Ordinal);
         Assert.Contains("method=\"post\"", publishView, StringComparison.Ordinal);
     }
@@ -96,12 +96,12 @@ public sealed class EvaluationWorkflowWebContractTests
     {
         var view = ReadView("Admin", "Evaluation.cshtml");
 
-        Assert.Contains("Değerlendirme politikası", view, StringComparison.Ordinal);
-        Assert.Contains("Kriterler ilk taslak başvuru oluştuğunda kilitlenir", view, StringComparison.Ordinal);
-        Assert.Contains("Adaylar", view, StringComparison.Ordinal);
-        Assert.Contains("Deterministik sıralama önizlemesi", view, StringComparison.Ordinal);
-        Assert.Contains("Sonuçları kesinleştir", view, StringComparison.Ordinal);
-        Assert.Contains("Yayımlama onayına geç", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Evaluation.PolicyHeading", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Evaluation.PolicyDescription", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Evaluation.Candidates", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Evaluation.RankingHeading", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Evaluation.FinalizeAction", view, StringComparison.Ordinal);
+        Assert.Contains("Admin.Evaluation.PublishConfirmation", view, StringComparison.Ordinal);
     }
 
     private static string ReadView(string folder, string fileName) =>

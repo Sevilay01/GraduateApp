@@ -1,6 +1,6 @@
 @model AdminApplicationListViewModel
 @{
-    ViewData["Title"] = "Başvuru yönetimi";
+    ViewData["Title"] = UiText.Get(Context, "Admin.Applications.Title");
     var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Search)
         || Model.Status.HasValue
         || Model.AcademicYearStart.HasValue
@@ -10,63 +10,71 @@
 <div class="admin-page">
     <header class="page-heading">
         <div>
-            <span class="eyebrow">Başvurular</span>
-            <h1 class="page-heading__title">Başvuru yönetimi</h1>
-            <p class="page-heading__description">Adayları güvenli filtrelerle bulun, başvuru yaşam döngüsünü ve belgeleri tek yerden inceleyin.</p>
+            <span class="eyebrow">@UiText.Get(Context, "Admin.Applications.Eyebrow")</span>
+            <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Applications.Heading")</h1>
+            <p class="page-heading__description">@UiText.Get(Context, "Admin.Applications.Lead")</p>
         </div>
         <div class="page-heading__actions">
-            <a asp-action="Offerings" class="btn btn-outline-primary">İlanlar ve değerlendirme</a>
+            <a asp-action="Offerings" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Applications.Offerings")</a>
         </div>
     </header>
 
     <form method="get" class="admin-filter-panel" role="search" aria-labelledby="application-filters-heading">
-        <h2 id="application-filters-heading" class="admin-filter-panel__heading">Başvuruları filtrele</h2>
+        <h2 id="application-filters-heading" class="admin-filter-panel__heading">@UiText.Get(Context, "Admin.Applications.FilterHeading")</h2>
         <div class="row g-3 align-items-end">
             <div class="col-12 col-lg-5">
-                <label for="search" class="form-label">Ad, e-posta veya program</label>
+                <label for="search" class="form-label">@UiText.Get(Context, "Admin.Applications.SearchLabel")</label>
                 <input id="search" name="search" value="@Model.Search" class="form-control" maxlength="100" autocomplete="off" />
             </div>
             <div class="col-12 col-sm-6 col-lg-3">
-                <label asp-for="Status" class="form-label">Başvuru durumu</label>
-                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<ApplicationStatus>()">
-                    <option value="">Tümü</option>
+                <label asp-for="Status" class="form-label">@UiText.Get(Context, "Admin.Applications.Status")</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="">@UiText.Get(Context, "Admin.Common.All")</option>
+                    @foreach (var status in Enum.GetValues<ApplicationStatus>())
+                    {
+                        <option value="@status">@UiText.LocalizeApplicationStatus(Context, status)</option>
+                    }
                 </select>
             </div>
             <div class="col-12 col-sm-6 col-lg-2">
-                <label asp-for="AcademicYearStart" class="form-label">Akademik yıl</label>
+                <label asp-for="AcademicYearStart" class="form-label">@UiText.Get(Context, "Admin.Applications.AcademicYear")</label>
                 <input asp-for="AcademicYearStart" class="form-control" min="2000" max="2200" placeholder="2026" />
             </div>
             <div class="col-12 col-sm-6 col-lg-2">
-                <label asp-for="Term" class="form-label">Dönem</label>
-                <select asp-for="Term" class="form-select" asp-items="Html.GetEnumSelectList<AcademicTerm>()">
-                    <option value="">Tümü</option>
+                <label asp-for="Term" class="form-label">@UiText.Get(Context, "Admin.Applications.Term")</label>
+                <select asp-for="Term" class="form-select">
+                    <option value="">@UiText.Get(Context, "Admin.Common.All")</option>
+                    @foreach (var term in Enum.GetValues<AcademicTerm>())
+                    {
+                        <option value="@term">@UiText.Get(Context, $"AcademicTerm.{term}")</option>
+                    }
                 </select>
             </div>
             <div class="col-12 admin-form-actions">
-                <button type="submit" class="btn btn-primary">Filtreleri uygula</button>
-                <a asp-action="Index" class="btn btn-outline-secondary">Filtreleri temizle</a>
+                <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Admin.Applications.ApplyFilters")</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Applications.ClearFilters")</a>
             </div>
         </div>
 
         @if (hasActiveFilters)
         {
-            <div class="active-filters" aria-label="Aktif filtreler">
-                <span class="active-filters__label">Aktif filtreler</span>
+            <div class="active-filters" aria-label="@UiText.Get(Context, "Admin.Applications.ActiveFilters")">
+                <span class="active-filters__label">@UiText.Get(Context, "Admin.Applications.ActiveFilters")</span>
                 @if (!string.IsNullOrWhiteSpace(Model.Search))
                 {
-                    <span class="filter-chip">Arama: @Model.Search</span>
+                    <span class="filter-chip">@UiText.Format(Context, "Admin.Applications.SearchFilter", Model.Search)</span>
                 }
                 @if (Model.Status.HasValue)
                 {
-                    <span class="filter-chip">Durum: @Model.Status.Value.DisplayName()</span>
+                    <span class="filter-chip">@UiText.Format(Context, "Admin.Applications.StatusFilter", UiText.LocalizeApplicationStatus(Context, Model.Status.Value))</span>
                 }
                 @if (Model.AcademicYearStart.HasValue)
                 {
-                    <span class="filter-chip">Yıl: @Model.AcademicYearStart</span>
+                    <span class="filter-chip">@UiText.Format(Context, "Admin.Applications.YearFilter", Model.AcademicYearStart)</span>
                 }
                 @if (Model.Term.HasValue)
                 {
-                    <span class="filter-chip">Dönem: @Model.Term.Value.DisplayName()</span>
+                    <span class="filter-chip">@UiText.Format(Context, "Admin.Applications.TermFilter", UiText.Get(Context, $"AcademicTerm.{Model.Term.Value}"))</span>
                 }
             </div>
         }
@@ -75,23 +83,23 @@
     <section aria-labelledby="application-results-heading">
         <div class="admin-results-heading mb-3">
             <div>
-                <h2 id="application-results-heading">Başvuru sonuçları</h2>
-                <p class="admin-results-count" role="status">@Model.Result.TotalCount başvuru bulundu</p>
+                <h2 id="application-results-heading">@UiText.Get(Context, "Admin.Applications.ResultsHeading")</h2>
+                <p class="admin-results-count" role="status">@UiText.Format(Context, "Admin.Applications.ResultCount", Model.Result.TotalCount)</p>
             </div>
         </div>
 
         @if (Model.ErrorMessage is not null)
         {
             <div class="alert alert-warning" role="alert">
-                <strong>Başvurular yüklenemedi.</strong>
+                <strong>@UiText.Get(Context, "Admin.Applications.LoadFailed")</strong>
                 <span>@Model.ErrorMessage</span>
             </div>
         }
         else if (Model.Result.Items.Count == 0)
         {
             <div class="empty-state">
-                <h3>Başvuru bulunamadı</h3>
-                <p>Filtreleri değiştirin veya tüm başvuruları görmek için filtreleri temizleyin.</p>
+                <h3>@UiText.Get(Context, "Admin.Applications.EmptyHeading")</h3>
+                <p>@UiText.Get(Context, "Admin.Applications.EmptyLead")</p>
             </div>
         }
         else
@@ -99,34 +107,34 @@
             <div class="table-shell">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle responsive-table">
-                        <caption class="visually-hidden">Filtrelenmiş lisansüstü başvuruları</caption>
+                        <caption class="visually-hidden">@UiText.Get(Context, "Admin.Applications.Caption")</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Öğrenci</th>
-                                <th scope="col">Maskelenmiş TC</th>
-                                <th scope="col">Program</th>
-                                <th scope="col">Dönem</th>
-                                <th scope="col">Başvuru tarihi</th>
-                                <th scope="col">Durum</th>
-                                <th scope="col"><span class="visually-hidden">İşlem</span></th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Students.Student")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Students.MaskedIdentity")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Institutes.Program")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Applications.Term")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Applications.ApplicationDate")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Common.Status")</th>
+                                <th scope="col"><span class="visually-hidden">@UiText.Get(Context, "Admin.Students.Action")</span></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var application in Model.Result.Items)
                             {
                                 <tr>
-                                    <td data-label="Öğrenci">@application.StudentFullName</td>
-                                    <td data-label="Maskelenmiş TC">@application.MaskedTc</td>
-                                    <td data-label="Program">@application.ProgramName</td>
-                                    <td data-label="Dönem">@application.AcademicYear · @application.TermName</td>
-                                    <td data-label="Başvuru tarihi">
+                                    <td data-label="@UiText.Get(Context, "Admin.Students.Student")">@application.StudentFullName</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Students.MaskedIdentity")">@application.MaskedTc</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Institutes.Program")">@application.ProgramName</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Applications.Term")">@application.AcademicYear · @UiText.LocalizeAcademicTerm(Context, application.TermName)</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Applications.ApplicationDate")">
                                         <time datetime="@application.ApplicationDateUtc.ToString("O")">
-                                            @IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")
+                                            @IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("g")
                                         </time>
                                     </td>
-                                    <td data-label="Durum"><partial name="_ApplicationStatusBadge" model="application.CurrentStatus" /></td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Common.Status")"><partial name="_ApplicationStatusBadge" model="application.CurrentStatus" /></td>
                                     <td data-label="">
-                                        <a asp-action="Detail" asp-route-id="@application.PublicId" class="btn btn-sm btn-primary">Başvuru detayı</a>
+                                        <a asp-action="Detail" asp-route-id="@application.PublicId" class="btn btn-sm btn-primary">@UiText.Get(Context, "Admin.Applications.Detail")</a>
                                     </td>
                                 </tr>
                             }
@@ -137,14 +145,14 @@
 
             @if (Model.Result.TotalPages > 1)
             {
-                <nav class="mt-3" aria-label="Başvuru sayfaları">
+                <nav class="mt-3" aria-label="@UiText.Get(Context, "Admin.Applications.Pagination")">
                     <ul class="pagination justify-content-center">
                         <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Önceki</a>
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">@UiText.Get(Context, "Admin.Common.Previous")</a>
                         </li>
                         <li class="page-item disabled"><span class="page-link" aria-current="page">@Model.Result.Page / @Model.Result.TotalPages</span></li>
                         <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)">
-                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">Sonraki</a>
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-academicYearStart="@Model.AcademicYearStart" asp-route-term="@Model.Term">@UiText.Get(Context, "Admin.Common.Next")</a>
                         </li>
                     </ul>
                 </nav>

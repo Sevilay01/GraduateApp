@@ -1,18 +1,18 @@
 @model AdminAccountPageViewModel
 @{
-    ViewData["Title"] = "Yönetici hesapları";
+    ViewData["Title"] = UiText.Get(Context, "Admin.Accounts.Title");
     var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Search) || Model.Status.HasValue;
 }
 
 <div class="admin-page">
     <header class="page-heading">
         <div>
-            <span class="eyebrow">Hesap yönetimi</span>
-            <h1 class="page-heading__title">Yöneticiler</h1>
-            <p class="page-heading__description">Yöneticileri tek kullanımlık bağlantıyla davet edin; hesapları silmeden güvenli biçimde yönetin.</p>
+            <span class="eyebrow">@UiText.Get(Context, "Admin.Accounts.Eyebrow")</span>
+            <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Accounts.Heading")</h1>
+            <p class="page-heading__description">@UiText.Get(Context, "Admin.Accounts.Lead")</p>
         </div>
         <div class="page-heading__actions">
-            <a asp-action="Students" class="btn btn-outline-primary">Öğrenciler</a>
+            <a asp-action="Students" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.Accounts.Students")</a>
         </div>
     </header>
 
@@ -22,44 +22,44 @@
     }
 
     <div class="alert alert-info" role="note">
-        Son aktif ve davetini tamamlamış yönetici pasifleştirilemez. Bu kural her istekte API tarafından yeniden doğrulanır.
+        @UiText.Get(Context, "Admin.Accounts.LastAdminRule")
     </div>
 
     <div class="row g-4">
         <div class="col-12 col-xl-8">
             <form method="get" class="admin-filter-panel mb-4" aria-labelledby="admin-account-filter-heading">
-                <h2 id="admin-account-filter-heading" class="admin-filter-panel__heading">Yönetici hesaplarını filtrele</h2>
+                <h2 id="admin-account-filter-heading" class="admin-filter-panel__heading">@UiText.Get(Context, "Admin.Accounts.FilterHeading")</h2>
                 <div class="row g-3 align-items-end">
                     <div class="col-12 col-md-6">
-                        <label asp-for="Search" class="form-label">E-posta</label>
-                        <input asp-for="Search" class="form-control" placeholder="E-postaya göre ara" />
+                        <label asp-for="Search" class="form-label">@UiText.Get(Context, "Field.Email")</label>
+                        <input asp-for="Search" class="form-control" placeholder="@UiText.Get(Context, "Admin.Accounts.EmailPlaceholder")" />
                     </div>
                     <div class="col-12 col-md-3">
-                        <label asp-for="Status" class="form-label">Durum</label>
+                        <label asp-for="Status" class="form-label">@UiText.Get(Context, "Admin.Accounts.StatusLabel")</label>
                         <select asp-for="Status" class="form-select">
-                            <option value="">Tümü</option>
-                            <option value="Active">Aktif</option>
-                            <option value="Inactive">Pasif</option>
-                            <option value="InvitationPending">Davet bekliyor</option>
-                            <option value="Locked">Kilitli</option>
+                            <option value="">@UiText.Get(Context, "Admin.Accounts.Status.All")</option>
+                            <option value="Active">@UiText.Get(Context, "Admin.Accounts.Status.Active")</option>
+                            <option value="Inactive">@UiText.Get(Context, "Admin.Accounts.Status.Inactive")</option>
+                            <option value="InvitationPending">@UiText.Get(Context, "Admin.Accounts.Status.InvitationPending")</option>
+                            <option value="Locked">@UiText.Get(Context, "Admin.Accounts.Status.Locked")</option>
                         </select>
                     </div>
                     <div class="col-12 col-md-3 admin-form-actions">
-                        <button class="btn btn-primary" type="submit">Filtrele</button>
-                        <a asp-action="Accounts" class="btn btn-outline-secondary">Temizle</a>
+                        <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Accounts.Filter")</button>
+                        <a asp-action="Accounts" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Accounts.Clear")</a>
                     </div>
                 </div>
                 @if (hasActiveFilters)
                 {
-                    <div class="active-filters" aria-label="Aktif filtreler">
-                        <span class="active-filters__label">Aktif filtreler</span>
+                    <div class="active-filters" aria-label="@UiText.Get(Context, "Admin.Accounts.ActiveFilters")">
+                        <span class="active-filters__label">@UiText.Get(Context, "Admin.Accounts.ActiveFilters")</span>
                         @if (!string.IsNullOrWhiteSpace(Model.Search))
                         {
-                            <span class="filter-chip">E-posta: @Model.Search</span>
+                            <span class="filter-chip">@UiText.Format(Context, "Admin.Accounts.EmailFilter", Model.Search)</span>
                         }
                         @if (Model.Status.HasValue)
                         {
-                            <span class="filter-chip">Durum: @Model.Status</span>
+                            <span class="filter-chip">@UiText.Format(Context, "Admin.Accounts.StatusFilter", UiText.Get(Context, $"Admin.Accounts.Status.{Model.Status}"))</span>
                         }
                     </div>
                 }
@@ -67,16 +67,16 @@
 
             <div class="admin-results-heading mb-3">
                 <div>
-                    <h2>Yönetici hesapları</h2>
-                    <p class="admin-results-count" role="status">@Model.Result.TotalCount hesap bulundu</p>
+                    <h2>@UiText.Get(Context, "Admin.Accounts.ResultsHeading")</h2>
+                    <p class="admin-results-count" role="status">@UiText.Format(Context, "Admin.Accounts.ResultCount", Model.Result.TotalCount)</p>
                 </div>
             </div>
 
             @if (Model.Result.Items.Count == 0)
             {
                 <div class="empty-state">
-                    <h3>Yönetici hesabı bulunamadı</h3>
-                    <p>Filtreleri değiştirin veya sağdaki formdan yeni bir yönetici davet edin.</p>
+                    <h3>@UiText.Get(Context, "Admin.Accounts.EmptyHeading")</h3>
+                    <p>@UiText.Get(Context, "Admin.Accounts.EmptyLead")</p>
                 </div>
             }
             else
@@ -84,14 +84,14 @@
                 <div class="table-shell">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle responsive-table">
-                            <caption class="visually-hidden">Filtrelenmiş yönetici hesapları</caption>
+                            <caption class="visually-hidden">@UiText.Get(Context, "Admin.Accounts.TableCaption")</caption>
                             <thead>
                                 <tr>
-                                    <th scope="col">E-posta</th>
-                                    <th scope="col">Durum</th>
-                                    <th scope="col">Giriş güvenliği</th>
-                                    <th scope="col">Tarihler</th>
-                                    <th scope="col">İşlemler</th>
+                                    <th scope="col">@UiText.Get(Context, "Field.Email")</th>
+                                    <th scope="col">@UiText.Get(Context, "Admin.Accounts.StatusLabel")</th>
+                                    <th scope="col">@UiText.Get(Context, "Admin.Accounts.SignInSecurity")</th>
+                                    <th scope="col">@UiText.Get(Context, "Admin.Accounts.Dates")</th>
+                                    <th scope="col">@UiText.Get(Context, "Admin.Accounts.Actions")</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -102,29 +102,33 @@
                                         : account.IsInvitationPending
                                             ? "admin-state--warning"
                                             : "admin-state--success";
-                                    var stateName = !account.IsActive ? "Pasif" : account.IsInvitationPending ? "Davet bekliyor" : "Aktif";
+                                    var stateName = !account.IsActive
+                                        ? UiText.Get(Context, "Admin.Accounts.Status.Inactive")
+                                        : account.IsInvitationPending
+                                            ? UiText.Get(Context, "Admin.Accounts.Status.InvitationPending")
+                                            : UiText.Get(Context, "Admin.Accounts.Status.Active");
                                     <tr>
-                                        <td data-label="E-posta">
+                                        <td data-label="@UiText.Get(Context, "Field.Email")">
                                             @account.Email
                                             @if (account.IsCurrentAdmin)
                                             {
-                                                <span class="admin-state admin-state--info ms-1">Mevcut hesap</span>
+                                                <span class="admin-state admin-state--info ms-1">@UiText.Get(Context, "Admin.Accounts.Current")</span>
                                             }
                                         </td>
-                                        <td data-label="Durum"><span class="admin-state @stateClass">@stateName</span></td>
-                                        <td data-label="Giriş güvenliği">
+                                        <td data-label="@UiText.Get(Context, "Admin.Accounts.StatusLabel")"><span class="admin-state @stateClass">@stateName</span></td>
+                                        <td data-label="@UiText.Get(Context, "Admin.Accounts.SignInSecurity")">
                                             @if (account.IsLocked)
                                             {
-                                                <span class="admin-state admin-state--danger">Kilitli</span>
+                                                <span class="admin-state admin-state--danger">@UiText.Get(Context, "Admin.Accounts.Status.Locked")</span>
                                             }
                                             else
                                             {
-                                                <span>Başarısız giriş: @account.AccessFailedCount</span>
+                                                <span>@UiText.Format(Context, "Admin.Accounts.FailedSignIns", account.AccessFailedCount)</span>
                                             }
                                         </td>
-                                        <td data-label="Tarihler" class="small">
-                                            <div>Oluşturma: @IstanbulTime.FromUtc(account.CreatedAtUtc).ToString("g")</div>
-                                            <div>Güncelleme: @IstanbulTime.FromUtc(account.UpdatedAtUtc).ToString("g")</div>
+                                        <td data-label="@UiText.Get(Context, "Admin.Accounts.Dates")" class="small">
+                                            <div>@UiText.Format(Context, "Admin.Accounts.Created", IstanbulTime.FromUtc(account.CreatedAtUtc).ToString("g"))</div>
+                                            <div>@UiText.Format(Context, "Admin.Accounts.Updated", IstanbulTime.FromUtc(account.UpdatedAtUtc).ToString("g"))</div>
                                         </td>
                                         <td data-label="">
                                             <div class="admin-action-stack">
@@ -133,7 +137,7 @@
                                                     <form asp-action="ResendAdminInvitation" method="post" data-disable-on-submit="true">
                                                         <input type="hidden" name="publicId" value="@account.PublicId" />
                                                         <input type="hidden" name="rowVersion" value="@account.RowVersion" />
-                                                        <button class="btn btn-sm btn-outline-primary" type="submit">Yönetici davetini yeniden gönder</button>
+                                                        <button class="btn btn-sm btn-outline-primary" type="submit">@UiText.Get(Context, "Admin.Accounts.ResendInvitation")</button>
                                                     </form>
                                                 }
                                                 @if (account.IsLocked)
@@ -141,7 +145,7 @@
                                                     <form asp-action="UnlockAdmin" method="post" data-disable-on-submit="true">
                                                         <input type="hidden" name="publicId" value="@account.PublicId" />
                                                         <input type="hidden" name="rowVersion" value="@account.RowVersion" />
-                                                        <button class="btn btn-sm btn-outline-primary" type="submit">Yönetici kilidini aç</button>
+                                                        <button class="btn btn-sm btn-outline-primary" type="submit">@UiText.Get(Context, "Admin.Accounts.Unlock")</button>
                                                     </form>
                                                 }
                                                 @if (!account.IsCurrentAdmin && account.IsActive)
@@ -149,7 +153,7 @@
                                                     <form asp-action="DeactivateAdmin" method="post" data-disable-on-submit="true">
                                                         <input type="hidden" name="publicId" value="@account.PublicId" />
                                                         <input type="hidden" name="rowVersion" value="@account.RowVersion" />
-                                                        <button class="btn btn-sm btn-outline-danger" type="submit">Yöneticiyi pasifleştir</button>
+                                                        <button class="btn btn-sm btn-outline-danger" type="submit">@UiText.Get(Context, "Admin.Accounts.Deactivate")</button>
                                                     </form>
                                                 }
                                                 else if (!account.IsActive)
@@ -157,7 +161,7 @@
                                                     <form asp-action="ActivateAdmin" method="post" data-disable-on-submit="true">
                                                         <input type="hidden" name="publicId" value="@account.PublicId" />
                                                         <input type="hidden" name="rowVersion" value="@account.RowVersion" />
-                                                        <button class="btn btn-sm btn-outline-success" type="submit">Yöneticiyi aktifleştir</button>
+                                                        <button class="btn btn-sm btn-outline-success" type="submit">@UiText.Get(Context, "Admin.Accounts.Activate")</button>
                                                     </form>
                                                 }
                                             </div>
@@ -172,11 +176,11 @@
 
             @if (Model.Result.TotalPages > 1)
             {
-                <nav class="mt-3" aria-label="Yönetici hesapları sayfaları">
+                <nav class="mt-3" aria-label="@UiText.Get(Context, "Admin.Accounts.Pagination")">
                     <ul class="pagination justify-content-center">
-                        <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Accounts" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">Önceki</a></li>
+                        <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)"><a class="page-link" asp-action="Accounts" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize">@UiText.Get(Context, "Admin.Accounts.Previous")</a></li>
                         <li class="page-item disabled"><span class="page-link" aria-current="page">@Model.Result.Page / @Model.Result.TotalPages</span></li>
-                        <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Accounts" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">Sonraki</a></li>
+                        <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)"><a class="page-link" asp-action="Accounts" asp-route-search="@Model.Search" asp-route-status="@Model.Status" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize">@UiText.Get(Context, "Admin.Accounts.Next")</a></li>
                     </ul>
                 </nav>
             }
@@ -186,18 +190,18 @@
             <section class="admin-section" aria-labelledby="admin-invite-heading">
                 <div class="admin-section-heading">
                     <div>
-                        <h2 id="admin-invite-heading">Yönetici davet et</h2>
-                        <p>Parola oluşturulmaz veya gösterilmez. Yönetici parolasını tek kullanımlık bağlantıdan belirler.</p>
+                        <h2 id="admin-invite-heading">@UiText.Get(Context, "Admin.Accounts.InviteHeading")</h2>
+                        <p>@UiText.Get(Context, "Admin.Accounts.InviteLead")</p>
                     </div>
                 </div>
                 <form asp-action="InviteAdmin" method="post" novalidate data-disable-on-submit="true">
                     <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
                     <div class="mb-3">
-                        <label asp-for="Invite.Email" class="form-label"></label>
+                        <label asp-for="Invite.Email" class="form-label">@UiText.Get(Context, "Field.Email")</label>
                         <input asp-for="Invite.Email" name="Email" class="form-control" autocomplete="email" maxlength="254" />
                         <span asp-validation-for="Invite.Email" class="text-danger"></span>
                     </div>
-                    <button class="btn btn-primary" type="submit">Yönetici daveti gönder</button>
+                    <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Accounts.InviteSubmit")</button>
                 </form>
             </section>
         </div>

@@ -1,6 +1,6 @@
 @model AdminApplicationDetailViewModel
 @{
-    ViewData["Title"] = "Başvuru detayı";
+    ViewData["Title"] = UiText.Get(Context, "Admin.Detail.Title");
     var transitions = Model.UsesEvaluationWorkflow
         ? Model.CurrentStatus.AllowedAdminTransitions().Where(item => item == ApplicationStatus.UnderReview).ToArray()
         : Model.CurrentStatus.AllowedAdminTransitions();
@@ -12,50 +12,50 @@
 <div class="admin-page">
     <header class="page-heading">
         <div>
-            <span class="eyebrow">Başvurular</span>
-            <h1 class="page-heading__title">Başvuru detayı</h1>
-            <p class="page-heading__description">@Model.ProgramName · @Model.AcademicYear · @Model.TermName</p>
+            <span class="eyebrow">@UiText.Get(Context, "Admin.Applications.Eyebrow")</span>
+            <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Detail.Title")</h1>
+            <p class="page-heading__description">@Model.ProgramName · @Model.AcademicYear · @UiText.LocalizeAcademicTerm(Context, Model.TermName)</p>
         </div>
         <div class="page-heading__actions">
             <partial name="_ApplicationStatusBadge" model="Model.CurrentStatus" />
-            <a asp-action="Index" class="btn btn-outline-secondary">Başvuru listesine dön</a>
+            <a asp-action="Index" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Detail.Back")</a>
         </div>
     </header>
 
-    <section class="admin-summary-grid" aria-label="Başvuru özeti">
+    <section class="admin-summary-grid" aria-label="@UiText.Get(Context, "Admin.Detail.SummaryAria")">
         <article class="admin-summary-card">
-            <h2>Başvuru özeti</h2>
+            <h2>@UiText.Get(Context, "Admin.Detail.SummaryHeading")</h2>
             <dl>
-                <dt>Başvuru tarihi</dt>
-                <dd><time datetime="@Model.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(Model.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")</time></dd>
-                <dt>Güncel durum</dt>
-                <dd>@Model.CurrentStatus.DisplayName()</dd>
-                <dt>Belge akışı</dt>
-                <dd>@(Model.UsesDocumentWorkflow ? "Etkin" : "Legacy akış")</dd>
-                <dt>Değerlendirme</dt>
-                <dd>@(Model.UsesEvaluationWorkflow ? "Sıralamalı iş akışı" : "Standart karar akışı")</dd>
+                <dt>@UiText.Get(Context, "Admin.Applications.ApplicationDate")</dt>
+                <dd><time datetime="@Model.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(Model.ApplicationDateUtc).ToString("g")</time></dd>
+                <dt>@UiText.Get(Context, "Admin.Detail.CurrentStatus")</dt>
+                <dd>@UiText.LocalizeApplicationStatus(Context, Model.CurrentStatus)</dd>
+                <dt>@UiText.Get(Context, "Admin.Detail.DocumentWorkflow")</dt>
+                <dd>@(Model.UsesDocumentWorkflow ? UiText.Get(Context, "Admin.Detail.WorkflowEnabled") : UiText.Get(Context, "Admin.Detail.LegacyWorkflow"))</dd>
+                <dt>@UiText.Get(Context, "Admin.Detail.Evaluation")</dt>
+                <dd>@(Model.UsesEvaluationWorkflow ? UiText.Get(Context, "Admin.Detail.RankedWorkflow") : UiText.Get(Context, "Admin.Detail.StandardWorkflow"))</dd>
             </dl>
         </article>
         <article class="admin-summary-card">
-            <h2>Öğrenci bilgileri</h2>
+            <h2>@UiText.Get(Context, "Admin.Detail.StudentHeading")</h2>
             <dl>
-                <dt>Ad soyad</dt>
+                <dt>@UiText.Get(Context, "Admin.Detail.FullName")</dt>
                 <dd>@Model.StudentFullName</dd>
-                <dt>Maskelenmiş TC</dt>
+                <dt>@UiText.Get(Context, "Admin.Students.MaskedIdentity")</dt>
                 <dd>@Model.MaskedTc</dd>
-                <dt>E-posta</dt>
+                <dt>@UiText.Get(Context, "Field.Email")</dt>
                 <dd>@Model.Email</dd>
             </dl>
         </article>
         <article class="admin-summary-card">
-            <h2>Program bilgileri</h2>
+            <h2>@UiText.Get(Context, "Admin.Detail.ProgramHeading")</h2>
             <dl>
-                <dt>Enstitü</dt>
+                <dt>@UiText.Get(Context, "Admin.Institutes.Institute")</dt>
                 <dd>@Model.InstituteName</dd>
-                <dt>Program</dt>
+                <dt>@UiText.Get(Context, "Admin.Institutes.Program")</dt>
                 <dd>@Model.ProgramName</dd>
-                <dt>Akademik dönem</dt>
-                <dd>@Model.AcademicYear · @Model.TermName</dd>
+                <dt>@UiText.Get(Context, "Admin.Detail.AcademicPeriod")</dt>
+                <dd>@Model.AcademicYear · @UiText.LocalizeAcademicTerm(Context, Model.TermName)</dd>
             </dl>
         </article>
     </section>
@@ -63,15 +63,15 @@
     <section class="admin-section" aria-labelledby="application-lifecycle-heading">
         <div class="admin-section-heading">
             <div>
-                <h2 id="application-lifecycle-heading">Başvuru yaşam döngüsü</h2>
-                <p>Durum değişiklikleri ve yönetici notları kronolojik kayıt olarak korunur.</p>
+                <h2 id="application-lifecycle-heading">@UiText.Get(Context, "Admin.Detail.LifecycleHeading")</h2>
+                <p>@UiText.Get(Context, "Admin.Detail.LifecycleLead")</p>
             </div>
         </div>
         @if (Model.History.Count == 0)
         {
             <div class="empty-state">
-                <h3>Henüz durum kaydı yok</h3>
-                <p>İlk durum değişikliği burada tarih ve notuyla görüntülenecek.</p>
+                <h3>@UiText.Get(Context, "Admin.Detail.NoHistoryHeading")</h3>
+                <p>@UiText.Get(Context, "Admin.Detail.NoHistoryLead")</p>
             </div>
         }
         else
@@ -80,8 +80,8 @@
                 @foreach (var history in Model.History.OrderByDescending(item => item.ChangedAtUtc))
                 {
                     <li>
-                        <strong>@history.CurrentStatus.DisplayName()</strong>
-                        <time datetime="@history.ChangedAtUtc.ToString("O")">@IstanbulTime.FromUtc(history.ChangedAtUtc).ToString("dd.MM.yyyy HH:mm") (İstanbul)</time>
+                        <strong>@UiText.LocalizeApplicationStatus(Context, history.CurrentStatus)</strong>
+                        <time datetime="@history.ChangedAtUtc.ToString("O")">@IstanbulTime.FromUtc(history.ChangedAtUtc).ToString("g") (@UiText.Get(Context, "Admin.Detail.IstanbulTime"))</time>
                         @if (!string.IsNullOrWhiteSpace(history.Notes))
                         {
                             <p class="mb-0 mt-1">@history.Notes</p>
@@ -95,15 +95,15 @@
     <section class="admin-section" aria-labelledby="scores-heading">
         <div class="admin-section-heading">
             <div>
-                <h2 id="scores-heading">Başvuru anındaki sınav sonuçları</h2>
-                <p>Bu değerler başvuru oluşturulurken alınan snapshot kayıtlarıdır.</p>
+                <h2 id="scores-heading">@UiText.Get(Context, "Admin.Detail.ScoresHeading")</h2>
+                <p>@UiText.Get(Context, "Admin.Detail.ScoresLead")</p>
             </div>
         </div>
         @if (Model.ScoreSnapshots.Count == 0)
         {
             <div class="empty-state">
-                <h3>Sınav sonucu bulunmuyor</h3>
-                <p>Bu başvuru için kaydedilmiş sınav sonucu snapshot’ı yok.</p>
+                <h3>@UiText.Get(Context, "Admin.Detail.NoScoresHeading")</h3>
+                <p>@UiText.Get(Context, "Admin.Detail.NoScoresLead")</p>
             </div>
         }
         else
@@ -111,21 +111,21 @@
             <div class="table-shell">
                 <div class="table-responsive">
                     <table class="table table-sm responsive-table">
-                        <caption class="visually-hidden">Başvuru anındaki sınav sonucu snapshot’ları</caption>
+                        <caption class="visually-hidden">@UiText.Get(Context, "Admin.Detail.ScoresCaption")</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Sınav</th>
-                                <th scope="col">Puan</th>
-                                <th scope="col">Sınav tarihi</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Detail.Exam")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Detail.Score")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Detail.ExamDate")</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var score in Model.ScoreSnapshots)
                             {
                                 <tr>
-                                    <td data-label="Sınav">@score.ExamName</td>
-                                    <td data-label="Puan">@score.Score</td>
-                                    <td data-label="Sınav tarihi">@score.ExamDate?.ToString("dd.MM.yyyy")</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Detail.Exam")">@score.ExamName</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Detail.Score")">@score.Score</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Detail.ExamDate")">@score.ExamDate?.ToString("dd.MM.yyyy")</td>
                                 </tr>
                             }
                         </tbody>
@@ -138,20 +138,20 @@
     <section class="admin-section" aria-labelledby="documents-heading">
         <div class="admin-section-heading">
             <div>
-                <h2 id="documents-heading">Belge gereksinimleri ve inceleme</h2>
-                <p>Yalnızca Pending veya UnderReview başvurulardaki inceleme bekleyen güncel belgeler için karar verilebilir.</p>
+                <h2 id="documents-heading">@UiText.Get(Context, "Admin.Detail.DocumentsHeading")</h2>
+                <p>@UiText.Get(Context, "Admin.Detail.DocumentsLead")</p>
             </div>
         </div>
 
         @if (!Model.UsesDocumentWorkflow)
         {
-            <div class="alert alert-info mb-0" role="note">Bu legacy başvuru yeni belge onay koşullarından muaftır.</div>
+            <div class="alert alert-info mb-0" role="note">@UiText.Get(Context, "Admin.Detail.LegacyDocumentExempt")</div>
         }
         else if (Model.DocumentRequirements.Count == 0)
         {
             <div class="empty-state">
-                <h3>Belge gereksinimi bulunmuyor</h3>
-                <p>Başvurunun belge snapshot’ında bir gereksinim yer almıyor.</p>
+                <h3>@UiText.Get(Context, "Admin.Detail.NoRequirementsHeading")</h3>
+                <p>@UiText.Get(Context, "Admin.Detail.NoRequirementsLead")</p>
             </div>
         }
         else
@@ -169,39 +169,39 @@
                     <article class="document-card @(requirement.IsRequired ? "document-card--required" : null)">
                         <header>
                             <div>
-                                <span class="eyebrow">@(requirement.IsRequired ? "Zorunlu belge" : "İsteğe bağlı belge")</span>
+                                <span class="eyebrow">@(requirement.IsRequired ? UiText.Get(Context, "Admin.Detail.RequiredDocument") : UiText.Get(Context, "Admin.Detail.OptionalDocument"))</span>
                                 <h3>@requirement.DisplayName</h3>
                                 @if (!string.IsNullOrWhiteSpace(requirement.Description))
                                 {
                                     <p class="text-muted mb-0">@requirement.Description</p>
                                 }
                             </div>
-                            <span class="admin-state @reviewClass">@(current?.ReviewStatus.ReviewName() ?? "Belge yüklenmedi")</span>
+                            <span class="admin-state @reviewClass">@(current is null ? UiText.Get(Context, "Admin.Detail.NotUploaded") : UiText.LocalizeDocumentReview(Context, current.ReviewStatus))</span>
                         </header>
 
                         @if (current is null)
                         {
-                            <p class="empty-inline">Güncel belge bulunmuyor.</p>
+                            <p class="empty-inline">@UiText.Get(Context, "Admin.Detail.NoCurrentDocument")</p>
                         }
                         else
                         {
                             <div class="document-current">
                                 <dl class="meta-grid">
-                                    <div><dt>Dosya adı</dt><dd>@current.OriginalFileName</dd></div>
-                                    <div><dt>Sürüm</dt><dd>@current.VersionNumber</dd></div>
-                                    <div><dt>Yüklenme zamanı</dt><dd><time datetime="@current.UploadedAtUtc.ToString("O")">@IstanbulTime.FromUtc(current.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</time></dd></div>
-                                    <div><dt>İnceleme durumu</dt><dd>@current.ReviewStatus.ReviewName()</dd></div>
+                                    <div><dt>@UiText.Get(Context, "Admin.Detail.FileName")</dt><dd>@current.OriginalFileName</dd></div>
+                                    <div><dt>@UiText.Get(Context, "Admin.Detail.Version")</dt><dd>@current.VersionNumber</dd></div>
+                                    <div><dt>@UiText.Get(Context, "Admin.Detail.UploadedAt")</dt><dd><time datetime="@current.UploadedAtUtc.ToString("O")">@IstanbulTime.FromUtc(current.UploadedAtUtc).ToString("g")</time></dd></div>
+                                    <div><dt>@UiText.Get(Context, "Admin.Detail.ReviewStatus")</dt><dd>@UiText.LocalizeDocumentReview(Context, current.ReviewStatus)</dd></div>
                                 </dl>
 
                                 @if (current.ReviewStatus == DocumentReviewStatus.Rejected)
                                 {
-                                    <div class="alert alert-danger py-2"><strong>Ret gerekçesi:</strong> @current.RejectionReason</div>
+                                    <div class="alert alert-danger py-2"><strong>@UiText.Get(Context, "Admin.Detail.RejectionReason")</strong> @current.RejectionReason</div>
                                 }
 
                                 <a asp-action="DownloadDocument"
                                    asp-route-applicationPublicId="@Model.PublicId"
                                    asp-route-documentPublicId="@current.PublicId"
-                                   class="btn btn-sm btn-outline-secondary">Güncel belgeyi güvenli indir</a>
+                                   class="btn btn-sm btn-outline-secondary">@UiText.Get(Context, "Admin.Detail.DownloadCurrent")</a>
 
                                 @if (Model.CurrentStatus.CanReviewDocument(current.ReviewStatus))
                                 {
@@ -211,23 +211,23 @@
                                             <input type="hidden" name="DocumentPublicId" value="@current.PublicId" />
                                             <input type="hidden" name="ReviewStatus" value="Approved" />
                                             <input type="hidden" name="RowVersion" value="@current.RowVersion" />
-                                            <button type="submit" class="btn btn-success">Belgeyi onayla</button>
+                                            <button type="submit" class="btn btn-success">@UiText.Get(Context, "Admin.Detail.ApproveDocument")</button>
                                         </form>
                                         <form asp-action="ReviewDocument" method="post" data-disable-on-submit="true">
                                             <input type="hidden" name="ApplicationPublicId" value="@Model.PublicId" />
                                             <input type="hidden" name="DocumentPublicId" value="@current.PublicId" />
                                             <input type="hidden" name="ReviewStatus" value="Rejected" />
                                             <input type="hidden" name="RowVersion" value="@current.RowVersion" />
-                                            <label for="rejection-@current.PublicId" class="form-label">Türkçe ret gerekçesi</label>
+                                            <label for="rejection-@current.PublicId" class="form-label">@UiText.Get(Context, "Admin.Detail.TurkishRejectionReason")</label>
                                             <textarea id="rejection-@current.PublicId" name="RejectionReason" class="form-control" rows="3" maxlength="500" required></textarea>
-                                            <button type="submit" class="btn btn-danger mt-2">Belgeyi reddet</button>
+                                            <button type="submit" class="btn btn-danger mt-2">@UiText.Get(Context, "Admin.Detail.RejectDocument")</button>
                                         </form>
                                     </div>
                                 }
                                 else
                                 {
                                     <p class="admin-readonly-note" data-document-review-readonly>
-                                        Bu belge için işlem formu gösterilmiyor. Belge kararı tamamlanmış veya başvuru incelemeye açık bir durumda değil.
+                                        @UiText.Get(Context, "Admin.Detail.ReviewReadonly")
                                     </p>
                                 }
                             </div>
@@ -236,13 +236,13 @@
                         @if (requirement.Versions.Count > 1)
                         {
                             <details class="mt-3">
-                                <summary>Geçmiş belge sürümleri</summary>
+                                <summary>@UiText.Get(Context, "Admin.Detail.PreviousVersions")</summary>
                                 <ul class="list-group list-group-flush mt-2">
                                     @foreach (var version in requirement.Versions.Where(item => !item.IsCurrent))
                                     {
                                         <li class="list-group-item px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                            <span>Sürüm @version.VersionNumber · @version.ReviewStatus.ReviewName() · @IstanbulTime.FromUtc(version.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</span>
-                                            <a asp-action="DownloadDocument" asp-route-applicationPublicId="@Model.PublicId" asp-route-documentPublicId="@version.PublicId" class="btn btn-sm btn-outline-secondary">Sürümü güvenli indir</a>
+                                            <span>@UiText.Format(Context, "Admin.Detail.VersionSummary", version.VersionNumber, UiText.LocalizeDocumentReview(Context, version.ReviewStatus), IstanbulTime.FromUtc(version.UploadedAtUtc).ToString("g"))</span>
+                                            <a asp-action="DownloadDocument" asp-route-applicationPublicId="@Model.PublicId" asp-route-documentPublicId="@version.PublicId" class="btn btn-sm btn-outline-secondary">@UiText.Get(Context, "Admin.Detail.DownloadVersion")</a>
                                         </li>
                                     }
                                 </ul>
@@ -257,17 +257,17 @@
     <section class="admin-section" aria-labelledby="allowed-actions-heading">
         <div class="admin-section-heading">
             <div>
-                <h2 id="allowed-actions-heading">İzin verilen eylemler</h2>
-                <p>Sunucu tarafındaki yaşam döngüsü, belge ve eşzamanlılık kontrolleri her istekte yeniden uygulanır.</p>
+                <h2 id="allowed-actions-heading">@UiText.Get(Context, "Admin.Detail.ActionsHeading")</h2>
+                <p>@UiText.Get(Context, "Admin.Detail.ActionsLead")</p>
             </div>
         </div>
         @if (Model.UsesEvaluationWorkflow)
         {
-            <div class="alert alert-info" role="note">Onay ve ret kararı, ilan değerlendirmesi kesinleştirilip yayımlandığında atomik olarak uygulanır.</div>
+            <div class="alert alert-info" role="note">@UiText.Get(Context, "Admin.Detail.EvaluationDecisionNote")</div>
         }
         @if (transitions.Count == 0)
         {
-            <p class="admin-readonly-note mb-0">Bu durumdan yönetici tarafından yapılabilecek başka bir geçiş yok.</p>
+            <p class="admin-readonly-note mb-0">@UiText.Get(Context, "Admin.Detail.NoTransitions")</p>
         }
         else
         {
@@ -275,26 +275,26 @@
                 <input type="hidden" name="PublicId" value="@Model.PublicId" />
                 <input type="hidden" name="RowVersion" value="@Model.RowVersion" />
                 <div class="col-12 col-md-4">
-                    <label for="NewStatus" class="form-label">Yeni durum</label>
+                    <label for="NewStatus" class="form-label">@UiText.Get(Context, "Admin.Detail.NewStatus")</label>
                     <select id="NewStatus" name="NewStatus" class="form-select" required>
                         @foreach (var status in transitions)
                         {
                             if (status != ApplicationStatus.Approved || allRequiredDocumentsApproved)
                             {
-                                <option value="@status">@status.DisplayName()</option>
+                                <option value="@status">@UiText.LocalizeApplicationStatus(Context, status)</option>
                             }
                         }
                     </select>
                 </div>
                 <div class="col-12 col-md-8">
-                    <label for="Notes" class="form-label">Yönetici notu</label>
+                    <label for="Notes" class="form-label">@UiText.Get(Context, "Admin.Detail.AdminNote")</label>
                     <textarea id="Notes" name="Notes" class="form-control" rows="3" maxlength="500"></textarea>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Başvuru durumunu güncelle</button>
+                    <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Admin.Detail.UpdateStatus")</button>
                     @if (transitions.Contains(ApplicationStatus.Approved) && !allRequiredDocumentsApproved)
                     {
-                        <p class="small text-warning mt-2 mb-0">Tüm zorunlu güncel belgeler onaylanmadan başvuru onaylanamaz.</p>
+                        <p class="small text-warning mt-2 mb-0">@UiText.Get(Context, "Admin.Detail.RequiredDocumentsWarning")</p>
                     }
                 </div>
             </form>

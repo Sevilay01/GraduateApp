@@ -1153,4 +1153,2139 @@
   <data name="Navigation.ProgramTranslations" xml:space="preserve">
     <value>Bulk English program names</value>
   </data>
+  <data name="Admin.ActivateStudent.Title" xml:space="preserve">
+    <value>Activate student</value>
+  </data>
+  <data name="Admin.ActivateStudent.Heading" xml:space="preserve">
+    <value>Activate student account</value>
+  </data>
+  <data name="Admin.ActivateStudent.Lead" xml:space="preserve">
+    <value>Verify the masked student information before restoring account access.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Summary" xml:space="preserve">
+    <value>Activation summary</value>
+  </data>
+  <data name="Admin.ActivateStudent.SummarySuffix" xml:space="preserve">
+    <value>student account will be activated. Existing sessions will no longer be valid because the security stamp will be renewed.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Submit" xml:space="preserve">
+    <value>Activate student account</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Title" xml:space="preserve">
+    <value>Deactivate student</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Heading" xml:space="preserve">
+    <value>Deactivate student account</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Lead" xml:space="preserve">
+    <value>This security action invalidates the student&apos;s current sessions; it does not delete historical data.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Summary" xml:space="preserve">
+    <value>Deactivation summary</value>
+  </data>
+  <data name="Admin.DeactivateStudent.SummarySuffix" xml:space="preserve">
+    <value>student account will be deactivated. Existing API tokens and the web session will be invalidated by renewing the security stamp.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Warning" xml:space="preserve">
+    <value>This action does not delete catalog data or the student&apos;s historical application records.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Submit" xml:space="preserve">
+    <value>Deactivate student account</value>
+  </data>
+  <data name="Admin.Student.ApplicationCount" xml:space="preserve">
+    <value>Application count</value>
+  </data>
+  <data name="Admin.Student.ExamScoreCount" xml:space="preserve">
+    <value>Exam score count</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Title" xml:space="preserve">
+    <value>Delete institute</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Heading" xml:space="preserve">
+    <value>Permanently delete institute</value>
+  </data>
+  <data name="Admin.DeleteInstitute.IntroSuffix" xml:space="preserve">
+    <value>institute is about to be deleted.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.LinkedPrograms" xml:space="preserve">
+    <value>This institute has {0} linked programs. Permanent deletion will be blocked to preserve data integrity; deactivate the institute instead.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Irreversible" xml:space="preserve">
+    <value>This action cannot be undone. Only institutes that have never been used can be permanently deleted.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Title" xml:space="preserve">
+    <value>Delete program</value>
+  </data>
+  <data name="Admin.DeleteProgram.Heading" xml:space="preserve">
+    <value>Permanently delete program</value>
+  </data>
+  <data name="Admin.DeleteProgram.IntroSuffix" xml:space="preserve">
+    <value>program is about to be deleted.</value>
+  </data>
+  <data name="Admin.DeleteProgram.LinkedOfferings" xml:space="preserve">
+    <value>This program has {0} linked term offerings. Permanent deletion will be blocked to preserve historical records; deactivate the program instead.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Irreversible" xml:space="preserve">
+    <value>This action cannot be undone. Only programs with no offerings can be permanently deleted.</value>
+  </data>
+  <data name="Admin.Delete.Permanent" xml:space="preserve">
+    <value>Delete permanently</value>
+  </data>
+  <data name="Admin.Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Admin.Common.AccountManagement" xml:space="preserve">
+    <value>Account management</value>
+  </data>
+  <data name="Admin.Accounts.Title" xml:space="preserve">
+    <value>Administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.Eyebrow" xml:space="preserve">
+    <value>Account management</value>
+  </data>
+  <data name="Admin.Accounts.Heading" xml:space="preserve">
+    <value>Administrators</value>
+  </data>
+  <data name="Admin.Accounts.Lead" xml:space="preserve">
+    <value>Invite administrators with a one-time link and manage their accounts securely without deleting them.</value>
+  </data>
+  <data name="Admin.Accounts.Students" xml:space="preserve">
+    <value>Students</value>
+  </data>
+  <data name="Admin.Accounts.LastAdminRule" xml:space="preserve">
+    <value>The last active administrator who has completed their invitation cannot be deactivated. The API revalidates this rule on every request.</value>
+  </data>
+  <data name="Admin.Accounts.FilterHeading" xml:space="preserve">
+    <value>Filter administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.EmailPlaceholder" xml:space="preserve">
+    <value>Search by email</value>
+  </data>
+  <data name="Admin.Accounts.StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Accounts.Status.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Admin.Accounts.Status.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Admin.Accounts.Status.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Admin.Accounts.Status.InvitationPending" xml:space="preserve">
+    <value>Invitation pending</value>
+  </data>
+  <data name="Admin.Accounts.Status.Locked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="Admin.Accounts.Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Admin.Accounts.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Admin.Accounts.ActiveFilters" xml:space="preserve">
+    <value>Active filters</value>
+  </data>
+  <data name="Admin.Accounts.EmailFilter" xml:space="preserve">
+    <value>Email: {0}</value>
+  </data>
+  <data name="Admin.Accounts.StatusFilter" xml:space="preserve">
+    <value>Status: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResultsHeading" xml:space="preserve">
+    <value>Administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.ResultCount" xml:space="preserve">
+    <value>{0} accounts found</value>
+  </data>
+  <data name="Admin.Accounts.EmptyHeading" xml:space="preserve">
+    <value>No administrator accounts found</value>
+  </data>
+  <data name="Admin.Accounts.EmptyLead" xml:space="preserve">
+    <value>Change the filters or invite a new administrator using the form on the right.</value>
+  </data>
+  <data name="Admin.Accounts.TableCaption" xml:space="preserve">
+    <value>Filtered administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.SignInSecurity" xml:space="preserve">
+    <value>Sign-in security</value>
+  </data>
+  <data name="Admin.Accounts.Dates" xml:space="preserve">
+    <value>Dates</value>
+  </data>
+  <data name="Admin.Accounts.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Admin.Accounts.Current" xml:space="preserve">
+    <value>Current account</value>
+  </data>
+  <data name="Admin.Accounts.FailedSignIns" xml:space="preserve">
+    <value>Failed sign-ins: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Created" xml:space="preserve">
+    <value>Created: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Updated" xml:space="preserve">
+    <value>Updated: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResendInvitation" xml:space="preserve">
+    <value>Resend administrator invitation</value>
+  </data>
+  <data name="Admin.Accounts.Unlock" xml:space="preserve">
+    <value>Unlock administrator</value>
+  </data>
+  <data name="Admin.Accounts.Deactivate" xml:space="preserve">
+    <value>Deactivate administrator</value>
+  </data>
+  <data name="Admin.Accounts.Activate" xml:space="preserve">
+    <value>Activate administrator</value>
+  </data>
+  <data name="Admin.Accounts.Pagination" xml:space="preserve">
+    <value>Administrator account pages</value>
+  </data>
+  <data name="Admin.Accounts.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Admin.Accounts.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Admin.Accounts.InviteHeading" xml:space="preserve">
+    <value>Invite administrator</value>
+  </data>
+  <data name="Admin.Accounts.InviteLead" xml:space="preserve">
+    <value>No password is created or displayed. The administrator sets their password through the one-time link.</value>
+  </data>
+  <data name="Admin.Accounts.InviteSubmit" xml:space="preserve">
+    <value>Send administrator invitation</value>
+  </data>
+  <data name="Admin.Catalog.Eyebrow" xml:space="preserve">
+    <value>Academic catalog</value>
+  </data>
+  <data name="Admin.Catalog.Institutes" xml:space="preserve">
+    <value>Institutes</value>
+  </data>
+  <data name="Admin.Catalog.Programs" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="Admin.Catalog.ProgramTranslations" xml:space="preserve">
+    <value>Bulk English names</value>
+  </data>
+  <data name="Admin.Catalog.Universities" xml:space="preserve">
+    <value>Universities</value>
+  </data>
+  <data name="Admin.Common.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Common.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Admin.Common.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Admin.Common.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Admin.Common.InactiveSuffix" xml:space="preserve">
+    <value> (inactive)</value>
+  </data>
+  <data name="Admin.Common.Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Admin.Common.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Admin.Common.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Admin.Common.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Admin.Common.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Admin.Common.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Admin.Common.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Admin.Common.Degree" xml:space="preserve">
+    <value>Degree</value>
+  </data>
+  <data name="Admin.Common.DegreeType" xml:space="preserve">
+    <value>Degree type</value>
+  </data>
+  <data name="Admin.Common.Offering" xml:space="preserve">
+    <value>Offering</value>
+  </data>
+  <data name="Admin.Institutes.Title" xml:space="preserve">
+    <value>Institute management</value>
+  </data>
+  <data name="Admin.Institutes.Heading" xml:space="preserve">
+    <value>Institutes and programs</value>
+  </data>
+  <data name="Admin.Institutes.Lead" xml:space="preserve">
+    <value>Create, edit, or close institutes to new selections.</value>
+  </data>
+  <data name="Admin.Institutes.Note" xml:space="preserve">
+    <value>Deactivate an institute that has been used instead of deleting it. Programs in inactive institutes are hidden from new offering and application selections while historical records are preserved.</value>
+  </data>
+  <data name="Admin.Institutes.FilterHeading" xml:space="preserve">
+    <value>Filter institutes</value>
+  </data>
+  <data name="Admin.Institutes.Name" xml:space="preserve">
+    <value>Institute name</value>
+  </data>
+  <data name="Admin.Institutes.SearchPlaceholder" xml:space="preserve">
+    <value>Search by name</value>
+  </data>
+  <data name="Admin.Institutes.EmptyHeading" xml:space="preserve">
+    <value>No institutes found</value>
+  </data>
+  <data name="Admin.Institutes.EmptyLead" xml:space="preserve">
+    <value>Change the filters or use the new institute form.</value>
+  </data>
+  <data name="Admin.Institutes.Caption" xml:space="preserve">
+    <value>Filtered institute records</value>
+  </data>
+  <data name="Admin.Institutes.Institute" xml:space="preserve">
+    <value>Institute</value>
+  </data>
+  <data name="Admin.Institutes.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Institutes.Deactivate" xml:space="preserve">
+    <value>Deactivate institute</value>
+  </data>
+  <data name="Admin.Institutes.Activate" xml:space="preserve">
+    <value>Activate institute</value>
+  </data>
+  <data name="Admin.Institutes.DeleteDetails" xml:space="preserve">
+    <value>Permanent deletion details</value>
+  </data>
+  <data name="Admin.Institutes.Pagination" xml:space="preserve">
+    <value>Institute list pages</value>
+  </data>
+  <data name="Admin.Institutes.EditHeading" xml:space="preserve">
+    <value>Edit institute</value>
+  </data>
+  <data name="Admin.Institutes.NewHeading" xml:space="preserve">
+    <value>New institute</value>
+  </data>
+  <data name="Admin.Institutes.Create" xml:space="preserve">
+    <value>Create institute</value>
+  </data>
+  <data name="Admin.Programs.Title" xml:space="preserve">
+    <value>Program management</value>
+  </data>
+  <data name="Admin.Programs.Heading" xml:space="preserve">
+    <value>Institutes and programs</value>
+  </data>
+  <data name="Admin.Programs.Lead" xml:space="preserve">
+    <value>Manage graduate programs together with their institute and degree type.</value>
+  </data>
+  <data name="Admin.Programs.Note" xml:space="preserve">
+    <value>Deactivate a program with offerings or historical records instead of deleting it. Even if its own record is active, a program is effectively inactive for new selections when its institute is inactive. For legacy records without an English name, the English interface safely falls back to the Turkish program name.</value>
+  </data>
+  <data name="Admin.Programs.FilterHeading" xml:space="preserve">
+    <value>Filter programs</value>
+  </data>
+  <data name="Admin.Programs.Name" xml:space="preserve">
+    <value>Program name</value>
+  </data>
+  <data name="Admin.Programs.NameTurkish" xml:space="preserve">
+    <value>Turkish program name</value>
+  </data>
+  <data name="Admin.Programs.NameEnglish" xml:space="preserve">
+    <value>English program name</value>
+  </data>
+  <data name="Admin.Programs.SearchPlaceholder" xml:space="preserve">
+    <value>Search by name</value>
+  </data>
+  <data name="Admin.Programs.RecordStatus" xml:space="preserve">
+    <value>Record status</value>
+  </data>
+  <data name="Admin.Programs.ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="Admin.Programs.EmptyHeading" xml:space="preserve">
+    <value>No programs found</value>
+  </data>
+  <data name="Admin.Programs.EmptyLead" xml:space="preserve">
+    <value>Change the filters or use the new program form.</value>
+  </data>
+  <data name="Admin.Programs.Caption" xml:space="preserve">
+    <value>Filtered graduate programs</value>
+  </data>
+  <data name="Admin.Programs.MissingEnglish" xml:space="preserve">
+    <value>English name missing</value>
+  </data>
+  <data name="Admin.Programs.InstituteInactive" xml:space="preserve">
+    <value>Institute inactive</value>
+  </data>
+  <data name="Admin.Programs.Deactivate" xml:space="preserve">
+    <value>Deactivate program</value>
+  </data>
+  <data name="Admin.Programs.Activate" xml:space="preserve">
+    <value>Activate program</value>
+  </data>
+  <data name="Admin.Programs.DeleteDetails" xml:space="preserve">
+    <value>Permanent deletion details</value>
+  </data>
+  <data name="Admin.Programs.Pagination" xml:space="preserve">
+    <value>Program list pages</value>
+  </data>
+  <data name="Admin.Programs.EditHeading" xml:space="preserve">
+    <value>Edit program</value>
+  </data>
+  <data name="Admin.Programs.NewHeading" xml:space="preserve">
+    <value>New program</value>
+  </data>
+  <data name="Admin.Programs.EnglishPlaceholder" xml:space="preserve">
+    <value>Computer Engineering</value>
+  </data>
+  <data name="Admin.Programs.EnglishFallbackHelp" xml:space="preserve">
+    <value>If left blank, the Turkish name is shown in the English interface.</value>
+  </data>
+  <data name="Admin.Programs.Create" xml:space="preserve">
+    <value>Create program</value>
+  </data>
+  <data name="Admin.Translations.Title" xml:space="preserve">
+    <value>Bulk program translations</value>
+  </data>
+  <data name="Admin.Translations.Heading" xml:space="preserve">
+    <value>Bulk English program names</value>
+  </data>
+  <data name="Admin.Translations.Lead" xml:space="preserve">
+    <value>Review official English program names on one screen and save them atomically.</value>
+  </data>
+  <data name="Admin.Translations.Note" xml:space="preserve">
+    <value>This area does not generate automatic translations. Enter English names verified by the institution. The English interface safely falls back to the Turkish name for blank records. All changes on the page are saved in one operation; if a concurrent update exists, no row is written partially.</value>
+  </data>
+  <data name="Admin.Translations.FilterHeading" xml:space="preserve">
+    <value>Search programs</value>
+  </data>
+  <data name="Admin.Translations.SearchLabel" xml:space="preserve">
+    <value>Turkish or English program name</value>
+  </data>
+  <data name="Admin.Translations.SearchPlaceholder" xml:space="preserve">
+    <value>For example, Bilgisayar or Computer</value>
+  </data>
+  <data name="Admin.Translations.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Admin.Translations.EmptyLead" xml:space="preserve">
+    <value>Change the search text or check the program catalog.</value>
+  </data>
+  <data name="Admin.Translations.Caption" xml:space="preserve">
+    <value>Official English names for the programs on this page</value>
+  </data>
+  <data name="Admin.Translations.EnglishLabel" xml:space="preserve">
+    <value>English name for {0}</value>
+  </data>
+  <data name="Admin.Translations.ScopeCount" xml:space="preserve">
+    <value>{0} programs are included in this operation.</value>
+  </data>
+  <data name="Admin.Translations.Save" xml:space="preserve">
+    <value>Save translations on this page</value>
+  </data>
+  <data name="Admin.Translations.Pagination" xml:space="preserve">
+    <value>Program translation pages</value>
+  </data>
+  <data name="Admin.Universities.Title" xml:space="preserve">
+    <value>University catalog</value>
+  </data>
+  <data name="Admin.Universities.Heading" xml:space="preserve">
+    <value>Universities</value>
+  </data>
+  <data name="Admin.Universities.Lead" xml:space="preserve">
+    <value>Manage the universities students can select in their profile as safe, encoded catalog records.</value>
+  </data>
+  <data name="Admin.Universities.ListHeading" xml:space="preserve">
+    <value>Defined universities</value>
+  </data>
+  <data name="Admin.Universities.Count" xml:space="preserve">
+    <value>{0} catalog records</value>
+  </data>
+  <data name="Admin.Universities.EmptyHeading" xml:space="preserve">
+    <value>University catalog is empty</value>
+  </data>
+  <data name="Admin.Universities.EmptyLead" xml:space="preserve">
+    <value>Use the form to add the first university record.</value>
+  </data>
+  <data name="Admin.Universities.Caption" xml:space="preserve">
+    <value>Defined university catalog</value>
+  </data>
+  <data name="Admin.Universities.Name" xml:space="preserve">
+    <value>University name</value>
+  </data>
+  <data name="Admin.Universities.University" xml:space="preserve">
+    <value>University</value>
+  </data>
+  <data name="Admin.Universities.NewHeading" xml:space="preserve">
+    <value>Add new university</value>
+  </data>
+  <data name="Admin.Universities.NewLead" xml:space="preserve">
+    <value>An attempt to create a duplicate name is shown with a safe error message.</value>
+  </data>
+  <data name="Admin.Universities.Add" xml:space="preserve">
+    <value>Add university to catalog</value>
+  </data>
+  <data name="Admin.Students.Title" xml:space="preserve">
+    <value>Student management</value>
+  </data>
+  <data name="Admin.Students.Heading" xml:space="preserve">
+    <value>Students</value>
+  </data>
+  <data name="Admin.Students.Lead" xml:space="preserve">
+    <value>Find student accounts using masked identity information and manage access through secure confirmation screens.</value>
+  </data>
+  <data name="Admin.Students.Administrators" xml:space="preserve">
+    <value>Administrators</value>
+  </data>
+  <data name="Admin.Students.SearchHeading" xml:space="preserve">
+    <value>Search students</value>
+  </data>
+  <data name="Admin.Students.SearchLabel" xml:space="preserve">
+    <value>First name, last name, or email</value>
+  </data>
+  <data name="Admin.Students.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Admin.Students.ActiveFilter" xml:space="preserve">
+    <value>Active filter</value>
+  </data>
+  <data name="Admin.Students.SearchFilter" xml:space="preserve">
+    <value>Search: {0}</value>
+  </data>
+  <data name="Admin.Students.ResultsHeading" xml:space="preserve">
+    <value>Student accounts</value>
+  </data>
+  <data name="Admin.Students.ResultCount" xml:space="preserve">
+    <value>{0} students found</value>
+  </data>
+  <data name="Admin.Students.EmptyHeading" xml:space="preserve">
+    <value>No students found</value>
+  </data>
+  <data name="Admin.Students.EmptyLead" xml:space="preserve">
+    <value>Change the search text or clear the filter to view all students.</value>
+  </data>
+  <data name="Admin.Students.Caption" xml:space="preserve">
+    <value>Filtered student accounts</value>
+  </data>
+  <data name="Admin.Students.Student" xml:space="preserve">
+    <value>Student</value>
+  </data>
+  <data name="Admin.Students.MaskedIdentity" xml:space="preserve">
+    <value>Masked identity number</value>
+  </data>
+  <data name="Admin.Students.Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Admin.Students.Pagination" xml:space="preserve">
+    <value>Student list pages</value>
+  </data>
+  <data name="Admin.Applications.Title" xml:space="preserve">
+    <value>Application management</value>
+  </data>
+  <data name="Admin.Applications.Eyebrow" xml:space="preserve">
+    <value>Applications</value>
+  </data>
+  <data name="Admin.Applications.Heading" xml:space="preserve">
+    <value>Application management</value>
+  </data>
+  <data name="Admin.Applications.Lead" xml:space="preserve">
+    <value>Find candidates with secure filters and review the application lifecycle and documents in one place.</value>
+  </data>
+  <data name="Admin.Applications.Offerings" xml:space="preserve">
+    <value>Offerings and evaluation</value>
+  </data>
+  <data name="Admin.Applications.FilterHeading" xml:space="preserve">
+    <value>Filter applications</value>
+  </data>
+  <data name="Admin.Applications.SearchLabel" xml:space="preserve">
+    <value>Name, email, or program</value>
+  </data>
+  <data name="Admin.Applications.Status" xml:space="preserve">
+    <value>Application status</value>
+  </data>
+  <data name="Admin.Applications.AcademicYear" xml:space="preserve">
+    <value>Academic year</value>
+  </data>
+  <data name="Admin.Applications.Term" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="Admin.Applications.ApplyFilters" xml:space="preserve">
+    <value>Apply filters</value>
+  </data>
+  <data name="Admin.Applications.ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="Admin.Applications.ActiveFilters" xml:space="preserve">
+    <value>Active filters</value>
+  </data>
+  <data name="Admin.Applications.SearchFilter" xml:space="preserve">
+    <value>Search: {0}</value>
+  </data>
+  <data name="Admin.Applications.StatusFilter" xml:space="preserve">
+    <value>Status: {0}</value>
+  </data>
+  <data name="Admin.Applications.YearFilter" xml:space="preserve">
+    <value>Year: {0}</value>
+  </data>
+  <data name="Admin.Applications.TermFilter" xml:space="preserve">
+    <value>Term: {0}</value>
+  </data>
+  <data name="Admin.Applications.ResultsHeading" xml:space="preserve">
+    <value>Application results</value>
+  </data>
+  <data name="Admin.Applications.ResultCount" xml:space="preserve">
+    <value>{0} applications found</value>
+  </data>
+  <data name="Admin.Applications.LoadFailed" xml:space="preserve">
+    <value>Applications could not be loaded.</value>
+  </data>
+  <data name="Admin.Applications.EmptyHeading" xml:space="preserve">
+    <value>No applications found</value>
+  </data>
+  <data name="Admin.Applications.EmptyLead" xml:space="preserve">
+    <value>Change the filters or clear them to view all applications.</value>
+  </data>
+  <data name="Admin.Applications.Caption" xml:space="preserve">
+    <value>Filtered graduate applications</value>
+  </data>
+  <data name="Admin.Applications.ApplicationDate" xml:space="preserve">
+    <value>Application date</value>
+  </data>
+  <data name="Admin.Applications.Detail" xml:space="preserve">
+    <value>Application details</value>
+  </data>
+  <data name="Admin.Applications.Pagination" xml:space="preserve">
+    <value>Application pages</value>
+  </data>
+  <data name="Admin.Detail.Title" xml:space="preserve">
+    <value>Application details</value>
+  </data>
+  <data name="Admin.Detail.Back" xml:space="preserve">
+    <value>Return to application list</value>
+  </data>
+  <data name="Admin.Detail.SummaryAria" xml:space="preserve">
+    <value>Application summary</value>
+  </data>
+  <data name="Admin.Detail.SummaryHeading" xml:space="preserve">
+    <value>Application summary</value>
+  </data>
+  <data name="Admin.Detail.CurrentStatus" xml:space="preserve">
+    <value>Current status</value>
+  </data>
+  <data name="Admin.Detail.DocumentWorkflow" xml:space="preserve">
+    <value>Document workflow</value>
+  </data>
+  <data name="Admin.Detail.WorkflowEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Admin.Detail.LegacyWorkflow" xml:space="preserve">
+    <value>Legacy workflow</value>
+  </data>
+  <data name="Admin.Detail.Evaluation" xml:space="preserve">
+    <value>Evaluation</value>
+  </data>
+  <data name="Admin.Detail.RankedWorkflow" xml:space="preserve">
+    <value>Ranked workflow</value>
+  </data>
+  <data name="Admin.Detail.StandardWorkflow" xml:space="preserve">
+    <value>Standard decision workflow</value>
+  </data>
+  <data name="Admin.Detail.StudentHeading" xml:space="preserve">
+    <value>Student information</value>
+  </data>
+  <data name="Admin.Detail.FullName" xml:space="preserve">
+    <value>Full name</value>
+  </data>
+  <data name="Admin.Detail.ProgramHeading" xml:space="preserve">
+    <value>Program information</value>
+  </data>
+  <data name="Admin.Detail.AcademicPeriod" xml:space="preserve">
+    <value>Academic term</value>
+  </data>
+  <data name="Admin.Detail.LifecycleHeading" xml:space="preserve">
+    <value>Application lifecycle</value>
+  </data>
+  <data name="Admin.Detail.LifecycleLead" xml:space="preserve">
+    <value>Status changes and administrator notes are preserved as a chronological record.</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryHeading" xml:space="preserve">
+    <value>No status history yet</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryLead" xml:space="preserve">
+    <value>The first status change will appear here with its date and note.</value>
+  </data>
+  <data name="Admin.Detail.IstanbulTime" xml:space="preserve">
+    <value>Istanbul</value>
+  </data>
+  <data name="Admin.Detail.ScoresHeading" xml:space="preserve">
+    <value>Exam scores at application time</value>
+  </data>
+  <data name="Admin.Detail.ScoresLead" xml:space="preserve">
+    <value>These values are snapshot records captured when the application was created.</value>
+  </data>
+  <data name="Admin.Detail.NoScoresHeading" xml:space="preserve">
+    <value>No exam scores</value>
+  </data>
+  <data name="Admin.Detail.NoScoresLead" xml:space="preserve">
+    <value>No exam-score snapshot is stored for this application.</value>
+  </data>
+  <data name="Admin.Detail.ScoresCaption" xml:space="preserve">
+    <value>Exam-score snapshots at application time</value>
+  </data>
+  <data name="Admin.Detail.Exam" xml:space="preserve">
+    <value>Exam</value>
+  </data>
+  <data name="Admin.Detail.Score" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="Admin.Detail.ExamDate" xml:space="preserve">
+    <value>Exam date</value>
+  </data>
+  <data name="Admin.Detail.DocumentsHeading" xml:space="preserve">
+    <value>Document requirements and review</value>
+  </data>
+  <data name="Admin.Detail.DocumentsLead" xml:space="preserve">
+    <value>A decision can be made only for current documents awaiting review on Pending or UnderReview applications.</value>
+  </data>
+  <data name="Admin.Detail.LegacyDocumentExempt" xml:space="preserve">
+    <value>This legacy application is exempt from the new document approval requirements.</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsHeading" xml:space="preserve">
+    <value>No document requirements</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsLead" xml:space="preserve">
+    <value>The application&apos;s document snapshot contains no requirements.</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocument" xml:space="preserve">
+    <value>Required document</value>
+  </data>
+  <data name="Admin.Detail.OptionalDocument" xml:space="preserve">
+    <value>Optional document</value>
+  </data>
+  <data name="Admin.Detail.NotUploaded" xml:space="preserve">
+    <value>Document not uploaded</value>
+  </data>
+  <data name="Admin.Detail.NoCurrentDocument" xml:space="preserve">
+    <value>No current document is available.</value>
+  </data>
+  <data name="Admin.Detail.FileName" xml:space="preserve">
+    <value>File name</value>
+  </data>
+  <data name="Admin.Detail.Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Admin.Detail.UploadedAt" xml:space="preserve">
+    <value>Uploaded at</value>
+  </data>
+  <data name="Admin.Detail.ReviewStatus" xml:space="preserve">
+    <value>Review status</value>
+  </data>
+  <data name="Admin.Detail.RejectionReason" xml:space="preserve">
+    <value>Rejection reason:</value>
+  </data>
+  <data name="Admin.Detail.DownloadCurrent" xml:space="preserve">
+    <value>Securely download current document</value>
+  </data>
+  <data name="Admin.Detail.ApproveDocument" xml:space="preserve">
+    <value>Approve document</value>
+  </data>
+  <data name="Admin.Detail.TurkishRejectionReason" xml:space="preserve">
+    <value>Rejection reason in Turkish</value>
+  </data>
+  <data name="Admin.Detail.RejectDocument" xml:space="preserve">
+    <value>Reject document</value>
+  </data>
+  <data name="Admin.Detail.ReviewReadonly" xml:space="preserve">
+    <value>No action form is shown for this document. The document decision is complete or the application is not in a reviewable state.</value>
+  </data>
+  <data name="Admin.Detail.PreviousVersions" xml:space="preserve">
+    <value>Previous document versions</value>
+  </data>
+  <data name="Admin.Detail.VersionSummary" xml:space="preserve">
+    <value>Version {0} · {1} · {2}</value>
+  </data>
+  <data name="Admin.Detail.DownloadVersion" xml:space="preserve">
+    <value>Securely download version</value>
+  </data>
+  <data name="Admin.Detail.ActionsHeading" xml:space="preserve">
+    <value>Allowed actions</value>
+  </data>
+  <data name="Admin.Detail.ActionsLead" xml:space="preserve">
+    <value>Server-side lifecycle, document, and concurrency checks are reapplied on every request.</value>
+  </data>
+  <data name="Admin.Detail.EvaluationDecisionNote" xml:space="preserve">
+    <value>Approval and rejection decisions are applied atomically when the offering evaluation is finalized and published.</value>
+  </data>
+  <data name="Admin.Detail.NoTransitions" xml:space="preserve">
+    <value>No further administrator transition is available from this status.</value>
+  </data>
+  <data name="Admin.Detail.NewStatus" xml:space="preserve">
+    <value>New status</value>
+  </data>
+  <data name="Admin.Detail.AdminNote" xml:space="preserve">
+    <value>Administrator note</value>
+  </data>
+  <data name="Admin.Detail.UpdateStatus" xml:space="preserve">
+    <value>Update application status</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocumentsWarning" xml:space="preserve">
+    <value>The application cannot be approved until all current required documents are approved.</value>
+  </data>
+  <data name="EvaluationState.Configuring" xml:space="preserve">
+    <value>Configuring</value>
+  </data>
+  <data name="EvaluationState.Finalized" xml:space="preserve">
+    <value>Finalized</value>
+  </data>
+  <data name="EvaluationState.Published" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="CriterionSource.UndergraduateGpa" xml:space="preserve">
+    <value>Undergraduate GPA</value>
+  </data>
+  <data name="CriterionSource.ExamScore" xml:space="preserve">
+    <value>Exam score</value>
+  </data>
+  <data name="CriterionSource.ManualScore" xml:space="preserve">
+    <value>Manual score</value>
+  </data>
+  <data name="Eligibility.Pending" xml:space="preserve">
+    <value>Decision pending</value>
+  </data>
+  <data name="Eligibility.Eligible" xml:space="preserve">
+    <value>Eligible</value>
+  </data>
+  <data name="Eligibility.Ineligible" xml:space="preserve">
+    <value>Ineligible</value>
+  </data>
+  <data name="Admin.Offerings.Title" xml:space="preserve">
+    <value>Offerings and evaluation</value>
+  </data>
+  <data name="Admin.Offerings.Heading" xml:space="preserve">
+    <value>Term program offerings</value>
+  </data>
+  <data name="Admin.Offerings.Lead" xml:space="preserve">
+    <value>Manage offering dates, quotas, and document and exam requirements under the existing security and concurrency contracts.</value>
+  </data>
+  <data name="Admin.Offerings.New" xml:space="preserve">
+    <value>Create new offering</value>
+  </data>
+  <data name="Admin.Offerings.Back" xml:space="preserve">
+    <value>Return to applications</value>
+  </data>
+  <data name="Admin.Offerings.LoadFailed" xml:space="preserve">
+    <value>Offering data could not be loaded.</value>
+  </data>
+  <data name="Admin.Offerings.FilterHeading" xml:space="preserve">
+    <value>Filter offerings</value>
+  </data>
+  <data name="Admin.Offerings.YearStart" xml:space="preserve">
+    <value>Academic year start</value>
+  </data>
+  <data name="Admin.Offerings.IncludeArchived" xml:space="preserve">
+    <value>Show archived offerings</value>
+  </data>
+  <data name="Admin.Offerings.ArchivedIncluded" xml:space="preserve">
+    <value>Archived included</value>
+  </data>
+  <data name="Admin.Offerings.HealthHeading" xml:space="preserve">
+    <value>Offering configuration health</value>
+  </data>
+  <data name="Admin.Offerings.HealthLead" xml:space="preserve">
+    <value>This read-only summary shows active required document conditions and existing-application risk for open offerings.</value>
+  </data>
+  <data name="Admin.Offerings.Health.A" xml:space="preserve">
+    <value>A · Legacy</value>
+  </data>
+  <data name="Admin.Offerings.Health.B" xml:space="preserve">
+    <value>B · Healthy</value>
+  </data>
+  <data name="Admin.Offerings.Health.C" xml:space="preserve">
+    <value>C · No applications</value>
+  </data>
+  <data name="Admin.Offerings.Health.D" xml:space="preserve">
+    <value>D · Drafts exist</value>
+  </data>
+  <data name="Admin.Offerings.Health.E" xml:space="preserve">
+    <value>E · Submitted applications exist</value>
+  </data>
+  <data name="Admin.Offerings.Count" xml:space="preserve">
+    <value>{0} offerings</value>
+  </data>
+  <data name="Admin.Offerings.Health.ALead" xml:space="preserve">
+    <value>Legacy offerings outside the document workflow. Their existing behavior is unchanged.</value>
+  </data>
+  <data name="Admin.Offerings.Health.BLead" xml:space="preserve">
+    <value>Open offerings with at least one active required document condition.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CLead" xml:space="preserve">
+    <value>Open offerings with document workflow enabled but no active required condition or applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.DLead" xml:space="preserve">
+    <value>Open offerings with no active required condition and existing drafts.</value>
+  </data>
+  <data name="Admin.Offerings.Health.ELead" xml:space="preserve">
+    <value>Open offerings with no active required condition and submitted or later applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Clear" xml:space="preserve">
+    <value>No open workflow offerings with incomplete document configuration exist in the filtered results.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Risk" xml:space="preserve">
+    <value>Configuration risk was found in {0} open offerings.</value>
+  </data>
+  <data name="Admin.Offerings.Health.RiskLead" xml:space="preserve">
+    <value>These offerings are hidden from the new-student program list. No automatic data correction is performed.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Group" xml:space="preserve">
+    <value>Group {0} · Offering #{1}</value>
+  </data>
+  <data name="Admin.Offerings.Health.OpenInvalid" xml:space="preserve">
+    <value>Open · Missing condition</value>
+  </data>
+  <data name="Admin.Offerings.Health.ActiveRequired" xml:space="preserve">
+    <value>Active required conditions</value>
+  </data>
+  <data name="Admin.Offerings.Health.TotalRequirements" xml:space="preserve">
+    <value>Total document conditions</value>
+  </data>
+  <data name="Admin.Offerings.Health.Drafts" xml:space="preserve">
+    <value>Drafts</value>
+  </data>
+  <data name="Admin.Offerings.Health.Submitted" xml:space="preserve">
+    <value>Submitted and later</value>
+  </data>
+  <data name="Admin.Offerings.Health.SnapshotWarning" xml:space="preserve">
+    <value>This offering already has draft or submitted applications. New document conditions do not change existing application snapshots. No automatic data change should be made before an institute decision is recorded for existing applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Hidden" xml:space="preserve">
+    <value>The offering is hidden from students, and direct draft creation is rejected by the API.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CompletedEvaluation" xml:space="preserve">
+    <value>Finalized or published evaluations, results, and applications are not changed. The offering is only closed to new applications and sent for manual review.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepClose" xml:space="preserve">
+    <value>Close the offering safely to new applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReview" xml:space="preserve">
+    <value>Send it for manual institute review without changing existing results.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepGuide" xml:space="preserve">
+    <value>Verify the institute&apos;s current term and program guide.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepDocuments" xml:space="preserve">
+    <value>Add document conditions through the existing secure administrator workflow.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepRequired" xml:space="preserve">
+    <value>Verify that at least one active required condition exists.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReopen" xml:space="preserve">
+    <value>Reopen the offering with the current RowVersion and API invariant checks.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CloseReview" xml:space="preserve">
+    <value>Close and send for manual review</value>
+  </data>
+  <data name="Admin.Offerings.Health.Close" xml:space="preserve">
+    <value>Close offering safely</value>
+  </data>
+  <data name="Admin.Offerings.Health.ConfigureDocuments" xml:space="preserve">
+    <value>Configure document conditions</value>
+  </data>
+  <data name="Admin.Offerings.ListHeading" xml:space="preserve">
+    <value>Offerings</value>
+  </data>
+  <data name="Admin.Offerings.Showing" xml:space="preserve">
+    <value>{0} offerings shown</value>
+  </data>
+  <data name="Admin.Offerings.EmptyHeading" xml:space="preserve">
+    <value>No offerings found</value>
+  </data>
+  <data name="Admin.Offerings.EmptyLead" xml:space="preserve">
+    <value>Change the filters or use the form to create a new closed offering.</value>
+  </data>
+  <data name="Admin.Offerings.State.Archived" xml:space="preserve">
+    <value>Archived</value>
+  </data>
+  <data name="Admin.Offerings.State.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Admin.Offerings.State.Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Admin.Offerings.Start" xml:space="preserve">
+    <value>Application start</value>
+  </data>
+  <data name="Admin.Offerings.Deadline" xml:space="preserve">
+    <value>Application deadline</value>
+  </data>
+  <data name="Admin.Offerings.Unspecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="Admin.Offerings.Quota" xml:space="preserve">
+    <value>Quota</value>
+  </data>
+  <data name="Admin.Offerings.DocumentWorkflow" xml:space="preserve">
+    <value>Document workflow</value>
+  </data>
+  <data name="Admin.Offerings.LegacyOutside" xml:space="preserve">
+    <value>Legacy workflow · out of scope</value>
+  </data>
+  <data name="Admin.Offerings.Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Admin.Offerings.Incomplete" xml:space="preserve">
+    <value>Incomplete</value>
+  </data>
+  <data name="Admin.Offerings.RequirementCount" xml:space="preserve">
+    <value>{0} conditions</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationWorkflow" xml:space="preserve">
+    <value>Evaluation workflow</value>
+  </data>
+  <data name="Admin.Offerings.NotUsed" xml:space="preserve">
+    <value>Not used</value>
+  </data>
+  <data name="Admin.Offerings.ExamRequirements" xml:space="preserve">
+    <value>Exam requirements</value>
+  </data>
+  <data name="Admin.Offerings.ReadinessHeading" xml:space="preserve">
+    <value>Prerequisites for opening the offering</value>
+  </data>
+  <data name="Admin.Offerings.RequiredCondition" xml:space="preserve">
+    <value>Required document condition:</value>
+  </data>
+  <data name="Admin.Offerings.RequiredReady" xml:space="preserve">
+    <value>At least one active required condition exists.</value>
+  </data>
+  <data name="Admin.Offerings.RequiredMissing" xml:space="preserve">
+    <value>Define at least one required document condition before opening the offering.</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicy" xml:space="preserve">
+    <value>Criterion policy:</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicyLead" xml:space="preserve">
+    <value>Total weight must be 10,000 bp, and every exam-score criterion must have a linked active required exam condition.</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicy" xml:space="preserve">
+    <value>Evaluation policy:</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicyLead" xml:space="preserve">
+    <value>This offering does not use the ranked evaluation workflow.</value>
+  </data>
+  <data name="Admin.Offerings.ConfigurationLocked" xml:space="preserve">
+    <value>Offering configuration is locked because the evaluation is finalized or published.</value>
+  </data>
+  <data name="Admin.Offerings.EditGeneral" xml:space="preserve">
+    <value>Edit general information</value>
+  </data>
+  <data name="Admin.Offerings.DocumentRequirements" xml:space="preserve">
+    <value>Document conditions</value>
+  </data>
+  <data name="Admin.Offerings.Evaluation" xml:space="preserve">
+    <value>Evaluation</value>
+  </data>
+  <data name="Admin.Offerings.OpenCheck" xml:space="preserve">
+    <value>Opening checks</value>
+  </data>
+  <data name="Admin.Offerings.EditHeading" xml:space="preserve">
+    <value>Edit offering</value>
+  </data>
+  <data name="Admin.Offerings.NewHeading" xml:space="preserve">
+    <value>Create new offering</value>
+  </data>
+  <data name="Admin.Offerings.NewLead" xml:space="preserve">
+    <value>A new offering is first created closed as a safe default.</value>
+  </data>
+  <data name="Admin.Offerings.Editing" xml:space="preserve">
+    <value>Offering being edited:</value>
+  </data>
+  <data name="Admin.Offerings.OfferingNumber" xml:space="preserve">
+    <value>Offering #{0}</value>
+  </data>
+  <data name="Admin.Offerings.StepsAria" xml:space="preserve">
+    <value>Offering configuration steps</value>
+  </data>
+  <data name="Admin.Offerings.Configuration" xml:space="preserve">
+    <value>Offering configuration</value>
+  </data>
+  <data name="Admin.Offerings.General" xml:space="preserve">
+    <value>General information</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationCriteria" xml:space="preserve">
+    <value>Evaluation criteria</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationNotUsed" xml:space="preserve">
+    <value>Evaluation is not used</value>
+  </data>
+  <data name="Admin.Offerings.ReviewOpen" xml:space="preserve">
+    <value>Review and open</value>
+  </data>
+  <data name="Admin.Offerings.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Offerings.Term" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="Admin.Offerings.StartIstanbul" xml:space="preserve">
+    <value>Application start (Istanbul)</value>
+  </data>
+  <data name="Admin.Offerings.DeadlineIstanbul" xml:space="preserve">
+    <value>Application deadline (Istanbul)</value>
+  </data>
+  <data name="Admin.Offerings.UseEvaluation" xml:space="preserve">
+    <value>Use ranked evaluation workflow</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationImmutable" xml:space="preserve">
+    <value>Once enabled, it cannot be disabled; an existing offering can be moved to this workflow only when it has no applications.</value>
+  </data>
+  <data name="Admin.Offerings.ExamLead" xml:space="preserve">
+    <value>Only selected exams are submitted as offering conditions. Required exams can be linked to ExamScore criteria.</value>
+  </data>
+  <data name="Admin.Offerings.UseCondition" xml:space="preserve">
+    <value>Use condition</value>
+  </data>
+  <data name="Admin.Offerings.RequiredExam" xml:space="preserve">
+    <value>Required exam</value>
+  </data>
+  <data name="Admin.Offerings.MinimumScore" xml:space="preserve">
+    <value>Minimum score</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDate" xml:space="preserve">
+    <value>Earliest accepted result date</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDateHelp" xml:space="preserve">
+    <value>Results before this date are rejected.</value>
+  </data>
+  <data name="Admin.Offerings.AlesHelp" xml:space="preserve">
+    <value>ALES results are valid for five years. The date must be five years before the application deadline.</value>
+  </data>
+  <data name="Admin.Offerings.ApplyFiveYears" xml:space="preserve">
+    <value>Apply five-year date</value>
+  </data>
+  <data name="Admin.Offerings.AlesSuggestion" xml:space="preserve">
+    <value>Suggested date: {0}</value>
+  </data>
+  <data name="Admin.Offerings.AlesNeedDeadline" xml:space="preserve">
+    <value>Enter the application deadline to calculate a suggestion.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedHeading" xml:space="preserve">
+    <value>A new offering is created closed first.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLabel" xml:space="preserve">
+    <value>The new offering will be created closed</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLead" xml:space="preserve">
+    <value>After defining at least one active required document condition and completing the evaluation prerequisites, edit the offering to open it.</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveHeading" xml:space="preserve">
+    <value>Archive area</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveLead" xml:space="preserve">
+    <value>An archived offering is hidden from new operations; historical application and audit records are preserved.</value>
+  </data>
+  <data name="Admin.Offerings.Archive" xml:space="preserve">
+    <value>Archive offering</value>
+  </data>
+  <data name="Admin.Offerings.Save" xml:space="preserve">
+    <value>Save offering changes</value>
+  </data>
+  <data name="Admin.Offerings.CreateClosed" xml:space="preserve">
+    <value>Create closed offering</value>
+  </data>
+  <data name="Admin.Offerings.CancelEdit" xml:space="preserve">
+    <value>Cancel editing</value>
+  </data>
+  <data name="Admin.Requirements.Heading" xml:space="preserve">
+    <value>Offering document conditions</value>
+  </data>
+  <data name="Admin.Requirements.SnapshotLead" xml:space="preserve">
+    <value>Snapshot conditions for existing drafts and applications do not change. Condition changes affect only drafts created later.</value>
+  </data>
+  <data name="Admin.Requirements.Invariant" xml:space="preserve">
+    <value>Document-condition changes affect only new drafts. The API safely rejects an attempt to deactivate the last active required condition for an open offering.</value>
+  </data>
+  <data name="Admin.Requirements.GuideHeading" xml:space="preserve">
+    <value>Guide verification</value>
+  </data>
+  <data name="Admin.Requirements.GuideLead" xml:space="preserve">
+    <value>Define document conditions according to the institute&apos;s current offering guide. Additional program-specific documents may apply.</value>
+  </data>
+  <data name="Admin.Requirements.GuidePrefix" xml:space="preserve">
+    <value>Do not copy one document list to every offering.</value>
+  </data>
+  <data name="Admin.Requirements.SocialGuide" xml:space="preserve">
+    <value>Social Sciences Institute 2026–2027 Fall guide</value>
+  </data>
+  <data name="Admin.Requirements.And" xml:space="preserve">
+    <value>and</value>
+  </data>
+  <data name="Admin.Requirements.InternationalGuide" xml:space="preserve">
+    <value>international student announcement</value>
+  </data>
+  <data name="Admin.Requirements.GuideSuffix" xml:space="preserve">
+    <value>Use the official source appropriate for the application type, such as these examples.</value>
+  </data>
+  <data name="Admin.Requirements.SelectHeading" xml:space="preserve">
+    <value>Select an offering for document conditions</value>
+  </data>
+  <data name="Admin.Requirements.SelectLead" xml:space="preserve">
+    <value>Use the “Document conditions” action only on the offering card you will manage. The full condition list is loaded for the selected offering.</value>
+  </data>
+  <data name="Admin.Requirements.Selected" xml:space="preserve">
+    <value>Selected offering · #{0}</value>
+  </data>
+  <data name="Admin.Requirements.ActiveRequired" xml:space="preserve">
+    <value>{0} active required</value>
+  </data>
+  <data name="Admin.Requirements.Locked" xml:space="preserve">
+    <value>Offering configuration is locked because the evaluation is finalized or published. Document conditions are read-only; the offering must be left for manual institute review.</value>
+  </data>
+  <data name="Admin.Requirements.EmptyHeading" xml:space="preserve">
+    <value>No document conditions defined</value>
+  </data>
+  <data name="Admin.Requirements.HistoricalLocked" xml:space="preserve">
+    <value>The normal document-configuration workflow cannot be used for this historical offering.</value>
+  </data>
+  <data name="Admin.Requirements.Caption" xml:space="preserve">
+    <value>Document conditions for {0}</value>
+  </data>
+  <data name="Admin.Requirements.Requirement" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="Admin.Requirements.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Admin.Requirements.TypeLimit" xml:space="preserve">
+    <value>Type and limit</value>
+  </data>
+  <data name="Admin.Requirements.Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Admin.Requirements.Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Admin.Requirements.Optional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="Admin.Requirements.NoDescription" xml:space="preserve">
+    <value>No description</value>
+  </data>
+  <data name="Admin.Requirements.ConcurrencyProtected" xml:space="preserve">
+    <value>Concurrency protected</value>
+  </data>
+  <data name="Admin.Requirements.ReadOnly" xml:space="preserve">
+    <value>Read-only</value>
+  </data>
+  <data name="Admin.Requirements.Edit" xml:space="preserve">
+    <value>Edit condition</value>
+  </data>
+  <data name="Admin.Requirements.DeactivateAria" xml:space="preserve">
+    <value>Deactivate document condition: {0}</value>
+  </data>
+  <data name="Admin.Requirements.ActivateAria" xml:space="preserve">
+    <value>Activate document condition: {0}</value>
+  </data>
+  <data name="Admin.Requirements.Deactivate" xml:space="preserve">
+    <value>Deactivate condition</value>
+  </data>
+  <data name="Admin.Requirements.Activate" xml:space="preserve">
+    <value>Activate condition</value>
+  </data>
+  <data name="Admin.Requirements.LastRequired" xml:space="preserve">
+    <value>The last active required condition on an open offering cannot be removed.</value>
+  </data>
+  <data name="Admin.Requirements.NewHeading" xml:space="preserve">
+    <value>New document condition</value>
+  </data>
+  <data name="Admin.Requirements.EditHeading" xml:space="preserve">
+    <value>Edit document condition</value>
+  </data>
+  <data name="Admin.Requirements.Code" xml:space="preserve">
+    <value>Document code</value>
+  </data>
+  <data name="Admin.Requirements.DisplayNameTurkish" xml:space="preserve">
+    <value>Display name in Turkish</value>
+  </data>
+  <data name="Admin.Requirements.AllowedType" xml:space="preserve">
+    <value>Allowed type</value>
+  </data>
+  <data name="Admin.Requirements.MaximumBytes" xml:space="preserve">
+    <value>Maximum size (bytes)</value>
+  </data>
+  <data name="Admin.Requirements.RequiredDocument" xml:space="preserve">
+    <value>Required document</value>
+  </data>
+  <data name="Admin.Requirements.Save" xml:space="preserve">
+    <value>Save document condition</value>
+  </data>
+
+  <!-- Admin evaluation localization -->
+  <data name="Admin.Evaluation.PageTitle" xml:space="preserve">
+    <value>Application evaluation</value>
+  </data>
+  <data name="Admin.Evaluation.Area" xml:space="preserve">
+    <value>Offerings and evaluation</value>
+  </data>
+  <data name="Admin.Evaluation.BackToOfferings" xml:space="preserve">
+    <value>Back to offerings</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedTitle" xml:space="preserve">
+    <value>Results are finalized; evaluation data can no longer be changed.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedBody" xml:space="preserve">
+    <value>Students cannot see the results until publication is complete.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedTitle" xml:space="preserve">
+    <value>Results are published; evaluation data can no longer be changed.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedBody" xml:space="preserve">
+    <value>Application statuses and result snapshots now reflect the published results.</value>
+  </data>
+  <data name="Admin.Evaluation.LifecycleAria" xml:space="preserve">
+    <value>Evaluation lifecycle and permissions</value>
+  </data>
+  <data name="Admin.Evaluation.Lifecycle" xml:space="preserve">
+    <value>Lifecycle</value>
+  </data>
+  <data name="Admin.Evaluation.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Evaluation.Quota" xml:space="preserve">
+    <value>Quota</value>
+  </data>
+  <data name="Admin.Evaluation.Deadline" xml:space="preserve">
+    <value>Application deadline</value>
+  </data>
+  <data name="Admin.Evaluation.Unspecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="Admin.Evaluation.Permissions" xml:space="preserve">
+    <value>Current action permissions</value>
+  </data>
+  <data name="Admin.Evaluation.Policy" xml:space="preserve">
+    <value>Policy</value>
+  </data>
+  <data name="Admin.Evaluation.Eligibility" xml:space="preserve">
+    <value>Eligibility</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScore" xml:space="preserve">
+    <value>Manual score</value>
+  </data>
+  <data name="Admin.Evaluation.Finalization" xml:space="preserve">
+    <value>Finalization</value>
+  </data>
+  <data name="Admin.Evaluation.Publication" xml:space="preserve">
+    <value>Publication</value>
+  </data>
+  <data name="Admin.Evaluation.Editable" xml:space="preserve">
+    <value>Editable</value>
+  </data>
+  <data name="Admin.Evaluation.DecisionAllowed" xml:space="preserve">
+    <value>Decision allowed</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreAllowed" xml:space="preserve">
+    <value>Entry allowed</value>
+  </data>
+  <data name="Admin.Evaluation.ReadOnly" xml:space="preserve">
+    <value>Read only</value>
+  </data>
+  <data name="Admin.Evaluation.PrerequisiteDependent" xml:space="preserve">
+    <value>Subject to prerequisites</value>
+  </data>
+  <data name="Admin.Evaluation.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Admin.Evaluation.Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Admin.Evaluation.PermissionMatrix" xml:space="preserve">
+    <value>Lifecycle permission matrix</value>
+  </data>
+  <data name="Admin.Evaluation.ConfiguringMatrix" xml:space="preserve">
+    <value>policy, eligibility, and manual scores; finalization after prerequisites.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedMatrix" xml:space="preserve">
+    <value>publication only.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedMatrix" xml:space="preserve">
+    <value>all mutation surfaces are closed.</value>
+  </data>
+  <data name="Admin.Evaluation.Step1" xml:space="preserve">
+    <value>1. Policy and criteria</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyHeading" xml:space="preserve">
+    <value>Evaluation policy</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyDescription" xml:space="preserve">
+    <value>Criteria are locked when the first draft application is created. Lower tie-break priorities are applied first.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightValid" xml:space="preserve">
+    <value>The total weight is valid.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightInvalid" xml:space="preserve">
+    <value>The total weight must be 10,000 bp.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteria" xml:space="preserve">
+    <value>No criteria have been defined</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteriaBody" xml:space="preserve">
+    <value>Create a valid policy totaling 10,000 bp before finalizing the offering.</value>
+  </data>
+  <data name="Admin.Evaluation.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Admin.Evaluation.DisplayName" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="Admin.Evaluation.SourceType" xml:space="preserve">
+    <value>Source type</value>
+  </data>
+  <data name="Admin.Evaluation.RequiredExam" xml:space="preserve">
+    <value>Linked required exam</value>
+  </data>
+  <data name="Admin.Evaluation.SelectExam" xml:space="preserve">
+    <value>Select an exam</value>
+  </data>
+  <data name="Admin.Evaluation.MinimumFormat" xml:space="preserve">
+    <value>Minimum {0}</value>
+  </data>
+  <data name="Admin.Evaluation.WeightBp" xml:space="preserve">
+    <value>Weight (bp)</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScore" xml:space="preserve">
+    <value>Maximum raw score</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScoreValidation" xml:space="preserve">
+    <value>The maximum raw score must be between 0.0001 and 99999 with no more than 4 decimal places.</value>
+  </data>
+  <data name="Admin.Evaluation.TieBreakPriority" xml:space="preserve">
+    <value>Tie-break priority</value>
+  </data>
+  <data name="Admin.Evaluation.SaveCriterion" xml:space="preserve">
+    <value>Save criterion</value>
+  </data>
+  <data name="Admin.Evaluation.CriterionDangerZone" xml:space="preserve">
+    <value>Criterion deletion</value>
+  </data>
+  <data name="Admin.Evaluation.DeleteCriterion" xml:space="preserve">
+    <value>Delete criterion</value>
+  </data>
+  <data name="Admin.Evaluation.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Admin.Evaluation.Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Admin.Evaluation.Exam" xml:space="preserve">
+    <value>Exam</value>
+  </data>
+  <data name="Admin.Evaluation.Weight" xml:space="preserve">
+    <value>Weight</value>
+  </data>
+  <data name="Admin.Evaluation.Maximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="Admin.Evaluation.Priority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="Admin.Evaluation.NewCriterion" xml:space="preserve">
+    <value>New criterion</value>
+  </data>
+  <data name="Admin.Evaluation.AddCriterion" xml:space="preserve">
+    <value>Add criterion</value>
+  </data>
+  <data name="Admin.Evaluation.Step2" xml:space="preserve">
+    <value>2. Candidate evaluations</value>
+  </data>
+  <data name="Admin.Evaluation.Candidates" xml:space="preserve">
+    <value>Candidates</value>
+  </data>
+  <data name="Admin.Evaluation.CandidatesDescription" xml:space="preserve">
+    <value>Masked identity, document eligibility, automatic components, and permitted manual actions are shown together.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidates" xml:space="preserve">
+    <value>No candidates to evaluate</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidatesBody" xml:space="preserve">
+    <value>This offering does not yet have an application in the evaluation scope.</value>
+  </data>
+  <data name="Admin.Evaluation.OpenApplication" xml:space="preserve">
+    <value>Open application</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityFormat" xml:space="preserve">
+    <value>Eligibility: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.TotalFormat" xml:space="preserve">
+    <value>Total: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.MissingPrerequisites" xml:space="preserve">
+    <value>Missing prerequisites:</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityPending" xml:space="preserve">
+    <value>The eligibility decision is pending.</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreMissing" xml:space="preserve">
+    <value>One or more score components are missing.</value>
+  </data>
+  <data name="Admin.Evaluation.ComponentsCaption" xml:space="preserve">
+    <value>Score components for candidate {0}</value>
+  </data>
+  <data name="Admin.Evaluation.Component" xml:space="preserve">
+    <value>Component</value>
+  </data>
+  <data name="Admin.Evaluation.RawScore" xml:space="preserve">
+    <value>Raw score</value>
+  </data>
+  <data name="Admin.Evaluation.Normalized" xml:space="preserve">
+    <value>Normalized</value>
+  </data>
+  <data name="Admin.Evaluation.Contribution" xml:space="preserve">
+    <value>Contribution</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityDecision" xml:space="preserve">
+    <value>Eligibility decision</value>
+  </data>
+  <data name="Admin.Evaluation.Decision" xml:space="preserve">
+    <value>Decision</value>
+  </data>
+  <data name="Admin.Evaluation.IneligibleReason" xml:space="preserve">
+    <value>Reason if ineligible</value>
+  </data>
+  <data name="Admin.Evaluation.SaveEligibility" xml:space="preserve">
+    <value>Save eligibility decision</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScoreHeading" xml:space="preserve">
+    <value>Manual score for {0}</value>
+  </data>
+  <data name="Admin.Evaluation.SaveManualScore" xml:space="preserve">
+    <value>Save manual score</value>
+  </data>
+  <data name="Admin.Evaluation.Step3" xml:space="preserve">
+    <value>3. Ranking and result actions</value>
+  </data>
+  <data name="Admin.Evaluation.RankingHeading" xml:space="preserve">
+    <value>Deterministic ranking preview</value>
+  </data>
+  <data name="Admin.Evaluation.RankingDescription" xml:space="preserve">
+    <value>Admission and quota-exceeded outcomes are identified in text; the quota boundary is also marked in the table.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeBlocked" xml:space="preserve">
+    <value>Finalization prerequisites are not complete.</value>
+  </data>
+  <data name="Admin.Evaluation.RankingCaption" xml:space="preserve">
+    <value>Candidate ranking and projected outcomes</value>
+  </data>
+  <data name="Admin.Evaluation.Rank" xml:space="preserve">
+    <value>Rank</value>
+  </data>
+  <data name="Admin.Evaluation.MaskedCandidate" xml:space="preserve">
+    <value>Masked candidate</value>
+  </data>
+  <data name="Admin.Evaluation.TotalScore" xml:space="preserve">
+    <value>Total score</value>
+  </data>
+  <data name="Admin.Evaluation.ProjectedOutcome" xml:space="preserve">
+    <value>Projected outcome</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaBoundary" xml:space="preserve">
+    <value>Quota boundary</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHeading" xml:space="preserve">
+    <value>Finalize results</value>
+  </data>
+  <data name="Admin.Evaluation.DeadlineFormat" xml:space="preserve">
+    <value>Application deadline: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyTotalFormat" xml:space="preserve">
+    <value>Policy total: {0} bp</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaFormat" xml:space="preserve">
+    <value>Quota: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeEffect" xml:space="preserve">
+    <value>Finalization freezes the ranking and decisions; students cannot see the results yet.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeAction" xml:space="preserve">
+    <value>Finalize results</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHidden" xml:space="preserve">
+    <value>The finalization form is hidden until all prerequisites are complete.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishHeading" xml:space="preserve">
+    <value>Publish results</value>
+  </data>
+  <data name="Admin.Evaluation.PublishDescription" xml:space="preserve">
+    <value>Review the finalized results and irreversible publication effects on a separate confirmation screen.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishConfirmation" xml:space="preserve">
+    <value>Continue to publication confirmation</value>
+  </data>
+  <data name="Admin.Evaluation.AlreadyPublished" xml:space="preserve">
+    <value>Results are published; no other result mutation action is shown.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PageTitle" xml:space="preserve">
+    <value>Publish results</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Back" xml:space="preserve">
+    <value>Back to evaluation</value>
+  </data>
+  <data name="Admin.PublishEvaluation.SummaryAria" xml:space="preserve">
+    <value>Publication summary</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Admitted" xml:space="preserve">
+    <value>Admitted</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NotAdmitted" xml:space="preserve">
+    <value>Not admitted due to quota</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Ineligible" xml:space="preserve">
+    <value>Ineligible</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRanking" xml:space="preserve">
+    <value>Finalized ranking</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRankingDescription" xml:space="preserve">
+    <value>This ranking is used to create application statuses and student result snapshots during publication.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRows" xml:space="preserve">
+    <value>No ranking rows found</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRowsBody" xml:space="preserve">
+    <value>Return to the evaluation screen and verify the finalized data before publication.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.RankingCaption" xml:space="preserve">
+    <value>Finalized candidate ranking</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Outcome" xml:space="preserve">
+    <value>Outcome</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Undetermined" xml:space="preserve">
+    <value>Undetermined</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ConfirmationHeading" xml:space="preserve">
+    <value>Irreversible publication confirmation</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Irreversible" xml:space="preserve">
+    <value>This action cannot be undone.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.IrreversibleBody" xml:space="preserve">
+    <value>Finalized results become visible to students, and application statuses are atomically set to Approved or Rejected.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.BeforePublication" xml:space="preserve">
+    <value>Before publication, students cannot see scores, ranks, or outcomes.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.AtomicEffect" xml:space="preserve">
+    <value>Publication creates the application status, history, audit, and result snapshot records in one atomic operation.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ServerChecks" xml:space="preserve">
+    <value>Server-side lifecycle, antiforgery, and RowVersion checks are applied again.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PublishAction" xml:space="preserve">
+    <value>Publish results</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Cancel" xml:space="preserve">
+    <value>Cancel publication</value>
+  </data>
+
+  <!-- Evaluation API summary localization -->
+  <data name="Admin.Evaluation.DocumentReviewLegacy" xml:space="preserve">
+    <value>Legacy document workflow</value>
+  </data>
+  <data name="Admin.Evaluation.DocumentReviewProgress" xml:space="preserve">
+    <value>{0}/{1} required documents approved</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AlreadyFinalized" xml:space="preserve">
+    <value>The offering results have already been finalized or published.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.CloseOffering" xml:space="preserve">
+    <value>The offering must be closed first.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DeadlineNotPassed" xml:space="preserve">
+    <value>The application deadline has not passed yet.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PositiveQuota" xml:space="preserve">
+    <value>The quota must be positive.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.ValidPolicy" xml:space="preserve">
+    <value>The evaluation policy must be valid and total 10,000 basis points.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.NoSubmittedApplications" xml:space="preserve">
+    <value>There are no submitted applications to finalize.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PendingApplications" xml:space="preserve">
+    <value>Some pending applications have not been moved to review.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AllUnderReview" xml:space="preserve">
+    <value>All applications being evaluated must be under review.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.EligibilityPending" xml:space="preserve">
+    <value>Some applications do not have an eligibility decision.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DocumentsPending" xml:space="preserve">
+    <value>All current required documents must be approved for candidates marked eligible.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.MissingCriteria" xml:space="preserve">
+    <value>Application {0} has missing criteria: {1}.</value>
+  </data>
+
+  <!-- Localized admin controller messages -->
+  <data name="Admin.Message.InviteEmailInvalid" xml:space="preserve">
+    <value>Enter a valid email address for the administrator invitation.</value>
+  </data>
+  <data name="Admin.Message.InviteCreated" xml:space="preserve">
+    <value>Administrator invitation created.</value>
+  </data>
+  <data name="Admin.Message.InviteCreateFailed" xml:space="preserve">
+    <value>The administrator invitation could not be created.</value>
+  </data>
+  <data name="Admin.Message.InviteResent" xml:space="preserve">
+    <value>Administrator invitation recreated.</value>
+  </data>
+  <data name="Admin.Message.AdminActivated" xml:space="preserve">
+    <value>Administrator account activated.</value>
+  </data>
+  <data name="Admin.Message.AdminDeactivated" xml:space="preserve">
+    <value>Administrator account deactivated and current sessions revoked.</value>
+  </data>
+  <data name="Admin.Message.AdminUnlocked" xml:space="preserve">
+    <value>Administrator account unlocked.</value>
+  </data>
+  <data name="Admin.Message.AdminAccountInvalid" xml:space="preserve">
+    <value>Administrator account information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.AdminUpdateFailed" xml:space="preserve">
+    <value>The administrator account could not be updated.</value>
+  </data>
+  <data name="Admin.Message.StudentNotSelected" xml:space="preserve">
+    <value>No student was selected.</value>
+  </data>
+  <data name="Admin.Message.StudentNotFound" xml:space="preserve">
+    <value>The student could not be found.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivated" xml:space="preserve">
+    <value>Student deactivated and current sessions revoked.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivateFailed" xml:space="preserve">
+    <value>The student could not be deactivated.</value>
+  </data>
+  <data name="Admin.Message.StudentActivated" xml:space="preserve">
+    <value>Student reactivated and previous sessions invalidated.</value>
+  </data>
+  <data name="Admin.Message.StudentActivateFailed" xml:space="preserve">
+    <value>The student could not be activated.</value>
+  </data>
+  <data name="Admin.Message.OfferingEditNotFound" xml:space="preserve">
+    <value>The offering to edit could not be found.</value>
+  </data>
+  <data name="Admin.Message.RequirementOfferingNotFound" xml:space="preserve">
+    <value>The offering selected for document requirements could not be found.</value>
+  </data>
+  <data name="Admin.Message.RequirementsLoadFailed" xml:space="preserve">
+    <value>Document requirements could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.SelectOfferingBeforeRequirement" xml:space="preserve">
+    <value>Select an offering before editing a document requirement.</value>
+  </data>
+  <data name="Admin.Message.RequirementNotFound" xml:space="preserve">
+    <value>The document requirement to edit was not found in the selected offering.</value>
+  </data>
+  <data name="Admin.Message.OfferingsLoadFailed" xml:space="preserve">
+    <value>Offering information could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.TermInvalid" xml:space="preserve">
+    <value>Select a valid term.</value>
+  </data>
+  <data name="Admin.Message.DeadlineAfterStart" xml:space="preserve">
+    <value>The application deadline must be after the start date.</value>
+  </data>
+  <data name="Admin.Message.OfferingConcurrencyMissing" xml:space="preserve">
+    <value>Offering concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.OfferingValidationFailed" xml:space="preserve">
+    <value>Offering information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaveFailed" xml:space="preserve">
+    <value>The term offering could not be saved.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaved" xml:space="preserve">
+    <value>Term offering saved.</value>
+  </data>
+  <data name="Admin.Message.RemediationInvalid" xml:space="preserve">
+    <value>Offering closure information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.RemediationClosed" xml:space="preserve">
+    <value>The invalid open offering was closed safely. Existing applications and results were not changed.</value>
+  </data>
+  <data name="Admin.Message.RemediationFailed" xml:space="preserve">
+    <value>The offering could not be closed for safe remediation.</value>
+  </data>
+  <data name="Admin.Message.ValidOfferingRequired" xml:space="preserve">
+    <value>Select a valid offering.</value>
+  </data>
+  <data name="Admin.Message.RequirementConcurrencyMissing" xml:space="preserve">
+    <value>Concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.RequirementValidationFailed" xml:space="preserve">
+    <value>Document requirement information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaved" xml:space="preserve">
+    <value>Document requirement saved. The change affects only drafts created from now on.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaveFailed" xml:space="preserve">
+    <value>The document requirement could not be saved.</value>
+  </data>
+  <data name="Admin.Message.RequirementStateInvalid" xml:space="preserve">
+    <value>The document requirement status could not be validated. Refresh the page and try again.</value>
+  </data>
+  <data name="Admin.Message.RequirementActivated" xml:space="preserve">
+    <value>Document requirement activated.</value>
+  </data>
+  <data name="Admin.Message.RequirementDeactivated" xml:space="preserve">
+    <value>Document requirement deactivated.</value>
+  </data>
+  <data name="Admin.Message.RequirementUpdateFailed" xml:space="preserve">
+    <value>The document requirement could not be updated.</value>
+  </data>
+  <data name="Admin.Message.UniversitiesLoadFailed" xml:space="preserve">
+    <value>The university catalog could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.UniversityValidationFailed" xml:space="preserve">
+    <value>University information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreateFailed" xml:space="preserve">
+    <value>The university could not be created.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreated" xml:space="preserve">
+    <value>University added to the catalog.</value>
+  </data>
+  <data name="Admin.Message.InstitutesLoadFailed" xml:space="preserve">
+    <value>Institute information could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.InstituteConcurrencyMissing" xml:space="preserve">
+    <value>Institute concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.InstituteValidationFailed" xml:space="preserve">
+    <value>Institute information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.InstituteSaveFailed" xml:space="preserve">
+    <value>The institute could not be saved.</value>
+  </data>
+  <data name="Admin.Message.InstituteUpdated" xml:space="preserve">
+    <value>Institute updated.</value>
+  </data>
+  <data name="Admin.Message.InstituteCreated" xml:space="preserve">
+    <value>Institute created.</value>
+  </data>
+  <data name="Admin.Message.InstituteActivated" xml:space="preserve">
+    <value>Institute activated.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeactivated" xml:space="preserve">
+    <value>Institute deactivated. Linked programs will not appear in new selections.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateInvalid" xml:space="preserve">
+    <value>Institute activation information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateFailed" xml:space="preserve">
+    <value>The institute status could not be changed.</value>
+  </data>
+  <data name="Admin.Message.InstituteNotFound" xml:space="preserve">
+    <value>The institute could not be found.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteInvalid" xml:space="preserve">
+    <value>Institute deletion information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleted" xml:space="preserve">
+    <value>The unused institute was permanently deleted.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteFailed" xml:space="preserve">
+    <value>The institute could not be deleted.</value>
+  </data>
+  <data name="Admin.Message.ProgramsLoadFailed" xml:space="preserve">
+    <value>Program information could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.TranslationBatchRange" xml:space="preserve">
+    <value>Between 1 and 100 program translations can be updated in one operation.</value>
+  </data>
+  <data name="Admin.Message.TranslationValidationFailed" xml:space="preserve">
+    <value>Program translations could not be validated.</value>
+  </data>
+  <data name="Admin.Message.TranslationSaveFailed" xml:space="preserve">
+    <value>Program translations could not be saved.</value>
+  </data>
+  <data name="Admin.Message.TranslationNoChanges" xml:space="preserve">
+    <value>No program translation changes were found.</value>
+  </data>
+  <data name="Admin.Message.TranslationOneUpdated" xml:space="preserve">
+    <value>1 program translation updated.</value>
+  </data>
+  <data name="Admin.Message.TranslationManyUpdated" xml:space="preserve">
+    <value>{0} program translations updated.</value>
+  </data>
+  <data name="Admin.Message.ProgramConcurrencyMissing" xml:space="preserve">
+    <value>Program concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.ProgramValidationFailed" xml:space="preserve">
+    <value>Program information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.ProgramUpdated" xml:space="preserve">
+    <value>Program updated.</value>
+  </data>
+  <data name="Admin.Message.ProgramCreated" xml:space="preserve">
+    <value>Program created.</value>
+  </data>
+  <data name="Admin.Message.ProgramActivated" xml:space="preserve">
+    <value>Program activated.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeactivated" xml:space="preserve">
+    <value>Program deactivated. Existing offerings and applications are preserved.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateInvalid" xml:space="preserve">
+    <value>Program activation information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateFailed" xml:space="preserve">
+    <value>The program status could not be changed.</value>
+  </data>
+  <data name="Admin.Message.ProgramNotFound" xml:space="preserve">
+    <value>The program could not be found.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteInvalid" xml:space="preserve">
+    <value>Program deletion information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleted" xml:space="preserve">
+    <value>The program with no offerings was permanently deleted.</value>
+  </data>
+  <data name="Admin.Message.EvaluationNotFound" xml:space="preserve">
+    <value>The evaluation offering could not be found.</value>
+  </data>
+  <data name="Admin.Message.CriterionInvalid" xml:space="preserve">
+    <value>Evaluation criterion information is invalid.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaved" xml:space="preserve">
+    <value>Evaluation criterion saved.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaveFailed" xml:space="preserve">
+    <value>The evaluation criterion could not be saved.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteInvalid" xml:space="preserve">
+    <value>Evaluation criterion deletion information is invalid.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleted" xml:space="preserve">
+    <value>Evaluation criterion removed.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteFailed" xml:space="preserve">
+    <value>The evaluation criterion could not be removed.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaved" xml:space="preserve">
+    <value>Candidate eligibility decision saved.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaveFailed" xml:space="preserve">
+    <value>The candidate eligibility decision could not be saved.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalized" xml:space="preserve">
+    <value>Evaluation results finalized; they have not yet been published to students.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalizeFailed" xml:space="preserve">
+    <value>The evaluation could not be finalized.</value>
+  </data>
+  <data name="Admin.Message.NoPublishableResults" xml:space="preserve">
+    <value>No publishable results were found.</value>
+  </data>
+  <data name="Admin.Message.EvaluationPublished" xml:space="preserve">
+    <value>Evaluation results published to students.</value>
+  </data>
+  <data name="Admin.Message.PublishFailed" xml:space="preserve">
+    <value>The results could not be published.</value>
+  </data>
+  <data name="Admin.Message.ApplicationNotFound" xml:space="preserve">
+    <value>The application could not be found.</value>
+  </data>
+  <data name="Admin.Message.StatusInvalid" xml:space="preserve">
+    <value>Status update information is invalid.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdated" xml:space="preserve">
+    <value>Application status updated.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdateFailed" xml:space="preserve">
+    <value>The application status could not be updated.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewInvalid" xml:space="preserve">
+    <value>Document review information is invalid.</value>
+  </data>
+  <data name="Admin.Message.DocumentApproved" xml:space="preserve">
+    <value>Document approved.</value>
+  </data>
+  <data name="Admin.Message.DocumentRejected" xml:space="preserve">
+    <value>Document rejected with a reason.</value>
+  </data>
+
+  <data name="Admin.Message.ProgramSaveFailed" xml:space="preserve">
+    <value>The program could not be saved.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteFailed" xml:space="preserve">
+    <value>The program could not be deleted.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreRequired" xml:space="preserve">
+    <value>A manual score is required.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaved" xml:space="preserve">
+    <value>Manual score saved.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaveFailed" xml:space="preserve">
+    <value>The manual score could not be saved.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewSaveFailed" xml:space="preserve">
+    <value>The document review could not be saved.</value>
+  </data>
+  <data name="Admin.Message.DocumentDownloadFailed" xml:space="preserve">
+    <value>The document could not be downloaded.</value>
+  </data>
+
+  <!-- Model binding and validation localization -->
+  <data name="Validation.Required" xml:space="preserve">
+    <value>This field is required.</value>
+  </data>
+  <data name="Validation.RequestBodyRequired" xml:space="preserve">
+    <value>The required information was not submitted.</value>
+  </data>
+  <data name="Validation.InvalidNumberOrDate" xml:space="preserve">
+    <value>The entered value is not a valid number or date.</value>
+  </data>
+  <data name="Validation.InvalidValue" xml:space="preserve">
+    <value>The entered value is invalid.</value>
+  </data>
+  <data name="Validation.NumberRequired" xml:space="preserve">
+    <value>Enter a valid number.</value>
+  </data>
+  <data name="Validation.ValidExam" xml:space="preserve">
+    <value>Select a valid exam.</value>
+  </data>
+  <data name="Validation.ScoreRange" xml:space="preserve">
+    <value>The score must be between 0 and 999.99.</value>
+  </data>
+  <data name="Validation.ValidProgram" xml:space="preserve">
+    <value>Select a valid program.</value>
+  </data>
+  <data name="Validation.AcademicYearRange" xml:space="preserve">
+    <value>The academic year start must be between 2000 and 2200.</value>
+  </data>
+  <data name="Validation.ValidTerm" xml:space="preserve">
+    <value>Select a valid term.</value>
+  </data>
+  <data name="Validation.StartRequired" xml:space="preserve">
+    <value>The application start date is required.</value>
+  </data>
+  <data name="Validation.DeadlineRequired" xml:space="preserve">
+    <value>The application deadline is required.</value>
+  </data>
+  <data name="Validation.QuotaRange" xml:space="preserve">
+    <value>The quota must be between 1 and 100,000.</value>
+  </data>
+  <data name="Validation.OfferingConcurrency" xml:space="preserve">
+    <value>Offering concurrency information is invalid.</value>
+  </data>
+  <data name="Validation.DisplayNameRequired" xml:space="preserve">
+    <value>The display name is required.</value>
+  </data>
+  <data name="Validation.MaximumSize" xml:space="preserve">
+    <value>The maximum size is invalid.</value>
+  </data>
+  <data name="Validation.ValidEmail" xml:space="preserve">
+    <value>Enter a valid email address.</value>
+  </data>
+  <data name="Validation.UniversityNameRequired" xml:space="preserve">
+    <value>The university name is required.</value>
+  </data>
+  <data name="Validation.UniversityNameLength" xml:space="preserve">
+    <value>The university name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.InstituteNameRequired" xml:space="preserve">
+    <value>The institute name is required.</value>
+  </data>
+  <data name="Validation.InstituteNameLength" xml:space="preserve">
+    <value>The institute name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.InstituteConcurrency" xml:space="preserve">
+    <value>Institute concurrency information is invalid.</value>
+  </data>
+  <data name="Validation.ValidInstitute" xml:space="preserve">
+    <value>Select a valid institute.</value>
+  </data>
+  <data name="Validation.ProgramNameRequired" xml:space="preserve">
+    <value>The program name is required.</value>
+  </data>
+  <data name="Validation.ProgramNameLength" xml:space="preserve">
+    <value>The program name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.ProgramEnglishNameLength" xml:space="preserve">
+    <value>The English program name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.DegreeTypeRequired" xml:space="preserve">
+    <value>The degree type is required.</value>
+  </data>
+  <data name="Validation.DegreeTypeLength" xml:space="preserve">
+    <value>The degree type can contain at most 50 characters.</value>
+  </data>
+  <data name="Validation.ProgramConcurrency" xml:space="preserve">
+    <value>Program concurrency information is invalid.</value>
+  </data>
+  <data name="Validation.MaximumRawScore" xml:space="preserve">
+    <value>The maximum raw score must be between 0.0001 and 99999 with no more than 4 decimal places.</value>
+  </data>
+  <data name="Field.AcademicYearStart" xml:space="preserve">
+    <value>Academic year start</value>
+  </data>
+  <data name="Field.Term" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="Field.ApplicationStartIstanbul" xml:space="preserve">
+    <value>Application start (Istanbul)</value>
+  </data>
+  <data name="Field.ApplicationDeadlineIstanbul" xml:space="preserve">
+    <value>Application deadline (Istanbul)</value>
+  </data>
+  <data name="Field.OfferingOpen" xml:space="preserve">
+    <value>Offering open</value>
+  </data>
+  <data name="Field.Archive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Field.RankedWorkflow" xml:space="preserve">
+    <value>Ranked evaluation workflow</value>
+  </data>
+  <data name="Field.AdminEmail" xml:space="preserve">
+    <value>New administrator email address</value>
+  </data>
+  <data name="Field.UniversityName" xml:space="preserve">
+    <value>University name</value>
+  </data>
+  <data name="Field.InstituteName" xml:space="preserve">
+    <value>Institute name</value>
+  </data>
+  <data name="Field.Institute" xml:space="preserve">
+    <value>Institute</value>
+  </data>
+  <data name="Field.ProgramName" xml:space="preserve">
+    <value>Program name</value>
+  </data>
+  <data name="Field.ProgramNameEnglish" xml:space="preserve">
+    <value>English program name</value>
+  </data>
+  <data name="Field.DegreeType" xml:space="preserve">
+    <value>Degree type</value>
+  </data>
+
+  <!-- Administrator invitation validation -->
+  <data name="Validation.EmailRequired" xml:space="preserve">
+    <value>Email is required.</value>
+  </data>
+  <data name="Validation.EmailMaximumLength" xml:space="preserve">
+    <value>Email can contain at most 254 characters.</value>
+  </data>
 </root>
