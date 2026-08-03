@@ -1765,4 +1765,178 @@
   <data name="Admin.Applications.Pagination" xml:space="preserve">
     <value>Application pages</value>
   </data>
+  <data name="Admin.Detail.Title" xml:space="preserve">
+    <value>Application details</value>
+  </data>
+  <data name="Admin.Detail.Back" xml:space="preserve">
+    <value>Return to application list</value>
+  </data>
+  <data name="Admin.Detail.SummaryAria" xml:space="preserve">
+    <value>Application summary</value>
+  </data>
+  <data name="Admin.Detail.SummaryHeading" xml:space="preserve">
+    <value>Application summary</value>
+  </data>
+  <data name="Admin.Detail.CurrentStatus" xml:space="preserve">
+    <value>Current status</value>
+  </data>
+  <data name="Admin.Detail.DocumentWorkflow" xml:space="preserve">
+    <value>Document workflow</value>
+  </data>
+  <data name="Admin.Detail.WorkflowEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Admin.Detail.LegacyWorkflow" xml:space="preserve">
+    <value>Legacy workflow</value>
+  </data>
+  <data name="Admin.Detail.Evaluation" xml:space="preserve">
+    <value>Evaluation</value>
+  </data>
+  <data name="Admin.Detail.RankedWorkflow" xml:space="preserve">
+    <value>Ranked workflow</value>
+  </data>
+  <data name="Admin.Detail.StandardWorkflow" xml:space="preserve">
+    <value>Standard decision workflow</value>
+  </data>
+  <data name="Admin.Detail.StudentHeading" xml:space="preserve">
+    <value>Student information</value>
+  </data>
+  <data name="Admin.Detail.FullName" xml:space="preserve">
+    <value>Full name</value>
+  </data>
+  <data name="Admin.Detail.ProgramHeading" xml:space="preserve">
+    <value>Program information</value>
+  </data>
+  <data name="Admin.Detail.AcademicPeriod" xml:space="preserve">
+    <value>Academic term</value>
+  </data>
+  <data name="Admin.Detail.LifecycleHeading" xml:space="preserve">
+    <value>Application lifecycle</value>
+  </data>
+  <data name="Admin.Detail.LifecycleLead" xml:space="preserve">
+    <value>Status changes and administrator notes are preserved as a chronological record.</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryHeading" xml:space="preserve">
+    <value>No status history yet</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryLead" xml:space="preserve">
+    <value>The first status change will appear here with its date and note.</value>
+  </data>
+  <data name="Admin.Detail.IstanbulTime" xml:space="preserve">
+    <value>Istanbul</value>
+  </data>
+  <data name="Admin.Detail.ScoresHeading" xml:space="preserve">
+    <value>Exam scores at application time</value>
+  </data>
+  <data name="Admin.Detail.ScoresLead" xml:space="preserve">
+    <value>These values are snapshot records captured when the application was created.</value>
+  </data>
+  <data name="Admin.Detail.NoScoresHeading" xml:space="preserve">
+    <value>No exam scores</value>
+  </data>
+  <data name="Admin.Detail.NoScoresLead" xml:space="preserve">
+    <value>No exam-score snapshot is stored for this application.</value>
+  </data>
+  <data name="Admin.Detail.ScoresCaption" xml:space="preserve">
+    <value>Exam-score snapshots at application time</value>
+  </data>
+  <data name="Admin.Detail.Exam" xml:space="preserve">
+    <value>Exam</value>
+  </data>
+  <data name="Admin.Detail.Score" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="Admin.Detail.ExamDate" xml:space="preserve">
+    <value>Exam date</value>
+  </data>
+  <data name="Admin.Detail.DocumentsHeading" xml:space="preserve">
+    <value>Document requirements and review</value>
+  </data>
+  <data name="Admin.Detail.DocumentsLead" xml:space="preserve">
+    <value>A decision can be made only for current documents awaiting review on Pending or UnderReview applications.</value>
+  </data>
+  <data name="Admin.Detail.LegacyDocumentExempt" xml:space="preserve">
+    <value>This legacy application is exempt from the new document approval requirements.</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsHeading" xml:space="preserve">
+    <value>No document requirements</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsLead" xml:space="preserve">
+    <value>The application&apos;s document snapshot contains no requirements.</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocument" xml:space="preserve">
+    <value>Required document</value>
+  </data>
+  <data name="Admin.Detail.OptionalDocument" xml:space="preserve">
+    <value>Optional document</value>
+  </data>
+  <data name="Admin.Detail.NotUploaded" xml:space="preserve">
+    <value>Document not uploaded</value>
+  </data>
+  <data name="Admin.Detail.NoCurrentDocument" xml:space="preserve">
+    <value>No current document is available.</value>
+  </data>
+  <data name="Admin.Detail.FileName" xml:space="preserve">
+    <value>File name</value>
+  </data>
+  <data name="Admin.Detail.Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Admin.Detail.UploadedAt" xml:space="preserve">
+    <value>Uploaded at</value>
+  </data>
+  <data name="Admin.Detail.ReviewStatus" xml:space="preserve">
+    <value>Review status</value>
+  </data>
+  <data name="Admin.Detail.RejectionReason" xml:space="preserve">
+    <value>Rejection reason:</value>
+  </data>
+  <data name="Admin.Detail.DownloadCurrent" xml:space="preserve">
+    <value>Securely download current document</value>
+  </data>
+  <data name="Admin.Detail.ApproveDocument" xml:space="preserve">
+    <value>Approve document</value>
+  </data>
+  <data name="Admin.Detail.TurkishRejectionReason" xml:space="preserve">
+    <value>Rejection reason in Turkish</value>
+  </data>
+  <data name="Admin.Detail.RejectDocument" xml:space="preserve">
+    <value>Reject document</value>
+  </data>
+  <data name="Admin.Detail.ReviewReadonly" xml:space="preserve">
+    <value>No action form is shown for this document. The document decision is complete or the application is not in a reviewable state.</value>
+  </data>
+  <data name="Admin.Detail.PreviousVersions" xml:space="preserve">
+    <value>Previous document versions</value>
+  </data>
+  <data name="Admin.Detail.VersionSummary" xml:space="preserve">
+    <value>Version {0} · {1} · {2}</value>
+  </data>
+  <data name="Admin.Detail.DownloadVersion" xml:space="preserve">
+    <value>Securely download version</value>
+  </data>
+  <data name="Admin.Detail.ActionsHeading" xml:space="preserve">
+    <value>Allowed actions</value>
+  </data>
+  <data name="Admin.Detail.ActionsLead" xml:space="preserve">
+    <value>Server-side lifecycle, document, and concurrency checks are reapplied on every request.</value>
+  </data>
+  <data name="Admin.Detail.EvaluationDecisionNote" xml:space="preserve">
+    <value>Approval and rejection decisions are applied atomically when the offering evaluation is finalized and published.</value>
+  </data>
+  <data name="Admin.Detail.NoTransitions" xml:space="preserve">
+    <value>No further administrator transition is available from this status.</value>
+  </data>
+  <data name="Admin.Detail.NewStatus" xml:space="preserve">
+    <value>New status</value>
+  </data>
+  <data name="Admin.Detail.AdminNote" xml:space="preserve">
+    <value>Administrator note</value>
+  </data>
+  <data name="Admin.Detail.UpdateStatus" xml:space="preserve">
+    <value>Update application status</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocumentsWarning" xml:space="preserve">
+    <value>The application cannot be approved until all current required documents are approved.</value>
+  </data>
 </root>
