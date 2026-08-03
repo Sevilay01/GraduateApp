@@ -93,6 +93,21 @@ public sealed class AdminProgramsController(IProgramAdminService programService)
         return FromResult(result);
     }
 
+    [HttpPost("translations/auto-fill")]
+    public async Task<IActionResult> AutoFillTranslations(
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await programService.AutoFillTranslationsAsync(
+            adminId,
+            cancellationToken);
+        return FromResult(result);
+    }
+
     [HttpPost("{id:int}/activate")]
     public Task<IActionResult> Activate(
         int id,

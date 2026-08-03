@@ -1466,8 +1466,32 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains(".configuration-steps", css, StringComparison.Ordinal);
         Assert.Contains(".language-switcher__options", css, StringComparison.Ordinal);
         Assert.Contains(".language-switcher__option.active", css, StringComparison.Ordinal);
+        Assert.Contains("@media (min-width: 1400px)", css, StringComparison.Ordinal);
         Assert.Contains("max-width: 100%;", css, StringComparison.Ordinal);
         Assert.Contains(".admin-item-card__actions .btn", css, StringComparison.Ordinal);
+
+        var layout = File.ReadAllText(
+            Path.Combine(
+                RepositoryRoot(),
+                "GraduateApp.Web",
+                "Views",
+                "Shared",
+                "_Layout.cshtml"));
+        Assert.Contains("navbar-expand-xxl", layout, StringComparison.Ordinal);
+        Assert.Contains("language-switcher--persistent", layout, StringComparison.Ordinal);
+        Assert.True(
+            layout.IndexOf("language-switcher--persistent", StringComparison.Ordinal)
+            < layout.IndexOf("id=\"mainNav\"", StringComparison.Ordinal));
+
+        var translationsView = File.ReadAllText(
+            Path.Combine(
+                RepositoryRoot(),
+                "GraduateApp.Web",
+                "Views",
+                "Admin",
+                "ProgramTranslations.cshtml"));
+        Assert.Contains("AutoFillProgramTranslations", translationsView, StringComparison.Ordinal);
+        Assert.Contains("Admin.Translations.AutoFill", translationsView, StringComparison.Ordinal);
 
         var siteJavaScript = File.ReadAllText(
             Path.Combine(

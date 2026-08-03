@@ -770,6 +770,44 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AutoFillProgramTranslations(
+        string? search,
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await apiClient.AutoFillProgramTranslationsAsync(cancellationToken);
+        if (!result.IsSuccess)
+        {
+            TempData["ErrorMessage"] = ApiError(
+                result.Error,
+                "Admin.Message.TranslationSaveFailed");
+        }
+        else
+        {
+            TempData["SuccessMessage"] = result.Value?.UpdatedCount switch
+            {
+                0 => T("Admin.Message.TranslationNoChanges"),
+                1 => T("Admin.Message.TranslationOneUpdated"),
+                var count => UiText.Format(
+                    HttpContext,
+                    "Admin.Message.TranslationManyUpdated",
+                    count)
+            };
+        }
+
+        return RedirectToAction(
+            nameof(ProgramTranslations),
+            new
+            {
+                search,
+                page = Math.Max(page, 1),
+                pageSize = Math.Clamp(pageSize, 10, 100)
+            });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveProgramTranslations(
         ProgramTranslationPageViewModel model,
         CancellationToken cancellationToken)

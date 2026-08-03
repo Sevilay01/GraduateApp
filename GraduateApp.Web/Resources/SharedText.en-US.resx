@@ -1547,7 +1547,7 @@
     <value>Computer Engineering</value>
   </data>
   <data name="Admin.Programs.EnglishFallbackHelp" xml:space="preserve">
-    <value>If left blank, the Turkish name is shown in the English interface.</value>
+    <value>If left blank, an existing translation for the same Turkish name or the safe program catalog is used automatically. If no match exists, the English interface falls back to the Turkish name.</value>
   </data>
   <data name="Admin.Programs.Create" xml:space="preserve">
     <value>Create program</value>
@@ -1559,10 +1559,13 @@
     <value>Bulk English program names</value>
   </data>
   <data name="Admin.Translations.Lead" xml:space="preserve">
-    <value>Review official English program names on one screen and save them atomically.</value>
+    <value>Automatically match missing English program names, then review and correct them on one screen when needed.</value>
   </data>
   <data name="Admin.Translations.Note" xml:space="preserve">
-    <value>This area does not generate automatic translations. Enter English names verified by the institution. The English interface safely falls back to the Turkish name for blank records. All changes on the page are saved in one operation; if a concurrent update exists, no row is written partially.</value>
+    <value>Automatic matching first reuses a previously verified English name for the same Turkish program, then checks the safe central catalog. You can correct unmatched or institution-specific names here; existing English names are never overwritten automatically.</value>
+  </data>
+  <data name="Admin.Translations.AutoFill" xml:space="preserve">
+    <value>Auto-fill missing English names</value>
   </data>
   <data name="Admin.Translations.FilterHeading" xml:space="preserve">
     <value>Search programs</value>
