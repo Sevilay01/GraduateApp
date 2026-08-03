@@ -3,12 +3,13 @@
     ViewData["Title"] = UiText.Get(Context, "ApplicationDetail.Title");
     var hasInvalidRequirementConfiguration = !Model.HasValidRequiredDocumentConfiguration();
     var canSubmit = Model.CanSubmitDocumentWorkflow();
+    var localizedProgramName = UiText.SelectLocalized(Context, Model.ProgramName, Model.ProgramNameEnglish);
 }
 
 <header class="page-heading">
     <div>
         <p class="eyebrow">@UiText.Get(Context, "ApplicationDetail.Title")</p>
-        <h1>@Model.ProgramName</h1>
+        <h1>@localizedProgramName</h1>
         <p>@Model.InstituteName · @Model.AcademicYear · @Model.TermName</p>
     </div>
     <partial name="_ApplicationStatusBadge" model="Model.CurrentStatus" />
@@ -34,7 +35,7 @@
                 <div>
                     <p class="eyebrow">@UiText.Get(Context, "ApplicationDetail.FinalResult")</p>
                     <h2 id="evaluation-result-heading">@UiText.Get(Context, "ApplicationDetail.PublishedResult")</h2>
-                    <p>@Model.InstituteName · @Model.ProgramName · @Model.AcademicYear · @Model.TermName</p>
+                    <p>@Model.InstituteName · @localizedProgramName · @Model.AcademicYear · @Model.TermName</p>
                 </div>
                 <strong>@UiText.LocalizeEvaluationOutcome(Context, result.Outcome)</strong>
             </div>
