@@ -1939,4 +1939,490 @@
   <data name="Admin.Detail.RequiredDocumentsWarning" xml:space="preserve">
     <value>The application cannot be approved until all current required documents are approved.</value>
   </data>
+  <data name="EvaluationState.Configuring" xml:space="preserve">
+    <value>Configuring</value>
+  </data>
+  <data name="EvaluationState.Finalized" xml:space="preserve">
+    <value>Finalized</value>
+  </data>
+  <data name="EvaluationState.Published" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="CriterionSource.UndergraduateGpa" xml:space="preserve">
+    <value>Undergraduate GPA</value>
+  </data>
+  <data name="CriterionSource.ExamScore" xml:space="preserve">
+    <value>Exam score</value>
+  </data>
+  <data name="CriterionSource.ManualScore" xml:space="preserve">
+    <value>Manual score</value>
+  </data>
+  <data name="Eligibility.Pending" xml:space="preserve">
+    <value>Decision pending</value>
+  </data>
+  <data name="Eligibility.Eligible" xml:space="preserve">
+    <value>Eligible</value>
+  </data>
+  <data name="Eligibility.Ineligible" xml:space="preserve">
+    <value>Ineligible</value>
+  </data>
+  <data name="Admin.Offerings.Title" xml:space="preserve">
+    <value>Offerings and evaluation</value>
+  </data>
+  <data name="Admin.Offerings.Heading" xml:space="preserve">
+    <value>Term program offerings</value>
+  </data>
+  <data name="Admin.Offerings.Lead" xml:space="preserve">
+    <value>Manage offering dates, quotas, and document and exam requirements under the existing security and concurrency contracts.</value>
+  </data>
+  <data name="Admin.Offerings.New" xml:space="preserve">
+    <value>Create new offering</value>
+  </data>
+  <data name="Admin.Offerings.Back" xml:space="preserve">
+    <value>Return to applications</value>
+  </data>
+  <data name="Admin.Offerings.LoadFailed" xml:space="preserve">
+    <value>Offering data could not be loaded.</value>
+  </data>
+  <data name="Admin.Offerings.FilterHeading" xml:space="preserve">
+    <value>Filter offerings</value>
+  </data>
+  <data name="Admin.Offerings.YearStart" xml:space="preserve">
+    <value>Academic year start</value>
+  </data>
+  <data name="Admin.Offerings.IncludeArchived" xml:space="preserve">
+    <value>Show archived offerings</value>
+  </data>
+  <data name="Admin.Offerings.ArchivedIncluded" xml:space="preserve">
+    <value>Archived included</value>
+  </data>
+  <data name="Admin.Offerings.HealthHeading" xml:space="preserve">
+    <value>Offering configuration health</value>
+  </data>
+  <data name="Admin.Offerings.HealthLead" xml:space="preserve">
+    <value>This read-only summary shows active required document conditions and existing-application risk for open offerings.</value>
+  </data>
+  <data name="Admin.Offerings.Health.A" xml:space="preserve">
+    <value>A · Legacy</value>
+  </data>
+  <data name="Admin.Offerings.Health.B" xml:space="preserve">
+    <value>B · Healthy</value>
+  </data>
+  <data name="Admin.Offerings.Health.C" xml:space="preserve">
+    <value>C · No applications</value>
+  </data>
+  <data name="Admin.Offerings.Health.D" xml:space="preserve">
+    <value>D · Drafts exist</value>
+  </data>
+  <data name="Admin.Offerings.Health.E" xml:space="preserve">
+    <value>E · Submitted applications exist</value>
+  </data>
+  <data name="Admin.Offerings.Count" xml:space="preserve">
+    <value>{0} offerings</value>
+  </data>
+  <data name="Admin.Offerings.Health.ALead" xml:space="preserve">
+    <value>Legacy offerings outside the document workflow. Their existing behavior is unchanged.</value>
+  </data>
+  <data name="Admin.Offerings.Health.BLead" xml:space="preserve">
+    <value>Open offerings with at least one active required document condition.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CLead" xml:space="preserve">
+    <value>Open offerings with document workflow enabled but no active required condition or applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.DLead" xml:space="preserve">
+    <value>Open offerings with no active required condition and existing drafts.</value>
+  </data>
+  <data name="Admin.Offerings.Health.ELead" xml:space="preserve">
+    <value>Open offerings with no active required condition and submitted or later applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Clear" xml:space="preserve">
+    <value>No open workflow offerings with incomplete document configuration exist in the filtered results.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Risk" xml:space="preserve">
+    <value>Configuration risk was found in {0} open offerings.</value>
+  </data>
+  <data name="Admin.Offerings.Health.RiskLead" xml:space="preserve">
+    <value>These offerings are hidden from the new-student program list. No automatic data correction is performed.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Group" xml:space="preserve">
+    <value>Group {0} · Offering #{1}</value>
+  </data>
+  <data name="Admin.Offerings.Health.OpenInvalid" xml:space="preserve">
+    <value>Open · Missing condition</value>
+  </data>
+  <data name="Admin.Offerings.Health.ActiveRequired" xml:space="preserve">
+    <value>Active required conditions</value>
+  </data>
+  <data name="Admin.Offerings.Health.TotalRequirements" xml:space="preserve">
+    <value>Total document conditions</value>
+  </data>
+  <data name="Admin.Offerings.Health.Drafts" xml:space="preserve">
+    <value>Drafts</value>
+  </data>
+  <data name="Admin.Offerings.Health.Submitted" xml:space="preserve">
+    <value>Submitted and later</value>
+  </data>
+  <data name="Admin.Offerings.Health.SnapshotWarning" xml:space="preserve">
+    <value>This offering already has draft or submitted applications. New document conditions do not change existing application snapshots. No automatic data change should be made before an institute decision is recorded for existing applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.Hidden" xml:space="preserve">
+    <value>The offering is hidden from students, and direct draft creation is rejected by the API.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CompletedEvaluation" xml:space="preserve">
+    <value>Finalized or published evaluations, results, and applications are not changed. The offering is only closed to new applications and sent for manual review.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepClose" xml:space="preserve">
+    <value>Close the offering safely to new applications.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReview" xml:space="preserve">
+    <value>Send it for manual institute review without changing existing results.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepGuide" xml:space="preserve">
+    <value>Verify the institute&apos;s current term and program guide.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepDocuments" xml:space="preserve">
+    <value>Add document conditions through the existing secure administrator workflow.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepRequired" xml:space="preserve">
+    <value>Verify that at least one active required condition exists.</value>
+  </data>
+  <data name="Admin.Offerings.Health.StepReopen" xml:space="preserve">
+    <value>Reopen the offering with the current RowVersion and API invariant checks.</value>
+  </data>
+  <data name="Admin.Offerings.Health.CloseReview" xml:space="preserve">
+    <value>Close and send for manual review</value>
+  </data>
+  <data name="Admin.Offerings.Health.Close" xml:space="preserve">
+    <value>Close offering safely</value>
+  </data>
+  <data name="Admin.Offerings.Health.ConfigureDocuments" xml:space="preserve">
+    <value>Configure document conditions</value>
+  </data>
+  <data name="Admin.Offerings.ListHeading" xml:space="preserve">
+    <value>Offerings</value>
+  </data>
+  <data name="Admin.Offerings.Showing" xml:space="preserve">
+    <value>{0} offerings shown</value>
+  </data>
+  <data name="Admin.Offerings.EmptyHeading" xml:space="preserve">
+    <value>No offerings found</value>
+  </data>
+  <data name="Admin.Offerings.EmptyLead" xml:space="preserve">
+    <value>Change the filters or use the form to create a new closed offering.</value>
+  </data>
+  <data name="Admin.Offerings.State.Archived" xml:space="preserve">
+    <value>Archived</value>
+  </data>
+  <data name="Admin.Offerings.State.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Admin.Offerings.State.Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Admin.Offerings.Start" xml:space="preserve">
+    <value>Application start</value>
+  </data>
+  <data name="Admin.Offerings.Deadline" xml:space="preserve">
+    <value>Application deadline</value>
+  </data>
+  <data name="Admin.Offerings.Unspecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="Admin.Offerings.Quota" xml:space="preserve">
+    <value>Quota</value>
+  </data>
+  <data name="Admin.Offerings.DocumentWorkflow" xml:space="preserve">
+    <value>Document workflow</value>
+  </data>
+  <data name="Admin.Offerings.LegacyOutside" xml:space="preserve">
+    <value>Legacy workflow · out of scope</value>
+  </data>
+  <data name="Admin.Offerings.Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Admin.Offerings.Incomplete" xml:space="preserve">
+    <value>Incomplete</value>
+  </data>
+  <data name="Admin.Offerings.RequirementCount" xml:space="preserve">
+    <value>{0} conditions</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationWorkflow" xml:space="preserve">
+    <value>Evaluation workflow</value>
+  </data>
+  <data name="Admin.Offerings.NotUsed" xml:space="preserve">
+    <value>Not used</value>
+  </data>
+  <data name="Admin.Offerings.ExamRequirements" xml:space="preserve">
+    <value>Exam requirements</value>
+  </data>
+  <data name="Admin.Offerings.ReadinessHeading" xml:space="preserve">
+    <value>Prerequisites for opening the offering</value>
+  </data>
+  <data name="Admin.Offerings.RequiredCondition" xml:space="preserve">
+    <value>Required document condition:</value>
+  </data>
+  <data name="Admin.Offerings.RequiredReady" xml:space="preserve">
+    <value>At least one active required condition exists.</value>
+  </data>
+  <data name="Admin.Offerings.RequiredMissing" xml:space="preserve">
+    <value>Define at least one required document condition before opening the offering.</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicy" xml:space="preserve">
+    <value>Criterion policy:</value>
+  </data>
+  <data name="Admin.Offerings.CriteriaPolicyLead" xml:space="preserve">
+    <value>Total weight must be 10,000 bp, and every exam-score criterion must have a linked active required exam condition.</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicy" xml:space="preserve">
+    <value>Evaluation policy:</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationPolicyLead" xml:space="preserve">
+    <value>This offering does not use the ranked evaluation workflow.</value>
+  </data>
+  <data name="Admin.Offerings.ConfigurationLocked" xml:space="preserve">
+    <value>Offering configuration is locked because the evaluation is finalized or published.</value>
+  </data>
+  <data name="Admin.Offerings.EditGeneral" xml:space="preserve">
+    <value>Edit general information</value>
+  </data>
+  <data name="Admin.Offerings.DocumentRequirements" xml:space="preserve">
+    <value>Document conditions</value>
+  </data>
+  <data name="Admin.Offerings.Evaluation" xml:space="preserve">
+    <value>Evaluation</value>
+  </data>
+  <data name="Admin.Offerings.OpenCheck" xml:space="preserve">
+    <value>Opening checks</value>
+  </data>
+  <data name="Admin.Offerings.EditHeading" xml:space="preserve">
+    <value>Edit offering</value>
+  </data>
+  <data name="Admin.Offerings.NewHeading" xml:space="preserve">
+    <value>Create new offering</value>
+  </data>
+  <data name="Admin.Offerings.NewLead" xml:space="preserve">
+    <value>A new offering is first created closed as a safe default.</value>
+  </data>
+  <data name="Admin.Offerings.Editing" xml:space="preserve">
+    <value>Offering being edited:</value>
+  </data>
+  <data name="Admin.Offerings.OfferingNumber" xml:space="preserve">
+    <value>Offering #{0}</value>
+  </data>
+  <data name="Admin.Offerings.StepsAria" xml:space="preserve">
+    <value>Offering configuration steps</value>
+  </data>
+  <data name="Admin.Offerings.Configuration" xml:space="preserve">
+    <value>Offering configuration</value>
+  </data>
+  <data name="Admin.Offerings.General" xml:space="preserve">
+    <value>General information</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationCriteria" xml:space="preserve">
+    <value>Evaluation criteria</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationNotUsed" xml:space="preserve">
+    <value>Evaluation is not used</value>
+  </data>
+  <data name="Admin.Offerings.ReviewOpen" xml:space="preserve">
+    <value>Review and open</value>
+  </data>
+  <data name="Admin.Offerings.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Admin.Offerings.Term" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="Admin.Offerings.StartIstanbul" xml:space="preserve">
+    <value>Application start (Istanbul)</value>
+  </data>
+  <data name="Admin.Offerings.DeadlineIstanbul" xml:space="preserve">
+    <value>Application deadline (Istanbul)</value>
+  </data>
+  <data name="Admin.Offerings.UseEvaluation" xml:space="preserve">
+    <value>Use ranked evaluation workflow</value>
+  </data>
+  <data name="Admin.Offerings.EvaluationImmutable" xml:space="preserve">
+    <value>Once enabled, it cannot be disabled; an existing offering can be moved to this workflow only when it has no applications.</value>
+  </data>
+  <data name="Admin.Offerings.ExamLead" xml:space="preserve">
+    <value>Only selected exams are submitted as offering conditions. Required exams can be linked to ExamScore criteria.</value>
+  </data>
+  <data name="Admin.Offerings.UseCondition" xml:space="preserve">
+    <value>Use condition</value>
+  </data>
+  <data name="Admin.Offerings.RequiredExam" xml:space="preserve">
+    <value>Required exam</value>
+  </data>
+  <data name="Admin.Offerings.MinimumScore" xml:space="preserve">
+    <value>Minimum score</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDate" xml:space="preserve">
+    <value>Earliest accepted result date</value>
+  </data>
+  <data name="Admin.Offerings.MinimumDateHelp" xml:space="preserve">
+    <value>Results before this date are rejected.</value>
+  </data>
+  <data name="Admin.Offerings.AlesHelp" xml:space="preserve">
+    <value>ALES results are valid for five years. The date must be five years before the application deadline.</value>
+  </data>
+  <data name="Admin.Offerings.ApplyFiveYears" xml:space="preserve">
+    <value>Apply five-year date</value>
+  </data>
+  <data name="Admin.Offerings.AlesSuggestion" xml:space="preserve">
+    <value>Suggested date: {0}</value>
+  </data>
+  <data name="Admin.Offerings.AlesNeedDeadline" xml:space="preserve">
+    <value>Enter the application deadline to calculate a suggestion.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedHeading" xml:space="preserve">
+    <value>A new offering is created closed first.</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLabel" xml:space="preserve">
+    <value>The new offering will be created closed</value>
+  </data>
+  <data name="Admin.Offerings.NewClosedLead" xml:space="preserve">
+    <value>After defining at least one active required document condition and completing the evaluation prerequisites, edit the offering to open it.</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveHeading" xml:space="preserve">
+    <value>Archive area</value>
+  </data>
+  <data name="Admin.Offerings.ArchiveLead" xml:space="preserve">
+    <value>An archived offering is hidden from new operations; historical application and audit records are preserved.</value>
+  </data>
+  <data name="Admin.Offerings.Archive" xml:space="preserve">
+    <value>Archive offering</value>
+  </data>
+  <data name="Admin.Offerings.Save" xml:space="preserve">
+    <value>Save offering changes</value>
+  </data>
+  <data name="Admin.Offerings.CreateClosed" xml:space="preserve">
+    <value>Create closed offering</value>
+  </data>
+  <data name="Admin.Offerings.CancelEdit" xml:space="preserve">
+    <value>Cancel editing</value>
+  </data>
+  <data name="Admin.Requirements.Heading" xml:space="preserve">
+    <value>Offering document conditions</value>
+  </data>
+  <data name="Admin.Requirements.SnapshotLead" xml:space="preserve">
+    <value>Snapshot conditions for existing drafts and applications do not change. Condition changes affect only drafts created later.</value>
+  </data>
+  <data name="Admin.Requirements.Invariant" xml:space="preserve">
+    <value>Document-condition changes affect only new drafts. The API safely rejects an attempt to deactivate the last active required condition for an open offering.</value>
+  </data>
+  <data name="Admin.Requirements.GuideHeading" xml:space="preserve">
+    <value>Guide verification</value>
+  </data>
+  <data name="Admin.Requirements.GuideLead" xml:space="preserve">
+    <value>Define document conditions according to the institute&apos;s current offering guide. Additional program-specific documents may apply.</value>
+  </data>
+  <data name="Admin.Requirements.GuidePrefix" xml:space="preserve">
+    <value>Do not copy one document list to every offering.</value>
+  </data>
+  <data name="Admin.Requirements.SocialGuide" xml:space="preserve">
+    <value>Social Sciences Institute 2026–2027 Fall guide</value>
+  </data>
+  <data name="Admin.Requirements.And" xml:space="preserve">
+    <value>and</value>
+  </data>
+  <data name="Admin.Requirements.InternationalGuide" xml:space="preserve">
+    <value>international student announcement</value>
+  </data>
+  <data name="Admin.Requirements.GuideSuffix" xml:space="preserve">
+    <value>Use the official source appropriate for the application type, such as these examples.</value>
+  </data>
+  <data name="Admin.Requirements.SelectHeading" xml:space="preserve">
+    <value>Select an offering for document conditions</value>
+  </data>
+  <data name="Admin.Requirements.SelectLead" xml:space="preserve">
+    <value>Use the “Document conditions” action only on the offering card you will manage. The full condition list is loaded for the selected offering.</value>
+  </data>
+  <data name="Admin.Requirements.Selected" xml:space="preserve">
+    <value>Selected offering · #{0}</value>
+  </data>
+  <data name="Admin.Requirements.ActiveRequired" xml:space="preserve">
+    <value>{0} active required</value>
+  </data>
+  <data name="Admin.Requirements.Locked" xml:space="preserve">
+    <value>Offering configuration is locked because the evaluation is finalized or published. Document conditions are read-only; the offering must be left for manual institute review.</value>
+  </data>
+  <data name="Admin.Requirements.EmptyHeading" xml:space="preserve">
+    <value>No document conditions defined</value>
+  </data>
+  <data name="Admin.Requirements.HistoricalLocked" xml:space="preserve">
+    <value>The normal document-configuration workflow cannot be used for this historical offering.</value>
+  </data>
+  <data name="Admin.Requirements.Caption" xml:space="preserve">
+    <value>Document conditions for {0}</value>
+  </data>
+  <data name="Admin.Requirements.Requirement" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="Admin.Requirements.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Admin.Requirements.TypeLimit" xml:space="preserve">
+    <value>Type and limit</value>
+  </data>
+  <data name="Admin.Requirements.Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Admin.Requirements.Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Admin.Requirements.Optional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="Admin.Requirements.NoDescription" xml:space="preserve">
+    <value>No description</value>
+  </data>
+  <data name="Admin.Requirements.ConcurrencyProtected" xml:space="preserve">
+    <value>Concurrency protected</value>
+  </data>
+  <data name="Admin.Requirements.ReadOnly" xml:space="preserve">
+    <value>Read-only</value>
+  </data>
+  <data name="Admin.Requirements.Edit" xml:space="preserve">
+    <value>Edit condition</value>
+  </data>
+  <data name="Admin.Requirements.DeactivateAria" xml:space="preserve">
+    <value>Deactivate document condition: {0}</value>
+  </data>
+  <data name="Admin.Requirements.ActivateAria" xml:space="preserve">
+    <value>Activate document condition: {0}</value>
+  </data>
+  <data name="Admin.Requirements.Deactivate" xml:space="preserve">
+    <value>Deactivate condition</value>
+  </data>
+  <data name="Admin.Requirements.Activate" xml:space="preserve">
+    <value>Activate condition</value>
+  </data>
+  <data name="Admin.Requirements.LastRequired" xml:space="preserve">
+    <value>The last active required condition on an open offering cannot be removed.</value>
+  </data>
+  <data name="Admin.Requirements.NewHeading" xml:space="preserve">
+    <value>New document condition</value>
+  </data>
+  <data name="Admin.Requirements.EditHeading" xml:space="preserve">
+    <value>Edit document condition</value>
+  </data>
+  <data name="Admin.Requirements.Code" xml:space="preserve">
+    <value>Document code</value>
+  </data>
+  <data name="Admin.Requirements.DisplayNameTurkish" xml:space="preserve">
+    <value>Display name in Turkish</value>
+  </data>
+  <data name="Admin.Requirements.AllowedType" xml:space="preserve">
+    <value>Allowed type</value>
+  </data>
+  <data name="Admin.Requirements.MaximumBytes" xml:space="preserve">
+    <value>Maximum size (bytes)</value>
+  </data>
+  <data name="Admin.Requirements.RequiredDocument" xml:space="preserve">
+    <value>Required document</value>
+  </data>
+  <data name="Admin.Requirements.Save" xml:space="preserve">
+    <value>Save document condition</value>
+  </data>
 </root>
