@@ -43,7 +43,7 @@ public sealed class DocumentWorkflowInvariantWebTests
         Assert.Contains("Model.CanSubmitDocumentWorkflow()", view, StringComparison.Ordinal);
         Assert.Contains("disabled=\"@(!canSubmit)\"", view, StringComparison.Ordinal);
         Assert.Contains(
-            "Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.",
+            "ApplicationDetail.InvalidConfiguration",
             view,
             StringComparison.Ordinal);
     }
