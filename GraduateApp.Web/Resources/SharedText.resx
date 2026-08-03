@@ -817,4 +817,229 @@
   <data name="ApplicationDetail.Back" xml:space="preserve">
     <value>Panele dön</value>
   </data>
+  <data name="Field.Tc" xml:space="preserve">
+    <value>T.C. kimlik numarası</value>
+  </data>
+  <data name="Field.FirstName" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Field.LastName" xml:space="preserve">
+    <value>Soyad</value>
+  </data>
+  <data name="Field.FatherName" xml:space="preserve">
+    <value>Baba adı</value>
+  </data>
+  <data name="Field.BirthDate" xml:space="preserve">
+    <value>Doğum tarihi</value>
+  </data>
+  <data name="Field.Email" xml:space="preserve">
+    <value>E-posta</value>
+  </data>
+  <data name="Field.Telephone" xml:space="preserve">
+    <value>Telefon</value>
+  </data>
+  <data name="Field.Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="Field.ConfirmPassword" xml:space="preserve">
+    <value>Parola tekrarı</value>
+  </data>
+  <data name="Field.CurrentPassword" xml:space="preserve">
+    <value>Mevcut parola</value>
+  </data>
+  <data name="Field.NewPassword" xml:space="preserve">
+    <value>Yeni parola</value>
+  </data>
+  <data name="Field.University" xml:space="preserve">
+    <value>Üniversite</value>
+  </data>
+  <data name="Field.Faculty" xml:space="preserve">
+    <value>Fakülte</value>
+  </data>
+  <data name="Field.GraduatedProgram" xml:space="preserve">
+    <value>Mezun olunan program</value>
+  </data>
+  <data name="Field.Gpa" xml:space="preserve">
+    <value>Lisans not ortalaması</value>
+  </data>
+  <data name="Field.Exam" xml:space="preserve">
+    <value>Sınav</value>
+  </data>
+  <data name="Field.Score" xml:space="preserve">
+    <value>Puan</value>
+  </data>
+  <data name="Field.ResultDate" xml:space="preserve">
+    <value>Sonuç tarihi</value>
+  </data>
+  <data name="Register.Title" xml:space="preserve">
+    <value>Öğrenci kaydı</value>
+  </data>
+  <data name="Register.Eyebrow" xml:space="preserve">
+    <value>Yeni öğrenci hesabı</value>
+  </data>
+  <data name="Register.Heading" xml:space="preserve">
+    <value>Öğrenci kaydı oluşturun</value>
+  </data>
+  <data name="Register.Lead" xml:space="preserve">
+    <value>Kimlik ve iletişim bilgilerinizi eksiksiz girerek güvenli hesabınızı oluşturun.</value>
+  </data>
+  <data name="Register.Back" xml:space="preserve">
+    <value>Girişe dön</value>
+  </data>
+  <data name="Register.Identity" xml:space="preserve">
+    <value>Kimlik bilgileri</value>
+  </data>
+  <data name="Register.Contact" xml:space="preserve">
+    <value>İletişim bilgileri</value>
+  </data>
+  <data name="Register.PhoneExample" xml:space="preserve">
+    <value>Örnek: 05XX XXX XX XX</value>
+  </data>
+  <data name="Register.SecurePassword" xml:space="preserve">
+    <value>Güvenli parola</value>
+  </data>
+  <data name="Register.PasswordRule" xml:space="preserve">
+    <value>Parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermelidir.</value>
+  </data>
+  <data name="Register.PrivacyPrefix" xml:space="preserve">
+    <value>Kişisel verilerin işlenmesine ilişkin bilgi için</value>
+  </data>
+  <data name="Register.PrivacyLink" xml:space="preserve">
+    <value>aydınlatma metnini</value>
+  </data>
+  <data name="Register.PrivacySuffix" xml:space="preserve">
+    <value>inceleyebilirsiniz.</value>
+  </data>
+  <data name="Register.Submit" xml:space="preserve">
+    <value>Kayıt oluştur</value>
+  </data>
+  <data name="Forgot.Title" xml:space="preserve">
+    <value>Parolamı unuttum</value>
+  </data>
+  <data name="Forgot.Eyebrow" xml:space="preserve">
+    <value>Hesap kurtarma</value>
+  </data>
+  <data name="Forgot.Heading" xml:space="preserve">
+    <value>Parolanızı güvenle sıfırlayın</value>
+  </data>
+  <data name="Forgot.Lead" xml:space="preserve">
+    <value>Kayıtlı e-posta adresinizi girin. Güvenlik nedeniyle hesabın varlığı hakkında ayrıntı paylaşılmaz.</value>
+  </data>
+  <data name="Forgot.Aria" xml:space="preserve">
+    <value>Parola sıfırlama isteği</value>
+  </data>
+  <data name="Forgot.Submitted" xml:space="preserve">
+    <value>Hesap mevcutsa parola sıfırlama yönergeleri gönderildi.</value>
+  </data>
+  <data name="Forgot.Submit" xml:space="preserve">
+    <value>Sıfırlama bağlantısı iste</value>
+  </data>
+  <data name="Forgot.Back" xml:space="preserve">
+    <value>Giriş ekranına dön</value>
+  </data>
+  <data name="Reset.Title" xml:space="preserve">
+    <value>Parola sıfırlama</value>
+  </data>
+  <data name="Reset.Eyebrow" xml:space="preserve">
+    <value>Hesap güvenliği</value>
+  </data>
+  <data name="Reset.Heading" xml:space="preserve">
+    <value>Yeni parolanızı belirleyin</value>
+  </data>
+  <data name="Reset.Lead" xml:space="preserve">
+    <value>Başka hesaplarda kullanmadığınız, en az 12 karakterli güçlü bir parola seçin.</value>
+  </data>
+  <data name="Reset.Aria" xml:space="preserve">
+    <value>Yeni parola</value>
+  </data>
+  <data name="Reset.Submit" xml:space="preserve">
+    <value>Parolayı güncelle</value>
+  </data>
+  <data name="Change.Title" xml:space="preserve">
+    <value>Parola değiştir</value>
+  </data>
+  <data name="Change.Eyebrow" xml:space="preserve">
+    <value>Oturum güvenliği</value>
+  </data>
+  <data name="Change.Heading" xml:space="preserve">
+    <value>Parolanızı değiştirin</value>
+  </data>
+  <data name="Change.Lead" xml:space="preserve">
+    <value>Mevcut parolanızı doğrulayın ve hesabınız için yeni, güçlü bir parola belirleyin.</value>
+  </data>
+  <data name="Change.Aria" xml:space="preserve">
+    <value>Parola değiştirme formu</value>
+  </data>
+  <data name="Change.Submit" xml:space="preserve">
+    <value>Parolayı değiştir</value>
+  </data>
+  <data name="Invitation.Title" xml:space="preserve">
+    <value>Yönetici davetini kabul et</value>
+  </data>
+  <data name="Invitation.Eyebrow" xml:space="preserve">
+    <value>Yetkili erişimi</value>
+  </data>
+  <data name="Invitation.Heading" xml:space="preserve">
+    <value>Yönetici davetinizi tamamlayın</value>
+  </data>
+  <data name="Invitation.Lead" xml:space="preserve">
+    <value>Bu alan yalnızca size gönderilen tek kullanımlık yönetici daveti içindir.</value>
+  </data>
+  <data name="Invitation.Aria" xml:space="preserve">
+    <value>Yönetici parola belirleme</value>
+  </data>
+  <data name="Invitation.PasswordLead" xml:space="preserve">
+    <value>Güçlü ve yalnızca bu hesap için kullandığınız bir parola belirleyin.</value>
+  </data>
+  <data name="Invitation.Submit" xml:space="preserve">
+    <value>Daveti kabul et</value>
+  </data>
+  <data name="AccessDenied.Title" xml:space="preserve">
+    <value>Erişim reddedildi</value>
+  </data>
+  <data name="AccessDenied.Heading" xml:space="preserve">
+    <value>Bu sayfaya erişim yetkiniz yok</value>
+  </data>
+  <data name="AccessDenied.Lead" xml:space="preserve">
+    <value>Bu oturumun hesap türü istenen sayfaya uygun değil. Güvenli biçimde hesap değiştirebilir veya ana sayfaya dönebilirsiniz.</value>
+  </data>
+  <data name="AccessDenied.Admin" xml:space="preserve">
+    <value>Yönetici hesabıyla giriş yap</value>
+  </data>
+  <data name="AccessDenied.Student" xml:space="preserve">
+    <value>Öğrenci hesabıyla giriş yap</value>
+  </data>
+  <data name="AccessDenied.Home" xml:space="preserve">
+    <value>Ana sayfaya dön</value>
+  </data>
+  <data name="Privacy.Title" xml:space="preserve">
+    <value>Gizlilik</value>
+  </data>
+  <data name="Privacy.Heading" xml:space="preserve">
+    <value>Gizlilik ve kişisel veriler</value>
+  </data>
+  <data name="Privacy.P1" xml:space="preserve">
+    <value>GraduateApp yalnızca lisansüstü başvuru süreci için gerekli bilgileri işler. T.C. kimlik numarası, parola ve güvenlik belirteçleri kullanıcı arayüzünde veya uygulama loglarında gösterilmez.</value>
+  </data>
+  <data name="Privacy.P2" xml:space="preserve">
+    <value>Kişisel verilerinizin düzeltilmesi veya silinmesi için kurumunuzun yetkili başvuru birimiyle iletişime geçin.</value>
+  </data>
+  <data name="Status.Title" xml:space="preserve">
+    <value>İstek tamamlanamadı</value>
+  </data>
+  <data name="Status.NotFound" xml:space="preserve">
+    <value>Aradığınız sayfa bulunamadı.</value>
+  </data>
+  <data name="Status.Unauthorized" xml:space="preserve">
+    <value>Bu sayfayı görüntülemek için giriş yapmalısınız.</value>
+  </data>
+  <data name="Status.Forbidden" xml:space="preserve">
+    <value>Bu sayfaya erişim yetkiniz yok.</value>
+  </data>
+  <data name="Status.Failed" xml:space="preserve">
+    <value>İstek tamamlanamadı.</value>
+  </data>
+  <data name="Status.Home" xml:space="preserve">
+    <value>Ana sayfaya dön</value>
+  </data>
 </root>
