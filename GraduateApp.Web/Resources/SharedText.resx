@@ -1153,4 +1153,88 @@
   <data name="Navigation.ProgramTranslations" xml:space="preserve">
     <value>Toplu İngilizce program adları</value>
   </data>
+  <data name="Admin.ActivateStudent.Title" xml:space="preserve">
+    <value>Öğrenciyi aktifleştir</value>
+  </data>
+  <data name="Admin.ActivateStudent.Heading" xml:space="preserve">
+    <value>Öğrenci hesabını aktifleştir</value>
+  </data>
+  <data name="Admin.ActivateStudent.Lead" xml:space="preserve">
+    <value>Hesap erişimini geri vermeden önce maskelenmiş öğrenci bilgilerini doğrulayın.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Summary" xml:space="preserve">
+    <value>Aktifleştirme özeti</value>
+  </data>
+  <data name="Admin.ActivateStudent.SummarySuffix" xml:space="preserve">
+    <value>öğrencisinin hesabı yeniden aktifleştirilecek. Güvenlik damgası yenileneceği için önceki oturumlar geçerli olmayacak.</value>
+  </data>
+  <data name="Admin.ActivateStudent.Submit" xml:space="preserve">
+    <value>Öğrenci hesabını aktifleştir</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Title" xml:space="preserve">
+    <value>Öğrenciyi pasifleştir</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Heading" xml:space="preserve">
+    <value>Öğrenci hesabını pasifleştir</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Lead" xml:space="preserve">
+    <value>Bu güvenlik eylemi öğrencinin mevcut oturumlarını geçersiz kılar; geçmiş verileri silmez.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Summary" xml:space="preserve">
+    <value>Pasifleştirme özeti</value>
+  </data>
+  <data name="Admin.DeactivateStudent.SummarySuffix" xml:space="preserve">
+    <value>öğrencisinin hesabı pasifleştirilecek. Mevcut API tokenları ve Web oturumu güvenlik damgası yenilenerek geçersiz kılınacak.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Warning" xml:space="preserve">
+    <value>Bu işlem katalog verilerini veya öğrencinin geçmiş başvuru kayıtlarını silmez.</value>
+  </data>
+  <data name="Admin.DeactivateStudent.Submit" xml:space="preserve">
+    <value>Öğrenci hesabını pasifleştir</value>
+  </data>
+  <data name="Admin.Student.ApplicationCount" xml:space="preserve">
+    <value>Başvuru sayısı</value>
+  </data>
+  <data name="Admin.Student.ExamScoreCount" xml:space="preserve">
+    <value>Sınav sonucu sayısı</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Title" xml:space="preserve">
+    <value>Enstitüyü sil</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Heading" xml:space="preserve">
+    <value>Enstitüyü kalıcı olarak sil</value>
+  </data>
+  <data name="Admin.DeleteInstitute.IntroSuffix" xml:space="preserve">
+    <value>enstitüsünü silmek üzeresiniz.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.LinkedPrograms" xml:space="preserve">
+    <value>Bu enstitüye bağlı {0} program var. Veri bütünlüğünü korumak için kalıcı silme engellenecektir; enstitüyü pasifleştirin.</value>
+  </data>
+  <data name="Admin.DeleteInstitute.Irreversible" xml:space="preserve">
+    <value>Bu işlem geri alınamaz. Yalnızca hiç kullanılmamış enstitüler kalıcı olarak silinebilir.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Title" xml:space="preserve">
+    <value>Programı sil</value>
+  </data>
+  <data name="Admin.DeleteProgram.Heading" xml:space="preserve">
+    <value>Programı kalıcı olarak sil</value>
+  </data>
+  <data name="Admin.DeleteProgram.IntroSuffix" xml:space="preserve">
+    <value>programını silmek üzeresiniz.</value>
+  </data>
+  <data name="Admin.DeleteProgram.LinkedOfferings" xml:space="preserve">
+    <value>Bu programa bağlı {0} dönemsel ilan var. Geçmiş kayıtları korumak için kalıcı silme engellenecektir; programı pasifleştirin.</value>
+  </data>
+  <data name="Admin.DeleteProgram.Irreversible" xml:space="preserve">
+    <value>Bu işlem geri alınamaz. Yalnızca hiç ilanı olmayan programlar kalıcı olarak silinebilir.</value>
+  </data>
+  <data name="Admin.Delete.Permanent" xml:space="preserve">
+    <value>Kalıcı olarak sil</value>
+  </data>
+  <data name="Admin.Common.Cancel" xml:space="preserve">
+    <value>Vazgeç</value>
+  </data>
+  <data name="Admin.Common.AccountManagement" xml:space="preserve">
+    <value>Hesap yönetimi</value>
+  </data>
 </root>
