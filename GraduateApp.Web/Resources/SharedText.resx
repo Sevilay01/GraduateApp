@@ -2425,4 +2425,372 @@
   <data name="Admin.Requirements.Save" xml:space="preserve">
     <value>Belge koşulunu kaydet</value>
   </data>
+
+  <!-- Admin evaluation localization -->
+  <data name="Admin.Evaluation.PageTitle" xml:space="preserve">
+    <value>Başvuru değerlendirmesi</value>
+  </data>
+  <data name="Admin.Evaluation.Area" xml:space="preserve">
+    <value>İlanlar ve değerlendirme</value>
+  </data>
+  <data name="Admin.Evaluation.BackToOfferings" xml:space="preserve">
+    <value>İlanlara dön</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedTitle" xml:space="preserve">
+    <value>Sonuçlar kesinleştirildi; değerlendirme verileri değiştirilemez.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedBody" xml:space="preserve">
+    <value>Öğrenciler sonuçları yayımlama işlemi tamamlanana kadar göremez.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedTitle" xml:space="preserve">
+    <value>Sonuçlar yayımlandı; değerlendirme verileri değiştirilemez.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedBody" xml:space="preserve">
+    <value>Başvuru durumları ve sonuç snapshot’ları yayımlanmış haldedir.</value>
+  </data>
+  <data name="Admin.Evaluation.LifecycleAria" xml:space="preserve">
+    <value>Değerlendirme yaşam döngüsü ve yetkileri</value>
+  </data>
+  <data name="Admin.Evaluation.Lifecycle" xml:space="preserve">
+    <value>Yaşam döngüsü</value>
+  </data>
+  <data name="Admin.Evaluation.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Admin.Evaluation.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="Admin.Evaluation.Deadline" xml:space="preserve">
+    <value>Son başvuru</value>
+  </data>
+  <data name="Admin.Evaluation.Unspecified" xml:space="preserve">
+    <value>Belirtilmemiş</value>
+  </data>
+  <data name="Admin.Evaluation.Permissions" xml:space="preserve">
+    <value>Mevcut işlem yetkileri</value>
+  </data>
+  <data name="Admin.Evaluation.Policy" xml:space="preserve">
+    <value>Politika</value>
+  </data>
+  <data name="Admin.Evaluation.Eligibility" xml:space="preserve">
+    <value>Uygunluk</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScore" xml:space="preserve">
+    <value>Manuel puan</value>
+  </data>
+  <data name="Admin.Evaluation.Finalization" xml:space="preserve">
+    <value>Kesinleştirme</value>
+  </data>
+  <data name="Admin.Evaluation.Publication" xml:space="preserve">
+    <value>Yayımlama</value>
+  </data>
+  <data name="Admin.Evaluation.Editable" xml:space="preserve">
+    <value>Düzenlenebilir</value>
+  </data>
+  <data name="Admin.Evaluation.DecisionAllowed" xml:space="preserve">
+    <value>Karar verilebilir</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreAllowed" xml:space="preserve">
+    <value>Girilebilir</value>
+  </data>
+  <data name="Admin.Evaluation.ReadOnly" xml:space="preserve">
+    <value>Salt okunur</value>
+  </data>
+  <data name="Admin.Evaluation.PrerequisiteDependent" xml:space="preserve">
+    <value>Önkoşullara bağlı</value>
+  </data>
+  <data name="Admin.Evaluation.Open" xml:space="preserve">
+    <value>Açık</value>
+  </data>
+  <data name="Admin.Evaluation.Closed" xml:space="preserve">
+    <value>Kapalı</value>
+  </data>
+  <data name="Admin.Evaluation.PermissionMatrix" xml:space="preserve">
+    <value>Yaşam döngüsü yetki matrisi</value>
+  </data>
+  <data name="Admin.Evaluation.ConfiguringMatrix" xml:space="preserve">
+    <value>politika, uygunluk ve manuel puan; önkoşullarla kesinleştirme.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedMatrix" xml:space="preserve">
+    <value>yalnızca yayımlama.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedMatrix" xml:space="preserve">
+    <value>tüm değişiklik işlemleri kapalı.</value>
+  </data>
+  <data name="Admin.Evaluation.Step1" xml:space="preserve">
+    <value>1. Politika ve kriterler</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyHeading" xml:space="preserve">
+    <value>Değerlendirme politikası</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyDescription" xml:space="preserve">
+    <value>Kriterler ilk taslak başvuru oluştuğunda kilitlenir. Eşitlikte küçük tie-break önceliği önce uygulanır.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightValid" xml:space="preserve">
+    <value>Toplam ağırlık geçerli.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightInvalid" xml:space="preserve">
+    <value>Toplam ağırlık 10.000 bp olmalı.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteria" xml:space="preserve">
+    <value>Henüz kriter tanımlanmadı</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteriaBody" xml:space="preserve">
+    <value>İlan kesinleştirilmeden önce toplamı 10.000 bp olan geçerli bir politika oluşturun.</value>
+  </data>
+  <data name="Admin.Evaluation.Code" xml:space="preserve">
+    <value>Kod</value>
+  </data>
+  <data name="Admin.Evaluation.DisplayName" xml:space="preserve">
+    <value>Görünen ad</value>
+  </data>
+  <data name="Admin.Evaluation.SourceType" xml:space="preserve">
+    <value>Kaynak türü</value>
+  </data>
+  <data name="Admin.Evaluation.RequiredExam" xml:space="preserve">
+    <value>Bağlı zorunlu sınav</value>
+  </data>
+  <data name="Admin.Evaluation.SelectExam" xml:space="preserve">
+    <value>Sınav seçiniz</value>
+  </data>
+  <data name="Admin.Evaluation.MinimumFormat" xml:space="preserve">
+    <value>En az {0}</value>
+  </data>
+  <data name="Admin.Evaluation.WeightBp" xml:space="preserve">
+    <value>Ağırlık (bp)</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScore" xml:space="preserve">
+    <value>Maksimum ham puan</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScoreValidation" xml:space="preserve">
+    <value>Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.</value>
+  </data>
+  <data name="Admin.Evaluation.TieBreakPriority" xml:space="preserve">
+    <value>Tie-break önceliği</value>
+  </data>
+  <data name="Admin.Evaluation.SaveCriterion" xml:space="preserve">
+    <value>Kriteri kaydet</value>
+  </data>
+  <data name="Admin.Evaluation.CriterionDangerZone" xml:space="preserve">
+    <value>Kriter silme alanı</value>
+  </data>
+  <data name="Admin.Evaluation.DeleteCriterion" xml:space="preserve">
+    <value>Kriteri sil</value>
+  </data>
+  <data name="Admin.Evaluation.Name" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Admin.Evaluation.Source" xml:space="preserve">
+    <value>Kaynak</value>
+  </data>
+  <data name="Admin.Evaluation.Exam" xml:space="preserve">
+    <value>Sınav</value>
+  </data>
+  <data name="Admin.Evaluation.Weight" xml:space="preserve">
+    <value>Ağırlık</value>
+  </data>
+  <data name="Admin.Evaluation.Maximum" xml:space="preserve">
+    <value>Maksimum</value>
+  </data>
+  <data name="Admin.Evaluation.Priority" xml:space="preserve">
+    <value>Öncelik</value>
+  </data>
+  <data name="Admin.Evaluation.NewCriterion" xml:space="preserve">
+    <value>Yeni kriter</value>
+  </data>
+  <data name="Admin.Evaluation.AddCriterion" xml:space="preserve">
+    <value>Yeni kriteri ekle</value>
+  </data>
+  <data name="Admin.Evaluation.Step2" xml:space="preserve">
+    <value>2. Aday değerlendirmeleri</value>
+  </data>
+  <data name="Admin.Evaluation.Candidates" xml:space="preserve">
+    <value>Adaylar</value>
+  </data>
+  <data name="Admin.Evaluation.CandidatesDescription" xml:space="preserve">
+    <value>Maskelenmiş kimlik, belge uygunluğu, otomatik bileşenler ve izin verilen manuel işlemler birlikte gösterilir.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidates" xml:space="preserve">
+    <value>Değerlendirilecek aday yok</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidatesBody" xml:space="preserve">
+    <value>Bu ilanda henüz değerlendirme kapsamına alınmış bir başvuru bulunmuyor.</value>
+  </data>
+  <data name="Admin.Evaluation.OpenApplication" xml:space="preserve">
+    <value>Başvuruyu aç</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityFormat" xml:space="preserve">
+    <value>Uygunluk: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.TotalFormat" xml:space="preserve">
+    <value>Toplam: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.MissingPrerequisites" xml:space="preserve">
+    <value>Eksik önkoşullar:</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityPending" xml:space="preserve">
+    <value>Uygunluk kararı bekliyor.</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreMissing" xml:space="preserve">
+    <value>Bir veya daha fazla puan bileşeni eksik.</value>
+  </data>
+  <data name="Admin.Evaluation.ComponentsCaption" xml:space="preserve">
+    <value>{0} adayının puan bileşenleri</value>
+  </data>
+  <data name="Admin.Evaluation.Component" xml:space="preserve">
+    <value>Bileşen</value>
+  </data>
+  <data name="Admin.Evaluation.RawScore" xml:space="preserve">
+    <value>Ham puan</value>
+  </data>
+  <data name="Admin.Evaluation.Normalized" xml:space="preserve">
+    <value>Normalize</value>
+  </data>
+  <data name="Admin.Evaluation.Contribution" xml:space="preserve">
+    <value>Katkı</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityDecision" xml:space="preserve">
+    <value>Uygunluk kararı</value>
+  </data>
+  <data name="Admin.Evaluation.Decision" xml:space="preserve">
+    <value>Karar</value>
+  </data>
+  <data name="Admin.Evaluation.IneligibleReason" xml:space="preserve">
+    <value>Uygun değilse gerekçe</value>
+  </data>
+  <data name="Admin.Evaluation.SaveEligibility" xml:space="preserve">
+    <value>Uygunluk kararını kaydet</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScoreHeading" xml:space="preserve">
+    <value>{0} manuel puanı</value>
+  </data>
+  <data name="Admin.Evaluation.SaveManualScore" xml:space="preserve">
+    <value>Manuel puanı kaydet</value>
+  </data>
+  <data name="Admin.Evaluation.Step3" xml:space="preserve">
+    <value>3. Sıralama ve sonuç işlemleri</value>
+  </data>
+  <data name="Admin.Evaluation.RankingHeading" xml:space="preserve">
+    <value>Deterministik sıralama önizlemesi</value>
+  </data>
+  <data name="Admin.Evaluation.RankingDescription" xml:space="preserve">
+    <value>Kabul ve kontenjan dışı ayrımı metinle belirtilir; kontenjan çizgisi tabloda ayrıca işaretlenir.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeBlocked" xml:space="preserve">
+    <value>Kesinleştirme önkoşulları tamamlanmadı.</value>
+  </data>
+  <data name="Admin.Evaluation.RankingCaption" xml:space="preserve">
+    <value>Aday sıralaması ve öngörülen sonuçlar</value>
+  </data>
+  <data name="Admin.Evaluation.Rank" xml:space="preserve">
+    <value>Sıra</value>
+  </data>
+  <data name="Admin.Evaluation.MaskedCandidate" xml:space="preserve">
+    <value>Maskelenmiş aday</value>
+  </data>
+  <data name="Admin.Evaluation.TotalScore" xml:space="preserve">
+    <value>Toplam puan</value>
+  </data>
+  <data name="Admin.Evaluation.ProjectedOutcome" xml:space="preserve">
+    <value>Öngörülen sonuç</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaBoundary" xml:space="preserve">
+    <value>Kontenjan çizgisi</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHeading" xml:space="preserve">
+    <value>Sonuçları kesinleştirme</value>
+  </data>
+  <data name="Admin.Evaluation.DeadlineFormat" xml:space="preserve">
+    <value>Son başvuru tarihi: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyTotalFormat" xml:space="preserve">
+    <value>Politika toplamı: {0} bp</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaFormat" xml:space="preserve">
+    <value>Kontenjan: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeEffect" xml:space="preserve">
+    <value>Kesinleştirme sıralama ve kararları dondurur; öğrenciler sonuçları henüz göremez.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeAction" xml:space="preserve">
+    <value>Sonuçları kesinleştir</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHidden" xml:space="preserve">
+    <value>Kesinleştirme formu, tüm önkoşullar tamamlanana kadar gösterilmez.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishHeading" xml:space="preserve">
+    <value>Sonuçları yayımlama</value>
+  </data>
+  <data name="Admin.Evaluation.PublishDescription" xml:space="preserve">
+    <value>Kesinleştirilmiş sonuçları ve geri alınamaz yayımlama etkilerini ayrı onay ekranında inceleyin.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishConfirmation" xml:space="preserve">
+    <value>Yayımlama onayına geç</value>
+  </data>
+  <data name="Admin.Evaluation.AlreadyPublished" xml:space="preserve">
+    <value>Sonuçlar yayımlandı; başka bir sonuç değişiklik işlemi gösterilmiyor.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PageTitle" xml:space="preserve">
+    <value>Sonuçları yayımla</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Back" xml:space="preserve">
+    <value>Değerlendirmeye dön</value>
+  </data>
+  <data name="Admin.PublishEvaluation.SummaryAria" xml:space="preserve">
+    <value>Yayımlama özeti</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Admitted" xml:space="preserve">
+    <value>Kabul</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NotAdmitted" xml:space="preserve">
+    <value>Kontenjan dışında</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Ineligible" xml:space="preserve">
+    <value>Uygun bulunmadı</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRanking" xml:space="preserve">
+    <value>Kesinleştirilmiş sıralama</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRankingDescription" xml:space="preserve">
+    <value>Bu sıralama yayımlama sırasında başvuru durumları ve öğrenci sonuç snapshot’ları için kullanılır.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRows" xml:space="preserve">
+    <value>Sıralama satırı bulunamadı</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRowsBody" xml:space="preserve">
+    <value>Yayımlamadan önce değerlendirme ekranına dönerek kesinleştirilmiş verileri doğrulayın.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.RankingCaption" xml:space="preserve">
+    <value>Kesinleştirilmiş aday sıralaması</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Outcome" xml:space="preserve">
+    <value>Sonuç</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Undetermined" xml:space="preserve">
+    <value>Belirlenmedi</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ConfirmationHeading" xml:space="preserve">
+    <value>Geri alınamaz yayımlama onayı</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Irreversible" xml:space="preserve">
+    <value>İşlem geri alınamaz.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.IrreversibleBody" xml:space="preserve">
+    <value>Kesinleştirilmiş sonuçlar öğrencilere açılır ve başvuru durumları atomik olarak Onaylandı/Reddedildi yapılır.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.BeforePublication" xml:space="preserve">
+    <value>Yayımlama öncesinde öğrenciler puan, sıra ve sonucu göremez.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.AtomicEffect" xml:space="preserve">
+    <value>Yayımlama işlemi başvuru statüsü, history, audit ve sonuç snapshot kayıtlarını tek atomik işlemde oluşturur.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ServerChecks" xml:space="preserve">
+    <value>Sunucu tarafındaki yaşam döngüsü, antiforgery ve RowVersion kontrolleri yeniden uygulanır.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PublishAction" xml:space="preserve">
+    <value>Sonuçları yayımla</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Cancel" xml:space="preserve">
+    <value>Yayımlamadan vazgeç</value>
+  </data>
 </root>
