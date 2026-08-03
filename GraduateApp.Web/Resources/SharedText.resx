@@ -1150,4 +1150,7 @@
   <data name="Account.ChangeSuccess" xml:space="preserve">
     <value>Parolanız değiştirildi. Lütfen tekrar giriş yapın.</value>
   </data>
+  <data name="Navigation.ProgramTranslations" xml:space="preserve">
+    <value>Toplu İngilizce program adları</value>
+  </data>
 </root>
