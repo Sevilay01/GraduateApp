@@ -376,10 +376,16 @@ public sealed class ProgramAdminService(
             var key = ProgramNameEnglishCatalog.Normalize(program.ProgramName);
             var hasReusableName = reusableNames.TryGetValue(key, out var englishName)
                 && !string.IsNullOrWhiteSpace(englishName);
-            if (!hasReusableName
-                && !ProgramNameEnglishCatalog.TryGetEnglishName(program.ProgramName, out englishName!))
+            if (!hasReusableName)
             {
-                continue;
+                if (!ProgramNameEnglishCatalog.TryGetEnglishName(
+                    program.ProgramName,
+                    out var catalogName))
+                {
+                    continue;
+                }
+
+                englishName = catalogName;
             }
 
             program.ProgramNameEnglish = englishName;
