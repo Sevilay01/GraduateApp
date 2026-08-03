@@ -3280,4 +3280,12 @@
   <data name="Field.DegreeType" xml:space="preserve">
     <value>Derece türü</value>
   </data>
+
+  <!-- Administrator invitation validation -->
+  <data name="Validation.EmailRequired" xml:space="preserve">
+    <value>E-posta zorunludur.</value>
+  </data>
+  <data name="Validation.EmailMaximumLength" xml:space="preserve">
+    <value>E-posta en fazla 254 karakter olabilir.</value>
+  </data>
 </root>
