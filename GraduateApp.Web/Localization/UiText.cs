@@ -47,6 +47,18 @@ public static class UiText
             _ => degreeType ?? string.Empty
         };
 
+    public static string LocalizeApplicationStatus(HttpContext context, ApplicationStatus status) =>
+        Get(context, $"Status.{status}");
+
+    public static string LocalizeEvaluationOutcome(HttpContext context, EvaluationOutcome outcome) =>
+        Get(context, $"Outcome.{outcome}");
+
+    public static string LocalizeDocumentReview(HttpContext context, DocumentReviewStatus status) =>
+        Get(context, $"DocumentReview.{status}");
+
+    public static string LocalizeDocumentCategory(HttpContext context, DocumentContentCategory category) =>
+        Get(context, $"DocumentCategory.{category}");
+
     private static CultureInfo ResolveCulture(HttpContext context)
     {
         var requestedCulture = context.Features
