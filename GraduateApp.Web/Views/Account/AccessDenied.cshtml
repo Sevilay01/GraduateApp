@@ -1,11 +1,11 @@
 @{
-    ViewData["Title"] = "Erişim reddedildi";
+    ViewData["Title"] = UiText.Get(Context, "AccessDenied.Title");
 }
 
 <div class="text-center py-5" data-access-denied-actions>
     <div class="display-1 fw-bold text-danger" aria-hidden="true">403</div>
-    <h1 class="h2">Bu sayfaya erişim yetkiniz yok</h1>
-    <p class="text-muted">Bu oturumun hesap türü istenen sayfaya uygun değil. Güvenli biçimde hesap değiştirebilir veya ana sayfaya dönebilirsiniz.</p>
+    <h1 class="h2">@UiText.Get(Context, "AccessDenied.Heading")</h1>
+    <p class="text-muted">@UiText.Get(Context, "AccessDenied.Lead")</p>
     <div class="d-flex flex-wrap justify-content-center gap-2">
         @if (User.Identity?.IsAuthenticated == true)
         {
@@ -16,16 +16,16 @@
                 <input type="hidden" name="accountType" value="@targetAccountType" />
                 <button type="submit" class="btn btn-primary">
                     @(targetAccountType == LoginAccountType.Admin
-                        ? "Yönetici hesabıyla giriş yap"
-                        : "Öğrenci hesabıyla giriş yap")
+                        ? UiText.Get(Context, "AccessDenied.Admin")
+                        : UiText.Get(Context, "AccessDenied.Student"))
                 </button>
             </form>
         }
         else
         {
-            <a asp-action="Login" class="btn btn-primary">Öğrenci girişi</a>
-            <a asp-action="AdminLogin" class="btn btn-outline-primary">Yönetici girişi</a>
+            <a asp-action="Login" class="btn btn-primary">@UiText.Get(Context, "Session.StudentLogin")</a>
+            <a asp-action="AdminLogin" class="btn btn-outline-primary">@UiText.Get(Context, "Session.AdminLogin")</a>
         }
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Ana sayfaya dön</a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">@UiText.Get(Context, "AccessDenied.Home")</a>
     </div>
 </div>
