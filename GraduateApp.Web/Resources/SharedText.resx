@@ -1765,4 +1765,178 @@
   <data name="Admin.Applications.Pagination" xml:space="preserve">
     <value>Başvuru sayfaları</value>
   </data>
+  <data name="Admin.Detail.Title" xml:space="preserve">
+    <value>Başvuru detayı</value>
+  </data>
+  <data name="Admin.Detail.Back" xml:space="preserve">
+    <value>Başvuru listesine dön</value>
+  </data>
+  <data name="Admin.Detail.SummaryAria" xml:space="preserve">
+    <value>Başvuru özeti</value>
+  </data>
+  <data name="Admin.Detail.SummaryHeading" xml:space="preserve">
+    <value>Başvuru özeti</value>
+  </data>
+  <data name="Admin.Detail.CurrentStatus" xml:space="preserve">
+    <value>Güncel durum</value>
+  </data>
+  <data name="Admin.Detail.DocumentWorkflow" xml:space="preserve">
+    <value>Belge akışı</value>
+  </data>
+  <data name="Admin.Detail.WorkflowEnabled" xml:space="preserve">
+    <value>Etkin</value>
+  </data>
+  <data name="Admin.Detail.LegacyWorkflow" xml:space="preserve">
+    <value>Legacy akış</value>
+  </data>
+  <data name="Admin.Detail.Evaluation" xml:space="preserve">
+    <value>Değerlendirme</value>
+  </data>
+  <data name="Admin.Detail.RankedWorkflow" xml:space="preserve">
+    <value>Sıralamalı iş akışı</value>
+  </data>
+  <data name="Admin.Detail.StandardWorkflow" xml:space="preserve">
+    <value>Standart karar akışı</value>
+  </data>
+  <data name="Admin.Detail.StudentHeading" xml:space="preserve">
+    <value>Öğrenci bilgileri</value>
+  </data>
+  <data name="Admin.Detail.FullName" xml:space="preserve">
+    <value>Ad soyad</value>
+  </data>
+  <data name="Admin.Detail.ProgramHeading" xml:space="preserve">
+    <value>Program bilgileri</value>
+  </data>
+  <data name="Admin.Detail.AcademicPeriod" xml:space="preserve">
+    <value>Akademik dönem</value>
+  </data>
+  <data name="Admin.Detail.LifecycleHeading" xml:space="preserve">
+    <value>Başvuru yaşam döngüsü</value>
+  </data>
+  <data name="Admin.Detail.LifecycleLead" xml:space="preserve">
+    <value>Durum değişiklikleri ve yönetici notları kronolojik kayıt olarak korunur.</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryHeading" xml:space="preserve">
+    <value>Henüz durum kaydı yok</value>
+  </data>
+  <data name="Admin.Detail.NoHistoryLead" xml:space="preserve">
+    <value>İlk durum değişikliği burada tarih ve notuyla görüntülenecek.</value>
+  </data>
+  <data name="Admin.Detail.IstanbulTime" xml:space="preserve">
+    <value>İstanbul</value>
+  </data>
+  <data name="Admin.Detail.ScoresHeading" xml:space="preserve">
+    <value>Başvuru anındaki sınav sonuçları</value>
+  </data>
+  <data name="Admin.Detail.ScoresLead" xml:space="preserve">
+    <value>Bu değerler başvuru oluşturulurken alınan snapshot kayıtlarıdır.</value>
+  </data>
+  <data name="Admin.Detail.NoScoresHeading" xml:space="preserve">
+    <value>Sınav sonucu bulunmuyor</value>
+  </data>
+  <data name="Admin.Detail.NoScoresLead" xml:space="preserve">
+    <value>Bu başvuru için kaydedilmiş sınav sonucu snapshot’ı yok.</value>
+  </data>
+  <data name="Admin.Detail.ScoresCaption" xml:space="preserve">
+    <value>Başvuru anındaki sınav sonucu snapshot’ları</value>
+  </data>
+  <data name="Admin.Detail.Exam" xml:space="preserve">
+    <value>Sınav</value>
+  </data>
+  <data name="Admin.Detail.Score" xml:space="preserve">
+    <value>Puan</value>
+  </data>
+  <data name="Admin.Detail.ExamDate" xml:space="preserve">
+    <value>Sınav tarihi</value>
+  </data>
+  <data name="Admin.Detail.DocumentsHeading" xml:space="preserve">
+    <value>Belge gereksinimleri ve inceleme</value>
+  </data>
+  <data name="Admin.Detail.DocumentsLead" xml:space="preserve">
+    <value>Yalnızca Pending veya UnderReview başvurulardaki inceleme bekleyen güncel belgeler için karar verilebilir.</value>
+  </data>
+  <data name="Admin.Detail.LegacyDocumentExempt" xml:space="preserve">
+    <value>Bu legacy başvuru yeni belge onay koşullarından muaftır.</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsHeading" xml:space="preserve">
+    <value>Belge gereksinimi bulunmuyor</value>
+  </data>
+  <data name="Admin.Detail.NoRequirementsLead" xml:space="preserve">
+    <value>Başvurunun belge snapshot’ında bir gereksinim yer almıyor.</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocument" xml:space="preserve">
+    <value>Zorunlu belge</value>
+  </data>
+  <data name="Admin.Detail.OptionalDocument" xml:space="preserve">
+    <value>İsteğe bağlı belge</value>
+  </data>
+  <data name="Admin.Detail.NotUploaded" xml:space="preserve">
+    <value>Belge yüklenmedi</value>
+  </data>
+  <data name="Admin.Detail.NoCurrentDocument" xml:space="preserve">
+    <value>Güncel belge bulunmuyor.</value>
+  </data>
+  <data name="Admin.Detail.FileName" xml:space="preserve">
+    <value>Dosya adı</value>
+  </data>
+  <data name="Admin.Detail.Version" xml:space="preserve">
+    <value>Sürüm</value>
+  </data>
+  <data name="Admin.Detail.UploadedAt" xml:space="preserve">
+    <value>Yüklenme zamanı</value>
+  </data>
+  <data name="Admin.Detail.ReviewStatus" xml:space="preserve">
+    <value>İnceleme durumu</value>
+  </data>
+  <data name="Admin.Detail.RejectionReason" xml:space="preserve">
+    <value>Ret gerekçesi:</value>
+  </data>
+  <data name="Admin.Detail.DownloadCurrent" xml:space="preserve">
+    <value>Güncel belgeyi güvenli indir</value>
+  </data>
+  <data name="Admin.Detail.ApproveDocument" xml:space="preserve">
+    <value>Belgeyi onayla</value>
+  </data>
+  <data name="Admin.Detail.TurkishRejectionReason" xml:space="preserve">
+    <value>Türkçe ret gerekçesi</value>
+  </data>
+  <data name="Admin.Detail.RejectDocument" xml:space="preserve">
+    <value>Belgeyi reddet</value>
+  </data>
+  <data name="Admin.Detail.ReviewReadonly" xml:space="preserve">
+    <value>Bu belge için işlem formu gösterilmiyor. Belge kararı tamamlanmış veya başvuru incelemeye açık bir durumda değil.</value>
+  </data>
+  <data name="Admin.Detail.PreviousVersions" xml:space="preserve">
+    <value>Geçmiş belge sürümleri</value>
+  </data>
+  <data name="Admin.Detail.VersionSummary" xml:space="preserve">
+    <value>Sürüm {0} · {1} · {2}</value>
+  </data>
+  <data name="Admin.Detail.DownloadVersion" xml:space="preserve">
+    <value>Sürümü güvenli indir</value>
+  </data>
+  <data name="Admin.Detail.ActionsHeading" xml:space="preserve">
+    <value>İzin verilen eylemler</value>
+  </data>
+  <data name="Admin.Detail.ActionsLead" xml:space="preserve">
+    <value>Sunucu tarafındaki yaşam döngüsü, belge ve eşzamanlılık kontrolleri her istekte yeniden uygulanır.</value>
+  </data>
+  <data name="Admin.Detail.EvaluationDecisionNote" xml:space="preserve">
+    <value>Onay ve ret kararı, ilan değerlendirmesi kesinleştirilip yayımlandığında atomik olarak uygulanır.</value>
+  </data>
+  <data name="Admin.Detail.NoTransitions" xml:space="preserve">
+    <value>Bu durumdan yönetici tarafından yapılabilecek başka bir geçiş yok.</value>
+  </data>
+  <data name="Admin.Detail.NewStatus" xml:space="preserve">
+    <value>Yeni durum</value>
+  </data>
+  <data name="Admin.Detail.AdminNote" xml:space="preserve">
+    <value>Yönetici notu</value>
+  </data>
+  <data name="Admin.Detail.UpdateStatus" xml:space="preserve">
+    <value>Başvuru durumunu güncelle</value>
+  </data>
+  <data name="Admin.Detail.RequiredDocumentsWarning" xml:space="preserve">
+    <value>Tüm zorunlu güncel belgeler onaylanmadan başvuru onaylanamaz.</value>
+  </data>
 </root>
