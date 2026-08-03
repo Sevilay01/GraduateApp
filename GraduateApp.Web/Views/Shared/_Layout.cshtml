@@ -171,11 +171,11 @@
                             </select>
                         </div>
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
-                        <noscript>
-                            <button type="submit" class="btn btn-sm btn-outline-light">
-                                @UiText.Get(Context, "Language.Apply")
-                            </button>
-                        </noscript>
+                        @Html.Raw("<noscript>")
+                        <button type="submit" class="btn btn-sm btn-outline-light">
+                            @UiText.Get(Context, "Language.Apply")
+                        </button>
+                        @Html.Raw("</noscript>")
                     </form>
 
                     <div class="session-area">
