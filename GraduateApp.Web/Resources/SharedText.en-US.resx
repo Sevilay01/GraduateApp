@@ -1111,4 +1111,43 @@
   <data name="ExamScores.DeleteFailed" xml:space="preserve">
     <value>The exam result could not be deleted.</value>
   </data>
+  <data name="Account.LoginFailed" xml:space="preserve">
+    <value>Sign-in failed.</value>
+  </data>
+  <data name="Account.InvalidAuthResponse" xml:space="preserve">
+    <value>The authentication response was invalid.</value>
+  </data>
+  <data name="Account.FirstLoginPassword" xml:space="preserve">
+    <value>You must change your password when you first sign in.</value>
+  </data>
+  <data name="Account.RegisterFailed" xml:space="preserve">
+    <value>Registration could not be created.</value>
+  </data>
+  <data name="Account.Registered" xml:space="preserve">
+    <value>Your registration was created. You can now sign in.</value>
+  </data>
+  <data name="Account.RequestFailed" xml:space="preserve">
+    <value>The request cannot be completed right now.</value>
+  </data>
+  <data name="Account.ResetFailed" xml:space="preserve">
+    <value>The password could not be reset.</value>
+  </data>
+  <data name="Account.InvalidResetResponse" xml:space="preserve">
+    <value>The password-reset response could not be verified.</value>
+  </data>
+  <data name="Account.ResetSuccess" xml:space="preserve">
+    <value>Your password was updated. You can sign in with the new password.</value>
+  </data>
+  <data name="Account.InvitationFailed" xml:space="preserve">
+    <value>The administrator invitation could not be accepted.</value>
+  </data>
+  <data name="Account.InvitationSuccess" xml:space="preserve">
+    <value>Your administrator account was activated. You can sign in with the new password.</value>
+  </data>
+  <data name="Account.ChangeFailed" xml:space="preserve">
+    <value>The password could not be changed.</value>
+  </data>
+  <data name="Account.ChangeSuccess" xml:space="preserve">
+    <value>Your password was changed. Please sign in again.</value>
+  </data>
 </root>
