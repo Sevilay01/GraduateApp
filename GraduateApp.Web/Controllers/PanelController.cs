@@ -410,7 +410,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             Universities = universities
         };
 
-    private static void ApplyUniversityCatalogResult(
+    private void ApplyUniversityCatalogResult(
         StudentProfileViewModel model,
         ApiResult<IReadOnlyList<UniversityViewModel>> universities)
     {
