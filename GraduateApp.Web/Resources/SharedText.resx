@@ -481,4 +481,130 @@
   <data name="DegreeType.DistanceNonThesisMasters" xml:space="preserve">
     <value>Uzaktan Tezsiz Yüksek Lisans</value>
   </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Profil ve eğitim bilgileri</value>
+  </data>
+  <data name="Profile.Eyebrow" xml:space="preserve">
+    <value>Öğrenci profili</value>
+  </data>
+  <data name="Profile.IdentityNumber" xml:space="preserve">
+    <value>Kimlik numarası:</value>
+  </data>
+  <data name="Profile.Back" xml:space="preserve">
+    <value>Öğrenci paneline dön</value>
+  </data>
+  <data name="Profile.SnapshotHeading" xml:space="preserve">
+    <value>Snapshot bilgisi:</value>
+  </data>
+  <data name="Profile.SnapshotMessage" xml:space="preserve">
+    <value>Profil değişiklikleri mevcut başvuruların değerlendirme verilerini etkilemez.</value>
+  </data>
+  <data name="Profile.ContactHeading" xml:space="preserve">
+    <value>Kişisel ve iletişim bilgileri</value>
+  </data>
+  <data name="Profile.ContactLead" xml:space="preserve">
+    <value>Size ulaşabilmemiz için iletişim bilgilerinizi güncel tutun.</value>
+  </data>
+  <data name="Profile.UniversityLoadHeading" xml:space="preserve">
+    <value>Üniversite kataloğu yüklenemedi.</value>
+  </data>
+  <data name="Profile.UniversityLoadMessage" xml:space="preserve">
+    <value>Eğitim alanları şu anda kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</value>
+  </data>
+  <data name="Profile.UniversityEmptyHeading" xml:space="preserve">
+    <value>Üniversite kataloğu henüz tanımlanmamış. Lütfen yöneticiyle iletişime geçin.</value>
+  </data>
+  <data name="Profile.UniversityEmptyMessage" xml:space="preserve">
+    <value>Katalog tanımlanana kadar eğitim alanları kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</value>
+  </data>
+  <data name="Profile.EducationHeading" xml:space="preserve">
+    <value>Lisans eğitim bilgileri</value>
+  </data>
+  <data name="Profile.EducationLead" xml:space="preserve">
+    <value>Gelecekteki başvurularda kullanılacak güncel mezuniyet bilgilerinizi girin.</value>
+  </data>
+  <data name="Profile.SelectUniversity" xml:space="preserve">
+    <value>Üniversite seçiniz</value>
+  </data>
+  <data name="Profile.Save" xml:space="preserve">
+    <value>Bilgileri kaydet</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Vazgeç</value>
+  </data>
+  <data name="ExamScores.Title" xml:space="preserve">
+    <value>Sınav sonuçlarım</value>
+  </data>
+  <data name="ExamScores.Eyebrow" xml:space="preserve">
+    <value>Başvuru verileri</value>
+  </data>
+  <data name="ExamScores.Lead" xml:space="preserve">
+    <value>Başvurularda kullanılacak güncel sınav puanlarınızı ve sonuç tarihlerinizi yönetin.</value>
+  </data>
+  <data name="ExamScores.ValidityNote" xml:space="preserve">
+    <value>Sınav puanının geçerliliği, başvurduğunuz ilandaki sınav türü ve en eski kabul edilen sonuç tarihi koşuluna göre değerlendirilir.</value>
+  </data>
+  <data name="ExamScores.PartialWarning" xml:space="preserve">
+    <value>Sınav sonuçları eksik olabilir.</value>
+  </data>
+  <data name="ExamScores.Registered" xml:space="preserve">
+    <value>Kayıtlı sonuçlar</value>
+  </data>
+  <data name="ExamScores.Empty" xml:space="preserve">
+    <value>Henüz sınav sonucu eklemediniz</value>
+  </data>
+  <data name="ExamScores.EmptyLead" xml:space="preserve">
+    <value>Yeni sonuç formundan sınav türünü, puanınızı ve sınav tarihinizi kaydedebilirsiniz.</value>
+  </data>
+  <data name="ExamScores.ExamType" xml:space="preserve">
+    <value>Sınav türü</value>
+  </data>
+  <data name="ExamScores.Score" xml:space="preserve">
+    <value>Puan</value>
+  </data>
+  <data name="ExamScores.ResultDate" xml:space="preserve">
+    <value>Sonuç tarihi</value>
+  </data>
+  <data name="ExamScores.Validity" xml:space="preserve">
+    <value>Geçerlilik</value>
+  </data>
+  <data name="ExamScores.Actions" xml:space="preserve">
+    <value>İşlemler</value>
+  </data>
+  <data name="ExamScores.NotSpecified" xml:space="preserve">
+    <value>Belirtilmemiş</value>
+  </data>
+  <data name="ExamScores.ByOffering" xml:space="preserve">
+    <value>İlan koşuluna göre</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="ExamScores.DeleteConfirm" xml:space="preserve">
+    <value>Bu sınav sonucunu silmek istediğinizden emin misiniz?</value>
+  </data>
+  <data name="ExamScores.UpdateEyebrow" xml:space="preserve">
+    <value>Kayıt güncelleme</value>
+  </data>
+  <data name="ExamScores.NewEyebrow" xml:space="preserve">
+    <value>Yeni kayıt</value>
+  </data>
+  <data name="ExamScores.UpdateTitle" xml:space="preserve">
+    <value>Sınav sonucunu güncelle</value>
+  </data>
+  <data name="ExamScores.NewTitle" xml:space="preserve">
+    <value>Yeni sınav sonucu ekle</value>
+  </data>
+  <data name="ExamScores.SelectExam" xml:space="preserve">
+    <value>Sınav seçiniz</value>
+  </data>
+  <data name="ExamScores.ScoreHelp" xml:space="preserve">
+    <value>ALES, YDS ve YÖKDİL puanları 0–100 aralığında olmalıdır.</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
 </root>
