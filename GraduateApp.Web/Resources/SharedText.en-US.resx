@@ -297,4 +297,188 @@
   <data name="AcademicTerm.Summer" xml:space="preserve">
     <value>Summer</value>
   </data>
+
+  <data name="Panel.Title" xml:space="preserve">
+    <value>Student dashboard</value>
+  </data>
+  <data name="Panel.Eyebrow" xml:space="preserve">
+    <value>Student services</value>
+  </data>
+  <data name="Panel.Lead" xml:space="preserve">
+    <value>Review open programs and track the current status of your applications.</value>
+  </data>
+  <data name="Panel.ExamScores" xml:space="preserve">
+    <value>My exam scores</value>
+  </data>
+  <data name="Panel.Profile" xml:space="preserve">
+    <value>My profile and education</value>
+  </data>
+  <data name="Panel.PartialWarning" xml:space="preserve">
+    <value>Some dashboard information may be unavailable.</value>
+  </data>
+  <data name="Panel.NewApplication" xml:space="preserve">
+    <value>New application</value>
+  </data>
+  <data name="Panel.OpenPrograms" xml:space="preserve">
+    <value>Programs open for application</value>
+  </data>
+  <data name="Panel.OpenProgramsLead" xml:space="preserve">
+    <value>Compare requirements and create an application draft.</value>
+  </data>
+  <data name="Panel.SearchAria" xml:space="preserve">
+    <value>Search open programs</value>
+  </data>
+  <data name="Panel.SearchLabel" xml:space="preserve">
+    <value>Search by program, institute, or degree</value>
+  </data>
+  <data name="Panel.SearchPlaceholder" xml:space="preserve">
+    <value>For example, Computer Engineering, Natural Sciences, or Doctorate</value>
+  </data>
+  <data name="Panel.YearLabel" xml:space="preserve">
+    <value>Academic year start</value>
+  </data>
+  <data name="Panel.TermLabel" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="Panel.AllTerms" xml:space="preserve">
+    <value>All terms</value>
+  </data>
+  <data name="Panel.PreferLabel" xml:space="preserve">
+    <value>Prioritize listings in the same field as my undergraduate program</value>
+  </data>
+  <data name="Panel.PreferHelp" xml:space="preserve">
+    <value>Program names are compared without treating thesis, non-thesis, or doctorate degree suffixes as different fields. This is not an official eligibility decision and never prevents an application.</value>
+  </data>
+  <data name="Panel.SearchButton" xml:space="preserve">
+    <value>Search programs</value>
+  </data>
+  <data name="Panel.ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="Panel.RecommendationHeading" xml:space="preserve">
+    <value>Profile suggestion</value>
+  </data>
+  <data name="Panel.ProfileProgram" xml:space="preserve">
+    <value>Program in profile: {0}</value>
+  </data>
+  <data name="Panel.NoMatch" xml:space="preserve">
+    <value>No open program matched the search criteria</value>
+  </data>
+  <data name="Panel.TryDifferent" xml:space="preserve">
+    <value>Change the search text or academic-period filters and try again.</value>
+  </data>
+  <data name="Panel.ShowAll" xml:space="preserve">
+    <value>Show all open programs</value>
+  </data>
+  <data name="Panel.NoPrograms" xml:space="preserve">
+    <value>There are currently no programs open for application</value>
+  </data>
+  <data name="Panel.NoProgramsLead" xml:space="preserve">
+    <value>New listings will appear here when they are published.</value>
+  </data>
+  <data name="Panel.ProfileMatch" xml:space="preserve">
+    <value>Program field matches</value>
+  </data>
+  <data name="Panel.AcademicPeriod" xml:space="preserve">
+    <value>Academic period</value>
+  </data>
+  <data name="Panel.Quota" xml:space="preserve">
+    <value>Quota</value>
+  </data>
+  <data name="Panel.Deadline" xml:space="preserve">
+    <value>Application deadline</value>
+  </data>
+  <data name="Panel.ExamRequirements" xml:space="preserve">
+    <value>Exam requirements</value>
+  </data>
+  <data name="Panel.Minimum" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="Panel.Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Panel.Optional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="Panel.NoExamRequirement" xml:space="preserve">
+    <value>No additional exam requirement is specified for this listing.</value>
+  </data>
+  <data name="Panel.ApplicationCreated" xml:space="preserve">
+    <value>Application created</value>
+  </data>
+  <data name="Panel.CreateDraft" xml:space="preserve">
+    <value>Create application draft</value>
+  </data>
+  <data name="Panel.ViewApplication" xml:space="preserve">
+    <value>View application</value>
+  </data>
+  <data name="Panel.Tracking" xml:space="preserve">
+    <value>Tracking</value>
+  </data>
+  <data name="Panel.MyApplications" xml:space="preserve">
+    <value>My applications</value>
+  </data>
+  <data name="Panel.NoApplications" xml:space="preserve">
+    <value>You do not have an application yet</value>
+  </data>
+  <data name="Panel.NoApplicationsLead" xml:space="preserve">
+    <value>Choose one of the open programs above to create an application draft.</value>
+  </data>
+  <data name="Panel.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Panel.ApplicationDate" xml:space="preserve">
+    <value>Application date</value>
+  </data>
+  <data name="Panel.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Panel.Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Panel.DocumentsDetails" xml:space="preserve">
+    <value>Documents and details</value>
+  </data>
+  <data name="Panel.Error.ApplicationsLoad" xml:space="preserve">
+    <value>Applications could not be loaded.</value>
+  </data>
+  <data name="Panel.Error.RecommendationsPrograms" xml:space="preserve">
+    <value>Profile suggestions are unavailable because programs could not be loaded.</value>
+  </data>
+  <data name="Panel.Error.ProfileLoad" xml:space="preserve">
+    <value>Programs are shown in their normal order because your education profile could not be loaded.</value>
+  </data>
+  <data name="Panel.Recommendation.ProfileMissing" xml:space="preserve">
+    <value>Add your undergraduate program to your profile to use suggestions.</value>
+  </data>
+  <data name="Panel.Recommendation.MatchCount" xml:space="preserve">
+    <value>{0} listing(s) matched your undergraduate field and were moved to the top.</value>
+  </data>
+  <data name="Panel.Recommendation.NoMatch" xml:space="preserve">
+    <value>No open listing matched your undergraduate field; all other listings remain available for application.</value>
+  </data>
+  <data name="Panel.Error.Load" xml:space="preserve">
+    <value>Dashboard information could not be loaded.</value>
+  </data>
+  <data name="Panel.Error.InvalidOffering" xml:space="preserve">
+    <value>Select a valid program offering.</value>
+  </data>
+  <data name="Panel.Success.DraftCreated" xml:space="preserve">
+    <value>Your application draft was created. Upload the required documents before submitting it.</value>
+  </data>
+  <data name="Panel.Error.Create" xml:space="preserve">
+    <value>The application could not be created.</value>
+  </data>
+  <data name="DegreeType.Doctorate" xml:space="preserve">
+    <value>Doctorate</value>
+  </data>
+  <data name="DegreeType.ThesisMasters" xml:space="preserve">
+    <value>Master's with thesis</value>
+  </data>
+  <data name="DegreeType.NonThesisMasters" xml:space="preserve">
+    <value>Non-thesis master's</value>
+  </data>
+  <data name="DegreeType.DistanceNonThesisMasters" xml:space="preserve">
+    <value>Distance non-thesis master's</value>
+  </data>
 </root>
