@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Resources;
+using GraduateApp.Web.Models;
 using Microsoft.AspNetCore.Localization;
 
 namespace GraduateApp.Web.Localization;
