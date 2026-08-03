@@ -2793,4 +2793,45 @@
   <data name="Admin.PublishEvaluation.Cancel" xml:space="preserve">
     <value>Cancel publication</value>
   </data>
+
+  <!-- Evaluation API summary localization -->
+  <data name="Admin.Evaluation.DocumentReviewLegacy" xml:space="preserve">
+    <value>Legacy document workflow</value>
+  </data>
+  <data name="Admin.Evaluation.DocumentReviewProgress" xml:space="preserve">
+    <value>{0}/{1} required documents approved</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AlreadyFinalized" xml:space="preserve">
+    <value>The offering results have already been finalized or published.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.CloseOffering" xml:space="preserve">
+    <value>The offering must be closed first.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DeadlineNotPassed" xml:space="preserve">
+    <value>The application deadline has not passed yet.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PositiveQuota" xml:space="preserve">
+    <value>The quota must be positive.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.ValidPolicy" xml:space="preserve">
+    <value>The evaluation policy must be valid and total 10,000 basis points.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.NoSubmittedApplications" xml:space="preserve">
+    <value>There are no submitted applications to finalize.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.PendingApplications" xml:space="preserve">
+    <value>Some pending applications have not been moved to review.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.AllUnderReview" xml:space="preserve">
+    <value>All applications being evaluated must be under review.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.EligibilityPending" xml:space="preserve">
+    <value>Some applications do not have an eligibility decision.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.DocumentsPending" xml:space="preserve">
+    <value>All current required documents must be approved for candidates marked eligible.</value>
+  </data>
+  <data name="Admin.Evaluation.Blocker.MissingCriteria" xml:space="preserve">
+    <value>Application {0} has missing criteria: {1}.</value>
+  </data>
 </root>
