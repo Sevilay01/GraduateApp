@@ -607,4 +607,214 @@
   <data name="Common.Save" xml:space="preserve">
     <value>Kaydet</value>
   </data>
+  <data name="Status.Draft" xml:space="preserve">
+    <value>Taslak</value>
+  </data>
+  <data name="Status.Pending" xml:space="preserve">
+    <value>Beklemede</value>
+  </data>
+  <data name="Status.UnderReview" xml:space="preserve">
+    <value>İnceleniyor</value>
+  </data>
+  <data name="Status.Approved" xml:space="preserve">
+    <value>Onaylandı</value>
+  </data>
+  <data name="Status.Rejected" xml:space="preserve">
+    <value>Reddedildi</value>
+  </data>
+  <data name="Status.Withdrawn" xml:space="preserve">
+    <value>Geri çekildi</value>
+  </data>
+  <data name="Common.Unknown" xml:space="preserve">
+    <value>Bilinmiyor</value>
+  </data>
+  <data name="Outcome.Admitted" xml:space="preserve">
+    <value>Kabul</value>
+  </data>
+  <data name="Outcome.NotAdmitted" xml:space="preserve">
+    <value>Kontenjan dışında</value>
+  </data>
+  <data name="Outcome.Ineligible" xml:space="preserve">
+    <value>Uygun bulunmadı</value>
+  </data>
+  <data name="DocumentReview.Pending" xml:space="preserve">
+    <value>İnceleme bekliyor</value>
+  </data>
+  <data name="DocumentReview.Approved" xml:space="preserve">
+    <value>Onaylandı</value>
+  </data>
+  <data name="DocumentReview.Rejected" xml:space="preserve">
+    <value>Reddedildi</value>
+  </data>
+  <data name="DocumentCategory.PdfOnly" xml:space="preserve">
+    <value>PDF</value>
+  </data>
+  <data name="DocumentCategory.ImageOnly" xml:space="preserve">
+    <value>JPEG veya PNG</value>
+  </data>
+  <data name="DocumentCategory.PdfOrImage" xml:space="preserve">
+    <value>PDF, JPEG veya PNG</value>
+  </data>
+  <data name="Progress.Title" xml:space="preserve">
+    <value>Başvuru süreci</value>
+  </data>
+  <data name="Progress.Draft" xml:space="preserve">
+    <value>Taslak</value>
+  </data>
+  <data name="Progress.Submitted" xml:space="preserve">
+    <value>Gönderildi</value>
+  </data>
+  <data name="Progress.UnderReview" xml:space="preserve">
+    <value>İnceleniyor</value>
+  </data>
+  <data name="Progress.Result" xml:space="preserve">
+    <value>Sonuçlandı</value>
+  </data>
+  <data name="Progress.Withdrawn" xml:space="preserve">
+    <value>Geri çekildi</value>
+  </data>
+  <data name="ApplicationDetail.Title" xml:space="preserve">
+    <value>Başvuru detayı</value>
+  </data>
+  <data name="ApplicationDetail.EvaluationPending" xml:space="preserve">
+    <value>Değerlendirme sürüyor</value>
+  </data>
+  <data name="ApplicationDetail.EvaluationPendingLead" xml:space="preserve">
+    <value>Sonuçlar kesinleştirilip yayımlanana kadar puan, sıralama ve karar gösterilmez.</value>
+  </data>
+  <data name="ApplicationDetail.FinalResult" xml:space="preserve">
+    <value>Kesinleşmiş sonuç</value>
+  </data>
+  <data name="ApplicationDetail.PublishedResult" xml:space="preserve">
+    <value>Yayımlanmış değerlendirme sonucu</value>
+  </data>
+  <data name="ApplicationDetail.TotalScore" xml:space="preserve">
+    <value>Toplam puan</value>
+  </data>
+  <data name="ApplicationDetail.Rank" xml:space="preserve">
+    <value>Sıralama</value>
+  </data>
+  <data name="ApplicationDetail.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="ApplicationDetail.PublishedAt" xml:space="preserve">
+    <value>Yayımlanma</value>
+  </data>
+  <data name="ApplicationDetail.ComponentsCaption" xml:space="preserve">
+    <value>Değerlendirme puanı bileşenleri</value>
+  </data>
+  <data name="ApplicationDetail.Criterion" xml:space="preserve">
+    <value>Kriter</value>
+  </data>
+  <data name="ApplicationDetail.RawScore" xml:space="preserve">
+    <value>Ham puan</value>
+  </data>
+  <data name="ApplicationDetail.NormalizedScore" xml:space="preserve">
+    <value>Normalize puan</value>
+  </data>
+  <data name="ApplicationDetail.Weight" xml:space="preserve">
+    <value>Ağırlık</value>
+  </data>
+  <data name="ApplicationDetail.Contribution" xml:space="preserve">
+    <value>Katkı</value>
+  </data>
+  <data name="ApplicationDetail.SnapshotNote" xml:space="preserve">
+    <value>Bu sonuç, başvuru ve değerlendirme anında kaydedilen kesinleşmiş snapshot verilerine dayanır.</value>
+  </data>
+  <data name="ApplicationDetail.DocumentEyebrow" xml:space="preserve">
+    <value>Güvenli belge akışı</value>
+  </data>
+  <data name="ApplicationDetail.Documents" xml:space="preserve">
+    <value>Başvuru belgeleri</value>
+  </data>
+  <data name="ApplicationDetail.LegacyDocuments" xml:space="preserve">
+    <value>Bu başvuru legacy belge iş akışını kullanıyor. Mevcut erişim ve durum kuralları korunur.</value>
+  </data>
+  <data name="ApplicationDetail.UpdateUntil" xml:space="preserve">
+    <value>Belgelerinizi son başvuru tarihi olan {0} anına kadar güncelleyebilirsiniz. Yeni sürüm yeniden incelenir.</value>
+  </data>
+  <data name="ApplicationDetail.UpdateClosed" xml:space="preserve">
+    <value>İlan kapalı olduğu veya son başvuru tarihi geçtiği için belgeler artık güncellenemez.</value>
+  </data>
+  <data name="ApplicationDetail.MissingDocuments" xml:space="preserve">
+    <value>Eksik zorunlu belgeler:</value>
+  </data>
+  <data name="ApplicationDetail.Required" xml:space="preserve">
+    <value>Zorunlu</value>
+  </data>
+  <data name="ApplicationDetail.Optional" xml:space="preserve">
+    <value>İsteğe bağlı</value>
+  </data>
+  <data name="ApplicationDetail.FileType" xml:space="preserve">
+    <value>Dosya türü</value>
+  </data>
+  <data name="ApplicationDetail.Maximum" xml:space="preserve">
+    <value>En fazla</value>
+  </data>
+  <data name="ApplicationDetail.UploadedDocumentAria" xml:space="preserve">
+    <value>{0} yüklü belge bilgileri</value>
+  </data>
+  <data name="ApplicationDetail.File" xml:space="preserve">
+    <value>Dosya</value>
+  </data>
+  <data name="ApplicationDetail.Version" xml:space="preserve">
+    <value>Sürüm</value>
+  </data>
+  <data name="ApplicationDetail.UploadedAt" xml:space="preserve">
+    <value>Yükleme</value>
+  </data>
+  <data name="ApplicationDetail.Review" xml:space="preserve">
+    <value>İnceleme</value>
+  </data>
+  <data name="ApplicationDetail.RejectionReason" xml:space="preserve">
+    <value>Ret gerekçesi:</value>
+  </data>
+  <data name="ApplicationDetail.Download" xml:space="preserve">
+    <value>Belgeyi indir</value>
+  </data>
+  <data name="ApplicationDetail.NoDocument" xml:space="preserve">
+    <value>Henüz belge yüklenmedi.</value>
+  </data>
+  <data name="ApplicationDetail.ApprovalReset" xml:space="preserve">
+    <value>Bu belgeyi güncellerseniz mevcut onay geçersiz olur ve yeni sürüm yeniden incelenir.</value>
+  </data>
+  <data name="ApplicationDetail.Upload" xml:space="preserve">
+    <value>Belge yükle</value>
+  </data>
+  <data name="ApplicationDetail.UpdateDocument" xml:space="preserve">
+    <value>Belgeyi güncelle</value>
+  </data>
+  <data name="ApplicationDetail.UploadButton" xml:space="preserve">
+    <value>Yükle</value>
+  </data>
+  <data name="ApplicationDetail.Submit" xml:space="preserve">
+    <value>Başvuruyu gönder</value>
+  </data>
+  <data name="ApplicationDetail.SubmitLead" xml:space="preserve">
+    <value>Göndermeden önce tüm zorunlu belgelerin doğru ve güncel olduğunu kontrol edin.</value>
+  </data>
+  <data name="ApplicationDetail.InvalidConfiguration" xml:space="preserve">
+    <value>Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.</value>
+  </data>
+  <data name="ApplicationDetail.UploadRequired" xml:space="preserve">
+    <value>Önce tüm zorunlu belgeleri yükleyin.</value>
+  </data>
+  <data name="ApplicationDetail.Withdraw" xml:space="preserve">
+    <value>Başvuruyu geri çek</value>
+  </data>
+  <data name="ApplicationDetail.WithdrawLead" xml:space="preserve">
+    <value>Geri çekilen başvuru değerlendirme ve kontenjan hesabının dışında kalır. İlan açık ve son tarih geçmemişse daha sonra yeniden etkinleştirebilirsiniz; bu durumda başvuru taslağa döner ve yeniden gönderilmesi gerekir.</value>
+  </data>
+  <data name="ApplicationDetail.Reactivate" xml:space="preserve">
+    <value>Başvuruyu yeniden etkinleştir</value>
+  </data>
+  <data name="ApplicationDetail.ReactivateLead" xml:space="preserve">
+    <value>Belgeleriniz korunur. Eski puan ve değerlendirme snapshot’ları temizlenir; güncel bilgileri kontrol ettikten sonra başvuruyu yeniden göndermeniz gerekir.</value>
+  </data>
+  <data name="ApplicationDetail.ReactivateDraft" xml:space="preserve">
+    <value>Taslak olarak yeniden etkinleştir</value>
+  </data>
+  <data name="ApplicationDetail.Back" xml:space="preserve">
+    <value>Panele dön</value>
+  </data>
 </root>
