@@ -2425,4 +2425,372 @@
   <data name="Admin.Requirements.Save" xml:space="preserve">
     <value>Save document condition</value>
   </data>
+
+  <!-- Admin evaluation localization -->
+  <data name="Admin.Evaluation.PageTitle" xml:space="preserve">
+    <value>Application evaluation</value>
+  </data>
+  <data name="Admin.Evaluation.Area" xml:space="preserve">
+    <value>Offerings and evaluation</value>
+  </data>
+  <data name="Admin.Evaluation.BackToOfferings" xml:space="preserve">
+    <value>Back to offerings</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedTitle" xml:space="preserve">
+    <value>Results are finalized; evaluation data can no longer be changed.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedBody" xml:space="preserve">
+    <value>Students cannot see the results until publication is complete.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedTitle" xml:space="preserve">
+    <value>Results are published; evaluation data can no longer be changed.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedBody" xml:space="preserve">
+    <value>Application statuses and result snapshots now reflect the published results.</value>
+  </data>
+  <data name="Admin.Evaluation.LifecycleAria" xml:space="preserve">
+    <value>Evaluation lifecycle and permissions</value>
+  </data>
+  <data name="Admin.Evaluation.Lifecycle" xml:space="preserve">
+    <value>Lifecycle</value>
+  </data>
+  <data name="Admin.Evaluation.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Evaluation.Quota" xml:space="preserve">
+    <value>Quota</value>
+  </data>
+  <data name="Admin.Evaluation.Deadline" xml:space="preserve">
+    <value>Application deadline</value>
+  </data>
+  <data name="Admin.Evaluation.Unspecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="Admin.Evaluation.Permissions" xml:space="preserve">
+    <value>Current action permissions</value>
+  </data>
+  <data name="Admin.Evaluation.Policy" xml:space="preserve">
+    <value>Policy</value>
+  </data>
+  <data name="Admin.Evaluation.Eligibility" xml:space="preserve">
+    <value>Eligibility</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScore" xml:space="preserve">
+    <value>Manual score</value>
+  </data>
+  <data name="Admin.Evaluation.Finalization" xml:space="preserve">
+    <value>Finalization</value>
+  </data>
+  <data name="Admin.Evaluation.Publication" xml:space="preserve">
+    <value>Publication</value>
+  </data>
+  <data name="Admin.Evaluation.Editable" xml:space="preserve">
+    <value>Editable</value>
+  </data>
+  <data name="Admin.Evaluation.DecisionAllowed" xml:space="preserve">
+    <value>Decision allowed</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreAllowed" xml:space="preserve">
+    <value>Entry allowed</value>
+  </data>
+  <data name="Admin.Evaluation.ReadOnly" xml:space="preserve">
+    <value>Read only</value>
+  </data>
+  <data name="Admin.Evaluation.PrerequisiteDependent" xml:space="preserve">
+    <value>Subject to prerequisites</value>
+  </data>
+  <data name="Admin.Evaluation.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Admin.Evaluation.Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Admin.Evaluation.PermissionMatrix" xml:space="preserve">
+    <value>Lifecycle permission matrix</value>
+  </data>
+  <data name="Admin.Evaluation.ConfiguringMatrix" xml:space="preserve">
+    <value>policy, eligibility, and manual scores; finalization after prerequisites.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizedMatrix" xml:space="preserve">
+    <value>publication only.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishedMatrix" xml:space="preserve">
+    <value>all mutation surfaces are closed.</value>
+  </data>
+  <data name="Admin.Evaluation.Step1" xml:space="preserve">
+    <value>1. Policy and criteria</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyHeading" xml:space="preserve">
+    <value>Evaluation policy</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyDescription" xml:space="preserve">
+    <value>Criteria are locked when the first draft application is created. Lower tie-break priorities are applied first.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightValid" xml:space="preserve">
+    <value>The total weight is valid.</value>
+  </data>
+  <data name="Admin.Evaluation.WeightInvalid" xml:space="preserve">
+    <value>The total weight must be 10,000 bp.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteria" xml:space="preserve">
+    <value>No criteria have been defined</value>
+  </data>
+  <data name="Admin.Evaluation.NoCriteriaBody" xml:space="preserve">
+    <value>Create a valid policy totaling 10,000 bp before finalizing the offering.</value>
+  </data>
+  <data name="Admin.Evaluation.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Admin.Evaluation.DisplayName" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="Admin.Evaluation.SourceType" xml:space="preserve">
+    <value>Source type</value>
+  </data>
+  <data name="Admin.Evaluation.RequiredExam" xml:space="preserve">
+    <value>Linked required exam</value>
+  </data>
+  <data name="Admin.Evaluation.SelectExam" xml:space="preserve">
+    <value>Select an exam</value>
+  </data>
+  <data name="Admin.Evaluation.MinimumFormat" xml:space="preserve">
+    <value>Minimum {0}</value>
+  </data>
+  <data name="Admin.Evaluation.WeightBp" xml:space="preserve">
+    <value>Weight (bp)</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScore" xml:space="preserve">
+    <value>Maximum raw score</value>
+  </data>
+  <data name="Admin.Evaluation.MaximumRawScoreValidation" xml:space="preserve">
+    <value>The maximum raw score must be between 0.0001 and 99999 with no more than 4 decimal places.</value>
+  </data>
+  <data name="Admin.Evaluation.TieBreakPriority" xml:space="preserve">
+    <value>Tie-break priority</value>
+  </data>
+  <data name="Admin.Evaluation.SaveCriterion" xml:space="preserve">
+    <value>Save criterion</value>
+  </data>
+  <data name="Admin.Evaluation.CriterionDangerZone" xml:space="preserve">
+    <value>Criterion deletion</value>
+  </data>
+  <data name="Admin.Evaluation.DeleteCriterion" xml:space="preserve">
+    <value>Delete criterion</value>
+  </data>
+  <data name="Admin.Evaluation.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Admin.Evaluation.Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Admin.Evaluation.Exam" xml:space="preserve">
+    <value>Exam</value>
+  </data>
+  <data name="Admin.Evaluation.Weight" xml:space="preserve">
+    <value>Weight</value>
+  </data>
+  <data name="Admin.Evaluation.Maximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="Admin.Evaluation.Priority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="Admin.Evaluation.NewCriterion" xml:space="preserve">
+    <value>New criterion</value>
+  </data>
+  <data name="Admin.Evaluation.AddCriterion" xml:space="preserve">
+    <value>Add criterion</value>
+  </data>
+  <data name="Admin.Evaluation.Step2" xml:space="preserve">
+    <value>2. Candidate evaluations</value>
+  </data>
+  <data name="Admin.Evaluation.Candidates" xml:space="preserve">
+    <value>Candidates</value>
+  </data>
+  <data name="Admin.Evaluation.CandidatesDescription" xml:space="preserve">
+    <value>Masked identity, document eligibility, automatic components, and permitted manual actions are shown together.</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidates" xml:space="preserve">
+    <value>No candidates to evaluate</value>
+  </data>
+  <data name="Admin.Evaluation.NoCandidatesBody" xml:space="preserve">
+    <value>This offering does not yet have an application in the evaluation scope.</value>
+  </data>
+  <data name="Admin.Evaluation.OpenApplication" xml:space="preserve">
+    <value>Open application</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityFormat" xml:space="preserve">
+    <value>Eligibility: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.TotalFormat" xml:space="preserve">
+    <value>Total: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.MissingPrerequisites" xml:space="preserve">
+    <value>Missing prerequisites:</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityPending" xml:space="preserve">
+    <value>The eligibility decision is pending.</value>
+  </data>
+  <data name="Admin.Evaluation.ScoreMissing" xml:space="preserve">
+    <value>One or more score components are missing.</value>
+  </data>
+  <data name="Admin.Evaluation.ComponentsCaption" xml:space="preserve">
+    <value>Score components for candidate {0}</value>
+  </data>
+  <data name="Admin.Evaluation.Component" xml:space="preserve">
+    <value>Component</value>
+  </data>
+  <data name="Admin.Evaluation.RawScore" xml:space="preserve">
+    <value>Raw score</value>
+  </data>
+  <data name="Admin.Evaluation.Normalized" xml:space="preserve">
+    <value>Normalized</value>
+  </data>
+  <data name="Admin.Evaluation.Contribution" xml:space="preserve">
+    <value>Contribution</value>
+  </data>
+  <data name="Admin.Evaluation.EligibilityDecision" xml:space="preserve">
+    <value>Eligibility decision</value>
+  </data>
+  <data name="Admin.Evaluation.Decision" xml:space="preserve">
+    <value>Decision</value>
+  </data>
+  <data name="Admin.Evaluation.IneligibleReason" xml:space="preserve">
+    <value>Reason if ineligible</value>
+  </data>
+  <data name="Admin.Evaluation.SaveEligibility" xml:space="preserve">
+    <value>Save eligibility decision</value>
+  </data>
+  <data name="Admin.Evaluation.ManualScoreHeading" xml:space="preserve">
+    <value>Manual score for {0}</value>
+  </data>
+  <data name="Admin.Evaluation.SaveManualScore" xml:space="preserve">
+    <value>Save manual score</value>
+  </data>
+  <data name="Admin.Evaluation.Step3" xml:space="preserve">
+    <value>3. Ranking and result actions</value>
+  </data>
+  <data name="Admin.Evaluation.RankingHeading" xml:space="preserve">
+    <value>Deterministic ranking preview</value>
+  </data>
+  <data name="Admin.Evaluation.RankingDescription" xml:space="preserve">
+    <value>Admission and quota-exceeded outcomes are identified in text; the quota boundary is also marked in the table.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeBlocked" xml:space="preserve">
+    <value>Finalization prerequisites are not complete.</value>
+  </data>
+  <data name="Admin.Evaluation.RankingCaption" xml:space="preserve">
+    <value>Candidate ranking and projected outcomes</value>
+  </data>
+  <data name="Admin.Evaluation.Rank" xml:space="preserve">
+    <value>Rank</value>
+  </data>
+  <data name="Admin.Evaluation.MaskedCandidate" xml:space="preserve">
+    <value>Masked candidate</value>
+  </data>
+  <data name="Admin.Evaluation.TotalScore" xml:space="preserve">
+    <value>Total score</value>
+  </data>
+  <data name="Admin.Evaluation.ProjectedOutcome" xml:space="preserve">
+    <value>Projected outcome</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaBoundary" xml:space="preserve">
+    <value>Quota boundary</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHeading" xml:space="preserve">
+    <value>Finalize results</value>
+  </data>
+  <data name="Admin.Evaluation.DeadlineFormat" xml:space="preserve">
+    <value>Application deadline: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.PolicyTotalFormat" xml:space="preserve">
+    <value>Policy total: {0} bp</value>
+  </data>
+  <data name="Admin.Evaluation.QuotaFormat" xml:space="preserve">
+    <value>Quota: {0}</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeEffect" xml:space="preserve">
+    <value>Finalization freezes the ranking and decisions; students cannot see the results yet.</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeAction" xml:space="preserve">
+    <value>Finalize results</value>
+  </data>
+  <data name="Admin.Evaluation.FinalizeHidden" xml:space="preserve">
+    <value>The finalization form is hidden until all prerequisites are complete.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishHeading" xml:space="preserve">
+    <value>Publish results</value>
+  </data>
+  <data name="Admin.Evaluation.PublishDescription" xml:space="preserve">
+    <value>Review the finalized results and irreversible publication effects on a separate confirmation screen.</value>
+  </data>
+  <data name="Admin.Evaluation.PublishConfirmation" xml:space="preserve">
+    <value>Continue to publication confirmation</value>
+  </data>
+  <data name="Admin.Evaluation.AlreadyPublished" xml:space="preserve">
+    <value>Results are published; no other result mutation action is shown.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PageTitle" xml:space="preserve">
+    <value>Publish results</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Back" xml:space="preserve">
+    <value>Back to evaluation</value>
+  </data>
+  <data name="Admin.PublishEvaluation.SummaryAria" xml:space="preserve">
+    <value>Publication summary</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Admitted" xml:space="preserve">
+    <value>Admitted</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NotAdmitted" xml:space="preserve">
+    <value>Not admitted due to quota</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Ineligible" xml:space="preserve">
+    <value>Ineligible</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRanking" xml:space="preserve">
+    <value>Finalized ranking</value>
+  </data>
+  <data name="Admin.PublishEvaluation.FinalRankingDescription" xml:space="preserve">
+    <value>This ranking is used to create application statuses and student result snapshots during publication.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRows" xml:space="preserve">
+    <value>No ranking rows found</value>
+  </data>
+  <data name="Admin.PublishEvaluation.NoRowsBody" xml:space="preserve">
+    <value>Return to the evaluation screen and verify the finalized data before publication.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.RankingCaption" xml:space="preserve">
+    <value>Finalized candidate ranking</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Outcome" xml:space="preserve">
+    <value>Outcome</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Undetermined" xml:space="preserve">
+    <value>Undetermined</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ConfirmationHeading" xml:space="preserve">
+    <value>Irreversible publication confirmation</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Irreversible" xml:space="preserve">
+    <value>This action cannot be undone.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.IrreversibleBody" xml:space="preserve">
+    <value>Finalized results become visible to students, and application statuses are atomically set to Approved or Rejected.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.BeforePublication" xml:space="preserve">
+    <value>Before publication, students cannot see scores, ranks, or outcomes.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.AtomicEffect" xml:space="preserve">
+    <value>Publication creates the application status, history, audit, and result snapshot records in one atomic operation.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.ServerChecks" xml:space="preserve">
+    <value>Server-side lifecycle, antiforgery, and RowVersion checks are applied again.</value>
+  </data>
+  <data name="Admin.PublishEvaluation.PublishAction" xml:space="preserve">
+    <value>Publish results</value>
+  </data>
+  <data name="Admin.PublishEvaluation.Cancel" xml:space="preserve">
+    <value>Cancel publication</value>
+  </data>
 </root>
