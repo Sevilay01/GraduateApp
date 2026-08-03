@@ -233,51 +233,48 @@ ul {
 
 .language-switcher {
   display: flex;
+  width: 100%;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: flex-end;
   margin: 0;
-  color: #fff;
-}
-
-.language-switcher__label {
-  font-size: 0.78rem;
-  font-weight: 750;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .language-switcher__options {
   display: inline-flex;
-  flex: 0 0 auto;
-  gap: 0.15rem;
-  padding: 0.18rem;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 999px;
+  align-items: center;
+  gap: 0.12rem;
 }
 
 .language-switcher__option {
-  min-width: 2.45rem;
-  padding: 0.28rem 0.55rem;
-  color: rgba(255, 255, 255, 0.88);
+  padding: 0.2rem 0.28rem;
+  color: rgba(255, 255, 255, 0.78);
   background: transparent;
   border: 0;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 800;
+  border-radius: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 750;
   line-height: 1.2;
 }
 
-.language-switcher__option:not(.active):hover {
+.language-switcher__option:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.12);
+  text-decoration: underline;
+  text-underline-offset: 0.22rem;
 }
 
 .language-switcher__option.active {
-  color: var(--cu-primary);
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  color: #fff;
+  font-weight: 850;
+  text-decoration: underline;
+  text-decoration-thickness: 0.12rem;
+  text-underline-offset: 0.22rem;
+}
+
+.language-switcher__separator {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1;
 }
 
 .session-area {
@@ -1648,17 +1645,6 @@ code {
 
   .language-switcher {
     width: auto;
-  }
-
-  .language-switcher__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
   }
 
   .session-area {
