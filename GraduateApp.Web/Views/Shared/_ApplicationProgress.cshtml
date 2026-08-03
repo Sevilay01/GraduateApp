@@ -2,8 +2,19 @@
 @{
     var isWithdrawn = Model == ApplicationStatus.Withdrawn;
     var steps = isWithdrawn
-        ? new[] { "Taslak", "Gönderildi", "Geri çekildi" }
-        : new[] { "Taslak", "Gönderildi", "İnceleniyor", "Sonuçlandı" };
+        ? new[]
+        {
+            UiText.Get(Context, "Progress.Draft"),
+            UiText.Get(Context, "Progress.Submitted"),
+            UiText.Get(Context, "Progress.Withdrawn")
+        }
+        : new[]
+        {
+            UiText.Get(Context, "Progress.Draft"),
+            UiText.Get(Context, "Progress.Submitted"),
+            UiText.Get(Context, "Progress.UnderReview"),
+            UiText.Get(Context, "Progress.Result")
+        };
     var currentStep = Model switch
     {
         ApplicationStatus.Draft => 0,
@@ -14,7 +25,7 @@
     };
 }
 <section class="application-progress" aria-labelledby="application-progress-heading">
-    <h2 id="application-progress-heading" class="h5 mb-3">Başvuru süreci</h2>
+    <h2 id="application-progress-heading" class="h5 mb-3">@UiText.Get(Context, "Progress.Title")</h2>
     <ol>
         @for (var index = 0; index < steps.Length; index++)
         {
