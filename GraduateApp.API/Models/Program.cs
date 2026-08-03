@@ -5,6 +5,7 @@ public sealed class Program
     public int ProgramId { get; set; }
     public int InstituteId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
     public string DegreeType { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; }

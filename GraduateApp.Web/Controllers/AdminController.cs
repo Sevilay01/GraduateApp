@@ -720,6 +720,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
                 ProgramId = selected?.ProgramId ?? 0,
                 InstituteId = selected?.InstituteId ?? instituteItems.FirstOrDefault()?.InstituteId ?? 0,
                 ProgramName = selected?.ProgramName ?? string.Empty,
+                ProgramNameEnglish = selected?.ProgramNameEnglish,
                 DegreeType = selected?.DegreeType ?? ProgramDegreeTypeOptions.Values[0],
                 RowVersion = selected?.RowVersion
             },

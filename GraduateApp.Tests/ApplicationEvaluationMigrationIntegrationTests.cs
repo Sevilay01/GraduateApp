@@ -16,7 +16,7 @@ public sealed class ApplicationEvaluationMigrationIntegrationTests
         await SeedLegacyRowsAsync(database.ConnectionString);
         await RemoveEvaluationSchemaAndMarkPreviousMigrationsAppliedAsync(database);
 
-        await database.MigrateAsync();
+        await database.MigrateAsync("20260722170322_AddApplicationEvaluationAndResults");
 
         Assert.Equal(1, await database.ScalarAsync<int>("SELECT COUNT(*) FROM [dbo].[Applications];"));
         Assert.Equal(0, await database.ScalarAsync<int>("SELECT CONVERT(int, [UsesEvaluationWorkflow]) FROM [dbo].[Applications];"));

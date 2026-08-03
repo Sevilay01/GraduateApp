@@ -922,6 +922,10 @@ namespace GraduateApp.API.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("ProgramNameEnglish")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -941,6 +945,8 @@ namespace GraduateApp.API.Migrations
                     b.ToTable("Programs", null, t =>
                         {
                             t.HasCheckConstraint("CK_Programs_DegreeType", "[DegreeType] IN (N'Doktora',N'Tezli Yüksek Lisans',N'Tezsiz Yüksek Lisans',N'Uzaktan Tezsiz Yüksek Lisans')");
+
+                            t.HasCheckConstraint("CK_Programs_ProgramNameEnglish_Trimmed", "[ProgramNameEnglish] IS NULL OR ([ProgramNameEnglish] = LTRIM(RTRIM([ProgramNameEnglish])) AND LEN([ProgramNameEnglish]) >= 2)");
 
                             t.HasCheckConstraint("CK_Programs_ProgramName_Trimmed", "[ProgramName] = LTRIM(RTRIM([ProgramName])) AND LEN([ProgramName]) >= 2");
                         });

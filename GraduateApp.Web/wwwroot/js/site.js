@@ -69,3 +69,15 @@ for (const input of document.querySelectorAll("input[data-password-reveal]")) {
     });
     input.parentElement?.append(button);
 }
+
+
+for (const languageSelect of document.querySelectorAll(
+    'select[data-auto-submit-on-change="true"]')) {
+    if (!(languageSelect instanceof HTMLSelectElement)) {
+        continue;
+    }
+
+    languageSelect.addEventListener("change", () => {
+        languageSelect.form?.requestSubmit();
+    });
+}

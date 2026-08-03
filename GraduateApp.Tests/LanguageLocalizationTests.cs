@@ -75,6 +75,18 @@ public sealed class LanguageLocalizationTests
 
         Assert.Equal("Home", UiText.Get(httpContext, "Navigation.Home"));
         Assert.Equal(UiText.EnglishCultureName, UiText.CurrentCultureName(httpContext));
+        Assert.Equal(
+            "Computer Engineering",
+            UiText.SelectLocalized(
+                httpContext,
+                "Bilgisayar Mühendisliği",
+                "Computer Engineering"));
+        Assert.Equal(
+            "Bilgisayar Mühendisliği",
+            UiText.SelectLocalized(
+                httpContext,
+                "Bilgisayar Mühendisliği",
+                null));
     }
 
     private static (LanguageController Controller, DefaultHttpContext HttpContext) CreateController()

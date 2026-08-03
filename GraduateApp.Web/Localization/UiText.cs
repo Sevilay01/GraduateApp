@@ -28,6 +28,15 @@ public static class UiText
     public static string CurrentCultureName(HttpContext context) =>
         ResolveCulture(context).Name;
 
+    public static string SelectLocalized(
+        HttpContext context,
+        string defaultValue,
+        string? englishValue) =>
+        CurrentCultureName(context) == EnglishCultureName
+        && !string.IsNullOrWhiteSpace(englishValue)
+            ? englishValue
+            : defaultValue;
+
     private static CultureInfo ResolveCulture(HttpContext context)
     {
         var requestedCulture = context.Features

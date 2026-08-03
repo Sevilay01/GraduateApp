@@ -60,6 +60,7 @@ public sealed class ProgramViewModel
     public int ProgramOfferingId { get; set; }
     public int ProgramId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
     public string? DegreeType { get; set; }
     public string InstituteName { get; set; } = string.Empty;
     public int AcademicYearStart { get; set; }

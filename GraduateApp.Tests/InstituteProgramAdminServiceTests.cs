@@ -94,6 +94,7 @@ public sealed class InstituteProgramAdminServiceTests
         {
             InstituteId = institute.InstituteId,
             ProgramName = "  Bilgisayar Mühendisliği  ",
+            ProgramNameEnglish = "  Computer Engineering  ",
             DegreeType = "tezli yüksek lisans"
         };
 
@@ -110,6 +111,7 @@ public sealed class InstituteProgramAdminServiceTests
 
         Assert.True(created.IsSuccess);
         Assert.Equal("Bilgisayar Mühendisliği", created.Value!.ProgramName);
+        Assert.Equal("Computer Engineering", created.Value.ProgramNameEnglish);
         Assert.Equal("Tezli Yüksek Lisans", created.Value.DegreeType);
         Assert.False(duplicate.IsSuccess);
         Assert.Equal(StatusCodes.Status409Conflict, duplicate.StatusCode);

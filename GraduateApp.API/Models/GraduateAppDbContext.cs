@@ -386,12 +386,16 @@ public sealed class GraduateAppDbContext(DbContextOptions<GraduateAppDbContext> 
                     "CK_Programs_ProgramName_Trimmed",
                     "[ProgramName] = LTRIM(RTRIM([ProgramName])) AND LEN([ProgramName]) >= 2");
                 table.HasCheckConstraint(
+                    "CK_Programs_ProgramNameEnglish_Trimmed",
+                    "[ProgramNameEnglish] IS NULL OR ([ProgramNameEnglish] = LTRIM(RTRIM([ProgramNameEnglish])) AND LEN([ProgramNameEnglish]) >= 2)");
+                table.HasCheckConstraint(
                     "CK_Programs_DegreeType",
                     "[DegreeType] IN (N'Doktora',N'Tezli Yüksek Lisans',N'Tezsiz Yüksek Lisans',N'Uzaktan Tezsiz Yüksek Lisans')");
             });
             entity.Property(e => e.ProgramId).HasColumnName("ProgramID");
             entity.Property(e => e.InstituteId).HasColumnName("InstituteID");
             entity.Property(e => e.ProgramName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.ProgramNameEnglish).HasMaxLength(100);
             entity.Property(e => e.DegreeType).HasMaxLength(50).IsRequired();
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
