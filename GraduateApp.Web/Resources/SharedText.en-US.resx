@@ -2834,4 +2834,294 @@
   <data name="Admin.Evaluation.Blocker.MissingCriteria" xml:space="preserve">
     <value>Application {0} has missing criteria: {1}.</value>
   </data>
+
+  <!-- Localized admin controller messages -->
+  <data name="Admin.Message.InviteEmailInvalid" xml:space="preserve">
+    <value>Enter a valid email address for the administrator invitation.</value>
+  </data>
+  <data name="Admin.Message.InviteCreated" xml:space="preserve">
+    <value>Administrator invitation created.</value>
+  </data>
+  <data name="Admin.Message.InviteCreateFailed" xml:space="preserve">
+    <value>The administrator invitation could not be created.</value>
+  </data>
+  <data name="Admin.Message.InviteResent" xml:space="preserve">
+    <value>Administrator invitation recreated.</value>
+  </data>
+  <data name="Admin.Message.AdminActivated" xml:space="preserve">
+    <value>Administrator account activated.</value>
+  </data>
+  <data name="Admin.Message.AdminDeactivated" xml:space="preserve">
+    <value>Administrator account deactivated and current sessions revoked.</value>
+  </data>
+  <data name="Admin.Message.AdminUnlocked" xml:space="preserve">
+    <value>Administrator account unlocked.</value>
+  </data>
+  <data name="Admin.Message.AdminAccountInvalid" xml:space="preserve">
+    <value>Administrator account information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.AdminUpdateFailed" xml:space="preserve">
+    <value>The administrator account could not be updated.</value>
+  </data>
+  <data name="Admin.Message.StudentNotSelected" xml:space="preserve">
+    <value>No student was selected.</value>
+  </data>
+  <data name="Admin.Message.StudentNotFound" xml:space="preserve">
+    <value>The student could not be found.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivated" xml:space="preserve">
+    <value>Student deactivated and current sessions revoked.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivateFailed" xml:space="preserve">
+    <value>The student could not be deactivated.</value>
+  </data>
+  <data name="Admin.Message.StudentActivated" xml:space="preserve">
+    <value>Student reactivated and previous sessions invalidated.</value>
+  </data>
+  <data name="Admin.Message.StudentActivateFailed" xml:space="preserve">
+    <value>The student could not be activated.</value>
+  </data>
+  <data name="Admin.Message.OfferingEditNotFound" xml:space="preserve">
+    <value>The offering to edit could not be found.</value>
+  </data>
+  <data name="Admin.Message.RequirementOfferingNotFound" xml:space="preserve">
+    <value>The offering selected for document requirements could not be found.</value>
+  </data>
+  <data name="Admin.Message.RequirementsLoadFailed" xml:space="preserve">
+    <value>Document requirements could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.SelectOfferingBeforeRequirement" xml:space="preserve">
+    <value>Select an offering before editing a document requirement.</value>
+  </data>
+  <data name="Admin.Message.RequirementNotFound" xml:space="preserve">
+    <value>The document requirement to edit was not found in the selected offering.</value>
+  </data>
+  <data name="Admin.Message.OfferingsLoadFailed" xml:space="preserve">
+    <value>Offering information could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.TermInvalid" xml:space="preserve">
+    <value>Select a valid term.</value>
+  </data>
+  <data name="Admin.Message.DeadlineAfterStart" xml:space="preserve">
+    <value>The application deadline must be after the start date.</value>
+  </data>
+  <data name="Admin.Message.OfferingConcurrencyMissing" xml:space="preserve">
+    <value>Offering concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.OfferingValidationFailed" xml:space="preserve">
+    <value>Offering information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaveFailed" xml:space="preserve">
+    <value>The term offering could not be saved.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaved" xml:space="preserve">
+    <value>Term offering saved.</value>
+  </data>
+  <data name="Admin.Message.RemediationInvalid" xml:space="preserve">
+    <value>Offering closure information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.RemediationClosed" xml:space="preserve">
+    <value>The invalid open offering was closed safely. Existing applications and results were not changed.</value>
+  </data>
+  <data name="Admin.Message.RemediationFailed" xml:space="preserve">
+    <value>The offering could not be closed for safe remediation.</value>
+  </data>
+  <data name="Admin.Message.ValidOfferingRequired" xml:space="preserve">
+    <value>Select a valid offering.</value>
+  </data>
+  <data name="Admin.Message.RequirementConcurrencyMissing" xml:space="preserve">
+    <value>Concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.RequirementValidationFailed" xml:space="preserve">
+    <value>Document requirement information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaved" xml:space="preserve">
+    <value>Document requirement saved. The change affects only drafts created from now on.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaveFailed" xml:space="preserve">
+    <value>The document requirement could not be saved.</value>
+  </data>
+  <data name="Admin.Message.RequirementStateInvalid" xml:space="preserve">
+    <value>The document requirement status could not be validated. Refresh the page and try again.</value>
+  </data>
+  <data name="Admin.Message.RequirementActivated" xml:space="preserve">
+    <value>Document requirement activated.</value>
+  </data>
+  <data name="Admin.Message.RequirementDeactivated" xml:space="preserve">
+    <value>Document requirement deactivated.</value>
+  </data>
+  <data name="Admin.Message.RequirementUpdateFailed" xml:space="preserve">
+    <value>The document requirement could not be updated.</value>
+  </data>
+  <data name="Admin.Message.UniversitiesLoadFailed" xml:space="preserve">
+    <value>The university catalog could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.UniversityValidationFailed" xml:space="preserve">
+    <value>University information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreateFailed" xml:space="preserve">
+    <value>The university could not be created.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreated" xml:space="preserve">
+    <value>University added to the catalog.</value>
+  </data>
+  <data name="Admin.Message.InstitutesLoadFailed" xml:space="preserve">
+    <value>Institute information could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.InstituteConcurrencyMissing" xml:space="preserve">
+    <value>Institute concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.InstituteValidationFailed" xml:space="preserve">
+    <value>Institute information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.InstituteSaveFailed" xml:space="preserve">
+    <value>The institute could not be saved.</value>
+  </data>
+  <data name="Admin.Message.InstituteUpdated" xml:space="preserve">
+    <value>Institute updated.</value>
+  </data>
+  <data name="Admin.Message.InstituteCreated" xml:space="preserve">
+    <value>Institute created.</value>
+  </data>
+  <data name="Admin.Message.InstituteActivated" xml:space="preserve">
+    <value>Institute activated.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeactivated" xml:space="preserve">
+    <value>Institute deactivated. Linked programs will not appear in new selections.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateInvalid" xml:space="preserve">
+    <value>Institute activation information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateFailed" xml:space="preserve">
+    <value>The institute status could not be changed.</value>
+  </data>
+  <data name="Admin.Message.InstituteNotFound" xml:space="preserve">
+    <value>The institute could not be found.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteInvalid" xml:space="preserve">
+    <value>Institute deletion information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleted" xml:space="preserve">
+    <value>The unused institute was permanently deleted.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteFailed" xml:space="preserve">
+    <value>The institute could not be deleted.</value>
+  </data>
+  <data name="Admin.Message.ProgramsLoadFailed" xml:space="preserve">
+    <value>Program information could not be loaded.</value>
+  </data>
+  <data name="Admin.Message.TranslationBatchRange" xml:space="preserve">
+    <value>Between 1 and 100 program translations can be updated in one operation.</value>
+  </data>
+  <data name="Admin.Message.TranslationValidationFailed" xml:space="preserve">
+    <value>Program translations could not be validated.</value>
+  </data>
+  <data name="Admin.Message.TranslationSaveFailed" xml:space="preserve">
+    <value>Program translations could not be saved.</value>
+  </data>
+  <data name="Admin.Message.TranslationNoChanges" xml:space="preserve">
+    <value>No program translation changes were found.</value>
+  </data>
+  <data name="Admin.Message.TranslationOneUpdated" xml:space="preserve">
+    <value>1 program translation updated.</value>
+  </data>
+  <data name="Admin.Message.TranslationManyUpdated" xml:space="preserve">
+    <value>{0} program translations updated.</value>
+  </data>
+  <data name="Admin.Message.ProgramConcurrencyMissing" xml:space="preserve">
+    <value>Program concurrency information is missing. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.ProgramValidationFailed" xml:space="preserve">
+    <value>Program information could not be validated.</value>
+  </data>
+  <data name="Admin.Message.ProgramUpdated" xml:space="preserve">
+    <value>Program updated.</value>
+  </data>
+  <data name="Admin.Message.ProgramCreated" xml:space="preserve">
+    <value>Program created.</value>
+  </data>
+  <data name="Admin.Message.ProgramActivated" xml:space="preserve">
+    <value>Program activated.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeactivated" xml:space="preserve">
+    <value>Program deactivated. Existing offerings and applications are preserved.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateInvalid" xml:space="preserve">
+    <value>Program activation information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateFailed" xml:space="preserve">
+    <value>The program status could not be changed.</value>
+  </data>
+  <data name="Admin.Message.ProgramNotFound" xml:space="preserve">
+    <value>The program could not be found.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteInvalid" xml:space="preserve">
+    <value>Program deletion information is invalid. Refresh the page.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleted" xml:space="preserve">
+    <value>The program with no offerings was permanently deleted.</value>
+  </data>
+  <data name="Admin.Message.EvaluationNotFound" xml:space="preserve">
+    <value>The evaluation offering could not be found.</value>
+  </data>
+  <data name="Admin.Message.CriterionInvalid" xml:space="preserve">
+    <value>Evaluation criterion information is invalid.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaved" xml:space="preserve">
+    <value>Evaluation criterion saved.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaveFailed" xml:space="preserve">
+    <value>The evaluation criterion could not be saved.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteInvalid" xml:space="preserve">
+    <value>Evaluation criterion deletion information is invalid.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleted" xml:space="preserve">
+    <value>Evaluation criterion removed.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteFailed" xml:space="preserve">
+    <value>The evaluation criterion could not be removed.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaved" xml:space="preserve">
+    <value>Candidate eligibility decision saved.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaveFailed" xml:space="preserve">
+    <value>The candidate eligibility decision could not be saved.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalized" xml:space="preserve">
+    <value>Evaluation results finalized; they have not yet been published to students.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalizeFailed" xml:space="preserve">
+    <value>The evaluation could not be finalized.</value>
+  </data>
+  <data name="Admin.Message.NoPublishableResults" xml:space="preserve">
+    <value>No publishable results were found.</value>
+  </data>
+  <data name="Admin.Message.EvaluationPublished" xml:space="preserve">
+    <value>Evaluation results published to students.</value>
+  </data>
+  <data name="Admin.Message.PublishFailed" xml:space="preserve">
+    <value>The results could not be published.</value>
+  </data>
+  <data name="Admin.Message.ApplicationNotFound" xml:space="preserve">
+    <value>The application could not be found.</value>
+  </data>
+  <data name="Admin.Message.StatusInvalid" xml:space="preserve">
+    <value>Status update information is invalid.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdated" xml:space="preserve">
+    <value>Application status updated.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdateFailed" xml:space="preserve">
+    <value>The application status could not be updated.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewInvalid" xml:space="preserve">
+    <value>Document review information is invalid.</value>
+  </data>
+  <data name="Admin.Message.DocumentApproved" xml:space="preserve">
+    <value>Document approved.</value>
+  </data>
+  <data name="Admin.Message.DocumentRejected" xml:space="preserve">
+    <value>Document rejected with a reason.</value>
+  </data>
 </root>
