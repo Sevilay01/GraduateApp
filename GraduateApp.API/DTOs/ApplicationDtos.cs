@@ -57,7 +57,10 @@ public sealed record StudentApplicationDto(
     string TermName,
     DateTime ApplicationDateUtc,
     ApplicationStatus CurrentStatus,
-    string RowVersion);
+    string RowVersion)
+{
+    public string? ProgramNameEnglish { get; init; }
+}
 
 public sealed record AdminApplicationListItemDto(
     Guid PublicId,
