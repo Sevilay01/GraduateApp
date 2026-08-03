@@ -23,6 +23,9 @@ public static class UiText
     public static string Get(HttpContext context, string key) =>
         Resources.GetString(key, ResolveCulture(context)) ?? key;
 
+    public static string GetCurrent(string key) =>
+        Resources.GetString(key, ResolveCulture(CultureInfo.CurrentUICulture)) ?? key;
+
     public static string Format(HttpContext context, string key, params object?[] arguments) =>
         string.Format(ResolveCulture(context), Get(context, key), arguments);
 
@@ -132,6 +135,14 @@ public static class UiText
             "Belirtilmemiş" => Get(context, "AcademicTerm.LegacyUnspecified"),
             _ => termName ?? string.Empty
         };
+
+    private static CultureInfo ResolveCulture(CultureInfo? culture) =>
+        string.Equals(
+            culture?.Name,
+            EnglishCultureName,
+            StringComparison.OrdinalIgnoreCase)
+            ? EnglishCulture
+            : TurkishCulture;
 
     private static CultureInfo ResolveCulture(HttpContext context)
     {
