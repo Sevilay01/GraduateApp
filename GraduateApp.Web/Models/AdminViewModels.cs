@@ -441,6 +441,43 @@ public sealed class ProgramFormViewModel
     public string? RowVersion { get; set; }
 }
 
+public sealed class ProgramTranslationItemViewModel
+{
+    [Range(1, int.MaxValue)]
+    public int ProgramId { get; set; }
+    public string InstituteName { get; set; } = string.Empty;
+    public string ProgramName { get; set; } = string.Empty;
+    public string DegreeType { get; set; } = string.Empty;
+
+    [StringLength(
+        100,
+        MinimumLength = 2,
+        ErrorMessage = "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.")]
+    [Display(Name = "İngilizce program adı")]
+    public string? ProgramNameEnglish { get; set; }
+
+    [Required]
+    public string RowVersion { get; set; } = string.Empty;
+}
+
+public sealed class ProgramTranslationPageViewModel
+{
+    public List<ProgramTranslationItemViewModel> Items { get; set; } = [];
+    public string? Search { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 50;
+    public int TotalCount { get; set; }
+    public int TotalPages => PageSize <= 0
+        ? 0
+        : (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class ProgramTranslationBatchResultViewModel
+{
+    public int UpdatedCount { get; set; }
+}
+
 public sealed class ProgramPageViewModel
 {
     public PagedResultViewModel<ProgramAdminViewModel> Result { get; set; } = new();
