@@ -469,6 +469,100 @@ public sealed class InstituteProgramAdminServiceTests
     }
 
     [Fact]
+    public async Task Program_create_auto_maps_catalog_names_and_reuses_verified_names()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute { InstituteName = "Fen Bilimleri" };
+        db.Institutes.Add(institute);
+        await db.SaveChangesAsync();
+        var service = CreateProgramService(db);
+
+        var catalogMapped = await service.CreateAsync(
+            17,
+            new ProgramCreateDto
+            {
+                InstituteId = institute.InstituteId,
+                ProgramName = "Bilgisayar Mühendisliği",
+                DegreeType = "Doktora"
+            },
+            CancellationToken.None);
+        var verified = await service.CreateAsync(
+            17,
+            new ProgramCreateDto
+            {
+                InstituteId = institute.InstituteId,
+                ProgramName = "Veri ve Karar Bilimleri",
+                ProgramNameEnglish = "Data and Decision Sciences",
+                DegreeType = "Doktora"
+            },
+            CancellationToken.None);
+        var reused = await service.CreateAsync(
+            17,
+            new ProgramCreateDto
+            {
+                InstituteId = institute.InstituteId,
+                ProgramName = "Veri ve Karar Bilimleri",
+                DegreeType = "Tezli Yüksek Lisans"
+            },
+            CancellationToken.None);
+
+        Assert.True(catalogMapped.IsSuccess);
+        Assert.True(verified.IsSuccess);
+        Assert.True(reused.IsSuccess);
+        Assert.Equal("Computer Engineering", catalogMapped.Value!.ProgramNameEnglish);
+        Assert.Equal("Data and Decision Sciences", reused.Value!.ProgramNameEnglish);
+    }
+
+    [Fact]
+    public async Task Program_translation_auto_fill_updates_only_safe_matches()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute { InstituteName = "Fen Bilimleri" };
+        var catalogMapped = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Bilgisayar Mühendisliği",
+            DegreeType = "Doktora"
+        };
+        var verified = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Veri ve Karar Bilimleri",
+            ProgramNameEnglish = "Data and Decision Sciences",
+            DegreeType = "Doktora"
+        };
+        var reusable = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Veri ve Karar Bilimleri",
+            DegreeType = "Tezli Yüksek Lisans"
+        };
+        var unknown = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Kuruma Özgü Disiplinlerarası Program",
+            DegreeType = "Doktora"
+        };
+        db.Programs.AddRange(catalogMapped, verified, reusable, unknown);
+        await db.SaveChangesAsync();
+
+        var result = await CreateProgramService(db).AutoFillTranslationsAsync(
+            17,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.UpdatedCount);
+        Assert.Equal("Computer Engineering", catalogMapped.ProgramNameEnglish);
+        Assert.Equal("Data and Decision Sciences", verified.ProgramNameEnglish);
+        Assert.Equal("Data and Decision Sciences", reusable.ProgramNameEnglish);
+        Assert.Null(unknown.ProgramNameEnglish);
+        Assert.Equal(
+            2,
+            db.SecurityAuditLogs.Count(item =>
+                item.EventType == "ProgramTranslationAutoFilled"));
+    }
+
+    [Fact]
     public async Task Program_translation_batch_trims_updates_and_audits_in_one_save()
     {
         await using var db = TestDb.Create();
