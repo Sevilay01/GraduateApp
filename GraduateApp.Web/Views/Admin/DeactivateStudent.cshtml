@@ -1,13 +1,13 @@
 @model AdminStudentDetailViewModel
 @{
-    ViewData["Title"] = "Öğrenciyi pasifleştir";
+    ViewData["Title"] = UiText.Get(Context, "Admin.DeactivateStudent.Title");
 }
 
 <header class="page-heading">
     <div>
-        <span class="eyebrow">Hesap yönetimi</span>
-        <h1 class="page-heading__title">Öğrenci hesabını pasifleştir</h1>
-        <p class="page-heading__description">Bu güvenlik eylemi öğrencinin mevcut oturumlarını geçersiz kılar; geçmiş verileri silmez.</p>
+        <span class="eyebrow">@UiText.Get(Context, "Admin.Common.AccountManagement")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "Admin.DeactivateStudent.Heading")</h1>
+        <p class="page-heading__description">@UiText.Get(Context, "Admin.DeactivateStudent.Lead")</p>
     </div>
 </header>
 
@@ -15,23 +15,22 @@
     <div class="col-12 col-lg-7">
         <section class="danger-zone" aria-labelledby="confirmation-heading">
             <div class="card-body">
-                <h2 id="confirmation-heading" class="h3 text-danger">Pasifleştirme özeti</h2>
+                <h2 id="confirmation-heading" class="h3 text-danger">@UiText.Get(Context, "Admin.DeactivateStudent.Summary")</h2>
                 <p>
-                    <strong>@Model.FullName</strong> (@Model.MaskedTc) öğrencisinin hesabı pasifleştirilecek.
-                    Mevcut API tokenları ve Web oturumu güvenlik damgası yenilenerek geçersiz kılınacak.
+                    <strong>@Model.FullName</strong> (@Model.MaskedTc) @UiText.Get(Context, "Admin.DeactivateStudent.SummarySuffix")
                 </p>
                 <dl class="row">
-                    <dt class="col-sm-4">E-posta</dt><dd class="col-sm-8">@Model.Email</dd>
-                    <dt class="col-sm-4">Başvuru sayısı</dt><dd class="col-sm-8">@Model.ApplicationCount</dd>
-                    <dt class="col-sm-4">Sınav sonucu sayısı</dt><dd class="col-sm-8">@Model.ExamScoreCount</dd>
+                    <dt class="col-sm-4">@UiText.Get(Context, "Field.Email")</dt><dd class="col-sm-8">@Model.Email</dd>
+                    <dt class="col-sm-4">@UiText.Get(Context, "Admin.Student.ApplicationCount")</dt><dd class="col-sm-8">@Model.ApplicationCount</dd>
+                    <dt class="col-sm-4">@UiText.Get(Context, "Admin.Student.ExamScoreCount")</dt><dd class="col-sm-8">@Model.ExamScoreCount</dd>
                 </dl>
                 <div class="alert alert-warning" role="alert">
-                    Bu işlem katalog verilerini veya öğrencinin geçmiş başvuru kayıtlarını silmez.
+                    @UiText.Get(Context, "Admin.DeactivateStudent.Warning")
                 </div>
                 <form asp-action="ConfirmDeactivateStudent" method="post">
                     <input type="hidden" name="publicId" value="@Model.PublicId" />
-                    <button type="submit" class="btn btn-danger">Öğrenci hesabını pasifleştir</button>
-                    <a asp-action="Students" class="btn btn-outline-secondary">Vazgeç</a>
+                    <button type="submit" class="btn btn-danger">@UiText.Get(Context, "Admin.DeactivateStudent.Submit")</button>
+                    <a asp-action="Students" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Cancel")</a>
                 </form>
             </div>
         </section>
