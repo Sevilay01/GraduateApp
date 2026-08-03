@@ -3124,4 +3124,26 @@
   <data name="Admin.Message.DocumentRejected" xml:space="preserve">
     <value>Document rejected with a reason.</value>
   </data>
+
+  <data name="Admin.Message.ProgramSaveFailed" xml:space="preserve">
+    <value>The program could not be saved.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteFailed" xml:space="preserve">
+    <value>The program could not be deleted.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreRequired" xml:space="preserve">
+    <value>A manual score is required.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaved" xml:space="preserve">
+    <value>Manual score saved.</value>
+  </data>
+  <data name="Admin.Message.ManualScoreSaveFailed" xml:space="preserve">
+    <value>The manual score could not be saved.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewSaveFailed" xml:space="preserve">
+    <value>The document review could not be saved.</value>
+  </data>
+  <data name="Admin.Message.DocumentDownloadFailed" xml:space="preserve">
+    <value>The document could not be downloaded.</value>
+  </data>
 </root>
