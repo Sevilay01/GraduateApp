@@ -237,7 +237,7 @@
                         {
                             <tr>
                                 <td data-label="Program"><strong>@application.ProgramName</strong></td>
-                                <td data-label="@UiText.Get(Context, "Panel.AcademicPeriod")">@application.AcademicYear · @application.TermName</td>
+                                <td data-label="@UiText.Get(Context, "Panel.AcademicPeriod")">@application.AcademicYear · @UiText.Get(Context, $"AcademicTerm.{application.Term}")</td>
                                 <td data-label="@UiText.Get(Context, "Panel.ApplicationDate")">
                                     <time datetime="@application.ApplicationDateUtc.ToString("O")">
                                         @IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")
