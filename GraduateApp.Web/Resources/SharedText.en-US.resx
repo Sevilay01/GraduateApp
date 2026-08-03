@@ -1237,4 +1237,127 @@
   <data name="Admin.Common.AccountManagement" xml:space="preserve">
     <value>Account management</value>
   </data>
+  <data name="Admin.Accounts.Title" xml:space="preserve">
+    <value>Administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.Eyebrow" xml:space="preserve">
+    <value>Account management</value>
+  </data>
+  <data name="Admin.Accounts.Heading" xml:space="preserve">
+    <value>Administrators</value>
+  </data>
+  <data name="Admin.Accounts.Lead" xml:space="preserve">
+    <value>Invite administrators with a one-time link and manage their accounts securely without deleting them.</value>
+  </data>
+  <data name="Admin.Accounts.Students" xml:space="preserve">
+    <value>Students</value>
+  </data>
+  <data name="Admin.Accounts.LastAdminRule" xml:space="preserve">
+    <value>The last active administrator who has completed their invitation cannot be deactivated. The API revalidates this rule on every request.</value>
+  </data>
+  <data name="Admin.Accounts.FilterHeading" xml:space="preserve">
+    <value>Filter administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.EmailPlaceholder" xml:space="preserve">
+    <value>Search by email</value>
+  </data>
+  <data name="Admin.Accounts.StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Accounts.Status.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Admin.Accounts.Status.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Admin.Accounts.Status.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Admin.Accounts.Status.InvitationPending" xml:space="preserve">
+    <value>Invitation pending</value>
+  </data>
+  <data name="Admin.Accounts.Status.Locked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="Admin.Accounts.Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Admin.Accounts.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Admin.Accounts.ActiveFilters" xml:space="preserve">
+    <value>Active filters</value>
+  </data>
+  <data name="Admin.Accounts.EmailFilter" xml:space="preserve">
+    <value>Email: {0}</value>
+  </data>
+  <data name="Admin.Accounts.StatusFilter" xml:space="preserve">
+    <value>Status: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResultsHeading" xml:space="preserve">
+    <value>Administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.ResultCount" xml:space="preserve">
+    <value>{0} accounts found</value>
+  </data>
+  <data name="Admin.Accounts.EmptyHeading" xml:space="preserve">
+    <value>No administrator accounts found</value>
+  </data>
+  <data name="Admin.Accounts.EmptyLead" xml:space="preserve">
+    <value>Change the filters or invite a new administrator using the form on the right.</value>
+  </data>
+  <data name="Admin.Accounts.TableCaption" xml:space="preserve">
+    <value>Filtered administrator accounts</value>
+  </data>
+  <data name="Admin.Accounts.SignInSecurity" xml:space="preserve">
+    <value>Sign-in security</value>
+  </data>
+  <data name="Admin.Accounts.Dates" xml:space="preserve">
+    <value>Dates</value>
+  </data>
+  <data name="Admin.Accounts.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Admin.Accounts.Current" xml:space="preserve">
+    <value>Current account</value>
+  </data>
+  <data name="Admin.Accounts.FailedSignIns" xml:space="preserve">
+    <value>Failed sign-ins: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Created" xml:space="preserve">
+    <value>Created: {0}</value>
+  </data>
+  <data name="Admin.Accounts.Updated" xml:space="preserve">
+    <value>Updated: {0}</value>
+  </data>
+  <data name="Admin.Accounts.ResendInvitation" xml:space="preserve">
+    <value>Resend administrator invitation</value>
+  </data>
+  <data name="Admin.Accounts.Unlock" xml:space="preserve">
+    <value>Unlock administrator</value>
+  </data>
+  <data name="Admin.Accounts.Deactivate" xml:space="preserve">
+    <value>Deactivate administrator</value>
+  </data>
+  <data name="Admin.Accounts.Activate" xml:space="preserve">
+    <value>Activate administrator</value>
+  </data>
+  <data name="Admin.Accounts.Pagination" xml:space="preserve">
+    <value>Administrator account pages</value>
+  </data>
+  <data name="Admin.Accounts.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Admin.Accounts.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Admin.Accounts.InviteHeading" xml:space="preserve">
+    <value>Invite administrator</value>
+  </data>
+  <data name="Admin.Accounts.InviteLead" xml:space="preserve">
+    <value>No password is created or displayed. The administrator sets their password through the one-time link.</value>
+  </data>
+  <data name="Admin.Accounts.InviteSubmit" xml:space="preserve">
+    <value>Send administrator invitation</value>
+  </data>
 </root>
