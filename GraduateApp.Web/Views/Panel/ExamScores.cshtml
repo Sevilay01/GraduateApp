@@ -58,7 +58,7 @@
                                         <td data-label="" class="text-end">
                                             <a asp-action="ExamScores" asp-route-editId="@score.ScoreId" class="btn btn-sm btn-outline-primary">@UiText.Get(Context, "Common.Edit")</a>
                                             <form asp-action="DeleteExamScore" method="post" class="d-inline"
-                                                  onsubmit="return confirm('@JavaScriptEncoder.Default.Encode(UiText.Get(Context, "ExamScores.DeleteConfirm"))');">
+                                                  onsubmit="return confirm('@System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(UiText.Get(Context, "ExamScores.DeleteConfirm"))');">
                                                 <input type="hidden" name="scoreId" value="@score.ScoreId" />
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">@UiText.Get(Context, "Common.Delete")</button>
                                             </form>
