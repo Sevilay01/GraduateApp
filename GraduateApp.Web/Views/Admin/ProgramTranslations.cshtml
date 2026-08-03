@@ -1,0 +1,147 @@
+@model ProgramTranslationPageViewModel
+@{
+    ViewData["Title"] = "Toplu program çevirileri";
+}
+
+<header class="page-heading">
+    <div>
+        <span class="eyebrow">Akademik katalog</span>
+        <h1 class="page-heading__title">Toplu İngilizce program adları</h1>
+        <p class="page-heading__description">
+            Programların resmî İngilizce adlarını tek ekranda gözden geçirip atomik olarak kaydedin.
+        </p>
+    </div>
+    <div class="page-heading__actions admin-tab-links">
+        <a asp-action="Institutes" class="btn btn-outline-primary">Enstitüler</a>
+        <a asp-action="Programs" class="btn btn-outline-primary">Programlar</a>
+        <a asp-action="ProgramTranslations" class="btn btn-outline-primary" aria-current="page">Toplu İngilizce adlar</a>
+        <a asp-action="Universities" class="btn btn-outline-primary">Üniversiteler</a>
+    </div>
+</header>
+
+<div class="alert alert-info" role="note">
+    Bu alan otomatik çeviri üretmez. Kurumca doğrulanmış İngilizce adları girin.
+    Boş bırakılan kayıtlarda İngilizce arayüz Türkçe ada güvenli biçimde geri döner.
+    Sayfadaki tüm değişiklikler tek işlemde kaydedilir; eşzamanlı bir güncelleme varsa hiçbir satır kısmen yazılmaz.
+</div>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+}
+
+<form method="get" class="admin-filter-panel mb-4" aria-labelledby="translation-filter-heading">
+    <h2 id="translation-filter-heading" class="admin-filter-panel__heading">Programları ara</h2>
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-8">
+            <label asp-for="Search" class="form-label">Türkçe veya İngilizce program adı</label>
+            <input asp-for="Search" class="form-control" maxlength="100" placeholder="Örn. Bilgisayar veya Computer" />
+        </div>
+        <div class="col-12 col-lg-4 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Ara</button>
+            <a asp-action="ProgramTranslations" class="btn btn-outline-secondary">Temizle</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="empty-state">
+        <h2>Program bulunamadı</h2>
+        <p>Arama metnini değiştirin veya program kataloğunu kontrol edin.</p>
+    </div>
+}
+else
+{
+    <form asp-action="SaveProgramTranslations" method="post" novalidate data-disable-on-submit="true">
+        @Html.AntiForgeryToken()
+        <input asp-for="Search" type="hidden" />
+        <input asp-for="Page" type="hidden" />
+        <input asp-for="PageSize" type="hidden" />
+        <input asp-for="TotalCount" type="hidden" />
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+        <div class="table-shell">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle responsive-table">
+                    <caption>Bu sayfadaki programların resmî İngilizce adları</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Enstitü</th>
+                            <th scope="col">Türkçe program adı</th>
+                            <th scope="col">Derece</th>
+                            <th scope="col">İngilizce program adı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var index = 0; index < Model.Items.Count; index++)
+                        {
+                            <tr>
+                                <td data-label="Enstitü">
+                                    @Model.Items[index].InstituteName
+                                    <input asp-for="Items[index].InstituteName" type="hidden" />
+                                </td>
+                                <td data-label="Türkçe program adı">
+                                    <strong>@Model.Items[index].ProgramName</strong>
+                                    <input asp-for="Items[index].ProgramId" type="hidden" />
+                                    <input asp-for="Items[index].ProgramName" type="hidden" />
+                                    <input asp-for="Items[index].RowVersion" type="hidden" />
+                                </td>
+                                <td data-label="Derece">
+                                    @Model.Items[index].DegreeType
+                                    <input asp-for="Items[index].DegreeType" type="hidden" />
+                                </td>
+                                <td data-label="İngilizce program adı">
+                                    <label class="visually-hidden" asp-for="Items[index].ProgramNameEnglish">
+                                        @Model.Items[index].ProgramName için İngilizce ad
+                                    </label>
+                                    <input asp-for="Items[index].ProgramNameEnglish"
+                                           class="form-control"
+                                           lang="en"
+                                           maxlength="100"
+                                           autocomplete="off"
+                                           placeholder="Official English name" />
+                                    <span asp-validation-for="Items[index].ProgramNameEnglish" class="text-danger"></span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-sticky-actions mt-3">
+            <span class="text-body-secondary">@Model.Items.Count program bu işlem kapsamındadır.</span>
+            <button class="btn btn-primary" type="submit">Bu sayfadaki çevirileri kaydet</button>
+        </div>
+    </form>
+}
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-4" aria-label="Program çevirisi sayfaları">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
+                <a class="page-link"
+                   asp-action="ProgramTranslations"
+                   asp-route-search="@Model.Search"
+                   asp-route-page="@(Model.Page - 1)"
+                   asp-route-pageSize="@Model.PageSize">Önceki</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">@Model.Page / @Model.TotalPages</span>
+            </li>
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)">
+                <a class="page-link"
+                   asp-action="ProgramTranslations"
+                   asp-route-search="@Model.Search"
+                   asp-route-page="@(Model.Page + 1)"
+                   asp-route-pageSize="@Model.PageSize">Sonraki</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
