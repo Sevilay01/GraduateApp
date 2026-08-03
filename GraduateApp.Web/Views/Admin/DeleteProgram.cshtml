@@ -1,28 +1,28 @@
 @model ProgramAdminViewModel
 @{
-    ViewData["Title"] = "Programı sil";
+    ViewData["Title"] = UiText.Get(Context, "Admin.DeleteProgram.Title");
 }
 
 <div class="danger-zone mx-auto" style="max-width: 42rem;">
     <div class="card-body">
-        <h1 class="h3">Programı kalıcı olarak sil</h1>
-        <p><strong>@Model.InstituteName · @Model.ProgramName · @Model.DegreeType</strong> programını silmek üzeresiniz.</p>
+        <h1 class="h3">@UiText.Get(Context, "Admin.DeleteProgram.Heading")</h1>
+        <p><strong>@Model.InstituteName · @Model.ProgramName · @UiText.LocalizeDegreeType(Context, Model.DegreeType)</strong> @UiText.Get(Context, "Admin.DeleteProgram.IntroSuffix")</p>
         @if (Model.OfferingCount > 0)
         {
             <div class="alert alert-warning" role="alert">
-                Bu programa bağlı @Model.OfferingCount dönemsel ilan var. Geçmiş kayıtları korumak için kalıcı silme engellenecektir; programı pasifleştirin.
+                @UiText.Format(Context, "Admin.DeleteProgram.LinkedOfferings", Model.OfferingCount)
             </div>
         }
         else
         {
-            <div class="alert alert-danger" role="alert">Bu işlem geri alınamaz. Yalnızca hiç ilanı olmayan programlar kalıcı olarak silinebilir.</div>
+            <div class="alert alert-danger" role="alert">@UiText.Get(Context, "Admin.DeleteProgram.Irreversible")</div>
         }
         <form asp-action="ConfirmDeleteProgram" method="post" class="d-flex gap-2">
             @Html.AntiForgeryToken()
             <input type="hidden" name="id" value="@Model.ProgramId" />
             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-            <button class="btn btn-danger" type="submit" disabled="@(Model.OfferingCount > 0)">Kalıcı olarak sil</button>
-            <a asp-action="Programs" class="btn btn-outline-secondary">Vazgeç</a>
+            <button class="btn btn-danger" type="submit" disabled="@(Model.OfferingCount > 0)">@UiText.Get(Context, "Admin.Delete.Permanent")</button>
+            <a asp-action="Programs" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Cancel")</a>
         </form>
     </div>
 </div>
