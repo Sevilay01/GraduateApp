@@ -3146,4 +3146,138 @@
   <data name="Admin.Message.DocumentDownloadFailed" xml:space="preserve">
     <value>The document could not be downloaded.</value>
   </data>
+
+  <!-- Model binding and validation localization -->
+  <data name="Validation.Required" xml:space="preserve">
+    <value>This field is required.</value>
+  </data>
+  <data name="Validation.RequestBodyRequired" xml:space="preserve">
+    <value>The required information was not submitted.</value>
+  </data>
+  <data name="Validation.InvalidNumberOrDate" xml:space="preserve">
+    <value>The entered value is not a valid number or date.</value>
+  </data>
+  <data name="Validation.InvalidValue" xml:space="preserve">
+    <value>The entered value is invalid.</value>
+  </data>
+  <data name="Validation.NumberRequired" xml:space="preserve">
+    <value>Enter a valid number.</value>
+  </data>
+  <data name="Validation.ValidExam" xml:space="preserve">
+    <value>Select a valid exam.</value>
+  </data>
+  <data name="Validation.ScoreRange" xml:space="preserve">
+    <value>The score must be between 0 and 999.99.</value>
+  </data>
+  <data name="Validation.ValidProgram" xml:space="preserve">
+    <value>Select a valid program.</value>
+  </data>
+  <data name="Validation.AcademicYearRange" xml:space="preserve">
+    <value>The academic year start must be between 2000 and 2200.</value>
+  </data>
+  <data name="Validation.ValidTerm" xml:space="preserve">
+    <value>Select a valid term.</value>
+  </data>
+  <data name="Validation.StartRequired" xml:space="preserve">
+    <value>The application start date is required.</value>
+  </data>
+  <data name="Validation.DeadlineRequired" xml:space="preserve">
+    <value>The application deadline is required.</value>
+  </data>
+  <data name="Validation.QuotaRange" xml:space="preserve">
+    <value>The quota must be between 1 and 100,000.</value>
+  </data>
+  <data name="Validation.OfferingConcurrency" xml:space="preserve">
+    <value>Offering concurrency information is invalid.</value>
+  </data>
+  <data name="Validation.DisplayNameRequired" xml:space="preserve">
+    <value>The display name is required.</value>
+  </data>
+  <data name="Validation.MaximumSize" xml:space="preserve">
+    <value>The maximum size is invalid.</value>
+  </data>
+  <data name="Validation.ValidEmail" xml:space="preserve">
+    <value>Enter a valid email address.</value>
+  </data>
+  <data name="Validation.UniversityNameRequired" xml:space="preserve">
+    <value>The university name is required.</value>
+  </data>
+  <data name="Validation.UniversityNameLength" xml:space="preserve">
+    <value>The university name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.InstituteNameRequired" xml:space="preserve">
+    <value>The institute name is required.</value>
+  </data>
+  <data name="Validation.InstituteNameLength" xml:space="preserve">
+    <value>The institute name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.InstituteConcurrency" xml:space="preserve">
+    <value>Institute concurrency information is invalid.</value>
+  </data>
+  <data name="Validation.ValidInstitute" xml:space="preserve">
+    <value>Select a valid institute.</value>
+  </data>
+  <data name="Validation.ProgramNameRequired" xml:space="preserve">
+    <value>The program name is required.</value>
+  </data>
+  <data name="Validation.ProgramNameLength" xml:space="preserve">
+    <value>The program name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.ProgramEnglishNameLength" xml:space="preserve">
+    <value>The English program name must be between 2 and 100 characters.</value>
+  </data>
+  <data name="Validation.DegreeTypeRequired" xml:space="preserve">
+    <value>The degree type is required.</value>
+  </data>
+  <data name="Validation.DegreeTypeLength" xml:space="preserve">
+    <value>The degree type can contain at most 50 characters.</value>
+  </data>
+  <data name="Validation.ProgramConcurrency" xml:space="preserve">
+    <value>Program concurrency information is invalid.</value>
+  </data>
+  <data name="Validation.MaximumRawScore" xml:space="preserve">
+    <value>The maximum raw score must be between 0.0001 and 99999 with no more than 4 decimal places.</value>
+  </data>
+  <data name="Field.AcademicYearStart" xml:space="preserve">
+    <value>Academic year start</value>
+  </data>
+  <data name="Field.Term" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="Field.ApplicationStartIstanbul" xml:space="preserve">
+    <value>Application start (Istanbul)</value>
+  </data>
+  <data name="Field.ApplicationDeadlineIstanbul" xml:space="preserve">
+    <value>Application deadline (Istanbul)</value>
+  </data>
+  <data name="Field.OfferingOpen" xml:space="preserve">
+    <value>Offering open</value>
+  </data>
+  <data name="Field.Archive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Field.RankedWorkflow" xml:space="preserve">
+    <value>Ranked evaluation workflow</value>
+  </data>
+  <data name="Field.AdminEmail" xml:space="preserve">
+    <value>New administrator email address</value>
+  </data>
+  <data name="Field.UniversityName" xml:space="preserve">
+    <value>University name</value>
+  </data>
+  <data name="Field.InstituteName" xml:space="preserve">
+    <value>Institute name</value>
+  </data>
+  <data name="Field.Institute" xml:space="preserve">
+    <value>Institute</value>
+  </data>
+  <data name="Field.ProgramName" xml:space="preserve">
+    <value>Program name</value>
+  </data>
+  <data name="Field.ProgramNameEnglish" xml:space="preserve">
+    <value>English program name</value>
+  </data>
+  <data name="Field.DegreeType" xml:space="preserve">
+    <value>Degree type</value>
+  </data>
 </root>
