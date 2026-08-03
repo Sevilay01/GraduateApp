@@ -41,6 +41,31 @@ public sealed class BilingualStudentUiTests
     }
 
     [Fact]
+    public void Turkish_resources_preserve_critical_recommendation_and_safe_navigation_copy()
+    {
+        var turkish = CreateContext("tr-TR");
+
+        Assert.Equal(
+            "Program alanı eşleşiyor",
+            UiText.Get(turkish, "Panel.ProfileMatch"));
+        Assert.Equal(
+            "Program adları karşılaştırılır; ilandaki tezli/tezsiz yüksek lisans veya doktora gibi derece ekleri eşleştirmeyi değiştirmez. Resmî başvuru uygunluğu kararı değildir ve hiçbir ilana başvurmanızı engellemez.",
+            UiText.Get(turkish, "Panel.PreferHelp"));
+        Assert.Equal(
+            "Ana sayfaya dön",
+            UiText.Get(turkish, "AccessDenied.Home"));
+        Assert.Equal(
+            "Sonuçlar kesinleştirilip yayımlanana kadar puan, sıralama ve karar gösterilmez.",
+            UiText.Get(turkish, "ApplicationDetail.EvaluationPendingLead"));
+        Assert.Equal(
+            "Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.",
+            UiText.Get(turkish, "ApplicationDetail.InvalidConfiguration"));
+        Assert.Equal(
+            "Profil değişiklikleri mevcut başvuruların değerlendirme verilerini etkilemez.",
+            UiText.Get(turkish, "Profile.SnapshotMessage"));
+    }
+
+    [Fact]
     public void Missing_english_catalog_name_falls_back_to_turkish_without_hiding_the_program()
     {
         var english = CreateContext("en-US");
