@@ -89,7 +89,13 @@ public static class ProgramNameEnglishCatalog
             return false;
         }
 
-        return Names.TryGetValue(Normalize(programName), out englishName!);
+        if (!Names.TryGetValue(Normalize(programName), out var mappedName))
+        {
+            return false;
+        }
+
+        englishName = mappedName;
+        return true;
     }
 
     public static string Normalize(string programName) =>
