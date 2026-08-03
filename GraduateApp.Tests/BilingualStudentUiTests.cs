@@ -57,7 +57,7 @@ public sealed class BilingualStudentUiTests
     {
         var context = new DefaultHttpContext();
         context.Features.Set<IRequestCultureFeature>(
-            new RequestCultureFeature(new RequestCulture(culture), null));
+            new RequestCultureFeature(new RequestCulture(culture), new CookieRequestCultureProvider()));
         return context;
     }
 }
