@@ -1064,11 +1064,9 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.DoesNotContain("SwitchAccount", anonymousHtml, StringComparison.Ordinal);
         Assert.Contains("href=\"/Account/Login\"", anonymousHtml, StringComparison.Ordinal);
         Assert.Contains("href=\"/Account/AdminLogin\"", anonymousHtml, StringComparison.Ordinal);
-        var anonymousHomeAction = OpeningTagContaining(
-            anonymousHtml,
-            "btn-outline-secondary",
-            "a");
-        Assert.Matches("href=\"/(?:Home(?:/Index)?)?\"", anonymousHomeAction);
+        Assert.Matches(
+            "<a(?=[^>]*href=\"/(?:Home(?:/Index)?)?\")(?=[^>]*class=\"[^\"]*btn-outline-secondary[^\"]*\")[^>]*>",
+            anonymousHtml);
     }
 
     [Fact]
