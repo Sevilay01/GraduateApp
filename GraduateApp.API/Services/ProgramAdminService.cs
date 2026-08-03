@@ -26,6 +26,10 @@ public interface IProgramAdminService
         int adminId,
         ProgramUpdateDto request,
         CancellationToken cancellationToken);
+    Task<ServiceResult<ProgramTranslationBatchResultDto>> UpdateTranslationsAsync(
+        int adminId,
+        ProgramTranslationBatchUpdateDto request,
+        CancellationToken cancellationToken);
     Task<ServiceResult<ProgramAdminDto>> SetActiveAsync(
         int programId,
         int adminId,
@@ -247,6 +251,96 @@ public sealed class ProgramAdminService(
 
         var updated = await GetByIdAsync(programId, cancellationToken);
         return ServiceResult<ProgramAdminDto>.Success(updated!);
+    }
+
+    public async Task<ServiceResult<ProgramTranslationBatchResultDto>> UpdateTranslationsAsync(
+        int adminId,
+        ProgramTranslationBatchUpdateDto request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Items.Count is < 1 or > 100)
+        {
+            return ServiceResult<ProgramTranslationBatchResultDto>.Failure(
+                "Tek işlemde 1 ile 100 program çevirisi güncellenebilir.",
+                StatusCodes.Status400BadRequest);
+        }
+
+        var duplicateId = request.Items
+            .GroupBy(item => item.ProgramId)
+            .FirstOrDefault(group => group.Count() > 1);
+        if (duplicateId is not null)
+        {
+            return ServiceResult<ProgramTranslationBatchResultDto>.Failure(
+                "Aynı program toplu güncelleme isteğinde birden fazla kez yer alamaz.",
+                StatusCodes.Status400BadRequest);
+        }
+
+        var ids = request.Items.Select(item => item.ProgramId).ToArray();
+        var programs = await dbContext.Programs
+            .Where(item => ids.Contains(item.ProgramId))
+            .OrderBy(item => item.ProgramId)
+            .ToListAsync(cancellationToken);
+        if (programs.Count != ids.Length)
+        {
+            return ServiceResult<ProgramTranslationBatchResultDto>.Failure(
+                "Programlardan biri bulunamadı. Sayfayı yenileyip tekrar deneyin.",
+                StatusCodes.Status404NotFound);
+        }
+
+        var programsById = programs.ToDictionary(item => item.ProgramId);
+        var normalizedNames = new Dictionary<int, string?>(request.Items.Count);
+        foreach (var item in request.Items)
+        {
+            var englishName = string.IsNullOrWhiteSpace(item.ProgramNameEnglish)
+                ? null
+                : item.ProgramNameEnglish.Trim();
+            if (englishName is not null && (englishName.Length is < 2 or > 100))
+            {
+                return ServiceResult<ProgramTranslationBatchResultDto>.Failure(
+                    "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.",
+                    StatusCodes.Status400BadRequest);
+            }
+
+            var program = programsById[item.ProgramId];
+            if (!TrySetOriginalRowVersion(program, item.RowVersion, out var rowVersionError))
+            {
+                return ServiceResult<ProgramTranslationBatchResultDto>.Failure(
+                    rowVersionError!,
+                    StatusCodes.Status400BadRequest);
+            }
+
+            normalizedNames[item.ProgramId] = englishName;
+        }
+
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var updatedCount = 0;
+        foreach (var program in programs)
+        {
+            var englishName = normalizedNames[program.ProgramId];
+            if (string.Equals(program.ProgramNameEnglish, englishName, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            program.ProgramNameEnglish = englishName;
+            program.UpdatedAtUtc = now;
+            AddAudit(adminId, "ProgramTranslationUpdated", program.ProgramId.ToString(), program, now);
+            updatedCount++;
+        }
+
+        if (updatedCount == 0)
+        {
+            return ServiceResult<ProgramTranslationBatchResultDto>.Success(
+                new ProgramTranslationBatchResultDto(0));
+        }
+
+        var saveResult = await SaveAsync(cancellationToken);
+        return saveResult.IsSuccess
+            ? ServiceResult<ProgramTranslationBatchResultDto>.Success(
+                new ProgramTranslationBatchResultDto(updatedCount))
+            : ServiceResult<ProgramTranslationBatchResultDto>.Failure(
+                saveResult.Error!,
+                saveResult.StatusCode);
     }
 
     public async Task<ServiceResult<ProgramAdminDto>> SetActiveAsync(
