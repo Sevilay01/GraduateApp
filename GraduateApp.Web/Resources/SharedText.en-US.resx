@@ -817,4 +817,229 @@
   <data name="ApplicationDetail.Back" xml:space="preserve">
     <value>Return to dashboard</value>
   </data>
+  <data name="Field.Tc" xml:space="preserve">
+    <value>Turkish identity number</value>
+  </data>
+  <data name="Field.FirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="Field.LastName" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="Field.FatherName" xml:space="preserve">
+    <value>Father's name</value>
+  </data>
+  <data name="Field.BirthDate" xml:space="preserve">
+    <value>Date of birth</value>
+  </data>
+  <data name="Field.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Field.Telephone" xml:space="preserve">
+    <value>Telephone</value>
+  </data>
+  <data name="Field.Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Field.ConfirmPassword" xml:space="preserve">
+    <value>Confirm password</value>
+  </data>
+  <data name="Field.CurrentPassword" xml:space="preserve">
+    <value>Current password</value>
+  </data>
+  <data name="Field.NewPassword" xml:space="preserve">
+    <value>New password</value>
+  </data>
+  <data name="Field.University" xml:space="preserve">
+    <value>University</value>
+  </data>
+  <data name="Field.Faculty" xml:space="preserve">
+    <value>Faculty</value>
+  </data>
+  <data name="Field.GraduatedProgram" xml:space="preserve">
+    <value>Undergraduate program</value>
+  </data>
+  <data name="Field.Gpa" xml:space="preserve">
+    <value>Undergraduate GPA</value>
+  </data>
+  <data name="Field.Exam" xml:space="preserve">
+    <value>Exam</value>
+  </data>
+  <data name="Field.Score" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="Field.ResultDate" xml:space="preserve">
+    <value>Result date</value>
+  </data>
+  <data name="Register.Title" xml:space="preserve">
+    <value>Student registration</value>
+  </data>
+  <data name="Register.Eyebrow" xml:space="preserve">
+    <value>New student account</value>
+  </data>
+  <data name="Register.Heading" xml:space="preserve">
+    <value>Create your student registration</value>
+  </data>
+  <data name="Register.Lead" xml:space="preserve">
+    <value>Enter your identity and contact information completely to create a secure account.</value>
+  </data>
+  <data name="Register.Back" xml:space="preserve">
+    <value>Return to sign in</value>
+  </data>
+  <data name="Register.Identity" xml:space="preserve">
+    <value>Identity information</value>
+  </data>
+  <data name="Register.Contact" xml:space="preserve">
+    <value>Contact information</value>
+  </data>
+  <data name="Register.PhoneExample" xml:space="preserve">
+    <value>Example: 05XX XXX XX XX</value>
+  </data>
+  <data name="Register.SecurePassword" xml:space="preserve">
+    <value>Secure password</value>
+  </data>
+  <data name="Register.PasswordRule" xml:space="preserve">
+    <value>Use at least 12 characters with uppercase and lowercase letters, a number, and a special character.</value>
+  </data>
+  <data name="Register.PrivacyPrefix" xml:space="preserve">
+    <value>For information about processing personal data, review the</value>
+  </data>
+  <data name="Register.PrivacyLink" xml:space="preserve">
+    <value>privacy notice</value>
+  </data>
+  <data name="Register.PrivacySuffix" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="Register.Submit" xml:space="preserve">
+    <value>Create registration</value>
+  </data>
+  <data name="Forgot.Title" xml:space="preserve">
+    <value>Forgot password</value>
+  </data>
+  <data name="Forgot.Eyebrow" xml:space="preserve">
+    <value>Account recovery</value>
+  </data>
+  <data name="Forgot.Heading" xml:space="preserve">
+    <value>Reset your password securely</value>
+  </data>
+  <data name="Forgot.Lead" xml:space="preserve">
+    <value>Enter your registered email address. For security, no account-existence details are disclosed.</value>
+  </data>
+  <data name="Forgot.Aria" xml:space="preserve">
+    <value>Password-reset request</value>
+  </data>
+  <data name="Forgot.Submitted" xml:space="preserve">
+    <value>If the account exists, password-reset instructions have been sent.</value>
+  </data>
+  <data name="Forgot.Submit" xml:space="preserve">
+    <value>Request reset link</value>
+  </data>
+  <data name="Forgot.Back" xml:space="preserve">
+    <value>Return to sign in</value>
+  </data>
+  <data name="Reset.Title" xml:space="preserve">
+    <value>Reset password</value>
+  </data>
+  <data name="Reset.Eyebrow" xml:space="preserve">
+    <value>Account security</value>
+  </data>
+  <data name="Reset.Heading" xml:space="preserve">
+    <value>Choose your new password</value>
+  </data>
+  <data name="Reset.Lead" xml:space="preserve">
+    <value>Choose a strong password of at least 12 characters that you do not use for another account.</value>
+  </data>
+  <data name="Reset.Aria" xml:space="preserve">
+    <value>New password</value>
+  </data>
+  <data name="Reset.Submit" xml:space="preserve">
+    <value>Update password</value>
+  </data>
+  <data name="Change.Title" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Change.Eyebrow" xml:space="preserve">
+    <value>Session security</value>
+  </data>
+  <data name="Change.Heading" xml:space="preserve">
+    <value>Change your password</value>
+  </data>
+  <data name="Change.Lead" xml:space="preserve">
+    <value>Verify your current password and choose a new, strong password for your account.</value>
+  </data>
+  <data name="Change.Aria" xml:space="preserve">
+    <value>Change-password form</value>
+  </data>
+  <data name="Change.Submit" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Invitation.Title" xml:space="preserve">
+    <value>Accept administrator invitation</value>
+  </data>
+  <data name="Invitation.Eyebrow" xml:space="preserve">
+    <value>Authorized access</value>
+  </data>
+  <data name="Invitation.Heading" xml:space="preserve">
+    <value>Complete your administrator invitation</value>
+  </data>
+  <data name="Invitation.Lead" xml:space="preserve">
+    <value>This area is only for the one-time administrator invitation sent to you.</value>
+  </data>
+  <data name="Invitation.Aria" xml:space="preserve">
+    <value>Set administrator password</value>
+  </data>
+  <data name="Invitation.PasswordLead" xml:space="preserve">
+    <value>Choose a strong password used only for this account.</value>
+  </data>
+  <data name="Invitation.Submit" xml:space="preserve">
+    <value>Accept invitation</value>
+  </data>
+  <data name="AccessDenied.Title" xml:space="preserve">
+    <value>Access denied</value>
+  </data>
+  <data name="AccessDenied.Heading" xml:space="preserve">
+    <value>You do not have permission to access this page</value>
+  </data>
+  <data name="AccessDenied.Lead" xml:space="preserve">
+    <value>The account type in this session is not permitted on the requested page. You can switch accounts securely or return home.</value>
+  </data>
+  <data name="AccessDenied.Admin" xml:space="preserve">
+    <value>Sign in with an administrator account</value>
+  </data>
+  <data name="AccessDenied.Student" xml:space="preserve">
+    <value>Sign in with a student account</value>
+  </data>
+  <data name="AccessDenied.Home" xml:space="preserve">
+    <value>Return home</value>
+  </data>
+  <data name="Privacy.Title" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="Privacy.Heading" xml:space="preserve">
+    <value>Privacy and personal data</value>
+  </data>
+  <data name="Privacy.P1" xml:space="preserve">
+    <value>GraduateApp processes only the information required for graduate applications. Turkish identity numbers, passwords, and security tokens are not displayed in the user interface or application logs.</value>
+  </data>
+  <data name="Privacy.P2" xml:space="preserve">
+    <value>Contact your institution's authorized application office to request correction or deletion of your personal data.</value>
+  </data>
+  <data name="Status.Title" xml:space="preserve">
+    <value>Request could not be completed</value>
+  </data>
+  <data name="Status.NotFound" xml:space="preserve">
+    <value>The page you requested was not found.</value>
+  </data>
+  <data name="Status.Unauthorized" xml:space="preserve">
+    <value>You must sign in to view this page.</value>
+  </data>
+  <data name="Status.Forbidden" xml:space="preserve">
+    <value>You do not have permission to access this page.</value>
+  </data>
+  <data name="Status.Failed" xml:space="preserve">
+    <value>The request could not be completed.</value>
+  </data>
+  <data name="Status.Home" xml:space="preserve">
+    <value>Return home</value>
+  </data>
 </root>
