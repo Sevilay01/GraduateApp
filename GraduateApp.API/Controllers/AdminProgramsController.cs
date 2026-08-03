@@ -76,6 +76,23 @@ public sealed class AdminProgramsController(IProgramAdminService programService)
         return FromResult(result);
     }
 
+    [HttpPut("translations")]
+    public async Task<IActionResult> UpdateTranslations(
+        ProgramTranslationBatchUpdateDto request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetAdminId(out var adminId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await programService.UpdateTranslationsAsync(
+            adminId,
+            request,
+            cancellationToken);
+        return FromResult(result);
+    }
+
     [HttpPost("{id:int}/activate")]
     public Task<IActionResult> Activate(
         int id,

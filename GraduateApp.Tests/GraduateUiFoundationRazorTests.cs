@@ -132,13 +132,15 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.DoesNotContain("Bilgisayar Mühendisliği", decodedHtml, StringComparison.Ordinal);
         Assert.Contains("2026–2027 · Fall", decodedHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("2026–2027 · Güz", decodedHtml, StringComparison.Ordinal);
+        Assert.Contains("data-language-form", html, StringComparison.Ordinal);
         Assert.Contains("name=\"culture\"", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"tr-TR\"", html, StringComparison.Ordinal);
         Assert.Contains("value=\"en-US\"", html, StringComparison.Ordinal);
-        Assert.Matches("value=\\\"en-US\\\"\\s+selected", html);
+        Assert.Matches("value=\\\"en-US\\\"[^>]*aria-pressed=\\\"true\\\"", html);
         Assert.Contains("name=\"returnUrl\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
-        Assert.Contains("data-auto-submit-on-change=\"true\"", html, StringComparison.Ordinal);
-        Assert.Contains("<noscript>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<select id=\"site-language\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<noscript>", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Ana sayfa</a>", html, StringComparison.Ordinal);
     }
 
@@ -198,11 +200,7 @@ public sealed class GraduateUiFoundationRazorTests
             panelHtml,
             StringComparison.Ordinal);
         Assert.Contains(
-            "hiçbir ilana başvurmanızı engellemez",
-            panelHtml,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "derece ekleri eşleştirmeyi değiştirmez",
+            "id=\"prefer-undergraduate-program\"",
             panelHtml,
             StringComparison.Ordinal);
     }
@@ -279,7 +277,7 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("name=\"programOfferingId\" value=\"42\"", html, StringComparison.Ordinal);
         Assert.Contains("method=\"post\"", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
-        Assert.Contains("Program alanı eşleşiyor", html, StringComparison.Ordinal);
+        Assert.Contains("data-profile-match", html, StringComparison.Ordinal);
         Assert.Contains("data-profile-recommendation", html, StringComparison.Ordinal);
         Assert.Contains("<Bilgisayar Mühendisliği>", decodedHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("<Bilgisayar Mühendisliği>", html, StringComparison.Ordinal);
@@ -1068,7 +1066,9 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.DoesNotContain("SwitchAccount", anonymousHtml, StringComparison.Ordinal);
         Assert.Contains("href=\"/Account/Login\"", anonymousHtml, StringComparison.Ordinal);
         Assert.Contains("href=\"/Account/AdminLogin\"", anonymousHtml, StringComparison.Ordinal);
-        Assert.Matches("href=\"/(?:Home(?:/Index)?)?\"[^>]*>Ana sayfaya dön</a>", anonymousHtml);
+        Assert.Matches(
+            "<a(?=[^>]*href=\"/(?:Home(?:/Index)?)?\")(?=[^>]*class=\"[^\"]*btn-outline-secondary[^\"]*\")[^>]*>",
+            anonymousHtml);
     }
 
     [Fact]
@@ -1370,6 +1370,8 @@ public sealed class GraduateUiFoundationRazorTests
         Assert.Contains("@media (prefers-reduced-motion: reduce)", css, StringComparison.Ordinal);
         Assert.Contains("--cu-focus-ring", css, StringComparison.Ordinal);
         Assert.Contains(".configuration-steps", css, StringComparison.Ordinal);
+        Assert.Contains(".language-switcher__options", css, StringComparison.Ordinal);
+        Assert.Contains(".language-switcher__option.active", css, StringComparison.Ordinal);
         Assert.Contains("max-width: 100%;", css, StringComparison.Ordinal);
         Assert.Contains(".admin-item-card__actions .btn", css, StringComparison.Ordinal);
 

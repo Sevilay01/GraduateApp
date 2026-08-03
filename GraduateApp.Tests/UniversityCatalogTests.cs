@@ -531,7 +531,7 @@ public sealed class UniversityCatalogTests
         var gnoInput = OpeningTagContaining(populatedHtml, "name=\"Gno\"", "input");
         Assert.DoesNotContain("disabled", gnoInput, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(
-            "Değişiklikler mevcut başvuruların değerlendirme verilerini etkilemez.",
+            "Profil değişiklikleri mevcut başvuruların değerlendirme verilerini etkilemez.",
             WebUtility.HtmlDecode(populatedHtml),
             StringComparison.Ordinal);
 

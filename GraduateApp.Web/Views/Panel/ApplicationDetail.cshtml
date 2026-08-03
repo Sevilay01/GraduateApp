@@ -1,14 +1,15 @@
 @model StudentApplicationDetailViewModel
 @{
-    ViewData["Title"] = "Başvuru detayı";
+    ViewData["Title"] = UiText.Get(Context, "ApplicationDetail.Title");
     var hasInvalidRequirementConfiguration = !Model.HasValidRequiredDocumentConfiguration();
     var canSubmit = Model.CanSubmitDocumentWorkflow();
+    var localizedProgramName = UiText.SelectLocalized(Context, Model.ProgramName, Model.ProgramNameEnglish);
 }
 
 <header class="page-heading">
     <div>
-        <p class="eyebrow">Başvuru detayı</p>
-        <h1>@Model.ProgramName</h1>
+        <p class="eyebrow">@UiText.Get(Context, "ApplicationDetail.Title")</p>
+        <h1>@localizedProgramName</h1>
         <p>@Model.InstituteName · @Model.AcademicYear · @Model.TermName</p>
     </div>
     <partial name="_ApplicationStatusBadge" model="Model.CurrentStatus" />
@@ -21,8 +22,8 @@
     if (Model.PublishedEvaluation is null)
     {
         <section class="empty-state empty-state--compact" aria-labelledby="evaluation-pending-heading">
-            <h2 id="evaluation-pending-heading">Değerlendirme sürüyor</h2>
-            <p>Sonuçlar kesinleştirilip yayımlanana kadar puan, sıralama ve karar gösterilmez.</p>
+            <h2 id="evaluation-pending-heading">@UiText.Get(Context, "ApplicationDetail.EvaluationPending")</h2>
+            <p>@UiText.Get(Context, "ApplicationDetail.EvaluationPendingLead")</p>
         </section>
     }
     else
@@ -32,28 +33,28 @@
         <section class="result-card @(!isAdmitted ? "result-card--negative" : null)" aria-labelledby="evaluation-result-heading">
             <div class="result-card__hero">
                 <div>
-                    <p class="eyebrow">Kesinleşmiş sonuç</p>
-                    <h2 id="evaluation-result-heading">Yayımlanmış değerlendirme sonucu</h2>
-                    <p>@Model.InstituteName · @Model.ProgramName · @Model.AcademicYear · @Model.TermName</p>
+                    <p class="eyebrow">@UiText.Get(Context, "ApplicationDetail.FinalResult")</p>
+                    <h2 id="evaluation-result-heading">@UiText.Get(Context, "ApplicationDetail.PublishedResult")</h2>
+                    <p>@Model.InstituteName · @localizedProgramName · @Model.AcademicYear · @Model.TermName</p>
                 </div>
-                <strong>@result.Outcome.DisplayName()</strong>
+                <strong>@UiText.LocalizeEvaluationOutcome(Context, result.Outcome)</strong>
             </div>
 
             <dl class="meta-grid">
                 <div>
-                    <dt>Toplam puan</dt>
+                    <dt>@UiText.Get(Context, "ApplicationDetail.TotalScore")</dt>
                     <dd>@(result.TotalScore?.ToString("0.0000") ?? "—")</dd>
                 </div>
                 <div>
-                    <dt>Sıralama</dt>
+                    <dt>@UiText.Get(Context, "ApplicationDetail.Rank")</dt>
                     <dd>@(result.Rank?.ToString() ?? "—")</dd>
                 </div>
                 <div>
-                    <dt>Kontenjan</dt>
+                    <dt>@UiText.Get(Context, "ApplicationDetail.Quota")</dt>
                     <dd>@Model.Quota</dd>
                 </div>
                 <div>
-                    <dt>Yayımlanma</dt>
+                    <dt>@UiText.Get(Context, "ApplicationDetail.PublishedAt")</dt>
                     <dd>@IstanbulTime.FromUtc(result.ResultsPublishedAtUtc).ToString("dd.MM.yyyy HH:mm")</dd>
                 </div>
             </dl>
@@ -62,25 +63,25 @@
             {
                 <div class="table-responsive">
                     <table class="table align-middle responsive-table">
-                        <caption>Değerlendirme puanı bileşenleri</caption>
+                        <caption>@UiText.Get(Context, "ApplicationDetail.ComponentsCaption")</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Kriter</th>
-                                <th scope="col">Ham puan</th>
-                                <th scope="col">Normalize puan</th>
-                                <th scope="col">Ağırlık</th>
-                                <th scope="col">Katkı</th>
+                                <th scope="col">@UiText.Get(Context, "ApplicationDetail.Criterion")</th>
+                                <th scope="col">@UiText.Get(Context, "ApplicationDetail.RawScore")</th>
+                                <th scope="col">@UiText.Get(Context, "ApplicationDetail.NormalizedScore")</th>
+                                <th scope="col">@UiText.Get(Context, "ApplicationDetail.Weight")</th>
+                                <th scope="col">@UiText.Get(Context, "ApplicationDetail.Contribution")</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var component in result.Components)
                             {
                                 <tr>
-                                    <th scope="row" data-label="Kriter">@component.DisplayName</th>
-                                    <td data-label="Ham puan">@component.RawScore.ToString("0.0000")</td>
-                                    <td data-label="Normalize puan">@component.NormalizedScore.ToString("0.0000")</td>
-                                    <td data-label="Ağırlık">@((component.WeightBasisPoints / 100m).ToString("0.##"))%</td>
-                                    <td data-label="Katkı">@component.WeightedScore.ToString("0.0000")</td>
+                                    <th scope="row" data-label="@UiText.Get(Context, "ApplicationDetail.Criterion")">@component.DisplayName</th>
+                                    <td data-label="@UiText.Get(Context, "ApplicationDetail.RawScore")">@component.RawScore.ToString("0.0000")</td>
+                                    <td data-label="@UiText.Get(Context, "ApplicationDetail.NormalizedScore")">@component.NormalizedScore.ToString("0.0000")</td>
+                                    <td data-label="@UiText.Get(Context, "ApplicationDetail.Weight")">@((component.WeightBasisPoints / 100m).ToString("0.##"))%</td>
+                                    <td data-label="@UiText.Get(Context, "ApplicationDetail.Contribution")">@component.WeightedScore.ToString("0.0000")</td>
                                 </tr>
                             }
                         </tbody>
@@ -89,7 +90,7 @@
             }
 
             <p class="snapshot-note">
-                Bu sonuç, başvuru ve değerlendirme anında kaydedilen kesinleşmiş snapshot verilerine dayanır.
+                @UiText.Get(Context, "ApplicationDetail.SnapshotNote")
             </p>
         </section>
     }
@@ -97,15 +98,15 @@
 
 <section class="section-heading" aria-labelledby="documents-heading">
     <div>
-        <p class="eyebrow">Güvenli belge akışı</p>
-        <h2 id="documents-heading">Başvuru belgeleri</h2>
+        <p class="eyebrow">@UiText.Get(Context, "ApplicationDetail.DocumentEyebrow")</p>
+        <h2 id="documents-heading">@UiText.Get(Context, "ApplicationDetail.Documents")</h2>
     </div>
 </section>
 
 @if (!Model.UsesDocumentWorkflow)
 {
     <div class="alert alert-info" role="status">
-        Bu başvuru legacy belge iş akışını kullanıyor. Mevcut erişim ve durum kuralları korunur.
+        @UiText.Get(Context, "ApplicationDetail.LegacyDocuments")
     </div>
 }
 else
@@ -113,22 +114,21 @@ else
     @if (Model.CanUpdateDocuments && Model.ApplicationDeadlineUtc.HasValue)
     {
         <div class="alert alert-info" role="status">
-            Belgelerinizi son başvuru tarihi olan
-            <strong>@IstanbulTime.FromUtc(Model.ApplicationDeadlineUtc.Value).ToString("dd.MM.yyyy HH:mm")</strong>
-            anına kadar güncelleyebilirsiniz. Yeni sürüm yeniden incelenir.
+            @UiText.Format(Context, "ApplicationDetail.UpdateUntil",
+                IstanbulTime.FromUtc(Model.ApplicationDeadlineUtc.Value).ToString("dd.MM.yyyy HH:mm"))
         </div>
     }
     else if (Model.CurrentStatus is ApplicationStatus.Draft or ApplicationStatus.Pending or ApplicationStatus.UnderReview)
     {
         <div class="alert alert-secondary" role="status">
-            İlan kapalı olduğu veya son başvuru tarihi geçtiği için belgeler artık güncellenemez.
+            @UiText.Get(Context, "ApplicationDetail.UpdateClosed")
         </div>
     }
 
     @if (Model.MissingRequiredDocuments.Count > 0)
     {
         <div class="alert alert-warning" role="alert">
-            <strong>Eksik zorunlu belgeler:</strong> @string.Join(", ", Model.MissingRequiredDocuments)
+            <strong>@UiText.Get(Context, "ApplicationDetail.MissingDocuments")</strong> @string.Join(", ", Model.MissingRequiredDocuments)
         </div>
     }
 
@@ -143,16 +143,16 @@ else
                     <div>
                         <h3>@requirement.DisplayName</h3>
                         <span class="status-badge">
-                            @(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")
+                            @(requirement.IsRequired ? UiText.Get(Context, "ApplicationDetail.Required") : UiText.Get(Context, "ApplicationDetail.Optional"))
                         </span>
                     </div>
                     <dl>
                         <div>
-                            <dt>Dosya türü</dt>
-                            <dd>@requirement.AllowedContentCategory.CategoryName()</dd>
+                            <dt>@UiText.Get(Context, "ApplicationDetail.FileType")</dt>
+                            <dd>@UiText.LocalizeDocumentCategory(Context, requirement.AllowedContentCategory)</dd>
                         </div>
                         <div>
-                            <dt>En fazla</dt>
+                            <dt>@UiText.Get(Context, "ApplicationDetail.Maximum")</dt>
                             <dd>@DocumentPresentation.FileSize(requirement.MaximumBytes)</dd>
                         </div>
                     </dl>
@@ -165,40 +165,40 @@ else
 
                 @if (document is not null)
                 {
-                    <section class="document-current" aria-label="@requirement.DisplayName yüklü belge bilgileri">
+                    <section class="document-current" aria-label="@UiText.Format(Context, "ApplicationDetail.UploadedDocumentAria", requirement.DisplayName)">
                         <dl class="meta-grid">
                             <div>
-                                <dt>Dosya</dt>
+                                <dt>@UiText.Get(Context, "ApplicationDetail.File")</dt>
                                 <dd>@document.OriginalFileName</dd>
                             </div>
                             <div>
-                                <dt>Sürüm</dt>
+                                <dt>@UiText.Get(Context, "ApplicationDetail.Version")</dt>
                                 <dd>@document.VersionNumber</dd>
                             </div>
                             <div>
-                                <dt>Yükleme</dt>
+                                <dt>@UiText.Get(Context, "ApplicationDetail.UploadedAt")</dt>
                                 <dd>@IstanbulTime.FromUtc(document.UploadedAtUtc).ToString("dd.MM.yyyy HH:mm")</dd>
                             </div>
                             <div>
-                                <dt>İnceleme</dt>
-                                <dd>@document.ReviewStatus.ReviewName()</dd>
+                                <dt>@UiText.Get(Context, "ApplicationDetail.Review")</dt>
+                                <dd>@UiText.LocalizeDocumentReview(Context, document.ReviewStatus)</dd>
                             </div>
                         </dl>
                         @if (document.ReviewStatus == DocumentReviewStatus.Rejected)
                         {
                             <div class="alert alert-danger" role="alert">
-                                <strong>Ret gerekçesi:</strong> @document.RejectionReason
+                                <strong>@UiText.Get(Context, "ApplicationDetail.RejectionReason")</strong> @document.RejectionReason
                             </div>
                         }
                         <a asp-action="DownloadDocument"
                            asp-route-publicId="@Model.PublicId"
                            asp-route-documentPublicId="@document.PublicId"
-                           class="btn btn-outline-secondary">Belgeyi indir</a>
+                           class="btn btn-outline-secondary">@UiText.Get(Context, "ApplicationDetail.Download")</a>
                     </section>
                 }
                 else
                 {
-                    <p class="empty-inline">Henüz belge yüklenmedi.</p>
+                    <p class="empty-inline">@UiText.Get(Context, "ApplicationDetail.NoDocument")</p>
                 }
 
                 @if (canUpload)
@@ -206,7 +206,7 @@ else
                     @if (document?.ReviewStatus == DocumentReviewStatus.Approved)
                     {
                         <div class="alert alert-warning" role="alert">
-                            Bu belgeyi güncellerseniz mevcut onay geçersiz olur ve yeni sürüm yeniden incelenir.
+                            @UiText.Get(Context, "ApplicationDetail.ApprovalReset")
                         </div>
                     }
                     <form asp-action="UploadDocument"
@@ -216,7 +216,7 @@ else
                           enctype="multipart/form-data"
                           class="upload-form">
                         <label class="form-label" for="file-@requirement.PublicId">
-                            @(document is null ? "Belge yükle" : "Belgeyi güncelle")
+                            @(document is null ? UiText.Get(Context, "ApplicationDetail.Upload") : UiText.Get(Context, "ApplicationDetail.UpdateDocument"))
                         </label>
                         <div class="input-group">
                             <input id="file-@requirement.PublicId"
@@ -226,7 +226,7 @@ else
                                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                                    required />
                             <button type="submit" class="btn btn-primary">
-                                @(document is null ? "Yükle" : "Belgeyi güncelle")
+                                @(document is null ? UiText.Get(Context, "ApplicationDetail.UploadButton") : UiText.Get(Context, "ApplicationDetail.UpdateDocument"))
                             </button>
                         </div>
                     </form>
@@ -239,21 +239,21 @@ else
     {
         <form asp-action="SubmitApplication" asp-route-publicId="@Model.PublicId" method="post" class="submission-panel">
             <div>
-                <h2>Başvuruyu gönder</h2>
-                <p>Göndermeden önce tüm zorunlu belgelerin doğru ve güncel olduğunu kontrol edin.</p>
+                <h2>@UiText.Get(Context, "ApplicationDetail.Submit")</h2>
+                <p>@UiText.Get(Context, "ApplicationDetail.SubmitLead")</p>
                 @if (!canSubmit)
                 {
                     if (hasInvalidRequirementConfiguration)
                     {
-                        <p class="text-warning">Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.</p>
+                        <p class="text-warning">@UiText.Get(Context, "ApplicationDetail.InvalidConfiguration")</p>
                     }
                     else
                     {
-                        <p class="text-muted">Önce tüm zorunlu belgeleri yükleyin.</p>
+                        <p class="text-muted">@UiText.Get(Context, "ApplicationDetail.UploadRequired")</p>
                     }
                 }
             </div>
-            <button type="submit" class="btn btn-success" disabled="@(!canSubmit)">Başvuruyu gönder</button>
+            <button type="submit" class="btn btn-success" disabled="@(!canSubmit)">@UiText.Get(Context, "ApplicationDetail.Submit")</button>
         </form>
     }
 }
@@ -261,15 +261,13 @@ else
 @if (Model.CanWithdraw)
 {
     <section class="danger-zone" aria-labelledby="withdraw-application-heading">
-        <h2 id="withdraw-application-heading">Başvuruyu geri çek</h2>
+        <h2 id="withdraw-application-heading">@UiText.Get(Context, "ApplicationDetail.Withdraw")</h2>
         <p>
-            Geri çekilen başvuru değerlendirme ve kontenjan hesabının dışında kalır.
-            İlan açık ve son tarih geçmemişse daha sonra yeniden etkinleştirebilirsiniz;
-            bu durumda başvuru taslağa döner ve yeniden gönderilmesi gerekir.
+            @UiText.Get(Context, "ApplicationDetail.WithdrawLead")
         </p>
         <form asp-action="WithdrawApplication" asp-route-publicId="@Model.PublicId" method="post">
             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-            <button type="submit" class="btn btn-danger">Başvuruyu geri çek</button>
+            <button type="submit" class="btn btn-danger">@UiText.Get(Context, "ApplicationDetail.Withdraw")</button>
         </form>
     </section>
 }
@@ -277,17 +275,16 @@ else if (Model.CanReactivate)
 {
     <section class="submission-panel" aria-labelledby="reactivate-application-heading">
         <div>
-            <h2 id="reactivate-application-heading">Başvuruyu yeniden etkinleştir</h2>
+            <h2 id="reactivate-application-heading">@UiText.Get(Context, "ApplicationDetail.Reactivate")</h2>
             <p>
-                Belgeleriniz korunur. Eski puan ve değerlendirme snapshot’ları temizlenir;
-                güncel bilgileri kontrol ettikten sonra başvuruyu yeniden göndermeniz gerekir.
+                @UiText.Get(Context, "ApplicationDetail.ReactivateLead")
             </p>
         </div>
         <form asp-action="ReactivateApplication" asp-route-publicId="@Model.PublicId" method="post">
             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-            <button type="submit" class="btn btn-primary">Taslak olarak yeniden etkinleştir</button>
+            <button type="submit" class="btn btn-primary">@UiText.Get(Context, "ApplicationDetail.ReactivateDraft")</button>
         </form>
     </section>
 }
 
-<a asp-action="Index" class="btn btn-link mt-3">Panele dön</a>
+<a asp-action="Index" class="btn btn-link mt-3">@UiText.Get(Context, "ApplicationDetail.Back")</a>

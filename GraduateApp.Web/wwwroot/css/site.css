@@ -221,13 +221,66 @@ ul {
   background: var(--cu-primary);
 }
 
+.header-utilities {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.language-switcher {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.language-switcher__options {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+}
+
+.language-switcher__option {
+  padding: 0.2rem 0.28rem;
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  border: 0;
+  border-radius: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.language-switcher__option:hover {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.22rem;
+}
+
+.language-switcher__option.active {
+  color: #fff;
+  font-weight: 850;
+  text-decoration: underline;
+  text-decoration-thickness: 0.12rem;
+  text-underline-offset: 0.22rem;
+}
+
+.language-switcher__separator {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
 .session-area {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.24);
 }
 
 .session-identity {
@@ -1578,15 +1631,25 @@ code {
     width: auto;
   }
 
-  .session-area {
+  .header-utilities {
     flex-direction: row;
     align-items: center;
+    gap: 0.8rem;
     margin-top: 0;
     margin-left: 0.8rem;
     padding-top: 0;
     padding-left: 0.8rem;
     border-top: 0;
     border-left: 1px solid rgba(255, 255, 255, 0.24);
+  }
+
+  .language-switcher {
+    width: auto;
+  }
+
+  .session-area {
+    flex-direction: row;
+    align-items: center;
   }
 
   .session-actions--anonymous {

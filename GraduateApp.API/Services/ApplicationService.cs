@@ -1026,7 +1026,10 @@ public sealed class ApplicationService(
         AcademicPeriodFormatter.FormatTerm(offering.Term),
         DateTime.SpecifyKind(application.ApplicationDate, DateTimeKind.Utc),
         ParseStatus(application.CurrentStatus),
-        Convert.ToBase64String(application.RowVersion));
+        Convert.ToBase64String(application.RowVersion))
+    {
+        ProgramNameEnglish = offering.Program.ProgramNameEnglish
+    };
 
     private static StudentApplicationDetailDto MapStudentDetail(Application application, DateTime now)
     {
@@ -1067,7 +1070,10 @@ public sealed class ApplicationService(
             application.UsesDocumentWorkflow,
             application.UsesEvaluationWorkflow,
             requirements,
-            requirements.Where(item => item.IsRequired && item.CurrentDocument is null).Select(item => item.DisplayName).ToArray());
+            requirements.Where(item => item.IsRequired && item.CurrentDocument is null).Select(item => item.DisplayName).ToArray())
+        {
+            ProgramNameEnglish = application.ProgramOffering.Program.ProgramNameEnglish
+        };
     }
 
     private static ApplicationDocumentRequirementDto MapAdminRequirement(ApplicationDocumentRequirementSnapshot requirement)

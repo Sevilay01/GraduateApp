@@ -40,6 +40,29 @@ public sealed class ProgramUpdateDto : ProgramCreateDto
     public string RowVersion { get; init; } = string.Empty;
 }
 
+public sealed class ProgramTranslationUpdateDto
+{
+    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir program seçiniz.")]
+    public int ProgramId { get; init; }
+
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.")]
+    public string? ProgramNameEnglish { get; init; }
+
+    [Required(ErrorMessage = "Program eşzamanlılık bilgisi zorunludur.")]
+    [StringLength(24, MinimumLength = 12, ErrorMessage = "Program eşzamanlılık bilgisi geçersiz.")]
+    public string RowVersion { get; init; } = string.Empty;
+}
+
+public sealed class ProgramTranslationBatchUpdateDto
+{
+    [Required]
+    [MinLength(1, ErrorMessage = "En az bir program çevirisi gönderilmelidir.")]
+    [MaxLength(100, ErrorMessage = "Tek işlemde en fazla 100 program çevirisi güncellenebilir.")]
+    public IReadOnlyList<ProgramTranslationUpdateDto> Items { get; init; } = [];
+}
+
+public sealed record ProgramTranslationBatchResultDto(int UpdatedCount);
+
 public sealed class CatalogConcurrencyDto
 {
     [Required(ErrorMessage = "Eşzamanlılık bilgisi zorunludur.")]

@@ -1,4 +1,5 @@
 using System.Net;
+using GraduateApp.Web.Localization;
 using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -33,7 +34,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                 Applications = invalidSearchApplications.Value ?? [],
                 ErrorMessage = invalidSearchApplications.IsSuccess
                     ? null
-                    : invalidSearchApplications.Error ?? "Başvurular yüklenemedi."
+                    : invalidSearchApplications.Error ?? UiText.Get(HttpContext, "Panel.Error.ApplicationsLoad")
             });
         }
 
@@ -58,21 +59,18 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             var profile = await profileTask;
             if (!programs.IsSuccess)
             {
-                recommendationMessage =
-                    "Programlar yüklenemediği için profil önerileri şu anda kullanılamıyor.";
+                recommendationMessage = UiText.Get(HttpContext, "Panel.Error.RecommendationsPrograms");
             }
             else if (!profile.IsSuccess || profile.Value is null)
             {
-                recommendationMessage =
-                    "Eğitim profiliniz yüklenemediği için programlar normal sıralamada gösteriliyor.";
+                recommendationMessage = UiText.Get(HttpContext, "Panel.Error.ProfileLoad");
             }
             else
             {
                 graduatedProgram = profile.Value.Education?.GraduatedProgram;
                 if (string.IsNullOrWhiteSpace(graduatedProgram))
                 {
-                    recommendationMessage =
-                        "Önerileri kullanmak için profilinizde mezun olduğunuz lisans programını belirtin.";
+                    recommendationMessage = UiText.Get(HttpContext, "Panel.Recommendation.ProfileMissing");
                 }
                 else
                 {
@@ -90,8 +88,8 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                         .OrderByDescending(item => item.IsRecommendedForProfile)
                         .ToArray();
                     recommendationMessage = recommendationCount > 0
-                        ? $"{recommendationCount} ilan mezuniyet programınızla aynı alan adına sahip ve listenin başına taşındı."
-                        : "Mezuniyet programınızla aynı alan adına sahip açık ilan bulunamadı; diğer ilanlar başvuruya açık olmaya devam ediyor.";
+                        ? UiText.Format(HttpContext, "Panel.Recommendation.MatchCount", recommendationCount)
+                        : UiText.Get(HttpContext, "Panel.Recommendation.NoMatch");
                 }
             }
         }
@@ -105,7 +103,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             RecommendationMessage = recommendationMessage,
             ErrorMessage = programs.IsSuccess && applications.IsSuccess
                 ? null
-                : programs.Error ?? applications.Error ?? "Panel bilgileri yüklenemedi."
+                : programs.Error ?? applications.Error ?? UiText.Get(HttpContext, "Panel.Error.Load")
         });
     }
 
@@ -127,14 +125,14 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         if (programOfferingId <= 0)
         {
-            TempData["ErrorMessage"] = "Geçerli bir dönemsel ilan seçiniz.";
+            TempData["ErrorMessage"] = UiText.Get(HttpContext, "Panel.Error.InvalidOffering");
             return RedirectToAction(nameof(Index));
         }
 
         var result = await apiClient.CreateApplicationAsync(programOfferingId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Başvuru taslağınız oluşturuldu. Zorunlu belgeleri yükledikten sonra başvuruyu gönderin."
-            : result.Error ?? "Başvuru oluşturulamadı.";
+            ? UiText.Get(HttpContext, "Panel.Success.DraftCreated")
+            : result.Error ?? UiText.Get(HttpContext, "Panel.Error.Create");
         return result.IsSuccess && result.Value is not null
             ? RedirectToAction(nameof(ApplicationDetail), new { publicId = result.Value.PublicId })
             : RedirectToAction(nameof(Index));
@@ -168,7 +166,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         {
             Response.StatusCode = StatusCodes.Status404NotFound;
             ViewData["StatusCode"] = StatusCodes.Status404NotFound;
-            ViewData["StatusMessage"] = "Başvuru bulunamadı.";
+            ViewData["StatusMessage"] = UiText.Get(HttpContext, "Panel.Status.NotFound");
             return View("~/Views/Home/StatusCode.cshtml");
         }
 
@@ -204,14 +202,14 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         if (file is null || file.Length <= 0)
         {
-            TempData["ErrorMessage"] = "Yüklenecek dosyayı seçiniz.";
+            TempData["ErrorMessage"] = UiText.Get(HttpContext, "Panel.Document.Select");
             return RedirectToAction(nameof(ApplicationDetail), new { publicId });
         }
 
         var result = await apiClient.UploadApplicationDocumentAsync(publicId, requirementPublicId, file, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Belge güvenli biçimde yüklendi ve inceleme bekliyor."
-            : result.Error ?? "Belge yüklenemedi.";
+            ? UiText.Get(HttpContext, "Panel.Document.Uploaded")
+            : result.Error ?? UiText.Get(HttpContext, "Panel.Document.UploadFailed");
         return RedirectToAction(nameof(ApplicationDetail), new { publicId });
     }
 
@@ -221,8 +219,8 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         var result = await apiClient.SubmitApplicationAsync(publicId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Başvurunuz başarıyla gönderildi."
-            : result.Error ?? "Başvuru gönderilemedi.";
+            ? UiText.Get(HttpContext, "Panel.Application.Submitted")
+            : result.Error ?? UiText.Get(HttpContext, "Panel.Application.SubmitFailed");
         return RedirectToAction(nameof(ApplicationDetail), new { publicId });
     }
 
@@ -235,8 +233,8 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         var result = await apiClient.WithdrawApplicationAsync(publicId, rowVersion, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Başvurunuz geri çekildi."
-            : result.Error ?? "Başvuru geri çekilemedi.";
+            ? UiText.Get(HttpContext, "Panel.Application.Withdrawn")
+            : result.Error ?? UiText.Get(HttpContext, "Panel.Application.WithdrawFailed");
         return RedirectToAction(nameof(ApplicationDetail), new { publicId });
     }
 
@@ -249,8 +247,8 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         var result = await apiClient.ReactivateApplicationAsync(publicId, rowVersion, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Başvurunuz taslak olarak yeniden etkinleştirildi. Güncel bilgileri kontrol edip tekrar gönderebilirsiniz."
-            : result.Error ?? "Başvuru yeniden etkinleştirilemedi.";
+            ? UiText.Get(HttpContext, "Panel.Application.Reactivated")
+            : result.Error ?? UiText.Get(HttpContext, "Panel.Application.ReactivateFailed");
         return RedirectToAction(nameof(ApplicationDetail), new { publicId });
     }
 
@@ -263,7 +261,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.DownloadMyDocumentAsync(publicId, documentPublicId, cancellationToken);
         if (!result.IsSuccess || result.Content is null)
         {
-            TempData["ErrorMessage"] = result.Error ?? "Belge indirilemedi.";
+            TempData["ErrorMessage"] = result.Error ?? UiText.Get(HttpContext, "Panel.Document.DownloadFailed");
             return RedirectToAction(nameof(ApplicationDetail), new { publicId });
         }
 
@@ -283,7 +281,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
 
         if (!profile.IsSuccess || profile.Value is null)
         {
-            TempData["ErrorMessage"] = profile.Error ?? "Profil bilgileri yüklenemedi.";
+            TempData["ErrorMessage"] = profile.Error ?? UiText.Get(HttpContext, "Profile.LoadFailed");
             return RedirectToAction(nameof(Index));
         }
 
@@ -307,14 +305,14 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         var result = await apiClient.UpdateProfileAsync(model, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Profil güncellenemedi.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "Profile.UpdateFailed"));
             ApplyUniversityCatalogResult(
                 model,
                 await apiClient.GetUniversitiesAsync(cancellationToken));
             return View(model);
         }
 
-        TempData["SuccessMessage"] = "Profil ve eğitim bilgileriniz güncellendi.";
+        TempData["SuccessMessage"] = UiText.Get(HttpContext, "Profile.Updated");
         return RedirectToAction(nameof(Profile));
     }
 
@@ -344,9 +342,9 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                     ExamDate = selected.ExamDate
                 },
             ErrorMessage = !scores.IsSuccess || !exams.IsSuccess
-                ? scores.Error ?? exams.Error ?? "Sınav sonuçları yüklenemedi."
+                ? scores.Error ?? exams.Error ?? UiText.Get(HttpContext, "ExamScores.LoadFailed")
                 : editId.HasValue && selected is null
-                    ? "Düzenlemek istediğiniz sınav sonucu bulunamadı."
+                    ? UiText.Get(HttpContext, "ExamScores.EditNotFound")
                     : null
         });
     }
@@ -367,13 +365,13 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             : await apiClient.CreateExamScoreAsync(model, cancellationToken);
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Sınav sonucu kaydedilemedi.");
+            ModelState.AddModelError(string.Empty, result.Error ?? UiText.Get(HttpContext, "ExamScores.SaveFailed"));
             return await RenderExamScoresAsync(model, null, cancellationToken);
         }
 
         TempData["SuccessMessage"] = model.ScoreId > 0
-            ? "Sınav sonucunuz güncellendi."
-            : "Sınav sonucunuz eklendi.";
+            ? UiText.Get(HttpContext, "ExamScores.Updated")
+            : UiText.Get(HttpContext, "ExamScores.Added");
         return RedirectToAction(nameof(ExamScores));
     }
 
@@ -383,14 +381,14 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         if (scoreId <= 0)
         {
-            TempData["ErrorMessage"] = "Geçerli bir sınav sonucu seçiniz.";
+            TempData["ErrorMessage"] = UiText.Get(HttpContext, "ExamScores.InvalidSelection");
             return RedirectToAction(nameof(ExamScores));
         }
 
         var result = await apiClient.DeleteExamScoreAsync(scoreId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Sınav sonucunuz silindi."
-            : result.Error ?? "Sınav sonucu silinemedi.";
+            ? UiText.Get(HttpContext, "ExamScores.Deleted")
+            : result.Error ?? UiText.Get(HttpContext, "ExamScores.DeleteFailed");
         return RedirectToAction(nameof(ExamScores));
     }
 
@@ -412,7 +410,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             Universities = universities
         };
 
-    private static void ApplyUniversityCatalogResult(
+    private void ApplyUniversityCatalogResult(
         StudentProfileViewModel model,
         ApiResult<IReadOnlyList<UniversityViewModel>> universities)
     {
@@ -420,7 +418,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
         model.UniversityCatalogLoadSucceeded = universities.IsSuccess;
         model.UniversityCatalogErrorMessage = universities.IsSuccess
             ? null
-            : universities.Error ?? "Üniversite kataloğu yüklenemedi.";
+            : universities.Error ?? UiText.Get(HttpContext, "Profile.UniversityLoadFailed");
     }
 
     private async Task<IActionResult> RenderExamScoresAsync(

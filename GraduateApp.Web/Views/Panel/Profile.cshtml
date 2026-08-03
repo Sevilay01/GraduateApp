@@ -1,23 +1,22 @@
 @model StudentProfileViewModel
 @{
-    ViewData["Title"] = "Profil ve eğitim bilgileri";
+    ViewData["Title"] = UiText.Get(Context, "Profile.Title");
 }
 
 <div class="page-heading">
     <div>
-        <span class="eyebrow">Öğrenci profili</span>
-        <h1 class="page-heading__title">Profil ve eğitim bilgileri</h1>
-        <p class="page-heading__description">Kimlik numarası: <strong>@Model.TcMasked</strong></p>
+        <span class="eyebrow">@UiText.Get(Context, "Profile.Eyebrow")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "Profile.Title")</h1>
+        <p class="page-heading__description">@UiText.Get(Context, "Profile.IdentityNumber") <strong>@Model.TcMasked</strong></p>
     </div>
     <div class="page-heading__actions">
-        <a asp-action="Index" class="btn btn-outline-primary">Öğrenci paneline dön</a>
+        <a asp-action="Index" class="btn btn-outline-primary">@UiText.Get(Context, "Profile.Back")</a>
     </div>
 </div>
 
 <div class="profile-note mb-4" role="note">
-    <strong>Snapshot bilgisi:</strong>
-    Değişiklikler mevcut başvuruların değerlendirme verilerini etkilemez.
-    Profil değişiklikleri mevcut başvuruların snapshot değerlendirme verilerini etkilemez.
+    <strong>@UiText.Get(Context, "Profile.SnapshotHeading")</strong>
+    @UiText.Get(Context, "Profile.SnapshotMessage")
 </div>
 
 <form asp-action="Profile" method="post" novalidate>
@@ -25,36 +24,36 @@
 
     <fieldset class="card mb-4">
         <div class="card-body p-4">
-            <legend class="h4 mb-1">Kişisel ve iletişim bilgileri</legend>
-            <p class="text-muted mb-4">Size ulaşabilmemiz için iletişim bilgilerinizi güncel tutun.</p>
+            <legend class="h4 mb-1">@UiText.Get(Context, "Profile.ContactHeading")</legend>
+            <p class="text-muted mb-4">@UiText.Get(Context, "Profile.ContactLead")</p>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label asp-for="FirstName" class="form-label"></label>
+                    <label asp-for="FirstName" class="form-label">@UiText.Get(Context, "Field.FirstName")</label>
                     <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
                     <span asp-validation-for="FirstName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="LastName" class="form-label"></label>
+                    <label asp-for="LastName" class="form-label">@UiText.Get(Context, "Field.LastName")</label>
                     <input asp-for="LastName" class="form-control" autocomplete="family-name" />
                     <span asp-validation-for="LastName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Email" class="form-label"></label>
+                    <label asp-for="Email" class="form-label">@UiText.Get(Context, "Field.Email")</label>
                     <input asp-for="Email" class="form-control" autocomplete="email" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Telephone" class="form-label"></label>
+                    <label asp-for="Telephone" class="form-label">@UiText.Get(Context, "Field.Telephone")</label>
                     <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
                     <span asp-validation-for="Telephone" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="FatherName" class="form-label"></label>
+                    <label asp-for="FatherName" class="form-label">@UiText.Get(Context, "Field.FatherName")</label>
                     <input asp-for="FatherName" class="form-control" autocomplete="additional-name" />
                     <span asp-validation-for="FatherName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="BirthDate" class="form-label"></label>
+                    <label asp-for="BirthDate" class="form-label">@UiText.Get(Context, "Field.BirthDate")</label>
                     <input asp-for="BirthDate" class="form-control" autocomplete="bday" />
                     <span asp-validation-for="BirthDate" class="text-danger"></span>
                 </div>
@@ -65,28 +64,28 @@
     @if (!Model.UniversityCatalogLoadSucceeded)
     {
         <div class="alert alert-danger app-alert" role="alert">
-            <strong>Üniversite kataloğu yüklenemedi.</strong>
-            <span>@Model.UniversityCatalogErrorMessage Eğitim alanları şu anda kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</span>
+            <strong>@UiText.Get(Context, "Profile.UniversityLoadHeading")</strong>
+            <span>@Model.UniversityCatalogErrorMessage @UiText.Get(Context, "Profile.UniversityLoadMessage")</span>
         </div>
     }
     else if (Model.Universities.Count == 0)
     {
         <div class="alert alert-warning app-alert" role="alert">
-            <strong>Üniversite kataloğu henüz tanımlanmamış. Lütfen yöneticiyle iletişime geçin.</strong>
-            <span>Katalog tanımlanana kadar eğitim alanları kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</span>
+            <strong>@UiText.Get(Context, "Profile.UniversityEmptyHeading")</strong>
+            <span>@UiText.Get(Context, "Profile.UniversityEmptyMessage")</span>
         </div>
     }
 
     <fieldset class="card mb-4">
         <div class="card-body p-4">
-            <legend class="h4 mb-1">Lisans eğitim bilgileri</legend>
-            <p class="text-muted mb-4">Gelecekteki başvurularda kullanılacak güncel mezuniyet bilgilerinizi girin.</p>
+            <legend class="h4 mb-1">@UiText.Get(Context, "Profile.EducationHeading")</legend>
+            <p class="text-muted mb-4">@UiText.Get(Context, "Profile.EducationLead")</p>
             <div class="row g-3">
                 <div class="col-12">
-                    <label asp-for="UniversityId" class="form-label"></label>
+                    <label asp-for="UniversityId" class="form-label">@UiText.Get(Context, "Field.University")</label>
                     <select asp-for="UniversityId" class="form-select"
                             disabled="@(Model.CanEditEducation ? null : "disabled")">
-                        <option value="">Üniversite seçiniz</option>
+                        <option value="">@UiText.Get(Context, "Profile.SelectUniversity")</option>
                         @foreach (var university in Model.Universities)
                         {
                             <option value="@university.UniversityId">@university.UniversityName</option>
@@ -95,19 +94,19 @@
                     <span asp-validation-for="UniversityId" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Faculty" class="form-label"></label>
+                    <label asp-for="Faculty" class="form-label">@UiText.Get(Context, "Field.Faculty")</label>
                     <input asp-for="Faculty" class="form-control"
                            disabled="@(Model.CanEditEducation ? null : "disabled")" />
                     <span asp-validation-for="Faculty" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="GraduatedProgram" class="form-label"></label>
+                    <label asp-for="GraduatedProgram" class="form-label">@UiText.Get(Context, "Field.GraduatedProgram")</label>
                     <input asp-for="GraduatedProgram" class="form-control"
                            disabled="@(Model.CanEditEducation ? null : "disabled")" />
                     <span asp-validation-for="GraduatedProgram" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Gno" class="form-label"></label>
+                    <label asp-for="Gno" class="form-label">@UiText.Get(Context, "Field.Gpa")</label>
                     <input asp-for="Gno" class="form-control" type="text" inputmode="decimal"
                            disabled="@(Model.CanEditEducation ? null : "disabled")" />
                     <span asp-validation-for="Gno" class="text-danger"></span>
@@ -117,8 +116,8 @@
     </fieldset>
 
     <div class="d-flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-primary btn-lg">Bilgileri kaydet</button>
-        <a asp-action="Index" class="btn btn-link">Vazgeç</a>
+        <button type="submit" class="btn btn-primary btn-lg">@UiText.Get(Context, "Profile.Save")</button>
+        <a asp-action="Index" class="btn btn-link">@UiText.Get(Context, "Common.Cancel")</a>
     </div>
 </form>
 

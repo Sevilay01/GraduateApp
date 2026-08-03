@@ -730,6 +730,85 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ProgramTranslations(
+        string? search,
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 10, 100);
+        var result = await apiClient.GetAdminProgramsAsync(
+            search,
+            null,
+            null,
+            null,
+            page,
+            pageSize,
+            cancellationToken);
+        var value = result.Value;
+        return View(new ProgramTranslationPageViewModel
+        {
+            Items = value?.Items.Select(program => new ProgramTranslationItemViewModel
+            {
+                ProgramId = program.ProgramId,
+                InstituteName = program.InstituteName,
+                ProgramName = program.ProgramName,
+                DegreeType = program.DegreeType,
+                ProgramNameEnglish = program.ProgramNameEnglish,
+                RowVersion = program.RowVersion
+            }).ToList() ?? [],
+            Search = search,
+            Page = value?.Page ?? page,
+            PageSize = value?.PageSize ?? pageSize,
+            TotalCount = value?.TotalCount ?? 0,
+            ErrorMessage = result.IsSuccess ? null : result.Error
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveProgramTranslations(
+        ProgramTranslationPageViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (model.Items.Count is < 1 or > 100)
+        {
+            ModelState.AddModelError(
+                nameof(model.Items),
+                "Tek işlemde 1 ile 100 program çevirisi güncellenebilir.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            model.ErrorMessage = "Program çevirileri doğrulanamadı.";
+            return View("ProgramTranslations", model);
+        }
+
+        var result = await apiClient.UpdateProgramTranslationsAsync(
+            model.Items,
+            cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                result.Error ?? "Program çevirileri kaydedilemedi.");
+            model.ErrorMessage = "Program çevirileri kaydedilemedi.";
+            return View("ProgramTranslations", model);
+        }
+
+        TempData["SuccessMessage"] = result.Value?.UpdatedCount switch
+        {
+            0 => "Program çevirilerinde değişiklik yok.",
+            1 => "1 program çevirisi güncellendi.",
+            var count => $"{count} program çevirisi güncellendi."
+        };
+        return RedirectToAction(
+            nameof(ProgramTranslations),
+            new { model.Search, model.Page, model.PageSize });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveProgram(

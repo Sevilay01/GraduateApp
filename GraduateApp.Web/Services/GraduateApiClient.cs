@@ -618,6 +618,22 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             model.RowVersion
         }, cancellationToken);
 
+    public Task<ApiResult<ProgramTranslationBatchResultViewModel>> UpdateProgramTranslationsAsync(
+        IReadOnlyList<ProgramTranslationItemViewModel> items,
+        CancellationToken cancellationToken) =>
+        PutAsync<ProgramTranslationBatchResultViewModel>(
+            "api/admin/programs/translations",
+            new
+            {
+                Items = items.Select(item => new
+                {
+                    item.ProgramId,
+                    item.ProgramNameEnglish,
+                    item.RowVersion
+                })
+            },
+            cancellationToken);
+
     public Task<ApiResult<ProgramAdminViewModel>> ActivateProgramAsync(
         int programId,
         string rowVersion,

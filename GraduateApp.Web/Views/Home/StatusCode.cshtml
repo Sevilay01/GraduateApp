@@ -1,17 +1,17 @@
 @{
     var statusCode = ViewData["StatusCode"] as int? ?? 500;
-    ViewData["Title"] = "İstek tamamlanamadı";
+    ViewData["Title"] = UiText.Get(Context, "Status.Title");
     var message = ViewData["StatusMessage"] as string ?? statusCode switch
     {
-        404 => "Aradığınız sayfa bulunamadı.",
-        401 => "Bu sayfayı görüntülemek için giriş yapmalısınız.",
-        403 => "Bu sayfaya erişim yetkiniz yok.",
-        _ => "İstek tamamlanamadı."
+        404 => UiText.Get(Context, "Status.NotFound"),
+        401 => UiText.Get(Context, "Status.Unauthorized"),
+        403 => UiText.Get(Context, "Status.Forbidden"),
+        _ => UiText.Get(Context, "Status.Failed")
     };
 }
 
 <div class="text-center py-5">
     <div class="display-1 fw-bold text-secondary">@statusCode</div>
     <h1 class="h2">@message</h1>
-    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2">Ana sayfaya dön</a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2">@UiText.Get(Context, "Status.Home")</a>
 </div>

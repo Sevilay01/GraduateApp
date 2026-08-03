@@ -1,24 +1,24 @@
 @model PanelDashboardViewModel
 @{
-    ViewData["Title"] = "Öğrenci paneli";
+    ViewData["Title"] = UiText.Get(Context, "Panel.Title");
 }
 
 <div class="page-heading">
     <div>
-        <span class="eyebrow">Öğrenci işlemleri</span>
-        <h1 class="page-heading__title">Öğrenci paneli</h1>
-        <p class="page-heading__description">Açık programları inceleyin ve başvurularınızın güncel durumunu takip edin.</p>
+        <span class="eyebrow">@UiText.Get(Context, "Panel.Eyebrow")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "Panel.Title")</h1>
+        <p class="page-heading__description">@UiText.Get(Context, "Panel.Lead")</p>
     </div>
     <div class="page-heading__actions">
-        <a asp-action="ExamScores" class="btn btn-outline-primary">Sınav sonuçlarım</a>
-        <a asp-action="Profile" class="btn btn-outline-primary">Profil ve eğitim bilgilerim</a>
+        <a asp-action="ExamScores" class="btn btn-outline-primary">@UiText.Get(Context, "Panel.ExamScores")</a>
+        <a asp-action="Profile" class="btn btn-outline-primary">@UiText.Get(Context, "Panel.Profile")</a>
     </div>
 </div>
 
 @if (Model.ErrorMessage is not null)
 {
     <div class="alert alert-warning app-alert" role="alert">
-        <strong>Panel bilgileri eksik olabilir.</strong>
+        <strong>@UiText.Get(Context, "Panel.PartialWarning")</strong>
         <span>@Model.ErrorMessage</span>
     </div>
 }
@@ -26,29 +26,29 @@
 <section class="mb-5" aria-labelledby="programs-heading">
     <div class="section-heading">
         <div>
-            <span class="eyebrow">Yeni başvuru</span>
-            <h2 id="programs-heading">Başvuruya açık programlar</h2>
+            <span class="eyebrow">@UiText.Get(Context, "Panel.NewApplication")</span>
+            <h2 id="programs-heading">@UiText.Get(Context, "Panel.OpenPrograms")</h2>
         </div>
-        <p>Koşulları karşılaştırın ve başvuru taslağınızı oluşturun.</p>
+        <p>@UiText.Get(Context, "Panel.OpenProgramsLead")</p>
     </div>
 
-    <form asp-action="Index" method="get" class="admin-filter-panel mb-4" role="search" aria-label="Açık programlarda ara">
+    <form asp-action="Index" method="get" class="admin-filter-panel mb-4" role="search" aria-label="@UiText.Get(Context, "Panel.SearchAria")">
         @if (!ViewData.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
         }
         <div class="row g-3 align-items-end">
             <div class="col-12 col-lg-6">
-                <label for="open-program-search" class="form-label">Program, enstitü veya derece ara</label>
+                <label for="open-program-search" class="form-label">@UiText.Get(Context, "Panel.SearchLabel")</label>
                 <input id="open-program-search"
                        name="search"
                        value="@Model.ProgramSearch.Search"
                        maxlength="@OpenProgramSearchViewModel.MaximumSearchLength"
                        class="form-control"
-                       placeholder="Örn. Bilgisayar, Fen Bilimleri veya Doktora" />
+                       placeholder="@UiText.Get(Context, "Panel.SearchPlaceholder")" />
             </div>
             <div class="col-12 col-sm-6 col-lg-3">
-                <label for="open-program-year" class="form-label">Akademik yıl başlangıcı</label>
+                <label for="open-program-year" class="form-label">@UiText.Get(Context, "Panel.YearLabel")</label>
                 <input id="open-program-year"
                        name="academicYearStart"
                        value="@Model.ProgramSearch.AcademicYearStart"
@@ -59,12 +59,12 @@
                        placeholder="2026" />
             </div>
             <div class="col-12 col-sm-6 col-lg-3">
-                <label for="open-program-term" class="form-label">Dönem</label>
+                <label for="open-program-term" class="form-label">@UiText.Get(Context, "Panel.TermLabel")</label>
                 <select id="open-program-term" name="term" class="form-select">
-                    <option value="">Tüm dönemler</option>
+                    <option value="">@UiText.Get(Context, "Panel.AllTerms")</option>
                     @foreach (var term in AcademicTermDisplayExtensions.OfferingValues)
                     {
-                        <option value="@term" selected="@(Model.ProgramSearch.Term == term ? "selected" : null)">@term.DisplayName()</option>
+                        <option value="@term" selected="@(Model.ProgramSearch.Term == term ? "selected" : null)">@UiText.Get(Context, $"AcademicTerm.{term}")</option>
                     }
                 </select>
             </div>
@@ -77,18 +77,17 @@
                    checked="@(Model.ProgramSearch.PreferUndergraduateProgram ? "checked" : null)"
                    class="form-check-input" />
             <label for="prefer-undergraduate-program" class="form-check-label">
-                Mezuniyet programımla aynı alanı taşıyan ilanları öne çıkar
+                @UiText.Get(Context, "Panel.PreferLabel")
             </label>
             <div class="form-text">
-                Program adları karşılaştırılır; ilandaki tezli/tezsiz yüksek lisans veya doktora gibi derece ekleri eşleştirmeyi değiştirmez.
-                Resmî başvuru uygunluğu kararı değildir ve hiçbir ilana başvurmanızı engellemez.
+                @UiText.Get(Context, "Panel.PreferHelp")
             </div>
         </div>
         <div class="admin-form-actions mt-3">
-            <button type="submit" class="btn btn-primary">Programları ara</button>
+            <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Panel.SearchButton")</button>
             @if (Model.ProgramSearch.HasActiveFilters)
             {
-                <a asp-action="Index" class="btn btn-outline-secondary">Filtreleri temizle</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">@UiText.Get(Context, "Panel.ClearFilters")</a>
             }
         </div>
     </form>
@@ -96,11 +95,11 @@
     @if (Model.RecommendationMessage is not null)
     {
         <div class="alert alert-info app-alert" role="status" data-profile-recommendation>
-            <strong>Profil önerisi</strong>
+            <strong>@UiText.Get(Context, "Panel.RecommendationHeading")</strong>
             <span>@Model.RecommendationMessage</span>
             @if (!string.IsNullOrWhiteSpace(Model.GraduatedProgram))
             {
-                <small>Profildeki program: @Model.GraduatedProgram</small>
+                <small>@UiText.Format(Context, "Panel.ProfileProgram", Model.GraduatedProgram)</small>
             }
         </div>
     }
@@ -110,14 +109,14 @@
         <div class="empty-state">
             @if (Model.ProgramSearch.HasActiveFilters)
             {
-                <h3>Arama ölçütlerine uygun açık program bulunamadı</h3>
-                <p>Arama metnini veya akademik dönem filtrelerini değiştirerek yeniden deneyin.</p>
-                <a asp-action="Index" class="btn btn-outline-primary">Tüm açık programları göster</a>
+                <h3>@UiText.Get(Context, "Panel.NoMatch")</h3>
+                <p>@UiText.Get(Context, "Panel.TryDifferent")</p>
+                <a asp-action="Index" class="btn btn-outline-primary">@UiText.Get(Context, "Panel.ShowAll")</a>
             }
             else
             {
-                <h3>Şu anda başvuruya açık program yok</h3>
-                <p>Yeni ilanlar yayımlandığında bu bölümde görüntülenecektir.</p>
+                <h3>@UiText.Get(Context, "Panel.NoPrograms")</h3>
+                <p>@UiText.Get(Context, "Panel.NoProgramsLead")</p>
             }
         </div>
     }
@@ -135,13 +134,13 @@
                                 <div>
                                     <div class="program-card__institute">@program.InstituteName</div>
                                     <h3 class="h4 mb-1">@UiText.SelectLocalized(Context, program.ProgramName, program.ProgramNameEnglish)</h3>
-                                    <p class="program-card__degree">@program.DegreeType</p>
+                                    <p class="program-card__degree">@UiText.LocalizeDegreeType(Context, program.DegreeType)</p>
                                 </div>
                                 <div class="d-flex flex-column align-items-end gap-2">
                                     @if (program.IsRecommendedForProfile)
                                     {
                                         <span class="admin-state admin-state--success" data-profile-match>
-                                            Program alanı eşleşiyor
+                                            @UiText.Get(Context, "Panel.ProfileMatch")
                                         </span>
                                     }
                                     @if (existingApplication is not null)
@@ -153,35 +152,35 @@
 
                             <dl class="meta-grid">
                                 <div class="meta-item">
-                                    <dt>Akademik dönem</dt>
-                                    <dd>@program.AcademicYear · @program.TermName</dd>
+                                    <dt>@UiText.Get(Context, "Panel.AcademicPeriod")</dt>
+                                    <dd>@program.AcademicYear · @UiText.Get(Context, $"AcademicTerm.{program.Term}")</dd>
                                 </div>
                                 <div class="meta-item">
-                                    <dt>Kontenjan</dt>
-                                    <dd>@program.Quota kişi</dd>
+                                    <dt>@UiText.Get(Context, "Panel.Quota")</dt>
+                                    <dd>@UiText.Format(Context, "Home.People", program.Quota)</dd>
                                 </div>
                             </dl>
 
                             <div class="deadline-callout">
                                 <div>
-                                    <div class="deadline-callout__label">Son başvuru tarihi</div>
+                                    <div class="deadline-callout__label">@UiText.Get(Context, "Panel.Deadline")</div>
                                     <time datetime="@program.ApplicationDeadlineUtc.ToString("O")">
                                         @IstanbulTime.FromUtc(program.ApplicationDeadlineUtc).ToString("dd MMMM yyyy · HH:mm")
                                     </time>
-                                    <span class="visually-hidden"> İstanbul saati</span>
+                                    <span class="visually-hidden"> @UiText.Get(Context, "Home.IstanbulTime")</span>
                                 </div>
                             </div>
 
                             @if (program.ExamRequirements.Count > 0)
                             {
                                 <div class="mb-3">
-                                    <h4 class="h6">Sınav koşulları</h4>
+                                    <h4 class="h6">@UiText.Get(Context, "Panel.ExamRequirements")</h4>
                                     <ul class="requirement-list">
                                         @foreach (var requirement in program.ExamRequirements)
                                         {
                                             <li>
-                                                <span><strong>@requirement.ExamName</strong> · En az @requirement.MinimumScore.ToString("0.##")</span>
-                                                <span class="requirement-kind">@(requirement.IsRequired ? "Zorunlu" : "İsteğe bağlı")</span>
+                                                <span><strong>@requirement.ExamName</strong> · @UiText.Get(Context, "Panel.Minimum") @requirement.MinimumScore.ToString("0.##")</span>
+                                                <span class="requirement-kind">@(requirement.IsRequired ? UiText.Get(Context, "Panel.Required") : UiText.Get(Context, "Panel.Optional"))</span>
                                             </li>
                                         }
                                     </ul>
@@ -189,18 +188,18 @@
                             }
                             else
                             {
-                                <p class="small text-muted mb-3">Bu ilan için ayrıca bir sınav koşulu belirtilmemiştir.</p>
+                                <p class="small text-muted mb-3">@UiText.Get(Context, "Panel.NoExamRequirement")</p>
                             }
 
                             <form asp-action="Apply" method="post" class="mt-auto">
                                 <input type="hidden" name="programOfferingId" value="@program.ProgramOfferingId" />
                                 <button type="submit" class="btn btn-primary" disabled="@alreadyApplied">
-                                    @(alreadyApplied ? "Başvuru oluşturuldu" : "Başvuru taslağı oluştur")
+                                    @(alreadyApplied ? UiText.Get(Context, "Panel.ApplicationCreated") : UiText.Get(Context, "Panel.CreateDraft"))
                                 </button>
                                 @if (existingApplication is not null)
                                 {
                                     <a asp-action="ApplicationDetail" asp-route-publicId="@existingApplication.PublicId"
-                                       class="btn btn-link">Başvuruyu görüntüle</a>
+                                       class="btn btn-link">@UiText.Get(Context, "Panel.ViewApplication")</a>
                                 }
                             </form>
                         </div>
@@ -214,15 +213,15 @@
 <section aria-labelledby="applications-heading">
     <div class="section-heading">
         <div>
-            <span class="eyebrow">Takip</span>
-            <h2 id="applications-heading">Başvurularım</h2>
+            <span class="eyebrow">@UiText.Get(Context, "Panel.Tracking")</span>
+            <h2 id="applications-heading">@UiText.Get(Context, "Panel.MyApplications")</h2>
         </div>
     </div>
     @if (Model.Applications.Count == 0)
     {
         <div class="empty-state">
-            <h3>Henüz bir başvurunuz bulunmuyor</h3>
-            <p>Yukarıdaki açık programlardan birini seçerek başvuru taslağı oluşturabilirsiniz.</p>
+            <h3>@UiText.Get(Context, "Panel.NoApplications")</h3>
+            <p>@UiText.Get(Context, "Panel.NoApplicationsLead")</p>
         </div>
     }
     else
@@ -231,24 +230,24 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle responsive-table">
                     <thead>
-                        <tr><th>Program</th><th>Akademik dönem</th><th>Başvuru tarihi</th><th>Durum</th><th><span class="visually-hidden">İşlem</span></th></tr>
+                        <tr><th>@UiText.Get(Context, "Panel.Program")</th><th>@UiText.Get(Context, "Panel.AcademicPeriod")</th><th>@UiText.Get(Context, "Panel.ApplicationDate")</th><th>@UiText.Get(Context, "Panel.Status")</th><th><span class="visually-hidden">@UiText.Get(Context, "Panel.Action")</span></th></tr>
                     </thead>
                     <tbody>
                         @foreach (var application in Model.Applications)
                         {
                             <tr>
-                                <td data-label="Program"><strong>@application.ProgramName</strong></td>
-                                <td data-label="Akademik dönem">@application.AcademicYear · @application.TermName</td>
-                                <td data-label="Başvuru tarihi">
+                                <td data-label="@UiText.Get(Context, "Panel.Program")"><strong>@UiText.SelectLocalized(Context, application.ProgramName, application.ProgramNameEnglish)</strong></td>
+                                <td data-label="@UiText.Get(Context, "Panel.AcademicPeriod")">@application.AcademicYear · @UiText.Get(Context, $"AcademicTerm.{application.Term}")</td>
+                                <td data-label="@UiText.Get(Context, "Panel.ApplicationDate")">
                                     <time datetime="@application.ApplicationDateUtc.ToString("O")">
                                         @IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("dd.MM.yyyy HH:mm")
                                     </time>
-                                    <span class="visually-hidden"> İstanbul saati</span>
+                                    <span class="visually-hidden"> @UiText.Get(Context, "Home.IstanbulTime")</span>
                                 </td>
-                                <td data-label="Durum"><partial name="_ApplicationStatusBadge" model="application.CurrentStatus" /></td>
+                                <td data-label="@UiText.Get(Context, "Panel.Status")"><partial name="_ApplicationStatusBadge" model="application.CurrentStatus" /></td>
                                 <td data-label="">
                                     <a asp-action="ApplicationDetail" asp-route-publicId="@application.PublicId"
-                                       class="btn btn-sm btn-outline-primary">Belgeler ve detay</a>
+                                       class="btn btn-sm btn-outline-primary">@UiText.Get(Context, "Panel.DocumentsDetails")</a>
                                 </td>
                             </tr>
                         }

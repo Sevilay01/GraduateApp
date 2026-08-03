@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Resources;
+using GraduateApp.Web.Models;
 using Microsoft.AspNetCore.Localization;
 
 namespace GraduateApp.Web.Localization;
@@ -36,6 +37,28 @@ public static class UiText
         && !string.IsNullOrWhiteSpace(englishValue)
             ? englishValue
             : defaultValue;
+
+    public static string LocalizeDegreeType(HttpContext context, string? degreeType) =>
+        degreeType switch
+        {
+            "Doktora" => Get(context, "DegreeType.Doctorate"),
+            "Tezli Yüksek Lisans" => Get(context, "DegreeType.ThesisMasters"),
+            "Tezsiz Yüksek Lisans" => Get(context, "DegreeType.NonThesisMasters"),
+            "Uzaktan Tezsiz Yüksek Lisans" => Get(context, "DegreeType.DistanceNonThesisMasters"),
+            _ => degreeType ?? string.Empty
+        };
+
+    public static string LocalizeApplicationStatus(HttpContext context, ApplicationStatus status) =>
+        Get(context, $"Status.{status}");
+
+    public static string LocalizeEvaluationOutcome(HttpContext context, EvaluationOutcome outcome) =>
+        Get(context, $"Outcome.{outcome}");
+
+    public static string LocalizeDocumentReview(HttpContext context, DocumentReviewStatus status) =>
+        Get(context, $"DocumentReview.{status}");
+
+    public static string LocalizeDocumentCategory(HttpContext context, DocumentContentCategory category) =>
+        Get(context, $"DocumentCategory.{category}");
 
     private static CultureInfo ResolveCulture(HttpContext context)
     {

@@ -297,4 +297,860 @@
   <data name="AcademicTerm.Summer" xml:space="preserve">
     <value>Yaz</value>
   </data>
+
+  <data name="Panel.Title" xml:space="preserve">
+    <value>Öğrenci paneli</value>
+  </data>
+  <data name="Panel.Eyebrow" xml:space="preserve">
+    <value>Öğrenci işlemleri</value>
+  </data>
+  <data name="Panel.Lead" xml:space="preserve">
+    <value>Açık programları inceleyin ve başvurularınızın güncel durumunu takip edin.</value>
+  </data>
+  <data name="Panel.ExamScores" xml:space="preserve">
+    <value>Sınav sonuçlarım</value>
+  </data>
+  <data name="Panel.Profile" xml:space="preserve">
+    <value>Profil ve eğitim bilgilerim</value>
+  </data>
+  <data name="Panel.PartialWarning" xml:space="preserve">
+    <value>Panel bilgileri eksik olabilir.</value>
+  </data>
+  <data name="Panel.NewApplication" xml:space="preserve">
+    <value>Yeni başvuru</value>
+  </data>
+  <data name="Panel.OpenPrograms" xml:space="preserve">
+    <value>Başvuruya açık programlar</value>
+  </data>
+  <data name="Panel.OpenProgramsLead" xml:space="preserve">
+    <value>Koşulları karşılaştırın ve başvuru taslağınızı oluşturun.</value>
+  </data>
+  <data name="Panel.SearchAria" xml:space="preserve">
+    <value>Açık programlarda ara</value>
+  </data>
+  <data name="Panel.SearchLabel" xml:space="preserve">
+    <value>Program, enstitü veya derece ara</value>
+  </data>
+  <data name="Panel.SearchPlaceholder" xml:space="preserve">
+    <value>Örn. Bilgisayar, Fen Bilimleri veya Doktora</value>
+  </data>
+  <data name="Panel.YearLabel" xml:space="preserve">
+    <value>Akademik yıl başlangıcı</value>
+  </data>
+  <data name="Panel.TermLabel" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Panel.AllTerms" xml:space="preserve">
+    <value>Tüm dönemler</value>
+  </data>
+  <data name="Panel.PreferLabel" xml:space="preserve">
+    <value>Mezuniyet programımla aynı alanı taşıyan ilanları öne çıkar</value>
+  </data>
+  <data name="Panel.PreferHelp" xml:space="preserve">
+    <value>Program adları karşılaştırılır; ilandaki tezli/tezsiz yüksek lisans veya doktora gibi derece ekleri eşleştirmeyi değiştirmez. Resmî başvuru uygunluğu kararı değildir ve hiçbir ilana başvurmanızı engellemez.</value>
+  </data>
+  <data name="Panel.SearchButton" xml:space="preserve">
+    <value>Programları ara</value>
+  </data>
+  <data name="Panel.ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="Panel.RecommendationHeading" xml:space="preserve">
+    <value>Profil önerisi</value>
+  </data>
+  <data name="Panel.ProfileProgram" xml:space="preserve">
+    <value>Profildeki program: {0}</value>
+  </data>
+  <data name="Panel.NoMatch" xml:space="preserve">
+    <value>Arama ölçütlerine uygun açık program bulunamadı</value>
+  </data>
+  <data name="Panel.TryDifferent" xml:space="preserve">
+    <value>Arama metnini veya akademik dönem filtrelerini değiştirerek yeniden deneyin.</value>
+  </data>
+  <data name="Panel.ShowAll" xml:space="preserve">
+    <value>Tüm açık programları göster</value>
+  </data>
+  <data name="Panel.NoPrograms" xml:space="preserve">
+    <value>Şu anda başvuruya açık program yok</value>
+  </data>
+  <data name="Panel.NoProgramsLead" xml:space="preserve">
+    <value>Yeni ilanlar yayımlandığında bu bölümde görüntülenecektir.</value>
+  </data>
+  <data name="Panel.ProfileMatch" xml:space="preserve">
+    <value>Program alanı eşleşiyor</value>
+  </data>
+  <data name="Panel.AcademicPeriod" xml:space="preserve">
+    <value>Akademik dönem</value>
+  </data>
+  <data name="Panel.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="Panel.Deadline" xml:space="preserve">
+    <value>Son başvuru tarihi</value>
+  </data>
+  <data name="Panel.ExamRequirements" xml:space="preserve">
+    <value>Sınav koşulları</value>
+  </data>
+  <data name="Panel.Minimum" xml:space="preserve">
+    <value>En az</value>
+  </data>
+  <data name="Panel.Required" xml:space="preserve">
+    <value>Zorunlu</value>
+  </data>
+  <data name="Panel.Optional" xml:space="preserve">
+    <value>İsteğe bağlı</value>
+  </data>
+  <data name="Panel.NoExamRequirement" xml:space="preserve">
+    <value>Bu ilan için ayrıca bir sınav koşulu belirtilmemiştir.</value>
+  </data>
+  <data name="Panel.ApplicationCreated" xml:space="preserve">
+    <value>Başvuru oluşturuldu</value>
+  </data>
+  <data name="Panel.CreateDraft" xml:space="preserve">
+    <value>Başvuru taslağı oluştur</value>
+  </data>
+  <data name="Panel.ViewApplication" xml:space="preserve">
+    <value>Başvuruyu görüntüle</value>
+  </data>
+  <data name="Panel.Tracking" xml:space="preserve">
+    <value>Takip</value>
+  </data>
+  <data name="Panel.MyApplications" xml:space="preserve">
+    <value>Başvurularım</value>
+  </data>
+  <data name="Panel.NoApplications" xml:space="preserve">
+    <value>Henüz bir başvurunuz bulunmuyor</value>
+  </data>
+  <data name="Panel.NoApplicationsLead" xml:space="preserve">
+    <value>Yukarıdaki açık programlardan birini seçerek başvuru taslağı oluşturabilirsiniz.</value>
+  </data>
+  <data name="Panel.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Panel.ApplicationDate" xml:space="preserve">
+    <value>Başvuru tarihi</value>
+  </data>
+  <data name="Panel.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Panel.Action" xml:space="preserve">
+    <value>İşlem</value>
+  </data>
+  <data name="Panel.DocumentsDetails" xml:space="preserve">
+    <value>Belgeler ve detay</value>
+  </data>
+  <data name="Panel.Error.ApplicationsLoad" xml:space="preserve">
+    <value>Başvurular yüklenemedi.</value>
+  </data>
+  <data name="Panel.Error.RecommendationsPrograms" xml:space="preserve">
+    <value>Programlar yüklenemediği için profil önerileri şu anda kullanılamıyor.</value>
+  </data>
+  <data name="Panel.Error.ProfileLoad" xml:space="preserve">
+    <value>Eğitim profiliniz yüklenemediği için programlar normal sıralamada gösteriliyor.</value>
+  </data>
+  <data name="Panel.Recommendation.ProfileMissing" xml:space="preserve">
+    <value>Önerileri kullanmak için profilinizde mezun olduğunuz lisans programını belirtin.</value>
+  </data>
+  <data name="Panel.Recommendation.MatchCount" xml:space="preserve">
+    <value>{0} ilan mezuniyet programınızla aynı alan adına sahip ve listenin başına taşındı.</value>
+  </data>
+  <data name="Panel.Recommendation.NoMatch" xml:space="preserve">
+    <value>Mezuniyet programınızla aynı alan adına sahip açık ilan bulunamadı; diğer ilanlar başvuruya açık olmaya devam ediyor.</value>
+  </data>
+  <data name="Panel.Error.Load" xml:space="preserve">
+    <value>Panel bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Panel.Error.InvalidOffering" xml:space="preserve">
+    <value>Geçerli bir dönemsel ilan seçiniz.</value>
+  </data>
+  <data name="Panel.Success.DraftCreated" xml:space="preserve">
+    <value>Başvuru taslağınız oluşturuldu. Zorunlu belgeleri yükledikten sonra başvuruyu gönderin.</value>
+  </data>
+  <data name="Panel.Error.Create" xml:space="preserve">
+    <value>Başvuru oluşturulamadı.</value>
+  </data>
+  <data name="DegreeType.Doctorate" xml:space="preserve">
+    <value>Doktora</value>
+  </data>
+  <data name="DegreeType.ThesisMasters" xml:space="preserve">
+    <value>Tezli Yüksek Lisans</value>
+  </data>
+  <data name="DegreeType.NonThesisMasters" xml:space="preserve">
+    <value>Tezsiz Yüksek Lisans</value>
+  </data>
+  <data name="DegreeType.DistanceNonThesisMasters" xml:space="preserve">
+    <value>Uzaktan Tezsiz Yüksek Lisans</value>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Profil ve eğitim bilgileri</value>
+  </data>
+  <data name="Profile.Eyebrow" xml:space="preserve">
+    <value>Öğrenci profili</value>
+  </data>
+  <data name="Profile.IdentityNumber" xml:space="preserve">
+    <value>Kimlik numarası:</value>
+  </data>
+  <data name="Profile.Back" xml:space="preserve">
+    <value>Öğrenci paneline dön</value>
+  </data>
+  <data name="Profile.SnapshotHeading" xml:space="preserve">
+    <value>Snapshot bilgisi:</value>
+  </data>
+  <data name="Profile.SnapshotMessage" xml:space="preserve">
+    <value>Profil değişiklikleri mevcut başvuruların değerlendirme verilerini etkilemez.</value>
+  </data>
+  <data name="Profile.ContactHeading" xml:space="preserve">
+    <value>Kişisel ve iletişim bilgileri</value>
+  </data>
+  <data name="Profile.ContactLead" xml:space="preserve">
+    <value>Size ulaşabilmemiz için iletişim bilgilerinizi güncel tutun.</value>
+  </data>
+  <data name="Profile.UniversityLoadHeading" xml:space="preserve">
+    <value>Üniversite kataloğu yüklenemedi.</value>
+  </data>
+  <data name="Profile.UniversityLoadMessage" xml:space="preserve">
+    <value>Eğitim alanları şu anda kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</value>
+  </data>
+  <data name="Profile.UniversityEmptyHeading" xml:space="preserve">
+    <value>Üniversite kataloğu henüz tanımlanmamış. Lütfen yöneticiyle iletişime geçin.</value>
+  </data>
+  <data name="Profile.UniversityEmptyMessage" xml:space="preserve">
+    <value>Katalog tanımlanana kadar eğitim alanları kaydedilemez; profilinizin diğer alanlarını güncelleyebilirsiniz.</value>
+  </data>
+  <data name="Profile.EducationHeading" xml:space="preserve">
+    <value>Lisans eğitim bilgileri</value>
+  </data>
+  <data name="Profile.EducationLead" xml:space="preserve">
+    <value>Gelecekteki başvurularda kullanılacak güncel mezuniyet bilgilerinizi girin.</value>
+  </data>
+  <data name="Profile.SelectUniversity" xml:space="preserve">
+    <value>Üniversite seçiniz</value>
+  </data>
+  <data name="Profile.Save" xml:space="preserve">
+    <value>Bilgileri kaydet</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Vazgeç</value>
+  </data>
+  <data name="ExamScores.Title" xml:space="preserve">
+    <value>Sınav sonuçlarım</value>
+  </data>
+  <data name="ExamScores.Eyebrow" xml:space="preserve">
+    <value>Başvuru verileri</value>
+  </data>
+  <data name="ExamScores.Lead" xml:space="preserve">
+    <value>Başvurularda kullanılacak güncel sınav puanlarınızı ve sonuç tarihlerinizi yönetin.</value>
+  </data>
+  <data name="ExamScores.ValidityNote" xml:space="preserve">
+    <value>Sınav puanının geçerliliği, başvurduğunuz ilandaki sınav türü ve en eski kabul edilen sonuç tarihi koşuluna göre değerlendirilir.</value>
+  </data>
+  <data name="ExamScores.PartialWarning" xml:space="preserve">
+    <value>Sınav sonuçları eksik olabilir.</value>
+  </data>
+  <data name="ExamScores.Registered" xml:space="preserve">
+    <value>Kayıtlı sonuçlar</value>
+  </data>
+  <data name="ExamScores.Empty" xml:space="preserve">
+    <value>Henüz sınav sonucu eklemediniz</value>
+  </data>
+  <data name="ExamScores.EmptyLead" xml:space="preserve">
+    <value>Yeni sonuç formundan sınav türünü, puanınızı ve sınav tarihinizi kaydedebilirsiniz.</value>
+  </data>
+  <data name="ExamScores.ExamType" xml:space="preserve">
+    <value>Sınav türü</value>
+  </data>
+  <data name="ExamScores.Score" xml:space="preserve">
+    <value>Puan</value>
+  </data>
+  <data name="ExamScores.ResultDate" xml:space="preserve">
+    <value>Sonuç tarihi</value>
+  </data>
+  <data name="ExamScores.Validity" xml:space="preserve">
+    <value>Geçerlilik</value>
+  </data>
+  <data name="ExamScores.Actions" xml:space="preserve">
+    <value>İşlemler</value>
+  </data>
+  <data name="ExamScores.NotSpecified" xml:space="preserve">
+    <value>Belirtilmemiş</value>
+  </data>
+  <data name="ExamScores.ByOffering" xml:space="preserve">
+    <value>İlan koşuluna göre</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="ExamScores.DeleteConfirm" xml:space="preserve">
+    <value>Bu sınav sonucunu silmek istediğinizden emin misiniz?</value>
+  </data>
+  <data name="ExamScores.UpdateEyebrow" xml:space="preserve">
+    <value>Kayıt güncelleme</value>
+  </data>
+  <data name="ExamScores.NewEyebrow" xml:space="preserve">
+    <value>Yeni kayıt</value>
+  </data>
+  <data name="ExamScores.UpdateTitle" xml:space="preserve">
+    <value>Sınav sonucunu güncelle</value>
+  </data>
+  <data name="ExamScores.NewTitle" xml:space="preserve">
+    <value>Yeni sınav sonucu ekle</value>
+  </data>
+  <data name="ExamScores.SelectExam" xml:space="preserve">
+    <value>Sınav seçiniz</value>
+  </data>
+  <data name="ExamScores.ScoreHelp" xml:space="preserve">
+    <value>ALES, YDS ve YÖKDİL puanları 0–100 aralığında olmalıdır.</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="Status.Draft" xml:space="preserve">
+    <value>Taslak</value>
+  </data>
+  <data name="Status.Pending" xml:space="preserve">
+    <value>Beklemede</value>
+  </data>
+  <data name="Status.UnderReview" xml:space="preserve">
+    <value>İnceleniyor</value>
+  </data>
+  <data name="Status.Approved" xml:space="preserve">
+    <value>Onaylandı</value>
+  </data>
+  <data name="Status.Rejected" xml:space="preserve">
+    <value>Reddedildi</value>
+  </data>
+  <data name="Status.Withdrawn" xml:space="preserve">
+    <value>Geri çekildi</value>
+  </data>
+  <data name="Common.Unknown" xml:space="preserve">
+    <value>Bilinmiyor</value>
+  </data>
+  <data name="Outcome.Admitted" xml:space="preserve">
+    <value>Kabul</value>
+  </data>
+  <data name="Outcome.NotAdmitted" xml:space="preserve">
+    <value>Kontenjan dışında</value>
+  </data>
+  <data name="Outcome.Ineligible" xml:space="preserve">
+    <value>Uygun bulunmadı</value>
+  </data>
+  <data name="DocumentReview.Pending" xml:space="preserve">
+    <value>İnceleme bekliyor</value>
+  </data>
+  <data name="DocumentReview.Approved" xml:space="preserve">
+    <value>Onaylandı</value>
+  </data>
+  <data name="DocumentReview.Rejected" xml:space="preserve">
+    <value>Reddedildi</value>
+  </data>
+  <data name="DocumentCategory.PdfOnly" xml:space="preserve">
+    <value>PDF</value>
+  </data>
+  <data name="DocumentCategory.ImageOnly" xml:space="preserve">
+    <value>JPEG veya PNG</value>
+  </data>
+  <data name="DocumentCategory.PdfOrImage" xml:space="preserve">
+    <value>PDF, JPEG veya PNG</value>
+  </data>
+  <data name="Progress.Title" xml:space="preserve">
+    <value>Başvuru süreci</value>
+  </data>
+  <data name="Progress.Draft" xml:space="preserve">
+    <value>Taslak</value>
+  </data>
+  <data name="Progress.Submitted" xml:space="preserve">
+    <value>Gönderildi</value>
+  </data>
+  <data name="Progress.UnderReview" xml:space="preserve">
+    <value>İnceleniyor</value>
+  </data>
+  <data name="Progress.Result" xml:space="preserve">
+    <value>Sonuçlandı</value>
+  </data>
+  <data name="Progress.Withdrawn" xml:space="preserve">
+    <value>Geri çekildi</value>
+  </data>
+  <data name="ApplicationDetail.Title" xml:space="preserve">
+    <value>Başvuru detayı</value>
+  </data>
+  <data name="ApplicationDetail.EvaluationPending" xml:space="preserve">
+    <value>Değerlendirme sürüyor</value>
+  </data>
+  <data name="ApplicationDetail.EvaluationPendingLead" xml:space="preserve">
+    <value>Sonuçlar kesinleştirilip yayımlanana kadar puan, sıralama ve karar gösterilmez.</value>
+  </data>
+  <data name="ApplicationDetail.FinalResult" xml:space="preserve">
+    <value>Kesinleşmiş sonuç</value>
+  </data>
+  <data name="ApplicationDetail.PublishedResult" xml:space="preserve">
+    <value>Yayımlanmış değerlendirme sonucu</value>
+  </data>
+  <data name="ApplicationDetail.TotalScore" xml:space="preserve">
+    <value>Toplam puan</value>
+  </data>
+  <data name="ApplicationDetail.Rank" xml:space="preserve">
+    <value>Sıralama</value>
+  </data>
+  <data name="ApplicationDetail.Quota" xml:space="preserve">
+    <value>Kontenjan</value>
+  </data>
+  <data name="ApplicationDetail.PublishedAt" xml:space="preserve">
+    <value>Yayımlanma</value>
+  </data>
+  <data name="ApplicationDetail.ComponentsCaption" xml:space="preserve">
+    <value>Değerlendirme puanı bileşenleri</value>
+  </data>
+  <data name="ApplicationDetail.Criterion" xml:space="preserve">
+    <value>Kriter</value>
+  </data>
+  <data name="ApplicationDetail.RawScore" xml:space="preserve">
+    <value>Ham puan</value>
+  </data>
+  <data name="ApplicationDetail.NormalizedScore" xml:space="preserve">
+    <value>Normalize puan</value>
+  </data>
+  <data name="ApplicationDetail.Weight" xml:space="preserve">
+    <value>Ağırlık</value>
+  </data>
+  <data name="ApplicationDetail.Contribution" xml:space="preserve">
+    <value>Katkı</value>
+  </data>
+  <data name="ApplicationDetail.SnapshotNote" xml:space="preserve">
+    <value>Bu sonuç, başvuru ve değerlendirme anında kaydedilen kesinleşmiş snapshot verilerine dayanır.</value>
+  </data>
+  <data name="ApplicationDetail.DocumentEyebrow" xml:space="preserve">
+    <value>Güvenli belge akışı</value>
+  </data>
+  <data name="ApplicationDetail.Documents" xml:space="preserve">
+    <value>Başvuru belgeleri</value>
+  </data>
+  <data name="ApplicationDetail.LegacyDocuments" xml:space="preserve">
+    <value>Bu başvuru legacy belge iş akışını kullanıyor. Mevcut erişim ve durum kuralları korunur.</value>
+  </data>
+  <data name="ApplicationDetail.UpdateUntil" xml:space="preserve">
+    <value>Belgelerinizi son başvuru tarihi olan {0} anına kadar güncelleyebilirsiniz. Yeni sürüm yeniden incelenir.</value>
+  </data>
+  <data name="ApplicationDetail.UpdateClosed" xml:space="preserve">
+    <value>İlan kapalı olduğu veya son başvuru tarihi geçtiği için belgeler artık güncellenemez.</value>
+  </data>
+  <data name="ApplicationDetail.MissingDocuments" xml:space="preserve">
+    <value>Eksik zorunlu belgeler:</value>
+  </data>
+  <data name="ApplicationDetail.Required" xml:space="preserve">
+    <value>Zorunlu</value>
+  </data>
+  <data name="ApplicationDetail.Optional" xml:space="preserve">
+    <value>İsteğe bağlı</value>
+  </data>
+  <data name="ApplicationDetail.FileType" xml:space="preserve">
+    <value>Dosya türü</value>
+  </data>
+  <data name="ApplicationDetail.Maximum" xml:space="preserve">
+    <value>En fazla</value>
+  </data>
+  <data name="ApplicationDetail.UploadedDocumentAria" xml:space="preserve">
+    <value>{0} yüklü belge bilgileri</value>
+  </data>
+  <data name="ApplicationDetail.File" xml:space="preserve">
+    <value>Dosya</value>
+  </data>
+  <data name="ApplicationDetail.Version" xml:space="preserve">
+    <value>Sürüm</value>
+  </data>
+  <data name="ApplicationDetail.UploadedAt" xml:space="preserve">
+    <value>Yükleme</value>
+  </data>
+  <data name="ApplicationDetail.Review" xml:space="preserve">
+    <value>İnceleme</value>
+  </data>
+  <data name="ApplicationDetail.RejectionReason" xml:space="preserve">
+    <value>Ret gerekçesi:</value>
+  </data>
+  <data name="ApplicationDetail.Download" xml:space="preserve">
+    <value>Belgeyi indir</value>
+  </data>
+  <data name="ApplicationDetail.NoDocument" xml:space="preserve">
+    <value>Henüz belge yüklenmedi.</value>
+  </data>
+  <data name="ApplicationDetail.ApprovalReset" xml:space="preserve">
+    <value>Bu belgeyi güncellerseniz mevcut onay geçersiz olur ve yeni sürüm yeniden incelenir.</value>
+  </data>
+  <data name="ApplicationDetail.Upload" xml:space="preserve">
+    <value>Belge yükle</value>
+  </data>
+  <data name="ApplicationDetail.UpdateDocument" xml:space="preserve">
+    <value>Belgeyi güncelle</value>
+  </data>
+  <data name="ApplicationDetail.UploadButton" xml:space="preserve">
+    <value>Yükle</value>
+  </data>
+  <data name="ApplicationDetail.Submit" xml:space="preserve">
+    <value>Başvuruyu gönder</value>
+  </data>
+  <data name="ApplicationDetail.SubmitLead" xml:space="preserve">
+    <value>Göndermeden önce tüm zorunlu belgelerin doğru ve güncel olduğunu kontrol edin.</value>
+  </data>
+  <data name="ApplicationDetail.InvalidConfiguration" xml:space="preserve">
+    <value>Bu taslak için geçerli zorunlu belge koşulu bulunmuyor. İlan yöneticisiyle iletişime geçin.</value>
+  </data>
+  <data name="ApplicationDetail.UploadRequired" xml:space="preserve">
+    <value>Önce tüm zorunlu belgeleri yükleyin.</value>
+  </data>
+  <data name="ApplicationDetail.Withdraw" xml:space="preserve">
+    <value>Başvuruyu geri çek</value>
+  </data>
+  <data name="ApplicationDetail.WithdrawLead" xml:space="preserve">
+    <value>Geri çekilen başvuru değerlendirme ve kontenjan hesabının dışında kalır. İlan açık ve son tarih geçmemişse daha sonra yeniden etkinleştirebilirsiniz; bu durumda başvuru taslağa döner ve yeniden gönderilmesi gerekir.</value>
+  </data>
+  <data name="ApplicationDetail.Reactivate" xml:space="preserve">
+    <value>Başvuruyu yeniden etkinleştir</value>
+  </data>
+  <data name="ApplicationDetail.ReactivateLead" xml:space="preserve">
+    <value>Belgeleriniz korunur. Eski puan ve değerlendirme snapshot’ları temizlenir; güncel bilgileri kontrol ettikten sonra başvuruyu yeniden göndermeniz gerekir.</value>
+  </data>
+  <data name="ApplicationDetail.ReactivateDraft" xml:space="preserve">
+    <value>Taslak olarak yeniden etkinleştir</value>
+  </data>
+  <data name="ApplicationDetail.Back" xml:space="preserve">
+    <value>Panele dön</value>
+  </data>
+  <data name="Field.Tc" xml:space="preserve">
+    <value>T.C. kimlik numarası</value>
+  </data>
+  <data name="Field.FirstName" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Field.LastName" xml:space="preserve">
+    <value>Soyad</value>
+  </data>
+  <data name="Field.FatherName" xml:space="preserve">
+    <value>Baba adı</value>
+  </data>
+  <data name="Field.BirthDate" xml:space="preserve">
+    <value>Doğum tarihi</value>
+  </data>
+  <data name="Field.Email" xml:space="preserve">
+    <value>E-posta</value>
+  </data>
+  <data name="Field.Telephone" xml:space="preserve">
+    <value>Telefon</value>
+  </data>
+  <data name="Field.Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="Field.ConfirmPassword" xml:space="preserve">
+    <value>Parola tekrarı</value>
+  </data>
+  <data name="Field.CurrentPassword" xml:space="preserve">
+    <value>Mevcut parola</value>
+  </data>
+  <data name="Field.NewPassword" xml:space="preserve">
+    <value>Yeni parola</value>
+  </data>
+  <data name="Field.University" xml:space="preserve">
+    <value>Üniversite</value>
+  </data>
+  <data name="Field.Faculty" xml:space="preserve">
+    <value>Fakülte</value>
+  </data>
+  <data name="Field.GraduatedProgram" xml:space="preserve">
+    <value>Mezun olunan program</value>
+  </data>
+  <data name="Field.Gpa" xml:space="preserve">
+    <value>Lisans not ortalaması</value>
+  </data>
+  <data name="Field.Exam" xml:space="preserve">
+    <value>Sınav</value>
+  </data>
+  <data name="Field.Score" xml:space="preserve">
+    <value>Puan</value>
+  </data>
+  <data name="Field.ResultDate" xml:space="preserve">
+    <value>Sonuç tarihi</value>
+  </data>
+  <data name="Register.Title" xml:space="preserve">
+    <value>Öğrenci kaydı</value>
+  </data>
+  <data name="Register.Eyebrow" xml:space="preserve">
+    <value>Yeni öğrenci hesabı</value>
+  </data>
+  <data name="Register.Heading" xml:space="preserve">
+    <value>Öğrenci kaydı oluşturun</value>
+  </data>
+  <data name="Register.Lead" xml:space="preserve">
+    <value>Kimlik ve iletişim bilgilerinizi eksiksiz girerek güvenli hesabınızı oluşturun.</value>
+  </data>
+  <data name="Register.Back" xml:space="preserve">
+    <value>Girişe dön</value>
+  </data>
+  <data name="Register.Identity" xml:space="preserve">
+    <value>Kimlik bilgileri</value>
+  </data>
+  <data name="Register.Contact" xml:space="preserve">
+    <value>İletişim bilgileri</value>
+  </data>
+  <data name="Register.PhoneExample" xml:space="preserve">
+    <value>Örnek: 05XX XXX XX XX</value>
+  </data>
+  <data name="Register.SecurePassword" xml:space="preserve">
+    <value>Güvenli parola</value>
+  </data>
+  <data name="Register.PasswordRule" xml:space="preserve">
+    <value>Parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermelidir.</value>
+  </data>
+  <data name="Register.PrivacyPrefix" xml:space="preserve">
+    <value>Kişisel verilerin işlenmesine ilişkin bilgi için</value>
+  </data>
+  <data name="Register.PrivacyLink" xml:space="preserve">
+    <value>aydınlatma metnini</value>
+  </data>
+  <data name="Register.PrivacySuffix" xml:space="preserve">
+    <value>inceleyebilirsiniz.</value>
+  </data>
+  <data name="Register.Submit" xml:space="preserve">
+    <value>Kayıt oluştur</value>
+  </data>
+  <data name="Forgot.Title" xml:space="preserve">
+    <value>Parolamı unuttum</value>
+  </data>
+  <data name="Forgot.Eyebrow" xml:space="preserve">
+    <value>Hesap kurtarma</value>
+  </data>
+  <data name="Forgot.Heading" xml:space="preserve">
+    <value>Parolanızı güvenle sıfırlayın</value>
+  </data>
+  <data name="Forgot.Lead" xml:space="preserve">
+    <value>Kayıtlı e-posta adresinizi girin. Güvenlik nedeniyle hesabın varlığı hakkında ayrıntı paylaşılmaz.</value>
+  </data>
+  <data name="Forgot.Aria" xml:space="preserve">
+    <value>Parola sıfırlama isteği</value>
+  </data>
+  <data name="Forgot.Submitted" xml:space="preserve">
+    <value>Hesap mevcutsa parola sıfırlama yönergeleri gönderildi.</value>
+  </data>
+  <data name="Forgot.Submit" xml:space="preserve">
+    <value>Sıfırlama bağlantısı iste</value>
+  </data>
+  <data name="Forgot.Back" xml:space="preserve">
+    <value>Giriş ekranına dön</value>
+  </data>
+  <data name="Reset.Title" xml:space="preserve">
+    <value>Parola sıfırlama</value>
+  </data>
+  <data name="Reset.Eyebrow" xml:space="preserve">
+    <value>Hesap güvenliği</value>
+  </data>
+  <data name="Reset.Heading" xml:space="preserve">
+    <value>Yeni parolanızı belirleyin</value>
+  </data>
+  <data name="Reset.Lead" xml:space="preserve">
+    <value>Başka hesaplarda kullanmadığınız, en az 12 karakterli güçlü bir parola seçin.</value>
+  </data>
+  <data name="Reset.Aria" xml:space="preserve">
+    <value>Yeni parola</value>
+  </data>
+  <data name="Reset.Submit" xml:space="preserve">
+    <value>Parolayı güncelle</value>
+  </data>
+  <data name="Change.Title" xml:space="preserve">
+    <value>Parola değiştir</value>
+  </data>
+  <data name="Change.Eyebrow" xml:space="preserve">
+    <value>Oturum güvenliği</value>
+  </data>
+  <data name="Change.Heading" xml:space="preserve">
+    <value>Parolanızı değiştirin</value>
+  </data>
+  <data name="Change.Lead" xml:space="preserve">
+    <value>Mevcut parolanızı doğrulayın ve hesabınız için yeni, güçlü bir parola belirleyin.</value>
+  </data>
+  <data name="Change.Aria" xml:space="preserve">
+    <value>Parola değiştirme formu</value>
+  </data>
+  <data name="Change.Submit" xml:space="preserve">
+    <value>Parolayı değiştir</value>
+  </data>
+  <data name="Invitation.Title" xml:space="preserve">
+    <value>Yönetici davetini kabul et</value>
+  </data>
+  <data name="Invitation.Eyebrow" xml:space="preserve">
+    <value>Yetkili erişimi</value>
+  </data>
+  <data name="Invitation.Heading" xml:space="preserve">
+    <value>Yönetici davetinizi tamamlayın</value>
+  </data>
+  <data name="Invitation.Lead" xml:space="preserve">
+    <value>Bu alan yalnızca size gönderilen tek kullanımlık yönetici daveti içindir.</value>
+  </data>
+  <data name="Invitation.Aria" xml:space="preserve">
+    <value>Yönetici parola belirleme</value>
+  </data>
+  <data name="Invitation.PasswordLead" xml:space="preserve">
+    <value>Güçlü ve yalnızca bu hesap için kullandığınız bir parola belirleyin.</value>
+  </data>
+  <data name="Invitation.Submit" xml:space="preserve">
+    <value>Daveti kabul et</value>
+  </data>
+  <data name="AccessDenied.Title" xml:space="preserve">
+    <value>Erişim reddedildi</value>
+  </data>
+  <data name="AccessDenied.Heading" xml:space="preserve">
+    <value>Bu sayfaya erişim yetkiniz yok</value>
+  </data>
+  <data name="AccessDenied.Lead" xml:space="preserve">
+    <value>Bu oturumun hesap türü istenen sayfaya uygun değil. Güvenli biçimde hesap değiştirebilir veya ana sayfaya dönebilirsiniz.</value>
+  </data>
+  <data name="AccessDenied.Admin" xml:space="preserve">
+    <value>Yönetici hesabıyla giriş yap</value>
+  </data>
+  <data name="AccessDenied.Student" xml:space="preserve">
+    <value>Öğrenci hesabıyla giriş yap</value>
+  </data>
+  <data name="AccessDenied.Home" xml:space="preserve">
+    <value>Ana sayfaya dön</value>
+  </data>
+  <data name="Privacy.Title" xml:space="preserve">
+    <value>Gizlilik</value>
+  </data>
+  <data name="Privacy.Heading" xml:space="preserve">
+    <value>Gizlilik ve kişisel veriler</value>
+  </data>
+  <data name="Privacy.P1" xml:space="preserve">
+    <value>GraduateApp yalnızca lisansüstü başvuru süreci için gerekli bilgileri işler. T.C. kimlik numarası, parola ve güvenlik belirteçleri kullanıcı arayüzünde veya uygulama loglarında gösterilmez.</value>
+  </data>
+  <data name="Privacy.P2" xml:space="preserve">
+    <value>Kişisel verilerinizin düzeltilmesi veya silinmesi için kurumunuzun yetkili başvuru birimiyle iletişime geçin.</value>
+  </data>
+  <data name="Status.Title" xml:space="preserve">
+    <value>İstek tamamlanamadı</value>
+  </data>
+  <data name="Status.NotFound" xml:space="preserve">
+    <value>Aradığınız sayfa bulunamadı.</value>
+  </data>
+  <data name="Status.Unauthorized" xml:space="preserve">
+    <value>Bu sayfayı görüntülemek için giriş yapmalısınız.</value>
+  </data>
+  <data name="Status.Forbidden" xml:space="preserve">
+    <value>Bu sayfaya erişim yetkiniz yok.</value>
+  </data>
+  <data name="Status.Failed" xml:space="preserve">
+    <value>İstek tamamlanamadı.</value>
+  </data>
+  <data name="Status.Home" xml:space="preserve">
+    <value>Ana sayfaya dön</value>
+  </data>
+  <data name="Panel.Status.NotFound" xml:space="preserve">
+    <value>Başvuru bulunamadı.</value>
+  </data>
+  <data name="Panel.Document.Select" xml:space="preserve">
+    <value>Yüklenecek dosyayı seçiniz.</value>
+  </data>
+  <data name="Panel.Document.Uploaded" xml:space="preserve">
+    <value>Belge güvenli biçimde yüklendi ve inceleme bekliyor.</value>
+  </data>
+  <data name="Panel.Document.UploadFailed" xml:space="preserve">
+    <value>Belge yüklenemedi.</value>
+  </data>
+  <data name="Panel.Application.Submitted" xml:space="preserve">
+    <value>Başvurunuz başarıyla gönderildi.</value>
+  </data>
+  <data name="Panel.Application.SubmitFailed" xml:space="preserve">
+    <value>Başvuru gönderilemedi.</value>
+  </data>
+  <data name="Panel.Application.Withdrawn" xml:space="preserve">
+    <value>Başvurunuz geri çekildi.</value>
+  </data>
+  <data name="Panel.Application.WithdrawFailed" xml:space="preserve">
+    <value>Başvuru geri çekilemedi.</value>
+  </data>
+  <data name="Panel.Application.Reactivated" xml:space="preserve">
+    <value>Başvurunuz taslak olarak yeniden etkinleştirildi. Güncel bilgileri kontrol edip tekrar gönderebilirsiniz.</value>
+  </data>
+  <data name="Panel.Application.ReactivateFailed" xml:space="preserve">
+    <value>Başvuru yeniden etkinleştirilemedi.</value>
+  </data>
+  <data name="Panel.Document.DownloadFailed" xml:space="preserve">
+    <value>Belge indirilemedi.</value>
+  </data>
+  <data name="Profile.LoadFailed" xml:space="preserve">
+    <value>Profil bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Profile.UpdateFailed" xml:space="preserve">
+    <value>Profil güncellenemedi.</value>
+  </data>
+  <data name="Profile.Updated" xml:space="preserve">
+    <value>Profil ve eğitim bilgileriniz güncellendi.</value>
+  </data>
+  <data name="Profile.UniversityLoadFailed" xml:space="preserve">
+    <value>Üniversite kataloğu yüklenemedi.</value>
+  </data>
+  <data name="ExamScores.LoadFailed" xml:space="preserve">
+    <value>Sınav sonuçları yüklenemedi.</value>
+  </data>
+  <data name="ExamScores.EditNotFound" xml:space="preserve">
+    <value>Düzenlemek istediğiniz sınav sonucu bulunamadı.</value>
+  </data>
+  <data name="ExamScores.SaveFailed" xml:space="preserve">
+    <value>Sınav sonucu kaydedilemedi.</value>
+  </data>
+  <data name="ExamScores.Updated" xml:space="preserve">
+    <value>Sınav sonucunuz güncellendi.</value>
+  </data>
+  <data name="ExamScores.Added" xml:space="preserve">
+    <value>Sınav sonucunuz eklendi.</value>
+  </data>
+  <data name="ExamScores.InvalidSelection" xml:space="preserve">
+    <value>Geçerli bir sınav sonucu seçiniz.</value>
+  </data>
+  <data name="ExamScores.Deleted" xml:space="preserve">
+    <value>Sınav sonucunuz silindi.</value>
+  </data>
+  <data name="ExamScores.DeleteFailed" xml:space="preserve">
+    <value>Sınav sonucu silinemedi.</value>
+  </data>
+  <data name="Account.LoginFailed" xml:space="preserve">
+    <value>Giriş yapılamadı.</value>
+  </data>
+  <data name="Account.InvalidAuthResponse" xml:space="preserve">
+    <value>Kimlik doğrulama yanıtı geçersiz.</value>
+  </data>
+  <data name="Account.FirstLoginPassword" xml:space="preserve">
+    <value>İlk girişinizde parolanızı değiştirmeniz gerekiyor.</value>
+  </data>
+  <data name="Account.RegisterFailed" xml:space="preserve">
+    <value>Kayıt oluşturulamadı.</value>
+  </data>
+  <data name="Account.Registered" xml:space="preserve">
+    <value>Kaydınız oluşturuldu. Şimdi giriş yapabilirsiniz.</value>
+  </data>
+  <data name="Account.RequestFailed" xml:space="preserve">
+    <value>İstek şu anda tamamlanamadı.</value>
+  </data>
+  <data name="Account.ResetFailed" xml:space="preserve">
+    <value>Parola sıfırlanamadı.</value>
+  </data>
+  <data name="Account.InvalidResetResponse" xml:space="preserve">
+    <value>Parola sıfırlama yanıtı doğrulanamadı.</value>
+  </data>
+  <data name="Account.ResetSuccess" xml:space="preserve">
+    <value>Parolanız güncellendi. Yeni parolanızla giriş yapabilirsiniz.</value>
+  </data>
+  <data name="Account.InvitationFailed" xml:space="preserve">
+    <value>Yönetici daveti kabul edilemedi.</value>
+  </data>
+  <data name="Account.InvitationSuccess" xml:space="preserve">
+    <value>Yönetici hesabınız etkinleştirildi. Yeni parolanızla giriş yapabilirsiniz.</value>
+  </data>
+  <data name="Account.ChangeFailed" xml:space="preserve">
+    <value>Parola değiştirilemedi.</value>
+  </data>
+  <data name="Account.ChangeSuccess" xml:space="preserve">
+    <value>Parolanız değiştirildi. Lütfen tekrar giriş yapın.</value>
+  </data>
+  <data name="Navigation.ProgramTranslations" xml:space="preserve">
+    <value>Toplu İngilizce program adları</value>
+  </data>
 </root>

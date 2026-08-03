@@ -11,7 +11,7 @@
     var isAdminOfferings = currentController == "Admin"
         && currentAction is "Offerings" or "Evaluation" or "PublishEvaluation";
     var isAdminCatalog = currentController == "Admin"
-        && currentAction is "Institutes" or "Programs" or "Universities" or "DeleteInstitute" or "DeleteProgram";
+        && currentAction is "Institutes" or "Programs" or "ProgramTranslations" or "Universities" or "DeleteInstitute" or "DeleteProgram";
     var isAdminStudents = currentController == "Admin"
         && currentAction is "Students" or "ActivateStudent" or "DeactivateStudent";
     var isAdminAccounts = currentController == "Admin" && currentAction == "Accounts";
@@ -110,9 +110,14 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="adminCatalogMenu">
                                     <li>
-                                        <a class="dropdown-item @(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "active" : null)"
-                                           aria-current="@(currentAction is "Institutes" or "Programs" or "DeleteInstitute" or "DeleteProgram" ? "page" : null)"
+                                        <a class="dropdown-item @(currentAction is "Institutes" or "Programs" or "ProgramTranslations" or "DeleteInstitute" or "DeleteProgram" ? "active" : null)"
+                                           aria-current="@(currentAction is "Institutes" or "Programs" or "ProgramTranslations" or "DeleteInstitute" or "DeleteProgram" ? "page" : null)"
                                            asp-controller="Admin" asp-action="Institutes">@UiText.Get(Context, "Navigation.InstitutesPrograms")</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item @(currentAction == "ProgramTranslations" ? "active" : null)"
+                                           aria-current="@(currentAction == "ProgramTranslations" ? "page" : null)"
+                                           asp-controller="Admin" asp-action="ProgramTranslations">@UiText.Get(Context, "Navigation.ProgramTranslations")</a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item @(currentAction == "Universities" ? "active" : null)"
@@ -146,62 +151,65 @@
                     </ul>
 
 
-                    <form asp-controller="Language"
-                          asp-action="Set"
-                          method="post"
-                          class="d-flex align-items-end gap-2 me-xl-3 my-3 my-xl-0"
-                          data-language-form
-                          aria-label="@UiText.Get(Context, "Language.Label")">
-                        <div>
-                            <label for="site-language" class="visually-hidden">
-                                @UiText.Get(Context, "Language.Label")
-                            </label>
-                            <select id="site-language"
-                                    name="culture"
-                                    class="form-select form-select-sm"
-                                    data-auto-submit-on-change="true">
-                                <option value="@UiText.TurkishCultureName"
-                                        selected="@(currentCultureName == UiText.TurkishCultureName ? "selected" : null)">
-                                    @UiText.Get(Context, "Language.Turkish")
-                                </option>
-                                <option value="@UiText.EnglishCultureName"
-                                        selected="@(currentCultureName == UiText.EnglishCultureName ? "selected" : null)">
-                                    @UiText.Get(Context, "Language.English")
-                                </option>
-                            </select>
-                        </div>
-                        <input type="hidden" name="returnUrl" value="@returnUrl" />
-                        @Html.Raw("<noscript>")
-                        <button type="submit" class="btn btn-sm btn-outline-light">
-                            @UiText.Get(Context, "Language.Apply")
-                        </button>
-                        @Html.Raw("</noscript>")
-                    </form>
+                    <div class="header-utilities">
+                        <form asp-controller="Language"
+                              asp-action="Set"
+                              method="post"
+                              class="language-switcher"
+                              data-language-form
+                              aria-label="@UiText.Get(Context, "Language.Label")">
+                            <span class="visually-hidden">@UiText.Get(Context, "Language.Label")</span>
+                            <div class="language-switcher__options"
+                                 role="group"
+                                 aria-label="@UiText.Get(Context, "Language.Label")">
+                                <button type="submit"
+                                        name="culture"
+                                        value="@UiText.TurkishCultureName"
+                                        lang="tr"
+                                        class="language-switcher__option @(currentCultureName == UiText.TurkishCultureName ? "active" : null)"
+                                        aria-pressed="@(currentCultureName == UiText.TurkishCultureName ? "true" : "false")"
+                                        title="@UiText.Get(Context, "Language.Turkish")">
+                                    TR
+                                </button>
+                                <span class="language-switcher__separator" aria-hidden="true">|</span>
+                                <button type="submit"
+                                        name="culture"
+                                        value="@UiText.EnglishCultureName"
+                                        lang="en"
+                                        class="language-switcher__option @(currentCultureName == UiText.EnglishCultureName ? "active" : null)"
+                                        aria-pressed="@(currentCultureName == UiText.EnglishCultureName ? "true" : "false")"
+                                        title="@UiText.Get(Context, "Language.English")">
+                                    EN
+                                </button>
+                            </div>
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        </form>
 
-                    <div class="session-area">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <div class="session-identity" aria-label="@UiText.Get(Context, "Session.Information")">
-                                <span class="session-identity__name">@User.Identity.Name</span>
-                                <span class="session-identity__role">@UiText.Format(Context, "Session.Account", roleDisplay)</span>
-                            </div>
-                            <div class="session-actions">
-                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="ChangePassword">
-                                    @UiText.Get(Context, "Session.ChangePassword")
-                                </a>
-                                <form asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="btn btn-sm btn-light">@UiText.Get(Context, "Session.SecureLogout")</button>
-                                </form>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="session-actions session-actions--anonymous" aria-label="@UiText.Get(Context, "Session.Actions")">
-                                <a class="btn btn-sm btn-light" asp-controller="Account" asp-action="Login">@UiText.Get(Context, "Session.StudentLogin")</a>
-                                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="AdminLogin">@UiText.Get(Context, "Session.AdminLogin")</a>
-                                <a class="nav-register-link" asp-controller="Account" asp-action="Register">@UiText.Get(Context, "Session.StudentRegistration")</a>
-                            </div>
-                        }
+                        <div class="session-area">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <div class="session-identity" aria-label="@UiText.Get(Context, "Session.Information")">
+                                    <span class="session-identity__name">@User.Identity.Name</span>
+                                    <span class="session-identity__role">@UiText.Format(Context, "Session.Account", roleDisplay)</span>
+                                </div>
+                                <div class="session-actions">
+                                    <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="ChangePassword">
+                                        @UiText.Get(Context, "Session.ChangePassword")
+                                    </a>
+                                    <form asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="btn btn-sm btn-light">@UiText.Get(Context, "Session.SecureLogout")</button>
+                                    </form>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="session-actions session-actions--anonymous" aria-label="@UiText.Get(Context, "Session.Actions")">
+                                    <a class="btn btn-sm btn-light" asp-controller="Account" asp-action="Login">@UiText.Get(Context, "Session.StudentLogin")</a>
+                                    <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="AdminLogin">@UiText.Get(Context, "Session.AdminLogin")</a>
+                                    <a class="nav-register-link" asp-controller="Account" asp-action="Register">@UiText.Get(Context, "Session.StudentRegistration")</a>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>

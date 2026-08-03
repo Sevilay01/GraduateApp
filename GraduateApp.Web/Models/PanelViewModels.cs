@@ -89,6 +89,7 @@ public sealed class PanelApplicationViewModel
     public int ProgramOfferingId { get; set; }
     public int ProgramId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
     public int AcademicYearStart { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
     public AcademicTerm Term { get; set; }
@@ -144,6 +145,7 @@ public sealed class StudentApplicationDetailViewModel
 {
     public Guid PublicId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
     public string InstituteName { get; set; } = string.Empty;
     public int AcademicYearStart { get; set; }
     public string AcademicYear { get; set; } = string.Empty;

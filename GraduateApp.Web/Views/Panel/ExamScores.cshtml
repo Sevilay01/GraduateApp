@@ -1,27 +1,27 @@
 @model StudentExamScoresPageViewModel
 @{
-    ViewData["Title"] = "Sınav sonuçlarım";
+    ViewData["Title"] = UiText.Get(Context, "ExamScores.Title");
 }
 
 <div class="page-heading">
     <div>
-        <span class="eyebrow">Başvuru verileri</span>
-        <h1 class="page-heading__title">Sınav sonuçlarım</h1>
-        <p class="page-heading__description">Başvurularda kullanılacak güncel sınav puanlarınızı ve sonuç tarihlerinizi yönetin.</p>
+        <span class="eyebrow">@UiText.Get(Context, "ExamScores.Eyebrow")</span>
+        <h1 class="page-heading__title">@UiText.Get(Context, "ExamScores.Title")</h1>
+        <p class="page-heading__description">@UiText.Get(Context, "ExamScores.Lead")</p>
     </div>
     <div class="page-heading__actions">
-        <a asp-action="Index" class="btn btn-outline-primary">Öğrenci paneline dön</a>
+        <a asp-action="Index" class="btn btn-outline-primary">@UiText.Get(Context, "Profile.Back")</a>
     </div>
 </div>
 
 <div class="profile-note mb-4" role="note">
-    Sınav puanının geçerliliği, başvurduğunuz ilandaki sınav türü ve en eski kabul edilen sonuç tarihi koşuluna göre değerlendirilir.
+    @UiText.Get(Context, "ExamScores.ValidityNote")
 </div>
 
 @if (Model.ErrorMessage is not null)
 {
     <div class="alert alert-warning app-alert" role="alert">
-        <strong>Sınav sonuçları eksik olabilir.</strong>
+        <strong>@UiText.Get(Context, "ExamScores.PartialWarning")</strong>
         <span>@Model.ErrorMessage</span>
     </div>
 }
@@ -30,13 +30,13 @@
     <div class="col-12 col-xl-7">
         <section aria-labelledby="scores-heading">
             <div class="section-heading">
-                <h2 id="scores-heading">Kayıtlı sonuçlar</h2>
+                <h2 id="scores-heading">@UiText.Get(Context, "ExamScores.Registered")</h2>
             </div>
             @if (Model.Scores.Count == 0)
             {
                 <div class="empty-state">
-                    <h3>Henüz sınav sonucu eklemediniz</h3>
-                    <p>Yeni sonuç formundan sınav türünü, puanınızı ve sınav tarihinizi kaydedebilirsiniz.</p>
+                    <h3>@UiText.Get(Context, "ExamScores.Empty")</h3>
+                    <p>@UiText.Get(Context, "ExamScores.EmptyLead")</p>
                 </div>
             }
             else
@@ -45,22 +45,22 @@
                     <div class="table-responsive">
                         <table class="table table-hover align-middle responsive-table">
                             <thead>
-                                <tr><th>Sınav türü</th><th>Puan</th><th>Sonuç tarihi</th><th>Geçerlilik</th><th><span class="visually-hidden">İşlemler</span></th></tr>
+                                <tr><th>@UiText.Get(Context, "ExamScores.ExamType")</th><th>@UiText.Get(Context, "ExamScores.Score")</th><th>@UiText.Get(Context, "ExamScores.ResultDate")</th><th>@UiText.Get(Context, "ExamScores.Validity")</th><th><span class="visually-hidden">@UiText.Get(Context, "ExamScores.Actions")</span></th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var score in Model.Scores)
                                 {
                                     <tr>
-                                        <td data-label="Sınav türü"><strong>@score.ExamName</strong></td>
-                                        <td data-label="Puan">@score.Score.ToString("0.##")</td>
-                                        <td data-label="Sonuç tarihi">@(score.ExamDate?.ToString("dd.MM.yyyy") ?? "Belirtilmemiş")</td>
-                                        <td data-label="Geçerlilik"><span class="small text-muted">İlan koşuluna göre</span></td>
+                                        <td data-label="@UiText.Get(Context, "ExamScores.ExamType")"><strong>@score.ExamName</strong></td>
+                                        <td data-label="@UiText.Get(Context, "ExamScores.Score")">@score.Score.ToString("0.##")</td>
+                                        <td data-label="@UiText.Get(Context, "ExamScores.ResultDate")">@(score.ExamDate?.ToString("dd.MM.yyyy") ?? UiText.Get(Context, "ExamScores.NotSpecified"))</td>
+                                        <td data-label="@UiText.Get(Context, "ExamScores.Validity")"><span class="small text-muted">@UiText.Get(Context, "ExamScores.ByOffering")</span></td>
                                         <td data-label="" class="text-end">
-                                            <a asp-action="ExamScores" asp-route-editId="@score.ScoreId" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                                            <a asp-action="ExamScores" asp-route-editId="@score.ScoreId" class="btn btn-sm btn-outline-primary">@UiText.Get(Context, "Common.Edit")</a>
                                             <form asp-action="DeleteExamScore" method="post" class="d-inline"
-                                                  onsubmit="return confirm('Bu sınav sonucunu silmek istediğinizden emin misiniz?');">
+                                                  onsubmit="return confirm('@System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(UiText.Get(Context, "ExamScores.DeleteConfirm"))');">
                                                 <input type="hidden" name="scoreId" value="@score.ScoreId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">@UiText.Get(Context, "Common.Delete")</button>
                                             </form>
                                         </td>
                                     </tr>
@@ -76,16 +76,16 @@
     <div class="col-12 col-xl-5">
         <section class="card" aria-labelledby="score-form-heading">
             <div class="card-body p-4">
-                <span class="eyebrow">@(Model.Form.ScoreId > 0 ? "Kayıt güncelleme" : "Yeni kayıt")</span>
-                <h2 id="score-form-heading" class="h4">@(Model.Form.ScoreId > 0 ? "Sınav sonucunu güncelle" : "Yeni sınav sonucu ekle")</h2>
+                <span class="eyebrow">@(Model.Form.ScoreId > 0 ? UiText.Get(Context, "ExamScores.UpdateEyebrow") : UiText.Get(Context, "ExamScores.NewEyebrow"))</span>
+                <h2 id="score-form-heading" class="h4">@(Model.Form.ScoreId > 0 ? UiText.Get(Context, "ExamScores.UpdateTitle") : UiText.Get(Context, "ExamScores.NewTitle"))</h2>
                 <form asp-action="SaveExamScore" method="post" novalidate>
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                     <input asp-for="Form.ScoreId" type="hidden" />
 
                     <div class="mb-3">
-                        <label asp-for="Form.ExamId" class="form-label"></label>
+                        <label asp-for="Form.ExamId" class="form-label">@UiText.Get(Context, "Field.Exam")</label>
                         <select asp-for="Form.ExamId" class="form-select" id="exam-select">
-                            <option value="0">Sınav seçiniz</option>
+                            <option value="0">@UiText.Get(Context, "ExamScores.SelectExam")</option>
                             @foreach (var exam in Model.Exams)
                             {
                                 <option value="@exam.ExamId" data-maximum-score="@exam.MaximumScore.ToString(System.Globalization.CultureInfo.InvariantCulture)">
@@ -97,22 +97,22 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Form.Score" class="form-label"></label>
+                        <label asp-for="Form.Score" class="form-label">@UiText.Get(Context, "Field.Score")</label>
                         <input asp-for="Form.Score" class="form-control" type="text" inputmode="decimal" id="score-input" />
-                        <div class="form-text" id="score-help">ALES, YDS ve YÖKDİL puanları 0–100 aralığında olmalıdır.</div>
+                        <div class="form-text" id="score-help">@UiText.Get(Context, "ExamScores.ScoreHelp")</div>
                         <span asp-validation-for="Form.Score" class="text-danger"></span>
                     </div>
 
                     <div class="mb-4">
-                        <label asp-for="Form.ExamDate" class="form-label"></label>
+                        <label asp-for="Form.ExamDate" class="form-label">@UiText.Get(Context, "Field.ResultDate")</label>
                         <input asp-for="Form.ExamDate" class="form-control" type="date" max="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(3)).ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="Form.ExamDate" class="text-danger"></span>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                    <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Common.Save")</button>
                     @if (Model.Form.ScoreId > 0)
                     {
-                        <a asp-action="ExamScores" class="btn btn-outline-secondary">Vazgeç</a>
+                        <a asp-action="ExamScores" class="btn btn-outline-secondary">@UiText.Get(Context, "Common.Cancel")</a>
                     }
                 </form>
             </div>

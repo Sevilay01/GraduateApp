@@ -41,8 +41,8 @@ public sealed class EvaluationWorkflowWebContractTests
         var controller = ReadSource("GraduateApp.Web", "Controllers", "PanelController.cs");
 
         Assert.Contains("Model.PublishedEvaluation is null", view, StringComparison.Ordinal);
-        Assert.Contains("puan, sıralama ve karar gösterilmez", view, StringComparison.Ordinal);
-        Assert.Contains("Yayımlanmış değerlendirme sonucu", view, StringComparison.Ordinal);
+        Assert.Contains("ApplicationDetail.EvaluationPendingLead", view, StringComparison.Ordinal);
+        Assert.Contains("ApplicationDetail.PublishedResult", view, StringComparison.Ordinal);
         Assert.Contains("GetMyPublishedEvaluationAsync", controller, StringComparison.Ordinal);
         Assert.Contains("if (published.IsSuccess)", controller, StringComparison.Ordinal);
     }
