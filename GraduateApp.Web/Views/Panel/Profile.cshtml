@@ -28,32 +28,32 @@
             <p class="text-muted mb-4">@UiText.Get(Context, "Profile.ContactLead")</p>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label asp-for="FirstName" class="form-label"></label>
+                    <label asp-for="FirstName" class="form-label">@UiText.Get(Context, "Field.FirstName")</label>
                     <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
                     <span asp-validation-for="FirstName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="LastName" class="form-label"></label>
+                    <label asp-for="LastName" class="form-label">@UiText.Get(Context, "Field.LastName")</label>
                     <input asp-for="LastName" class="form-control" autocomplete="family-name" />
                     <span asp-validation-for="LastName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Email" class="form-label"></label>
+                    <label asp-for="Email" class="form-label">@UiText.Get(Context, "Field.Email")</label>
                     <input asp-for="Email" class="form-control" autocomplete="email" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Telephone" class="form-label"></label>
+                    <label asp-for="Telephone" class="form-label">@UiText.Get(Context, "Field.Telephone")</label>
                     <input asp-for="Telephone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" placeholder="05XX XXX XX XX" />
                     <span asp-validation-for="Telephone" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="FatherName" class="form-label"></label>
+                    <label asp-for="FatherName" class="form-label">@UiText.Get(Context, "Field.FatherName")</label>
                     <input asp-for="FatherName" class="form-control" autocomplete="additional-name" />
                     <span asp-validation-for="FatherName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="BirthDate" class="form-label"></label>
+                    <label asp-for="BirthDate" class="form-label">@UiText.Get(Context, "Field.BirthDate")</label>
                     <input asp-for="BirthDate" class="form-control" autocomplete="bday" />
                     <span asp-validation-for="BirthDate" class="text-danger"></span>
                 </div>
@@ -82,7 +82,7 @@
             <p class="text-muted mb-4">@UiText.Get(Context, "Profile.EducationLead")</p>
             <div class="row g-3">
                 <div class="col-12">
-                    <label asp-for="UniversityId" class="form-label"></label>
+                    <label asp-for="UniversityId" class="form-label">@UiText.Get(Context, "Field.University")</label>
                     <select asp-for="UniversityId" class="form-select"
                             disabled="@(Model.CanEditEducation ? null : "disabled")">
                         <option value="">@UiText.Get(Context, "Profile.SelectUniversity")</option>
@@ -94,19 +94,19 @@
                     <span asp-validation-for="UniversityId" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Faculty" class="form-label"></label>
+                    <label asp-for="Faculty" class="form-label">@UiText.Get(Context, "Field.Faculty")</label>
                     <input asp-for="Faculty" class="form-control"
                            disabled="@(Model.CanEditEducation ? null : "disabled")" />
                     <span asp-validation-for="Faculty" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="GraduatedProgram" class="form-label"></label>
+                    <label asp-for="GraduatedProgram" class="form-label">@UiText.Get(Context, "Field.GraduatedProgram")</label>
                     <input asp-for="GraduatedProgram" class="form-control"
                            disabled="@(Model.CanEditEducation ? null : "disabled")" />
                     <span asp-validation-for="GraduatedProgram" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Gno" class="form-label"></label>
+                    <label asp-for="Gno" class="form-label">@UiText.Get(Context, "Field.Gpa")</label>
                     <input asp-for="Gno" class="form-control" type="text" inputmode="decimal"
                            disabled="@(Model.CanEditEducation ? null : "disabled")" />
                     <span asp-validation-for="Gno" class="text-danger"></span>
