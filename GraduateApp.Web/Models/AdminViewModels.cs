@@ -141,7 +141,7 @@ public sealed class ProgramOfferingRequirementInputViewModel
 {
     public bool IsConfigured { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir sınav seçiniz.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Validation.ValidExam")]
     public int ExamId { get; set; }
 
     [Range(
@@ -149,7 +149,7 @@ public sealed class ProgramOfferingRequirementInputViewModel
         "0",
         "999.99",
         ParseLimitsInInvariantCulture = true,
-        ErrorMessage = "Puan 0 ile 999,99 arasında olmalıdır.")]
+        ErrorMessage = "Validation.ScoreRange")]
     public decimal MinimumScore { get; set; }
     public DateOnly? MinimumValidityDate { get; set; }
     public bool IsRequired { get; set; }
@@ -159,44 +159,44 @@ public sealed class ProgramOfferingFormViewModel
 {
     public int ProgramOfferingId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir program seçiniz.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Validation.ValidProgram")]
     [Display(Name = "Program")]
     public int ProgramId { get; set; }
 
-    [Range(2000, 2200, ErrorMessage = "Akademik yıl başlangıcı 2000 ile 2200 arasında olmalıdır.")]
-    [Display(Name = "Akademik yıl başlangıcı")]
+    [Range(2000, 2200, ErrorMessage = "Validation.AcademicYearRange")]
+    [Display(Name = "Field.AcademicYearStart")]
     public int AcademicYearStart { get; set; }
 
-    [EnumDataType(typeof(AcademicTerm), ErrorMessage = "Geçerli bir dönem seçiniz.")]
-    [Display(Name = "Dönem")]
+    [EnumDataType(typeof(AcademicTerm), ErrorMessage = "Validation.ValidTerm")]
+    [Display(Name = "Field.Term")]
     public AcademicTerm Term { get; set; }
 
-    [Required(ErrorMessage = "Başvuru başlangıç tarihi zorunludur.")]
+    [Required(ErrorMessage = "Validation.StartRequired")]
     [DataType(DataType.DateTime)]
-    [Display(Name = "Başvuru başlangıcı (İstanbul)")]
+    [Display(Name = "Field.ApplicationStartIstanbul")]
     public DateTime ApplicationStartLocal { get; set; }
 
-    [Required(ErrorMessage = "Son başvuru tarihi zorunludur.")]
+    [Required(ErrorMessage = "Validation.DeadlineRequired")]
     [DataType(DataType.DateTime)]
-    [Display(Name = "Son başvuru (İstanbul)")]
+    [Display(Name = "Field.ApplicationDeadlineIstanbul")]
     public DateTime ApplicationDeadlineLocal { get; set; }
 
-    [Range(1, 100000, ErrorMessage = "Kontenjan 1 ile 100000 arasında olmalıdır.")]
+    [Range(1, 100000, ErrorMessage = "Validation.QuotaRange")]
     [Display(Name = "Kontenjan")]
     public int Quota { get; set; }
 
-    [Display(Name = "İlan açık")]
+    [Display(Name = "Field.OfferingOpen")]
     public bool IsOpen { get; set; }
 
-    [Display(Name = "Arşivle")]
+    [Display(Name = "Field.Archive")]
     public bool IsArchived { get; set; }
 
-    [Display(Name = "Sıralamalı değerlendirme iş akışı")]
+    [Display(Name = "Field.RankedWorkflow")]
     public bool UsesEvaluationWorkflow { get; set; } = true;
 
     [StringLength(
         64,
-        ErrorMessage = "İlan eşzamanlılık bilgisi geçersiz.")]
+        ErrorMessage = "Validation.OfferingConcurrency")]
     public string? RowVersion { get; set; }
     public List<ProgramOfferingRequirementInputViewModel> ExamRequirements { get; set; } = [];
     public IReadOnlyList<ProgramCatalogItemViewModel> Programs { get; set; } = [];
@@ -256,7 +256,7 @@ public sealed class OfferingDocumentRequirementFormViewModel
     [StringLength(64, MinimumLength = 2)]
     public string DocumentCode { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Görünen ad zorunludur.")]
+    [Required(ErrorMessage = "Validation.DisplayNameRequired")]
     [StringLength(150, MinimumLength = 2)]
     public string DisplayName { get; set; } = string.Empty;
 
@@ -265,7 +265,7 @@ public sealed class OfferingDocumentRequirementFormViewModel
     public bool IsRequired { get; set; }
     public DocumentContentCategory AllowedContentCategory { get; set; } = DocumentContentCategory.PdfOrImage;
 
-    [Range(1, 104857600, ErrorMessage = "Maksimum boyut geçersiz.")]
+    [Range(1, 104857600, ErrorMessage = "Validation.MaximumSize")]
     public long MaximumBytes { get; set; } = 10485760;
     public string? RowVersion { get; set; }
 }
@@ -336,9 +336,9 @@ public sealed class AdminAccountViewModel
 public sealed class InviteAdminViewModel
 {
     [Required(ErrorMessage = "E-posta zorunludur.")]
-    [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi giriniz.")]
+    [EmailAddress(ErrorMessage = "Validation.ValidEmail")]
     [StringLength(254, ErrorMessage = "E-posta en fazla 254 karakter olabilir.")]
-    [Display(Name = "Yeni yöneticinin e-posta adresi")]
+    [Display(Name = "Field.AdminEmail")]
     public string Email { get; set; } = string.Empty;
 }
 
@@ -364,9 +364,9 @@ public sealed class InstituteAdminViewModel
 
 public sealed class UniversityFormViewModel
 {
-    [Required(ErrorMessage = "Üniversite adı zorunludur.")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "Üniversite adı 2 ile 100 karakter arasında olmalıdır.")]
-    [Display(Name = "Üniversite adı")]
+    [Required(ErrorMessage = "Validation.UniversityNameRequired")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Validation.UniversityNameLength")]
+    [Display(Name = "Field.UniversityName")]
     public string UniversityName { get; set; } = string.Empty;
 }
 
@@ -381,12 +381,12 @@ public sealed class InstituteFormViewModel
 {
     public int InstituteId { get; set; }
 
-    [Required(ErrorMessage = "Enstitü adı zorunludur.")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "Enstitü adı 2 ile 100 karakter arasında olmalıdır.")]
-    [Display(Name = "Enstitü adı")]
+    [Required(ErrorMessage = "Validation.InstituteNameRequired")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Validation.InstituteNameLength")]
+    [Display(Name = "Field.InstituteName")]
     public string InstituteName { get; set; } = string.Empty;
 
-    [StringLength(24, MinimumLength = 12, ErrorMessage = "Enstitü eşzamanlılık bilgisi geçersiz.")]
+    [StringLength(24, MinimumLength = 12, ErrorMessage = "Validation.InstituteConcurrency")]
     public string? RowVersion { get; set; }
 }
 
@@ -419,25 +419,25 @@ public sealed class ProgramFormViewModel
 {
     public int ProgramId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Geçerli bir enstitü seçiniz.")]
-    [Display(Name = "Enstitü")]
+    [Range(1, int.MaxValue, ErrorMessage = "Validation.ValidInstitute")]
+    [Display(Name = "Field.Institute")]
     public int InstituteId { get; set; }
 
-    [Required(ErrorMessage = "Program adı zorunludur.")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "Program adı 2 ile 100 karakter arasında olmalıdır.")]
-    [Display(Name = "Program adı")]
+    [Required(ErrorMessage = "Validation.ProgramNameRequired")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Validation.ProgramNameLength")]
+    [Display(Name = "Field.ProgramName")]
     public string ProgramName { get; set; } = string.Empty;
 
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.")]
-    [Display(Name = "İngilizce program adı")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Validation.ProgramEnglishNameLength")]
+    [Display(Name = "Field.ProgramNameEnglish")]
     public string? ProgramNameEnglish { get; set; }
 
-    [Required(ErrorMessage = "Derece türü zorunludur.")]
-    [StringLength(50, ErrorMessage = "Derece türü en fazla 50 karakter olabilir.")]
-    [Display(Name = "Derece türü")]
+    [Required(ErrorMessage = "Validation.DegreeTypeRequired")]
+    [StringLength(50, ErrorMessage = "Validation.DegreeTypeLength")]
+    [Display(Name = "Field.DegreeType")]
     public string DegreeType { get; set; } = string.Empty;
 
-    [StringLength(24, MinimumLength = 12, ErrorMessage = "Program eşzamanlılık bilgisi geçersiz.")]
+    [StringLength(24, MinimumLength = 12, ErrorMessage = "Validation.ProgramConcurrency")]
     public string? RowVersion { get; set; }
 }
 
@@ -452,8 +452,8 @@ public sealed class ProgramTranslationItemViewModel
     [StringLength(
         100,
         MinimumLength = 2,
-        ErrorMessage = "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.")]
-    [Display(Name = "İngilizce program adı")]
+        ErrorMessage = "Validation.ProgramEnglishNameLength")]
+    [Display(Name = "Field.ProgramNameEnglish")]
     public string? ProgramNameEnglish { get; set; }
 
     [Required]
