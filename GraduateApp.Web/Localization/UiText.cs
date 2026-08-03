@@ -37,6 +37,16 @@ public static class UiText
             ? englishValue
             : defaultValue;
 
+    public static string LocalizeDegreeType(HttpContext context, string? degreeType) =>
+        degreeType switch
+        {
+            "Doktora" => Get(context, "DegreeType.Doctorate"),
+            "Tezli Yüksek Lisans" => Get(context, "DegreeType.ThesisMasters"),
+            "Tezsiz Yüksek Lisans" => Get(context, "DegreeType.NonThesisMasters"),
+            "Uzaktan Tezsiz Yüksek Lisans" => Get(context, "DegreeType.DistanceNonThesisMasters"),
+            _ => degreeType ?? string.Empty
+        };
+
     private static CultureInfo ResolveCulture(HttpContext context)
     {
         var requestedCulture = context.Features
