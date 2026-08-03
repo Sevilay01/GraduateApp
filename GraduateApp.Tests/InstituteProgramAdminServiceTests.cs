@@ -468,6 +468,143 @@ public sealed class InstituteProgramAdminServiceTests
         Assert.DoesNotContain("RowVersion", result.Error, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task Program_translation_batch_trims_updates_and_audits_in_one_save()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute { InstituteName = "Fen Bilimleri" };
+        var first = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Bilgisayar Mühendisliği",
+            DegreeType = "Tezli Yüksek Lisans",
+            RowVersion = RowVersion
+        };
+        var second = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Kimya",
+            ProgramNameEnglish = "Chemistry",
+            DegreeType = "Doktora",
+            RowVersion = RowVersion
+        };
+        db.Programs.AddRange(first, second);
+        await db.SaveChangesAsync();
+
+        var result = await CreateProgramService(db).UpdateTranslationsAsync(
+            17,
+            new ProgramTranslationBatchUpdateDto
+            {
+                Items =
+                [
+                    new ProgramTranslationUpdateDto
+                    {
+                        ProgramId = first.ProgramId,
+                        ProgramNameEnglish = "  Computer Engineering  ",
+                        RowVersion = Convert.ToBase64String(RowVersion)
+                    },
+                    new ProgramTranslationUpdateDto
+                    {
+                        ProgramId = second.ProgramId,
+                        ProgramNameEnglish = "  Chemical Sciences  ",
+                        RowVersion = Convert.ToBase64String(RowVersion)
+                    }
+                ]
+            },
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.UpdatedCount);
+        Assert.Equal("Computer Engineering", first.ProgramNameEnglish);
+        Assert.Equal("Chemical Sciences", second.ProgramNameEnglish);
+        Assert.Equal(
+            ["ProgramTranslationUpdated", "ProgramTranslationUpdated"],
+            db.SecurityAuditLogs.OrderBy(item => item.AuditId).Select(item => item.EventType));
+        Assert.All(db.SecurityAuditLogs, audit => Assert.Equal(17, audit.ActorAdminId));
+    }
+
+    [Fact]
+    public async Task Program_translation_batch_rejects_duplicate_ids_without_changes_or_audit()
+    {
+        await using var db = TestDb.Create();
+        var program = new GraduateApp.API.Models.Program
+        {
+            Institute = new Institute { InstituteName = "Fen Bilimleri" },
+            ProgramName = "Bilgisayar Mühendisliği",
+            DegreeType = "Tezli Yüksek Lisans",
+            RowVersion = RowVersion
+        };
+        db.Programs.Add(program);
+        await db.SaveChangesAsync();
+        var item = new ProgramTranslationUpdateDto
+        {
+            ProgramId = program.ProgramId,
+            ProgramNameEnglish = "Computer Engineering",
+            RowVersion = Convert.ToBase64String(RowVersion)
+        };
+
+        var result = await CreateProgramService(db).UpdateTranslationsAsync(
+            17,
+            new ProgramTranslationBatchUpdateDto { Items = [item, item] },
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+        Assert.Null(program.ProgramNameEnglish);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
+    [Fact]
+    public async Task Program_translation_batch_rejects_any_invalid_rowversion_before_mutating_all_rows()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute { InstituteName = "Fen Bilimleri" };
+        var first = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Bilgisayar Mühendisliği",
+            DegreeType = "Tezli Yüksek Lisans",
+            RowVersion = RowVersion
+        };
+        var second = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Kimya",
+            DegreeType = "Doktora",
+            RowVersion = RowVersion
+        };
+        db.Programs.AddRange(first, second);
+        await db.SaveChangesAsync();
+
+        var result = await CreateProgramService(db).UpdateTranslationsAsync(
+            17,
+            new ProgramTranslationBatchUpdateDto
+            {
+                Items =
+                [
+                    new ProgramTranslationUpdateDto
+                    {
+                        ProgramId = first.ProgramId,
+                        ProgramNameEnglish = "Computer Engineering",
+                        RowVersion = Convert.ToBase64String(RowVersion)
+                    },
+                    new ProgramTranslationUpdateDto
+                    {
+                        ProgramId = second.ProgramId,
+                        ProgramNameEnglish = "Chemistry",
+                        RowVersion = "invalid"
+                    }
+                ]
+            },
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StatusCodes.Status400BadRequest, result.StatusCode);
+        Assert.Null(first.ProgramNameEnglish);
+        Assert.Null(second.ProgramNameEnglish);
+        Assert.Empty(db.SecurityAuditLogs);
+    }
+
     private static InstituteAdminService CreateInstituteService(GraduateAppDbContext db) =>
         new(db, new TestTimeProvider(new DateTimeOffset(2026, 7, 21, 9, 0, 0, TimeSpan.Zero)));
 
