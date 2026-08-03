@@ -3280,4 +3280,12 @@
   <data name="Field.DegreeType" xml:space="preserve">
     <value>Degree type</value>
   </data>
+
+  <!-- Administrator invitation validation -->
+  <data name="Validation.EmailRequired" xml:space="preserve">
+    <value>Email is required.</value>
+  </data>
+  <data name="Validation.EmailMaximumLength" xml:space="preserve">
+    <value>Email can contain at most 254 characters.</value>
+  </data>
 </root>
