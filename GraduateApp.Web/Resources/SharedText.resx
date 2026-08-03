@@ -1547,7 +1547,7 @@
     <value>Computer Engineering</value>
   </data>
   <data name="Admin.Programs.EnglishFallbackHelp" xml:space="preserve">
-    <value>Boş bırakılırsa İngilizce arayüzde Türkçe ad gösterilir.</value>
+    <value>Boş bırakılırsa aynı Türkçe ada ait mevcut çeviri veya güvenli program kataloğu otomatik kullanılır. Eşleme bulunamazsa İngilizce arayüz Türkçe ada geri döner.</value>
   </data>
   <data name="Admin.Programs.Create" xml:space="preserve">
     <value>Program oluştur</value>
@@ -1559,10 +1559,13 @@
     <value>Toplu İngilizce program adları</value>
   </data>
   <data name="Admin.Translations.Lead" xml:space="preserve">
-    <value>Programların resmî İngilizce adlarını tek ekranda gözden geçirip atomik olarak kaydedin.</value>
+    <value>Eksik İngilizce program adlarını otomatik eşleyin; gerektiğinde tek ekranda gözden geçirip düzeltin.</value>
   </data>
   <data name="Admin.Translations.Note" xml:space="preserve">
-    <value>Bu alan otomatik çeviri üretmez. Kurumca doğrulanmış İngilizce adları girin. Boş bırakılan kayıtlarda İngilizce arayüz Türkçe ada güvenli biçimde geri döner. Sayfadaki tüm değişiklikler tek işlemde kaydedilir; eşzamanlı bir güncelleme varsa hiçbir satır kısmen yazılmaz.</value>
+    <value>Otomatik eşleme önce aynı Türkçe program adı için daha önce doğrulanmış İngilizce adı, ardından güvenli merkezi kataloğu kullanır. Eşlenemeyen veya kuruma özgü adları bu ekranda düzeltebilirsiniz; mevcut İngilizce adların üzerine otomatik yazılmaz.</value>
+  </data>
+  <data name="Admin.Translations.AutoFill" xml:space="preserve">
+    <value>Eksik İngilizce adları otomatik eşle</value>
   </data>
   <data name="Admin.Translations.FilterHeading" xml:space="preserve">
     <value>Programları ara</value>
