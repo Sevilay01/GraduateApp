@@ -30,6 +30,9 @@ public interface IProgramAdminService
         int adminId,
         ProgramTranslationBatchUpdateDto request,
         CancellationToken cancellationToken);
+    Task<ServiceResult<ProgramTranslationBatchResultDto>> AutoFillTranslationsAsync(
+        int adminId,
+        CancellationToken cancellationToken);
     Task<ServiceResult<ProgramAdminDto>> SetActiveAsync(
         int programId,
         int adminId,
@@ -343,6 +346,64 @@ public sealed class ProgramAdminService(
                 saveResult.StatusCode);
     }
 
+    public async Task<ServiceResult<ProgramTranslationBatchResultDto>> AutoFillTranslationsAsync(
+        int adminId,
+        CancellationToken cancellationToken)
+    {
+        var programs = await dbContext.Programs
+            .OrderBy(item => item.ProgramId)
+            .ToListAsync(cancellationToken);
+        var comparer = StringComparer.Create(
+            System.Globalization.CultureInfo.GetCultureInfo("tr-TR"),
+            ignoreCase: true);
+        var reusableNames = new Dictionary<string, string?>(comparer);
+
+        foreach (var program in programs.Where(item => !string.IsNullOrWhiteSpace(item.ProgramNameEnglish)))
+        {
+            var key = ProgramNameEnglishCatalog.Normalize(program.ProgramName);
+            var englishName = program.ProgramNameEnglish!.Trim();
+            if (!reusableNames.TryAdd(key, englishName)
+                && !string.Equals(reusableNames[key], englishName, StringComparison.OrdinalIgnoreCase))
+            {
+                reusableNames[key] = null;
+            }
+        }
+
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var updatedCount = 0;
+        foreach (var program in programs.Where(item => string.IsNullOrWhiteSpace(item.ProgramNameEnglish)))
+        {
+            var key = ProgramNameEnglishCatalog.Normalize(program.ProgramName);
+            var hasReusableName = reusableNames.TryGetValue(key, out var englishName)
+                && !string.IsNullOrWhiteSpace(englishName);
+            if (!hasReusableName
+                && !ProgramNameEnglishCatalog.TryGetEnglishName(program.ProgramName, out englishName!))
+            {
+                continue;
+            }
+
+            program.ProgramNameEnglish = englishName;
+            program.UpdatedAtUtc = now;
+            AddAudit(adminId, "ProgramTranslationAutoFilled", program.ProgramId.ToString(), program, now);
+            reusableNames[key] = englishName;
+            updatedCount++;
+        }
+
+        if (updatedCount == 0)
+        {
+            return ServiceResult<ProgramTranslationBatchResultDto>.Success(
+                new ProgramTranslationBatchResultDto(0));
+        }
+
+        var saveResult = await SaveAsync(cancellationToken);
+        return saveResult.IsSuccess
+            ? ServiceResult<ProgramTranslationBatchResultDto>.Success(
+                new ProgramTranslationBatchResultDto(updatedCount))
+            : ServiceResult<ProgramTranslationBatchResultDto>.Failure(
+                saveResult.Error!,
+                saveResult.StatusCode);
+    }
+
     public async Task<ServiceResult<ProgramAdminDto>> SetActiveAsync(
         int programId,
         int adminId,
@@ -438,6 +499,28 @@ public sealed class ProgramAdminService(
             return ServiceResult<NormalizedProgramInput>.Failure(
                 "İngilizce program adı 2 ile 100 karakter arasında olmalıdır.",
                 StatusCodes.Status400BadRequest);
+        }
+
+        if (programNameEnglish is null)
+        {
+            var reusableNames = await dbContext.Programs
+                .AsNoTracking()
+                .Where(item => item.ProgramId != currentProgramId
+                    && item.ProgramName == programName
+                    && item.ProgramNameEnglish != null
+                    && item.ProgramNameEnglish != string.Empty)
+                .Select(item => item.ProgramNameEnglish!)
+                .Distinct()
+                .Take(2)
+                .ToArrayAsync(cancellationToken);
+            if (reusableNames.Length == 1)
+            {
+                programNameEnglish = reusableNames[0].Trim();
+            }
+            else if (ProgramNameEnglishCatalog.TryGetEnglishName(programName, out var mappedName))
+            {
+                programNameEnglish = mappedName;
+            }
         }
 
         if (!DegreeTypeCatalog.TryCanonicalize(request.DegreeType, out var degreeType))
