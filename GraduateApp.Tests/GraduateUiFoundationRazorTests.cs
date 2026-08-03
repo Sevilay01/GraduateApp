@@ -904,6 +904,67 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task English_admin_evaluation_and_publication_render_localized_labels_without_changing_post_contracts()
+    {
+        using var host = CreateWebHost();
+        var model = EvaluationPageModel(OfferingEvaluationState.Configuring);
+        model.Evaluation.Applications[0].DocumentReviewSummary = "1/1 zorunlu belge onaylı";
+
+        var evaluationHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Evaluation",
+            model,
+            AuthenticatedUser("Admin", "Test Administrator"),
+            cultureName: "en-US");
+        var decodedEvaluation = WebUtility.HtmlDecode(evaluationHtml);
+
+        Assert.Contains("Application evaluation", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("2026–2027 · Fall", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Evaluation policy", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Candidate evaluations", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Eligibility: Eligible", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("1/1 required documents approved", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Quota boundary", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Finalize results", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("SaveEvaluationCriterion", evaluationHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", evaluationHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Başvuru değerlendirmesi", decodedEvaluation, StringComparison.Ordinal);
+        Assert.DoesNotContain("Kontenjan çizgisi", decodedEvaluation, StringComparison.Ordinal);
+
+        model.Evaluation.EvaluationState = OfferingEvaluationState.Finalized;
+        var publishHtml = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "PublishEvaluation",
+            new EvaluationPublishPageViewModel
+            {
+                ProgramOfferingId = model.Evaluation.ProgramOfferingId,
+                ProgramName = model.Evaluation.ProgramName,
+                Evaluation = model.Evaluation,
+                Summary = new EvaluationPublicationSummaryViewModel
+                {
+                    Quota = 1,
+                    AdmittedCount = 1,
+                    NotAdmittedCount = 1,
+                    IneligibleCount = 0,
+                    OfferingRowVersion = "cHVibGlzaC1yb3ctdmVyc2lvbg=="
+                }
+            },
+            AuthenticatedUser("Admin", "Test Administrator"),
+            cultureName: "en-US");
+        var decodedPublish = WebUtility.HtmlDecode(publishHtml);
+
+        Assert.Contains("Publish results", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("Finalized ranking", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("Irreversible publication confirmation", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("This action cannot be undone", decodedPublish, StringComparison.Ordinal);
+        Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaC1yb3ctdmVyc2lvbg==\"", publishHtml, StringComparison.Ordinal);
+        Assert.Contains("__RequestVerificationToken", publishHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sonuçları yayımla", decodedPublish, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Catalog_and_account_errors_render_encoded_responsive_and_specific_safe_actions()
     {
         using var host = CreateWebHost();
