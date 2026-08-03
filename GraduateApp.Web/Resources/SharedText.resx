@@ -2834,4 +2834,294 @@
   <data name="Admin.Evaluation.Blocker.MissingCriteria" xml:space="preserve">
     <value>{0} başvurusunda eksik kriterler: {1}.</value>
   </data>
+
+  <!-- Localized admin controller messages -->
+  <data name="Admin.Message.InviteEmailInvalid" xml:space="preserve">
+    <value>Yönetici daveti için geçerli bir e-posta adresi giriniz.</value>
+  </data>
+  <data name="Admin.Message.InviteCreated" xml:space="preserve">
+    <value>Yönetici daveti oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.InviteCreateFailed" xml:space="preserve">
+    <value>Yönetici daveti oluşturulamadı.</value>
+  </data>
+  <data name="Admin.Message.InviteResent" xml:space="preserve">
+    <value>Yönetici daveti yeniden oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.AdminActivated" xml:space="preserve">
+    <value>Yönetici hesabı aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.AdminDeactivated" xml:space="preserve">
+    <value>Yönetici hesabı pasifleştirildi ve mevcut oturumları iptal edildi.</value>
+  </data>
+  <data name="Admin.Message.AdminUnlocked" xml:space="preserve">
+    <value>Yönetici hesabının kilidi açıldı.</value>
+  </data>
+  <data name="Admin.Message.AdminAccountInvalid" xml:space="preserve">
+    <value>Yönetici hesap bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.AdminUpdateFailed" xml:space="preserve">
+    <value>Yönetici hesabı güncellenemedi.</value>
+  </data>
+  <data name="Admin.Message.StudentNotSelected" xml:space="preserve">
+    <value>Öğrenci seçilmedi.</value>
+  </data>
+  <data name="Admin.Message.StudentNotFound" xml:space="preserve">
+    <value>Öğrenci bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivated" xml:space="preserve">
+    <value>Öğrenci pasifleştirildi ve mevcut oturumları iptal edildi.</value>
+  </data>
+  <data name="Admin.Message.StudentDeactivateFailed" xml:space="preserve">
+    <value>Öğrenci pasifleştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.StudentActivated" xml:space="preserve">
+    <value>Öğrenci yeniden aktifleştirildi ve önceki oturumları geçersiz kılındı.</value>
+  </data>
+  <data name="Admin.Message.StudentActivateFailed" xml:space="preserve">
+    <value>Öğrenci aktifleştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.OfferingEditNotFound" xml:space="preserve">
+    <value>Düzenlenecek ilan bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.RequirementOfferingNotFound" xml:space="preserve">
+    <value>Belge koşulları için seçilen ilan bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.RequirementsLoadFailed" xml:space="preserve">
+    <value>Belge koşulları yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.SelectOfferingBeforeRequirement" xml:space="preserve">
+    <value>Belge koşulunu düzenlemek için önce ilan seçiniz.</value>
+  </data>
+  <data name="Admin.Message.RequirementNotFound" xml:space="preserve">
+    <value>Düzenlenecek belge koşulu seçilen ilanda bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.OfferingsLoadFailed" xml:space="preserve">
+    <value>İlan bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.TermInvalid" xml:space="preserve">
+    <value>Geçerli bir dönem seçiniz.</value>
+  </data>
+  <data name="Admin.Message.DeadlineAfterStart" xml:space="preserve">
+    <value>Son başvuru tarihi başlangıçtan sonra olmalıdır.</value>
+  </data>
+  <data name="Admin.Message.OfferingConcurrencyMissing" xml:space="preserve">
+    <value>İlan eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.OfferingValidationFailed" xml:space="preserve">
+    <value>İlan bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaveFailed" xml:space="preserve">
+    <value>Dönemsel ilan kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.OfferingSaved" xml:space="preserve">
+    <value>Dönemsel ilan kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.RemediationInvalid" xml:space="preserve">
+    <value>İlan kapatma bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.RemediationClosed" xml:space="preserve">
+    <value>Geçersiz açık ilan güvenli biçimde kapatıldı. Mevcut başvuru ve sonuçlar değiştirilmedi.</value>
+  </data>
+  <data name="Admin.Message.RemediationFailed" xml:space="preserve">
+    <value>İlan güvenli düzeltme için kapatılamadı.</value>
+  </data>
+  <data name="Admin.Message.ValidOfferingRequired" xml:space="preserve">
+    <value>Geçerli bir ilan seçiniz.</value>
+  </data>
+  <data name="Admin.Message.RequirementConcurrencyMissing" xml:space="preserve">
+    <value>Eşzamanlılık bilgisi eksik. Sayfayı yenileyin.</value>
+  </data>
+  <data name="Admin.Message.RequirementValidationFailed" xml:space="preserve">
+    <value>Belge koşulu bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaved" xml:space="preserve">
+    <value>Belge koşulu kaydedildi. Değişiklik yalnızca bundan sonra oluşturulan taslakları etkiler.</value>
+  </data>
+  <data name="Admin.Message.RequirementSaveFailed" xml:space="preserve">
+    <value>Belge koşulu kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.RequirementStateInvalid" xml:space="preserve">
+    <value>Belge koşulu durumu doğrulanamadı. Sayfayı yenileyip tekrar deneyin.</value>
+  </data>
+  <data name="Admin.Message.RequirementActivated" xml:space="preserve">
+    <value>Belge koşulu aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.RequirementDeactivated" xml:space="preserve">
+    <value>Belge koşulu pasifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.RequirementUpdateFailed" xml:space="preserve">
+    <value>Belge koşulu güncellenemedi.</value>
+  </data>
+  <data name="Admin.Message.UniversitiesLoadFailed" xml:space="preserve">
+    <value>Üniversite kataloğu yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.UniversityValidationFailed" xml:space="preserve">
+    <value>Üniversite bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreateFailed" xml:space="preserve">
+    <value>Üniversite oluşturulamadı.</value>
+  </data>
+  <data name="Admin.Message.UniversityCreated" xml:space="preserve">
+    <value>Üniversite kataloğa eklendi.</value>
+  </data>
+  <data name="Admin.Message.InstitutesLoadFailed" xml:space="preserve">
+    <value>Enstitü bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.InstituteConcurrencyMissing" xml:space="preserve">
+    <value>Enstitü eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.InstituteValidationFailed" xml:space="preserve">
+    <value>Enstitü bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.InstituteSaveFailed" xml:space="preserve">
+    <value>Enstitü kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.InstituteUpdated" xml:space="preserve">
+    <value>Enstitü güncellendi.</value>
+  </data>
+  <data name="Admin.Message.InstituteCreated" xml:space="preserve">
+    <value>Enstitü oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.InstituteActivated" xml:space="preserve">
+    <value>Enstitü aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeactivated" xml:space="preserve">
+    <value>Enstitü pasifleştirildi. Bağlı programlar yeni seçimlerde gösterilmeyecek.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateInvalid" xml:space="preserve">
+    <value>Enstitü aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.InstituteStateFailed" xml:space="preserve">
+    <value>Enstitü durumu değiştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.InstituteNotFound" xml:space="preserve">
+    <value>Enstitü bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteInvalid" xml:space="preserve">
+    <value>Enstitü silme bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleted" xml:space="preserve">
+    <value>Kullanılmamış enstitü kalıcı olarak silindi.</value>
+  </data>
+  <data name="Admin.Message.InstituteDeleteFailed" xml:space="preserve">
+    <value>Enstitü silinemedi.</value>
+  </data>
+  <data name="Admin.Message.ProgramsLoadFailed" xml:space="preserve">
+    <value>Program bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Admin.Message.TranslationBatchRange" xml:space="preserve">
+    <value>Tek işlemde 1 ile 100 program çevirisi güncellenebilir.</value>
+  </data>
+  <data name="Admin.Message.TranslationValidationFailed" xml:space="preserve">
+    <value>Program çevirileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.TranslationSaveFailed" xml:space="preserve">
+    <value>Program çevirileri kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.TranslationNoChanges" xml:space="preserve">
+    <value>Program çevirilerinde değişiklik yok.</value>
+  </data>
+  <data name="Admin.Message.TranslationOneUpdated" xml:space="preserve">
+    <value>1 program çevirisi güncellendi.</value>
+  </data>
+  <data name="Admin.Message.TranslationManyUpdated" xml:space="preserve">
+    <value>{0} program çevirisi güncellendi.</value>
+  </data>
+  <data name="Admin.Message.ProgramConcurrencyMissing" xml:space="preserve">
+    <value>Program eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.ProgramValidationFailed" xml:space="preserve">
+    <value>Program bilgileri doğrulanamadı.</value>
+  </data>
+  <data name="Admin.Message.ProgramUpdated" xml:space="preserve">
+    <value>Program güncellendi.</value>
+  </data>
+  <data name="Admin.Message.ProgramCreated" xml:space="preserve">
+    <value>Program oluşturuldu.</value>
+  </data>
+  <data name="Admin.Message.ProgramActivated" xml:space="preserve">
+    <value>Program aktifleştirildi.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeactivated" xml:space="preserve">
+    <value>Program pasifleştirildi. Mevcut ilan ve başvurular korunuyor.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateInvalid" xml:space="preserve">
+    <value>Program aktiflik bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.ProgramStateFailed" xml:space="preserve">
+    <value>Program durumu değiştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.ProgramNotFound" xml:space="preserve">
+    <value>Program bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleteInvalid" xml:space="preserve">
+    <value>Program silme bilgisi geçersiz. Sayfayı yenileyiniz.</value>
+  </data>
+  <data name="Admin.Message.ProgramDeleted" xml:space="preserve">
+    <value>İlanı bulunmayan program kalıcı olarak silindi.</value>
+  </data>
+  <data name="Admin.Message.EvaluationNotFound" xml:space="preserve">
+    <value>Değerlendirme ilanı bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.CriterionInvalid" xml:space="preserve">
+    <value>Değerlendirme kriteri bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaved" xml:space="preserve">
+    <value>Değerlendirme kriteri kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.CriterionSaveFailed" xml:space="preserve">
+    <value>Değerlendirme kriteri kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteInvalid" xml:space="preserve">
+    <value>Değerlendirme kriteri silme bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleted" xml:space="preserve">
+    <value>Değerlendirme kriteri kaldırıldı.</value>
+  </data>
+  <data name="Admin.Message.CriterionDeleteFailed" xml:space="preserve">
+    <value>Değerlendirme kriteri kaldırılamadı.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaved" xml:space="preserve">
+    <value>Aday uygunluk kararı kaydedildi.</value>
+  </data>
+  <data name="Admin.Message.EligibilitySaveFailed" xml:space="preserve">
+    <value>Aday uygunluk kararı kaydedilemedi.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalized" xml:space="preserve">
+    <value>Değerlendirme sonuçları kesinleştirildi; henüz öğrencilere yayımlanmadı.</value>
+  </data>
+  <data name="Admin.Message.EvaluationFinalizeFailed" xml:space="preserve">
+    <value>Değerlendirme kesinleştirilemedi.</value>
+  </data>
+  <data name="Admin.Message.NoPublishableResults" xml:space="preserve">
+    <value>Yayımlanabilir sonuç bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.EvaluationPublished" xml:space="preserve">
+    <value>Değerlendirme sonuçları öğrencilere yayımlandı.</value>
+  </data>
+  <data name="Admin.Message.PublishFailed" xml:space="preserve">
+    <value>Sonuçlar yayımlanamadı.</value>
+  </data>
+  <data name="Admin.Message.ApplicationNotFound" xml:space="preserve">
+    <value>Başvuru bulunamadı.</value>
+  </data>
+  <data name="Admin.Message.StatusInvalid" xml:space="preserve">
+    <value>Durum güncelleme bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdated" xml:space="preserve">
+    <value>Başvuru durumu güncellendi.</value>
+  </data>
+  <data name="Admin.Message.StatusUpdateFailed" xml:space="preserve">
+    <value>Başvuru durumu güncellenemedi.</value>
+  </data>
+  <data name="Admin.Message.DocumentReviewInvalid" xml:space="preserve">
+    <value>Belge inceleme bilgileri geçersiz.</value>
+  </data>
+  <data name="Admin.Message.DocumentApproved" xml:space="preserve">
+    <value>Belge onaylandı.</value>
+  </data>
+  <data name="Admin.Message.DocumentRejected" xml:space="preserve">
+    <value>Belge gerekçeyle reddedildi.</value>
+  </data>
 </root>
