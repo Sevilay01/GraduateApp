@@ -60,6 +60,15 @@ public static class UiText
     public static string LocalizeDocumentCategory(HttpContext context, DocumentContentCategory category) =>
         Get(context, $"DocumentCategory.{category}");
 
+    public static string LocalizeEvaluationState(HttpContext context, OfferingEvaluationState state) =>
+        Get(context, $"EvaluationState.{state}");
+
+    public static string LocalizeCriterionSource(HttpContext context, EvaluationCriterionSourceType sourceType) =>
+        Get(context, $"CriterionSource.{sourceType}");
+
+    public static string LocalizeEligibility(HttpContext context, EvaluationEligibilityStatus status) =>
+        Get(context, $"Eligibility.{status}");
+
     public static string LocalizeAcademicTerm(HttpContext context, string? termName) =>
         termName switch
         {
