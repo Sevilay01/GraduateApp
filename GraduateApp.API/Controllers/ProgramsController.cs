@@ -98,9 +98,9 @@ public sealed class ProgramsController(GraduateAppDbContext dbContext, TimeProvi
                         requirement.MinimumValidityDate,
                         requirement.IsRequired))
                     .ToArray())
-            {
-                ProgramNameEnglish = item.Program.ProgramNameEnglish
-            })
+        {
+            ProgramNameEnglish = item.Program.ProgramNameEnglish
+        })
             .ToArray());
     }
 
