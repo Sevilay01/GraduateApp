@@ -236,7 +236,7 @@
                         @foreach (var application in Model.Applications)
                         {
                             <tr>
-                                <td data-label="Program"><strong>@application.ProgramName</strong></td>
+                                <td data-label="@UiText.Get(Context, "Panel.Program")"><strong>@UiText.SelectLocalized(Context, application.ProgramName, application.ProgramNameEnglish)</strong></td>
                                 <td data-label="@UiText.Get(Context, "Panel.AcademicPeriod")">@application.AcademicYear · @UiText.Get(Context, $"AcademicTerm.{application.Term}")</td>
                                 <td data-label="@UiText.Get(Context, "Panel.ApplicationDate")">
                                     <time datetime="@application.ApplicationDateUtc.ToString("O")">
