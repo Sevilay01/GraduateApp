@@ -3146,4 +3146,138 @@
   <data name="Admin.Message.DocumentDownloadFailed" xml:space="preserve">
     <value>Belge indirilemedi.</value>
   </data>
+
+  <!-- Model binding and validation localization -->
+  <data name="Validation.Required" xml:space="preserve">
+    <value>Bu alan zorunludur.</value>
+  </data>
+  <data name="Validation.RequestBodyRequired" xml:space="preserve">
+    <value>Gerekli bilgiler gönderilmedi.</value>
+  </data>
+  <data name="Validation.InvalidNumberOrDate" xml:space="preserve">
+    <value>Girilen değer geçerli bir sayı veya tarih biçiminde değil.</value>
+  </data>
+  <data name="Validation.InvalidValue" xml:space="preserve">
+    <value>Girilen değer geçersiz.</value>
+  </data>
+  <data name="Validation.NumberRequired" xml:space="preserve">
+    <value>Geçerli bir sayı giriniz.</value>
+  </data>
+  <data name="Validation.ValidExam" xml:space="preserve">
+    <value>Geçerli bir sınav seçiniz.</value>
+  </data>
+  <data name="Validation.ScoreRange" xml:space="preserve">
+    <value>Puan 0 ile 999,99 arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.ValidProgram" xml:space="preserve">
+    <value>Geçerli bir program seçiniz.</value>
+  </data>
+  <data name="Validation.AcademicYearRange" xml:space="preserve">
+    <value>Akademik yıl başlangıcı 2000 ile 2200 arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.ValidTerm" xml:space="preserve">
+    <value>Geçerli bir dönem seçiniz.</value>
+  </data>
+  <data name="Validation.StartRequired" xml:space="preserve">
+    <value>Başvuru başlangıç tarihi zorunludur.</value>
+  </data>
+  <data name="Validation.DeadlineRequired" xml:space="preserve">
+    <value>Son başvuru tarihi zorunludur.</value>
+  </data>
+  <data name="Validation.QuotaRange" xml:space="preserve">
+    <value>Kontenjan 1 ile 100000 arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.OfferingConcurrency" xml:space="preserve">
+    <value>İlan eşzamanlılık bilgisi geçersiz.</value>
+  </data>
+  <data name="Validation.DisplayNameRequired" xml:space="preserve">
+    <value>Görünen ad zorunludur.</value>
+  </data>
+  <data name="Validation.MaximumSize" xml:space="preserve">
+    <value>Maksimum boyut geçersiz.</value>
+  </data>
+  <data name="Validation.ValidEmail" xml:space="preserve">
+    <value>Geçerli bir e-posta adresi giriniz.</value>
+  </data>
+  <data name="Validation.UniversityNameRequired" xml:space="preserve">
+    <value>Üniversite adı zorunludur.</value>
+  </data>
+  <data name="Validation.UniversityNameLength" xml:space="preserve">
+    <value>Üniversite adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.InstituteNameRequired" xml:space="preserve">
+    <value>Enstitü adı zorunludur.</value>
+  </data>
+  <data name="Validation.InstituteNameLength" xml:space="preserve">
+    <value>Enstitü adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.InstituteConcurrency" xml:space="preserve">
+    <value>Enstitü eşzamanlılık bilgisi geçersiz.</value>
+  </data>
+  <data name="Validation.ValidInstitute" xml:space="preserve">
+    <value>Geçerli bir enstitü seçiniz.</value>
+  </data>
+  <data name="Validation.ProgramNameRequired" xml:space="preserve">
+    <value>Program adı zorunludur.</value>
+  </data>
+  <data name="Validation.ProgramNameLength" xml:space="preserve">
+    <value>Program adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.ProgramEnglishNameLength" xml:space="preserve">
+    <value>İngilizce program adı 2 ile 100 karakter arasında olmalıdır.</value>
+  </data>
+  <data name="Validation.DegreeTypeRequired" xml:space="preserve">
+    <value>Derece türü zorunludur.</value>
+  </data>
+  <data name="Validation.DegreeTypeLength" xml:space="preserve">
+    <value>Derece türü en fazla 50 karakter olabilir.</value>
+  </data>
+  <data name="Validation.ProgramConcurrency" xml:space="preserve">
+    <value>Program eşzamanlılık bilgisi geçersiz.</value>
+  </data>
+  <data name="Validation.MaximumRawScore" xml:space="preserve">
+    <value>Maksimum ham puan 0,0001 ile 99999 arasında ve en fazla 4 ondalık basamaklı olmalıdır.</value>
+  </data>
+  <data name="Field.AcademicYearStart" xml:space="preserve">
+    <value>Akademik yıl başlangıcı</value>
+  </data>
+  <data name="Field.Term" xml:space="preserve">
+    <value>Dönem</value>
+  </data>
+  <data name="Field.ApplicationStartIstanbul" xml:space="preserve">
+    <value>Başvuru başlangıcı (İstanbul)</value>
+  </data>
+  <data name="Field.ApplicationDeadlineIstanbul" xml:space="preserve">
+    <value>Son başvuru (İstanbul)</value>
+  </data>
+  <data name="Field.OfferingOpen" xml:space="preserve">
+    <value>İlan açık</value>
+  </data>
+  <data name="Field.Archive" xml:space="preserve">
+    <value>Arşivle</value>
+  </data>
+  <data name="Field.RankedWorkflow" xml:space="preserve">
+    <value>Sıralamalı değerlendirme iş akışı</value>
+  </data>
+  <data name="Field.AdminEmail" xml:space="preserve">
+    <value>Yeni yöneticinin e-posta adresi</value>
+  </data>
+  <data name="Field.UniversityName" xml:space="preserve">
+    <value>Üniversite adı</value>
+  </data>
+  <data name="Field.InstituteName" xml:space="preserve">
+    <value>Enstitü adı</value>
+  </data>
+  <data name="Field.Institute" xml:space="preserve">
+    <value>Enstitü</value>
+  </data>
+  <data name="Field.ProgramName" xml:space="preserve">
+    <value>Program adı</value>
+  </data>
+  <data name="Field.ProgramNameEnglish" xml:space="preserve">
+    <value>İngilizce program adı</value>
+  </data>
+  <data name="Field.DegreeType" xml:space="preserve">
+    <value>Derece türü</value>
+  </data>
 </root>
