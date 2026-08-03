@@ -1042,4 +1042,73 @@
   <data name="Status.Home" xml:space="preserve">
     <value>Return home</value>
   </data>
+  <data name="Panel.Status.NotFound" xml:space="preserve">
+    <value>Application not found.</value>
+  </data>
+  <data name="Panel.Document.Select" xml:space="preserve">
+    <value>Select a file to upload.</value>
+  </data>
+  <data name="Panel.Document.Uploaded" xml:space="preserve">
+    <value>The document was uploaded securely and is pending review.</value>
+  </data>
+  <data name="Panel.Document.UploadFailed" xml:space="preserve">
+    <value>The document could not be uploaded.</value>
+  </data>
+  <data name="Panel.Application.Submitted" xml:space="preserve">
+    <value>Your application was submitted successfully.</value>
+  </data>
+  <data name="Panel.Application.SubmitFailed" xml:space="preserve">
+    <value>The application could not be submitted.</value>
+  </data>
+  <data name="Panel.Application.Withdrawn" xml:space="preserve">
+    <value>Your application was withdrawn.</value>
+  </data>
+  <data name="Panel.Application.WithdrawFailed" xml:space="preserve">
+    <value>The application could not be withdrawn.</value>
+  </data>
+  <data name="Panel.Application.Reactivated" xml:space="preserve">
+    <value>Your application was reactivated as a draft. Review the current information and submit it again.</value>
+  </data>
+  <data name="Panel.Application.ReactivateFailed" xml:space="preserve">
+    <value>The application could not be reactivated.</value>
+  </data>
+  <data name="Panel.Document.DownloadFailed" xml:space="preserve">
+    <value>The document could not be downloaded.</value>
+  </data>
+  <data name="Profile.LoadFailed" xml:space="preserve">
+    <value>Profile information could not be loaded.</value>
+  </data>
+  <data name="Profile.UpdateFailed" xml:space="preserve">
+    <value>The profile could not be updated.</value>
+  </data>
+  <data name="Profile.Updated" xml:space="preserve">
+    <value>Your profile and education information were updated.</value>
+  </data>
+  <data name="Profile.UniversityLoadFailed" xml:space="preserve">
+    <value>The university catalog could not be loaded.</value>
+  </data>
+  <data name="ExamScores.LoadFailed" xml:space="preserve">
+    <value>Exam scores could not be loaded.</value>
+  </data>
+  <data name="ExamScores.EditNotFound" xml:space="preserve">
+    <value>The exam result you wanted to edit was not found.</value>
+  </data>
+  <data name="ExamScores.SaveFailed" xml:space="preserve">
+    <value>The exam result could not be saved.</value>
+  </data>
+  <data name="ExamScores.Updated" xml:space="preserve">
+    <value>Your exam result was updated.</value>
+  </data>
+  <data name="ExamScores.Added" xml:space="preserve">
+    <value>Your exam result was added.</value>
+  </data>
+  <data name="ExamScores.InvalidSelection" xml:space="preserve">
+    <value>Select a valid exam result.</value>
+  </data>
+  <data name="ExamScores.Deleted" xml:space="preserve">
+    <value>Your exam result was deleted.</value>
+  </data>
+  <data name="ExamScores.DeleteFailed" xml:space="preserve">
+    <value>The exam result could not be deleted.</value>
+  </data>
 </root>
