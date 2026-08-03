@@ -1,4 +1,5 @@
 using System.Net;
+using GraduateApp.Web.Localization;
 using GraduateApp.Web.Models;
 using GraduateApp.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -33,7 +34,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                 Applications = invalidSearchApplications.Value ?? [],
                 ErrorMessage = invalidSearchApplications.IsSuccess
                     ? null
-                    : invalidSearchApplications.Error ?? "Başvurular yüklenemedi."
+                    : invalidSearchApplications.Error ?? UiText.Get(HttpContext, "Panel.Error.ApplicationsLoad")
             });
         }
 
@@ -58,21 +59,18 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             var profile = await profileTask;
             if (!programs.IsSuccess)
             {
-                recommendationMessage =
-                    "Programlar yüklenemediği için profil önerileri şu anda kullanılamıyor.";
+                recommendationMessage = UiText.Get(HttpContext, "Panel.Error.RecommendationsPrograms");
             }
             else if (!profile.IsSuccess || profile.Value is null)
             {
-                recommendationMessage =
-                    "Eğitim profiliniz yüklenemediği için programlar normal sıralamada gösteriliyor.";
+                recommendationMessage = UiText.Get(HttpContext, "Panel.Error.ProfileLoad");
             }
             else
             {
                 graduatedProgram = profile.Value.Education?.GraduatedProgram;
                 if (string.IsNullOrWhiteSpace(graduatedProgram))
                 {
-                    recommendationMessage =
-                        "Önerileri kullanmak için profilinizde mezun olduğunuz lisans programını belirtin.";
+                    recommendationMessage = UiText.Get(HttpContext, "Panel.Recommendation.ProfileMissing");
                 }
                 else
                 {
@@ -90,8 +88,8 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
                         .OrderByDescending(item => item.IsRecommendedForProfile)
                         .ToArray();
                     recommendationMessage = recommendationCount > 0
-                        ? $"{recommendationCount} ilan mezuniyet programınızla aynı alan adına sahip ve listenin başına taşındı."
-                        : "Mezuniyet programınızla aynı alan adına sahip açık ilan bulunamadı; diğer ilanlar başvuruya açık olmaya devam ediyor.";
+                        ? UiText.Format(HttpContext, "Panel.Recommendation.MatchCount", recommendationCount)
+                        : UiText.Get(HttpContext, "Panel.Recommendation.NoMatch");
                 }
             }
         }
@@ -105,7 +103,7 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
             RecommendationMessage = recommendationMessage,
             ErrorMessage = programs.IsSuccess && applications.IsSuccess
                 ? null
-                : programs.Error ?? applications.Error ?? "Panel bilgileri yüklenemedi."
+                : programs.Error ?? applications.Error ?? UiText.Get(HttpContext, "Panel.Error.Load")
         });
     }
 
@@ -127,14 +125,14 @@ public sealed class PanelController(GraduateApiClient apiClient) : Controller
     {
         if (programOfferingId <= 0)
         {
-            TempData["ErrorMessage"] = "Geçerli bir dönemsel ilan seçiniz.";
+            TempData["ErrorMessage"] = UiText.Get(HttpContext, "Panel.Error.InvalidOffering");
             return RedirectToAction(nameof(Index));
         }
 
         var result = await apiClient.CreateApplicationAsync(programOfferingId, cancellationToken);
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? "Başvuru taslağınız oluşturuldu. Zorunlu belgeleri yükledikten sonra başvuruyu gönderin."
-            : result.Error ?? "Başvuru oluşturulamadı.";
+            ? UiText.Get(HttpContext, "Panel.Success.DraftCreated")
+            : result.Error ?? UiText.Get(HttpContext, "Panel.Error.Create");
         return result.IsSuccess && result.Value is not null
             ? RedirectToAction(nameof(ApplicationDetail), new { publicId = result.Value.PublicId })
             : RedirectToAction(nameof(Index));
