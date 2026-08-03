@@ -335,9 +335,9 @@ public sealed class AdminAccountViewModel
 
 public sealed class InviteAdminViewModel
 {
-    [Required(ErrorMessage = "E-posta zorunludur.")]
+    [Required(ErrorMessage = "Validation.EmailRequired")]
     [EmailAddress(ErrorMessage = "Validation.ValidEmail")]
-    [StringLength(254, ErrorMessage = "E-posta en fazla 254 karakter olabilir.")]
+    [StringLength(254, ErrorMessage = "Validation.EmailMaximumLength")]
     [Display(Name = "Field.AdminEmail")]
     public string Email { get; set; } = string.Empty;
 }
