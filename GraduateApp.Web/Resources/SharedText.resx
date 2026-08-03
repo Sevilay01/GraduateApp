@@ -1042,4 +1042,73 @@
   <data name="Status.Home" xml:space="preserve">
     <value>Ana sayfaya dön</value>
   </data>
+  <data name="Panel.Status.NotFound" xml:space="preserve">
+    <value>Başvuru bulunamadı.</value>
+  </data>
+  <data name="Panel.Document.Select" xml:space="preserve">
+    <value>Yüklenecek dosyayı seçiniz.</value>
+  </data>
+  <data name="Panel.Document.Uploaded" xml:space="preserve">
+    <value>Belge güvenli biçimde yüklendi ve inceleme bekliyor.</value>
+  </data>
+  <data name="Panel.Document.UploadFailed" xml:space="preserve">
+    <value>Belge yüklenemedi.</value>
+  </data>
+  <data name="Panel.Application.Submitted" xml:space="preserve">
+    <value>Başvurunuz başarıyla gönderildi.</value>
+  </data>
+  <data name="Panel.Application.SubmitFailed" xml:space="preserve">
+    <value>Başvuru gönderilemedi.</value>
+  </data>
+  <data name="Panel.Application.Withdrawn" xml:space="preserve">
+    <value>Başvurunuz geri çekildi.</value>
+  </data>
+  <data name="Panel.Application.WithdrawFailed" xml:space="preserve">
+    <value>Başvuru geri çekilemedi.</value>
+  </data>
+  <data name="Panel.Application.Reactivated" xml:space="preserve">
+    <value>Başvurunuz taslak olarak yeniden etkinleştirildi. Güncel bilgileri kontrol edip tekrar gönderebilirsiniz.</value>
+  </data>
+  <data name="Panel.Application.ReactivateFailed" xml:space="preserve">
+    <value>Başvuru yeniden etkinleştirilemedi.</value>
+  </data>
+  <data name="Panel.Document.DownloadFailed" xml:space="preserve">
+    <value>Belge indirilemedi.</value>
+  </data>
+  <data name="Profile.LoadFailed" xml:space="preserve">
+    <value>Profil bilgileri yüklenemedi.</value>
+  </data>
+  <data name="Profile.UpdateFailed" xml:space="preserve">
+    <value>Profil güncellenemedi.</value>
+  </data>
+  <data name="Profile.Updated" xml:space="preserve">
+    <value>Profil ve eğitim bilgileriniz güncellendi.</value>
+  </data>
+  <data name="Profile.UniversityLoadFailed" xml:space="preserve">
+    <value>Üniversite kataloğu yüklenemedi.</value>
+  </data>
+  <data name="ExamScores.LoadFailed" xml:space="preserve">
+    <value>Sınav sonuçları yüklenemedi.</value>
+  </data>
+  <data name="ExamScores.EditNotFound" xml:space="preserve">
+    <value>Düzenlemek istediğiniz sınav sonucu bulunamadı.</value>
+  </data>
+  <data name="ExamScores.SaveFailed" xml:space="preserve">
+    <value>Sınav sonucu kaydedilemedi.</value>
+  </data>
+  <data name="ExamScores.Updated" xml:space="preserve">
+    <value>Sınav sonucunuz güncellendi.</value>
+  </data>
+  <data name="ExamScores.Added" xml:space="preserve">
+    <value>Sınav sonucunuz eklendi.</value>
+  </data>
+  <data name="ExamScores.InvalidSelection" xml:space="preserve">
+    <value>Geçerli bir sınav sonucu seçiniz.</value>
+  </data>
+  <data name="ExamScores.Deleted" xml:space="preserve">
+    <value>Sınav sonucunuz silindi.</value>
+  </data>
+  <data name="ExamScores.DeleteFailed" xml:space="preserve">
+    <value>Sınav sonucu silinemedi.</value>
+  </data>
 </root>
