@@ -607,4 +607,214 @@
   <data name="Common.Save" xml:space="preserve">
     <value>Save</value>
   </data>
+  <data name="Status.Draft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="Status.Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Status.UnderReview" xml:space="preserve">
+    <value>Under review</value>
+  </data>
+  <data name="Status.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Status.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Status.Withdrawn" xml:space="preserve">
+    <value>Withdrawn</value>
+  </data>
+  <data name="Common.Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Outcome.Admitted" xml:space="preserve">
+    <value>Admitted</value>
+  </data>
+  <data name="Outcome.NotAdmitted" xml:space="preserve">
+    <value>Outside quota</value>
+  </data>
+  <data name="Outcome.Ineligible" xml:space="preserve">
+    <value>Ineligible</value>
+  </data>
+  <data name="DocumentReview.Pending" xml:space="preserve">
+    <value>Pending review</value>
+  </data>
+  <data name="DocumentReview.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="DocumentReview.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="DocumentCategory.PdfOnly" xml:space="preserve">
+    <value>PDF</value>
+  </data>
+  <data name="DocumentCategory.ImageOnly" xml:space="preserve">
+    <value>JPEG or PNG</value>
+  </data>
+  <data name="DocumentCategory.PdfOrImage" xml:space="preserve">
+    <value>PDF, JPEG, or PNG</value>
+  </data>
+  <data name="Progress.Title" xml:space="preserve">
+    <value>Application progress</value>
+  </data>
+  <data name="Progress.Draft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="Progress.Submitted" xml:space="preserve">
+    <value>Submitted</value>
+  </data>
+  <data name="Progress.UnderReview" xml:space="preserve">
+    <value>Under review</value>
+  </data>
+  <data name="Progress.Result" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Progress.Withdrawn" xml:space="preserve">
+    <value>Withdrawn</value>
+  </data>
+  <data name="ApplicationDetail.Title" xml:space="preserve">
+    <value>Application details</value>
+  </data>
+  <data name="ApplicationDetail.EvaluationPending" xml:space="preserve">
+    <value>Evaluation in progress</value>
+  </data>
+  <data name="ApplicationDetail.EvaluationPendingLead" xml:space="preserve">
+    <value>Scores, ranking, and decisions remain hidden until the results are finalized and published.</value>
+  </data>
+  <data name="ApplicationDetail.FinalResult" xml:space="preserve">
+    <value>Final result</value>
+  </data>
+  <data name="ApplicationDetail.PublishedResult" xml:space="preserve">
+    <value>Published evaluation result</value>
+  </data>
+  <data name="ApplicationDetail.TotalScore" xml:space="preserve">
+    <value>Total score</value>
+  </data>
+  <data name="ApplicationDetail.Rank" xml:space="preserve">
+    <value>Rank</value>
+  </data>
+  <data name="ApplicationDetail.Quota" xml:space="preserve">
+    <value>Quota</value>
+  </data>
+  <data name="ApplicationDetail.PublishedAt" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="ApplicationDetail.ComponentsCaption" xml:space="preserve">
+    <value>Evaluation score components</value>
+  </data>
+  <data name="ApplicationDetail.Criterion" xml:space="preserve">
+    <value>Criterion</value>
+  </data>
+  <data name="ApplicationDetail.RawScore" xml:space="preserve">
+    <value>Raw score</value>
+  </data>
+  <data name="ApplicationDetail.NormalizedScore" xml:space="preserve">
+    <value>Normalized score</value>
+  </data>
+  <data name="ApplicationDetail.Weight" xml:space="preserve">
+    <value>Weight</value>
+  </data>
+  <data name="ApplicationDetail.Contribution" xml:space="preserve">
+    <value>Contribution</value>
+  </data>
+  <data name="ApplicationDetail.SnapshotNote" xml:space="preserve">
+    <value>This result is based on the finalized snapshot data captured at application and evaluation time.</value>
+  </data>
+  <data name="ApplicationDetail.DocumentEyebrow" xml:space="preserve">
+    <value>Secure document workflow</value>
+  </data>
+  <data name="ApplicationDetail.Documents" xml:space="preserve">
+    <value>Application documents</value>
+  </data>
+  <data name="ApplicationDetail.LegacyDocuments" xml:space="preserve">
+    <value>This application uses the legacy document workflow. Existing access and status rules remain in effect.</value>
+  </data>
+  <data name="ApplicationDetail.UpdateUntil" xml:space="preserve">
+    <value>You can update your documents until the application deadline, {0}. A new version will be reviewed again.</value>
+  </data>
+  <data name="ApplicationDetail.UpdateClosed" xml:space="preserve">
+    <value>Documents can no longer be updated because the offering is closed or its deadline has passed.</value>
+  </data>
+  <data name="ApplicationDetail.MissingDocuments" xml:space="preserve">
+    <value>Missing required documents:</value>
+  </data>
+  <data name="ApplicationDetail.Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="ApplicationDetail.Optional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="ApplicationDetail.FileType" xml:space="preserve">
+    <value>File type</value>
+  </data>
+  <data name="ApplicationDetail.Maximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="ApplicationDetail.UploadedDocumentAria" xml:space="preserve">
+    <value>Uploaded document information for {0}</value>
+  </data>
+  <data name="ApplicationDetail.File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="ApplicationDetail.Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="ApplicationDetail.UploadedAt" xml:space="preserve">
+    <value>Uploaded</value>
+  </data>
+  <data name="ApplicationDetail.Review" xml:space="preserve">
+    <value>Review</value>
+  </data>
+  <data name="ApplicationDetail.RejectionReason" xml:space="preserve">
+    <value>Rejection reason:</value>
+  </data>
+  <data name="ApplicationDetail.Download" xml:space="preserve">
+    <value>Download document</value>
+  </data>
+  <data name="ApplicationDetail.NoDocument" xml:space="preserve">
+    <value>No document has been uploaded yet.</value>
+  </data>
+  <data name="ApplicationDetail.ApprovalReset" xml:space="preserve">
+    <value>Updating this document invalidates its current approval and the new version will be reviewed again.</value>
+  </data>
+  <data name="ApplicationDetail.Upload" xml:space="preserve">
+    <value>Upload document</value>
+  </data>
+  <data name="ApplicationDetail.UpdateDocument" xml:space="preserve">
+    <value>Update document</value>
+  </data>
+  <data name="ApplicationDetail.UploadButton" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="ApplicationDetail.Submit" xml:space="preserve">
+    <value>Submit application</value>
+  </data>
+  <data name="ApplicationDetail.SubmitLead" xml:space="preserve">
+    <value>Confirm that every required document is correct and current before submitting.</value>
+  </data>
+  <data name="ApplicationDetail.InvalidConfiguration" xml:space="preserve">
+    <value>This draft has no valid required-document configuration. Contact the offering administrator.</value>
+  </data>
+  <data name="ApplicationDetail.UploadRequired" xml:space="preserve">
+    <value>Upload all required documents first.</value>
+  </data>
+  <data name="ApplicationDetail.Withdraw" xml:space="preserve">
+    <value>Withdraw application</value>
+  </data>
+  <data name="ApplicationDetail.WithdrawLead" xml:space="preserve">
+    <value>A withdrawn application is excluded from evaluation and quota calculations. If the offering is open and its deadline has not passed, you can reactivate it later; it returns to draft and must be submitted again.</value>
+  </data>
+  <data name="ApplicationDetail.Reactivate" xml:space="preserve">
+    <value>Reactivate application</value>
+  </data>
+  <data name="ApplicationDetail.ReactivateLead" xml:space="preserve">
+    <value>Your documents are preserved. Previous score and evaluation snapshots are cleared; review the current information and submit the application again.</value>
+  </data>
+  <data name="ApplicationDetail.ReactivateDraft" xml:space="preserve">
+    <value>Reactivate as draft</value>
+  </data>
+  <data name="ApplicationDetail.Back" xml:space="preserve">
+    <value>Return to dashboard</value>
+  </data>
 </root>
