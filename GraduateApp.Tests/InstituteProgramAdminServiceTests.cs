@@ -491,7 +491,7 @@ public sealed class InstituteProgramAdminServiceTests
             new ProgramCreateDto
             {
                 InstituteId = institute.InstituteId,
-                ProgramName = "Veri ve Karar Bilimleri",
+                ProgramName = "Veri ve Karar Bilimleri (Doktora)",
                 ProgramNameEnglish = "Data and Decision Sciences",
                 DegreeType = "Doktora"
             },
@@ -501,7 +501,7 @@ public sealed class InstituteProgramAdminServiceTests
             new ProgramCreateDto
             {
                 InstituteId = institute.InstituteId,
-                ProgramName = "Veri ve Karar Bilimleri",
+                ProgramName = "Veri ve Karar Bilimleri (Tezli YL)",
                 DegreeType = "Tezli Yüksek Lisans"
             },
             CancellationToken.None);
@@ -511,6 +511,42 @@ public sealed class InstituteProgramAdminServiceTests
         Assert.True(reused.IsSuccess);
         Assert.Equal("Computer Engineering", catalogMapped.Value!.ProgramNameEnglish);
         Assert.Equal("Data and Decision Sciences", reused.Value!.ProgramNameEnglish);
+    }
+
+    [Fact]
+    public async Task Program_create_does_not_choose_between_conflicting_normalized_translations()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute { InstituteName = "Fen Bilimleri" };
+        db.Programs.AddRange(
+            new GraduateApp.API.Models.Program
+            {
+                Institute = institute,
+                ProgramName = "Adli Bilimler (Doktora)",
+                ProgramNameEnglish = "Forensic Sciences",
+                DegreeType = "Doktora"
+            },
+            new GraduateApp.API.Models.Program
+            {
+                Institute = institute,
+                ProgramName = "Adli Bilimler (Tezli YL)",
+                ProgramNameEnglish = "Forensics",
+                DegreeType = "Tezli Yüksek Lisans"
+            });
+        await db.SaveChangesAsync();
+
+        var result = await CreateProgramService(db).CreateAsync(
+            17,
+            new ProgramCreateDto
+            {
+                InstituteId = institute.InstituteId,
+                ProgramName = "Adli Bilimler (Tezsiz YL)",
+                DegreeType = "Tezsiz Yüksek Lisans"
+            },
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value!.ProgramNameEnglish);
     }
 
     [Fact]
@@ -560,6 +596,91 @@ public sealed class InstituteProgramAdminServiceTests
             2,
             db.SecurityAuditLogs.Count(item =>
                 item.EventType == "ProgramTranslationAutoFilled"));
+    }
+
+    [Fact]
+    public async Task Program_translation_auto_fill_reuses_normalized_degree_variants_without_overwriting()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute { InstituteName = "Fen Bilimleri" };
+        var verified = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Adli Bilimler (Doktora)",
+            ProgramNameEnglish = "Verified Forensic Sciences",
+            DegreeType = "Doktora"
+        };
+        var reusable = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "  ADLİ   BİLİMLER ( tezli yl ) ",
+            ProgramNameEnglish = "   ",
+            DegreeType = "Tezli Yüksek Lisans"
+        };
+        var manual = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "İşletme (Uzaktan Tezsiz YL)",
+            ProgramNameEnglish = "Manually Curated Business Degree",
+            DegreeType = "Tezsiz Yüksek Lisans"
+        };
+        var unknown = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Kuruma Özgü Program (Sertifika)",
+            DegreeType = "Doktora"
+        };
+        db.Programs.AddRange(verified, reusable, manual, unknown);
+        await db.SaveChangesAsync();
+
+        var result = await CreateProgramService(db).AutoFillTranslationsAsync(
+            17,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Value!.UpdatedCount);
+        Assert.Equal("Verified Forensic Sciences", reusable.ProgramNameEnglish);
+        Assert.Equal("Manually Curated Business Degree", manual.ProgramNameEnglish);
+        Assert.Null(unknown.ProgramNameEnglish);
+    }
+
+    [Fact]
+    public async Task Program_translation_auto_fill_leaves_conflicting_normalized_variants_empty()
+    {
+        await using var db = TestDb.Create();
+        var institute = new Institute { InstituteName = "Fen Bilimleri" };
+        db.Programs.AddRange(
+            new GraduateApp.API.Models.Program
+            {
+                Institute = institute,
+                ProgramName = "Adli Bilimler (Doktora)",
+                ProgramNameEnglish = "Forensic Sciences",
+                DegreeType = "Doktora"
+            },
+            new GraduateApp.API.Models.Program
+            {
+                Institute = institute,
+                ProgramName = "Adli Bilimler (Tezli YL)",
+                ProgramNameEnglish = "Forensics",
+                DegreeType = "Tezli Yüksek Lisans"
+            });
+        var missing = new GraduateApp.API.Models.Program
+        {
+            Institute = institute,
+            ProgramName = "Adli Bilimler (Tezsiz YL)",
+            DegreeType = "Tezsiz Yüksek Lisans"
+        };
+        db.Programs.Add(missing);
+        await db.SaveChangesAsync();
+
+        var result = await CreateProgramService(db).AutoFillTranslationsAsync(
+            17,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, result.Value!.UpdatedCount);
+        Assert.Null(missing.ProgramNameEnglish);
+        Assert.Empty(db.SecurityAuditLogs);
     }
 
     [Fact]

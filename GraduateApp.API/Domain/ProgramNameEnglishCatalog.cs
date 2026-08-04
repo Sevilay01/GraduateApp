@@ -8,6 +8,14 @@ public static class ProgramNameEnglishCatalog
     private static readonly StringComparer TurkishNameComparer =
         StringComparer.Create(TurkishCulture, ignoreCase: true);
 
+    private static readonly string[] DegreeSuffixes =
+    [
+        "Doktora",
+        "Tezli YL",
+        "Tezsiz YL",
+        "Uzaktan Tezsiz YL"
+    ];
+
     private static readonly IReadOnlyDictionary<string, string> Names =
         new Dictionary<string, string>(TurkishNameComparer)
         {
@@ -16,6 +24,7 @@ public static class ProgramNameEnglishCatalog
             ["Anatomi"] = "Anatomy",
             ["Arkeoloji"] = "Archaeology",
             ["Bahçe Bitkileri"] = "Horticulture",
+            ["Bağımlılık"] = "Addiction Studies",
             ["Beden Eğitimi ve Spor"] = "Physical Education and Sports",
             ["Beslenme ve Diyetetik"] = "Nutrition and Dietetics",
             ["Bilgisayar Bilimleri"] = "Computer Science",
@@ -42,6 +51,7 @@ public static class ProgramNameEnglishCatalog
             ["Halk Sağlığı"] = "Public Health",
             ["Hemşirelik"] = "Nursing",
             ["İletişim Bilimleri"] = "Communication Sciences",
+            ["İngiliz Dili Eğitimi"] = "English Language Education",
             ["İnşaat Mühendisliği"] = "Civil Engineering",
             ["İş Sağlığı ve Güvenliği"] = "Occupational Health and Safety",
             ["İşletme"] = "Business Administration",
@@ -59,6 +69,7 @@ public static class ProgramNameEnglishCatalog
             ["Peyzaj Mimarlığı"] = "Landscape Architecture",
             ["Psikoloji"] = "Psychology",
             ["Rehberlik ve Psikolojik Danışmanlık"] = "Guidance and Psychological Counseling",
+            ["Sağlık Fiziği"] = "Health Physics",
             ["Sağlık Yönetimi"] = "Healthcare Management",
             ["Sanat ve Tasarım"] = "Art and Design",
             ["Siyaset Bilimi ve Kamu Yönetimi"] = "Political Science and Public Administration",
@@ -72,11 +83,13 @@ public static class ProgramNameEnglishCatalog
             ["Tarih"] = "History",
             ["Temel İslam Bilimleri"] = "Basic Islamic Sciences",
             ["Toprak Bilimi ve Bitki Besleme"] = "Soil Science and Plant Nutrition",
+            ["Translasyonel Tıp İngilizce"] = "Translational Medicine (English)",
             ["Turizm İşletmeciliği"] = "Tourism Management",
             ["Türk Dili ve Edebiyatı"] = "Turkish Language and Literature",
             ["Türkçe Eğitimi"] = "Turkish Language Education",
             ["Uluslararası İlişkiler"] = "International Relations",
             ["Yabancı Diller Eğitimi"] = "Foreign Language Education",
+            ["Yapay Zeka ve Veri Mühendisliği"] = "Artificial Intelligence and Data Engineering",
             ["Yönetim ve Organizasyon"] = "Management and Organization",
             ["Zootekni"] = "Animal Science"
         };
@@ -98,10 +111,33 @@ public static class ProgramNameEnglishCatalog
         return true;
     }
 
-    public static string Normalize(string programName) =>
+    public static string Normalize(string programName)
+    {
+        var normalized = CollapseWhitespace(programName);
+        if (!normalized.EndsWith(')'))
+        {
+            return normalized;
+        }
+
+        var openingParenthesis = normalized.LastIndexOf('(');
+        if (openingParenthesis <= 0)
+        {
+            return normalized;
+        }
+
+        var suffix = CollapseWhitespace(normalized[(openingParenthesis + 1)..^1]);
+        if (!DegreeSuffixes.Any(candidate => TurkishNameComparer.Equals(candidate, suffix)))
+        {
+            return normalized;
+        }
+
+        return normalized[..openingParenthesis].TrimEnd();
+    }
+
+    private static string CollapseWhitespace(string value) =>
         string.Join(
             ' ',
-            programName.Split(
+            value.Split(
                 (char[]?)null,
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 }

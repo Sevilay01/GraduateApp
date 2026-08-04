@@ -374,9 +374,13 @@ public sealed class ProgramAdminService(
         foreach (var program in programs.Where(item => string.IsNullOrWhiteSpace(item.ProgramNameEnglish)))
         {
             var key = ProgramNameEnglishCatalog.Normalize(program.ProgramName);
-            var hasReusableName = reusableNames.TryGetValue(key, out var englishName)
-                && !string.IsNullOrWhiteSpace(englishName);
-            if (!hasReusableName)
+            var hasExistingTranslation = reusableNames.TryGetValue(key, out var englishName);
+            if (hasExistingTranslation && string.IsNullOrWhiteSpace(englishName))
+            {
+                continue;
+            }
+
+            if (!hasExistingTranslation)
             {
                 if (!ProgramNameEnglishCatalog.TryGetEnglishName(
                     program.ProgramName,
@@ -509,21 +513,31 @@ public sealed class ProgramAdminService(
 
         if (programNameEnglish is null)
         {
-            var reusableNames = await dbContext.Programs
+            var translatedPrograms = await dbContext.Programs
                 .AsNoTracking()
                 .Where(item => item.ProgramId != currentProgramId
-                    && item.ProgramName == programName
                     && item.ProgramNameEnglish != null
                     && item.ProgramNameEnglish != string.Empty)
-                .Select(item => item.ProgramNameEnglish!)
-                .Distinct()
+                .Select(item => new { item.ProgramName, item.ProgramNameEnglish })
+                .ToListAsync(cancellationToken);
+            var normalizedProgramName = ProgramNameEnglishCatalog.Normalize(programName);
+            var comparer = StringComparer.Create(
+                System.Globalization.CultureInfo.GetCultureInfo("tr-TR"),
+                ignoreCase: true);
+            var reusableNames = translatedPrograms
+                .Where(item => comparer.Equals(
+                    ProgramNameEnglishCatalog.Normalize(item.ProgramName),
+                    normalizedProgramName))
+                .Select(item => item.ProgramNameEnglish!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Take(2)
-                .ToArrayAsync(cancellationToken);
+                .ToArray();
             if (reusableNames.Length == 1)
             {
-                programNameEnglish = reusableNames[0].Trim();
+                programNameEnglish = reusableNames[0];
             }
-            else if (ProgramNameEnglishCatalog.TryGetEnglishName(programName, out var mappedName))
+            else if (reusableNames.Length == 0
+                && ProgramNameEnglishCatalog.TryGetEnglishName(programName, out var mappedName))
             {
                 programNameEnglish = mappedName;
             }
