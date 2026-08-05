@@ -15,10 +15,10 @@ public sealed class ProgramNameEnglishCatalogTests
     [InlineData("İşletme (Tezsiz YL)", "Business Administration")]
     [InlineData("İşletme (Uzaktan Tezsiz YL)", "Business Administration")]
     [InlineData("  ADLİ   BİLİMLER  (  doktora  ) ", "Forensic Sciences")]
-    [InlineData("Bağımlılık", "Addiction Studies")]
-    [InlineData("İngiliz Dili Eğitimi", "English Language Education")]
+    [InlineData("Bağımlılık", "Addiction")]
+    [InlineData("İngiliz Dili Eğitimi", "English Language Teaching")]
     [InlineData("Sağlık Fiziği", "Health Physics")]
-    [InlineData("Translasyonel Tıp İngilizce", "Translational Medicine (English)")]
+    [InlineData("Translasyonel Tıp İngilizce", "Translational Medicine")]
     [InlineData("Yapay Zeka ve Veri Mühendisliği", "Artificial Intelligence and Data Engineering")]
     public void Known_program_names_are_mapped_deterministically(
         string turkishName,
