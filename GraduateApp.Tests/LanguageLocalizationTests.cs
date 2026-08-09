@@ -138,6 +138,59 @@ public sealed class LanguageLocalizationTests
                 "00000000-0000-0000-0000-000000000001 başvurusunda eksik kriterler: GPA."));
     }
 
+    [Theory]
+    [InlineData(UiText.TurkishCultureName, "Doktora", "Doktora")]
+    [InlineData(UiText.TurkishCultureName, "Tezli Yüksek Lisans", "Tezli Yüksek Lisans")]
+    [InlineData(UiText.TurkishCultureName, "Tezsiz Yüksek Lisans", "Tezsiz Yüksek Lisans")]
+    [InlineData(UiText.TurkishCultureName, "Uzaktan Tezsiz Yüksek Lisans", "Uzaktan Tezsiz Yüksek Lisans")]
+    [InlineData(UiText.EnglishCultureName, "Doktora", "Doctorate")]
+    [InlineData(UiText.EnglishCultureName, "Tezli Yüksek Lisans", "Master's Degree with Thesis")]
+    [InlineData(UiText.EnglishCultureName, "Tezsiz Yüksek Lisans", "Non-Thesis Master's Degree")]
+    [InlineData(UiText.EnglishCultureName, "Uzaktan Tezsiz Yüksek Lisans", "Distance Non-Thesis Master's Degree")]
+    public void Degree_types_localize_from_the_canonical_turkish_value(
+        string culture,
+        string canonicalValue,
+        string expected)
+    {
+        var httpContext = CreateContext(culture);
+
+        Assert.Equal(expected, UiText.LocalizeDegreeType(httpContext, canonicalValue));
+    }
+
+    [Fact]
+    public void Unknown_degree_type_uses_the_canonical_value_without_fallback_leaking()
+    {
+        var httpContext = CreateContext(UiText.EnglishCultureName);
+
+        Assert.Equal("Yeni Derece", UiText.LocalizeDegreeType(httpContext, "Yeni Derece"));
+    }
+
+    [Fact]
+    public void Degree_type_localization_does_not_leak_between_cultures()
+    {
+        var english = CreateContext(UiText.EnglishCultureName);
+        var turkish = CreateContext(UiText.TurkishCultureName);
+
+        Assert.Equal("Doctorate", UiText.LocalizeDegreeType(english, "Doktora"));
+        Assert.Equal("Doktora", UiText.LocalizeDegreeType(turkish, "Doktora"));
+        Assert.Equal("Doctorate", UiText.LocalizeDegreeType(english, "Doktora"));
+        Assert.Equal("Doktora", UiText.LocalizeDegreeType(turkish, "Doktora"));
+    }
+
+    [Fact]
+    public void English_program_names_remain_unmodified_while_degree_types_localize_separately()
+    {
+        var httpContext = CreateContext(UiText.EnglishCultureName);
+
+        Assert.Equal(
+            "Computer Engineering",
+            UiText.SelectLocalized(httpContext, "Bilgisayar Mühendisliği", "Computer Engineering"));
+        Assert.Equal("Doctorate", UiText.LocalizeDegreeType(httpContext, "Doktora"));
+        Assert.NotEqual(
+            UiText.SelectLocalized(httpContext, "Bilgisayar Mühendisliği", "Computer Engineering"),
+            UiText.LocalizeDegreeType(httpContext, "Doktora"));
+    }
+
     private static (LanguageController Controller, DefaultHttpContext HttpContext) CreateController()
     {
         var httpContext = new DefaultHttpContext();
@@ -154,5 +207,15 @@ public sealed class LanguageLocalizationTests
             Url = new UrlHelper(actionContext)
         };
         return (controller, httpContext);
+    }
+
+    private static DefaultHttpContext CreateContext(string cultureName)
+    {
+        var httpContext = new DefaultHttpContext();
+        httpContext.Features.Set<IRequestCultureFeature>(
+            new RequestCultureFeature(
+                new RequestCulture(cultureName),
+                new CookieRequestCultureProvider()));
+        return httpContext;
     }
 }

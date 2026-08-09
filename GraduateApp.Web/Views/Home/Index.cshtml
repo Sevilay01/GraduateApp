@@ -116,7 +116,7 @@
                         <div class="card-body d-flex flex-column p-4">
                             <div class="program-card__institute">@program.InstituteName</div>
                             <h3 class="h5 mb-2">@UiText.SelectLocalized(Context, program.ProgramName, program.ProgramNameEnglish)</h3>
-                            <p class="program-card__degree">@program.DegreeType</p>
+                            <p class="program-card__degree">@UiText.LocalizeDegreeType(Context, program.DegreeType)</p>
                             <dl class="meta-grid">
                                 <div class="meta-item">
                                     <dt>@UiText.Get(Context, "Home.AcademicPeriod")</dt>
