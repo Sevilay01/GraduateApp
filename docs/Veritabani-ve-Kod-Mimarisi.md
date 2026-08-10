@@ -252,7 +252,7 @@ erDiagram
 
 1. [GraduateApp.API/Models/GraduateAppDbContext.cs](../GraduateApp.API/Models/GraduateAppDbContext.cs)  
    Şemanın tamamı, tablo ilişkileri ve kısıtlar için ana referans.
-2. [GraduateApp.API/Models/*.cs](../GraduateApp.API/Models)  
+2. [GraduateApp.API/Models](../GraduateApp.API/Models)
    Entity düzeyi alanlar ve navigation property’ler.
 3. [GraduateApp.API/Services/ProgramOfferingService.cs](../GraduateApp.API/Services/ProgramOfferingService.cs)  
    İlan okuma/yazma akışı.
