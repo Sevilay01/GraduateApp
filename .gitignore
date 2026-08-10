@@ -40,6 +40,16 @@ secrets.json
 .env
 .env.*
 
+# Local databases
+*.mdf
+*.ldf
+*.ndf
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
 # Development-only password reset outbox
 .dev-emails/
 .dev-storage/
@@ -58,6 +68,12 @@ secrets.json
 [Pp]ublish/
 *.nupkg
 *.snupkg
+
+# Local backup and quarantine directories
+[Bb]ackups/
+.backups/
+[Qq]uarantine/
+.quarantine/
 
 # Crash diagnostics
 *.dmp
