@@ -448,7 +448,7 @@ Değişiklikleri güncel `main` üzerinden ayrı bir dalda hazırlayın:
 ```powershell
 git switch main
 git pull --ff-only
-git switch -c codex/kisa-degisiklik-aciklamasi
+git switch -c kisa-degisiklik-aciklamasi
 ```
 
 - Uygulama davranışı, migration ve dokümantasyon değişikliklerini aynı PR'da açıkça sınıflandırın.
