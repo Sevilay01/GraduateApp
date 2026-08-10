@@ -145,6 +145,39 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
+    public async Task Admin_layout_keeps_language_switcher_and_session_controls_separated_for_long_english_text()
+    {
+        using var host = CreateWebHost();
+        var html = await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "Index",
+            new AdminApplicationListViewModel
+            {
+                Result = new PagedResultViewModel<AdminApplicationListItemViewModel>
+                {
+                    Items = [],
+                    Page = 1,
+                    PageSize = 10,
+                    TotalCount = 0,
+                    TotalPages = 0
+                }
+            },
+            cultureName: "en-US",
+            user: AuthenticatedUser(
+                "Admin",
+                "Administrator With A Very Long Display Name That Must Still Wrap Safely"));
+
+        Assert.Contains("site-header__top", html, StringComparison.Ordinal);
+        Assert.Contains("site-header__controls", html, StringComparison.Ordinal);
+        Assert.Contains("language-switcher", html, StringComparison.Ordinal);
+        Assert.Contains("header-utilities", html, StringComparison.Ordinal);
+        Assert.Contains("session-actions", html, StringComparison.Ordinal);
+        Assert.Contains("Administrator With A Very Long Display Name", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("language-switcher__option</button><span", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Public_and_student_program_discovery_forms_preserve_filters_and_render_filtered_empty_state()
     {
         using var host = CreateWebHost();

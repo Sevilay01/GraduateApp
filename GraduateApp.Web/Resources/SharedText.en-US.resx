@@ -473,13 +473,13 @@
     <value>Doctorate</value>
   </data>
   <data name="DegreeType.ThesisMasters" xml:space="preserve">
-    <value>Master's with thesis</value>
+    <value>Master's Degree with Thesis</value>
   </data>
   <data name="DegreeType.NonThesisMasters" xml:space="preserve">
-    <value>Non-thesis master's</value>
+    <value>Non-Thesis Master's Degree</value>
   </data>
   <data name="DegreeType.DistanceNonThesisMasters" xml:space="preserve">
-    <value>Distance non-thesis master's</value>
+    <value>Distance Non-Thesis Master's Degree</value>
   </data>
   <data name="Profile.Title" xml:space="preserve">
     <value>Profile and education information</value>

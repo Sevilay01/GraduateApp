@@ -10,15 +10,19 @@ public static class UiText
     public const string TurkishCultureName = "tr-TR";
     public const string EnglishCultureName = "en-US";
 
-    private static readonly CultureInfo TurkishCulture =
-        CultureInfo.GetCultureInfo(TurkishCultureName);
-    private static readonly CultureInfo EnglishCulture =
-        CultureInfo.GetCultureInfo(EnglishCultureName);
-    private static readonly ResourceManager Resources =
-        new("GraduateApp.Web.Resources.SharedText", typeof(UiText).Assembly);
+    private static readonly CultureInfo TurkishCulture = CultureInfo.GetCultureInfo(TurkishCultureName);
+    private static readonly CultureInfo EnglishCulture = CultureInfo.GetCultureInfo(EnglishCultureName);
+    private static readonly ResourceManager Resources = new("GraduateApp.Web.Resources.SharedText", typeof(UiText).Assembly);
+    private static readonly IReadOnlyDictionary<string, string> DegreeTypeResourceKeys =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Doktora"] = "DegreeType.Doctorate",
+            ["Tezli Yüksek Lisans"] = "DegreeType.ThesisMasters",
+            ["Tezsiz Yüksek Lisans"] = "DegreeType.NonThesisMasters",
+            ["Uzaktan Tezsiz Yüksek Lisans"] = "DegreeType.DistanceNonThesisMasters"
+        };
 
-    public static IReadOnlyList<CultureInfo> SupportedCultures { get; } =
-        [TurkishCulture, EnglishCulture];
+    public static IReadOnlyList<CultureInfo> SupportedCultures { get; } = [TurkishCulture, EnglishCulture];
 
     public static string Get(HttpContext? context, string key) =>
         Resources.GetString(key, ResolveCulture(context)) ?? key;
@@ -36,20 +40,16 @@ public static class UiText
         HttpContext? context,
         string defaultValue,
         string? englishValue) =>
-        CurrentCultureName(context) == EnglishCultureName
-        && !string.IsNullOrWhiteSpace(englishValue)
+        CurrentCultureName(context) == EnglishCultureName && !string.IsNullOrWhiteSpace(englishValue)
             ? englishValue
             : defaultValue;
 
     public static string LocalizeDegreeType(HttpContext? context, string? degreeType) =>
-        degreeType switch
-        {
-            "Doktora" => Get(context, "DegreeType.Doctorate"),
-            "Tezli Yüksek Lisans" => Get(context, "DegreeType.ThesisMasters"),
-            "Tezsiz Yüksek Lisans" => Get(context, "DegreeType.NonThesisMasters"),
-            "Uzaktan Tezsiz Yüksek Lisans" => Get(context, "DegreeType.DistanceNonThesisMasters"),
-            _ => degreeType ?? string.Empty
-        };
+        degreeType is null
+            ? string.Empty
+            : DegreeTypeResourceKeys.TryGetValue(degreeType.Trim(), out var key)
+                ? Get(context, key)
+                : degreeType;
 
     public static string LocalizeApplicationStatus(HttpContext? context, ApplicationStatus status) =>
         Get(context, $"Status.{status}");
@@ -137,10 +137,7 @@ public static class UiText
         };
 
     private static CultureInfo ResolveCulture(CultureInfo? culture) =>
-        string.Equals(
-            culture?.Name,
-            EnglishCultureName,
-            StringComparison.OrdinalIgnoreCase)
+        string.Equals(culture?.Name, EnglishCultureName, StringComparison.OrdinalIgnoreCase)
             ? EnglishCulture
             : TurkishCulture;
 
@@ -152,8 +149,6 @@ public static class UiText
             .RequestCulture
             .UICulture;
 
-        return requestedCulture is null
-            ? TurkishCulture
-            : ResolveCulture(requestedCulture);
+        return requestedCulture is null ? TurkishCulture : ResolveCulture(requestedCulture);
     }
 }
