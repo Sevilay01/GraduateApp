@@ -1,0 +1,128 @@
+@model OfferingEditPageViewModel
+@{
+    ViewData["Title"] = Model.Form.ProgramOfferingId > 0
+        ? UiText.Get(Context, "Admin.OfferingNav.Edit")
+        : UiText.Get(Context, "Admin.Offerings.NewHeading");
+    var isNew = Model.Form.ProgramOfferingId == 0;
+    var canEdit = isNew
+        || Model.Shell is null
+        || !Model.Shell.Header.UsesEvaluationWorkflow
+        || Model.Shell.Header.EvaluationState == OfferingEvaluationState.Configuring;
+}
+
+<div class="admin-page">
+    @if (Model.Shell is not null)
+    {
+        <partial name="_OfferingHeader" model="Model.Shell" />
+    }
+    else
+    {
+        <header class="page-heading">
+            <div>
+                <span class="eyebrow">@UiText.Get(Context, "Admin.Offerings.Title")</span>
+                <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Offerings.NewHeading")</h1>
+                <p class="page-heading__description">@UiText.Get(Context, "Admin.Offerings.NewLead")</p>
+            </div>
+            <div class="page-heading__actions">
+                <a asp-action="Offerings" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.OfferingNav.Back")</a>
+            </div>
+        </header>
+    }
+
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    }
+    @if (!canEdit)
+    {
+        <div class="alert alert-info" role="note">@UiText.Get(Context, "Admin.Offerings.ConfigurationLocked")</div>
+    }
+
+    <section class="admin-section" aria-labelledby="offering-edit-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="offering-edit-heading">@(isNew ? UiText.Get(Context, "Admin.Offerings.NewHeading") : UiText.Get(Context, "Admin.Offerings.EditHeading"))</h2>
+                <p>@UiText.Get(Context, "Admin.OfferingEdit.Lead")</p>
+            </div>
+        </div>
+        <form asp-action="SaveOffering" method="post" novalidate data-disable-on-submit="true">
+            <input asp-for="Form.ProgramOfferingId" type="hidden" />
+            <input asp-for="Form.RowVersion" type="hidden" />
+            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+            <fieldset disabled="@(!canEdit)">
+                <legend class="visually-hidden">@UiText.Get(Context, "Admin.OfferingNav.Edit")</legend>
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <label asp-for="Form.ProgramId" class="form-label">@UiText.Get(Context, "Admin.Offerings.Program")</label>
+                        <select asp-for="Form.ProgramId" class="form-select">
+                            <option value="">@UiText.Get(Context, "Admin.OfferingEdit.SelectProgram")</option>
+                            @foreach (var program in Model.Programs)
+                            {
+                                <option value="@program.ProgramId">@program.InstituteName · @program.ProgramName · @UiText.LocalizeDegreeType(Context, program.DegreeType)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.ProgramId" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label asp-for="Form.AcademicYearStart" class="form-label">@UiText.Get(Context, "Admin.Offerings.YearStart")</label>
+                        <input asp-for="Form.AcademicYearStart" class="form-control" min="2000" max="2200" />
+                        <span asp-validation-for="Form.AcademicYearStart" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label asp-for="Form.Term" class="form-label">@UiText.Get(Context, "Admin.Offerings.Term")</label>
+                        <select asp-for="Form.Term" class="form-select">
+                            @foreach (var term in Enum.GetValues<AcademicTerm>().Where(item => item != AcademicTerm.LegacyUnspecified))
+                            {
+                                <option value="@term">@UiText.Get(Context, $"AcademicTerm.{term}")</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.Term" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Form.ApplicationStartLocal" class="form-label">@UiText.Get(Context, "Admin.Offerings.StartIstanbul")</label>
+                        <input asp-for="Form.ApplicationStartLocal" id="application-start-local" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="Form.ApplicationStartLocal" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Form.ApplicationDeadlineLocal" class="form-label">@UiText.Get(Context, "Admin.Offerings.DeadlineIstanbul")</label>
+                        <input asp-for="Form.ApplicationDeadlineLocal" id="application-deadline-local" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="Form.ApplicationDeadlineLocal" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label asp-for="Form.Quota" class="form-label">@UiText.Get(Context, "Admin.Offerings.Quota")</label>
+                        <input asp-for="Form.Quota" class="form-control" min="1" max="100000" />
+                        <span asp-validation-for="Form.Quota" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-sm-8 d-grid gap-2 align-content-end">
+                        <div class="form-check">
+                            <input asp-for="Form.UsesEvaluationWorkflow" class="form-check-input" />
+                            <label asp-for="Form.UsesEvaluationWorkflow" class="form-check-label">@UiText.Get(Context, "Admin.Offerings.UseEvaluation")</label>
+                        </div>
+                        @if (!isNew)
+                        {
+                            <div class="form-check">
+                                <input asp-for="Form.IsOpen" class="form-check-input" disabled="@(!Model.HasActiveRequiredDocumentRequirement)" />
+                                <label asp-for="Form.IsOpen" class="form-check-label">@UiText.Get(Context, "Admin.Offerings.OpenCheck")</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="Form.IsArchived" class="form-check-input" />
+                                <label asp-for="Form.IsArchived" class="form-check-label">@UiText.Get(Context, "Admin.Offerings.Archive")</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </fieldset>
+            @if (canEdit)
+            {
+                <div class="admin-form-actions mt-4">
+                    <button type="submit" class="btn btn-primary">@(isNew ? UiText.Get(Context, "Admin.Offerings.CreateClosed") : UiText.Get(Context, "Admin.Offerings.Save"))</button>
+                    <a asp-action="@(isNew ? "Offerings" : "OfferingOverview")" asp-route-id="@(isNew ? null : Model.Form.ProgramOfferingId)" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Cancel")</a>
+                </div>
+            }
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

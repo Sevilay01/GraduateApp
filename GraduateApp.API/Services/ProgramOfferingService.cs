@@ -15,6 +15,14 @@ public interface IProgramOfferingService
         AcademicTerm? term,
         bool includeArchived,
         CancellationToken cancellationToken);
+    Task<IReadOnlyList<ProgramOfferingAdminDto>> GetSummariesForAdminAsync(
+        int? academicYearStart,
+        AcademicTerm? term,
+        bool includeArchived,
+        CancellationToken cancellationToken);
+    Task<ProgramOfferingAdminDto?> GetForAdminAsync(
+        int offeringId,
+        CancellationToken cancellationToken);
     Task<ProgramOfferingCatalogDto> GetCatalogAsync(CancellationToken cancellationToken);
     Task<ServiceResult<ProgramOfferingAdminDto>> CreateAsync(
         int adminId,
@@ -38,13 +46,42 @@ public sealed class ProgramOfferingService(
 {
     private static readonly string DraftStatus = ApplicationStatus.Draft.ToString();
 
-    public async Task<IReadOnlyList<ProgramOfferingAdminDto>> GetForAdminAsync(
+    public Task<IReadOnlyList<ProgramOfferingAdminDto>> GetForAdminAsync(
         int? academicYearStart,
         AcademicTerm? term,
         bool includeArchived,
+        CancellationToken cancellationToken) =>
+        GetForAdminCoreAsync(
+            academicYearStart,
+            term,
+            includeArchived,
+            includeExamRequirements: true,
+            cancellationToken);
+
+    public Task<IReadOnlyList<ProgramOfferingAdminDto>> GetSummariesForAdminAsync(
+        int? academicYearStart,
+        AcademicTerm? term,
+        bool includeArchived,
+        CancellationToken cancellationToken) =>
+        GetForAdminCoreAsync(
+            academicYearStart,
+            term,
+            includeArchived,
+            includeExamRequirements: false,
+            cancellationToken);
+
+    private async Task<IReadOnlyList<ProgramOfferingAdminDto>> GetForAdminCoreAsync(
+        int? academicYearStart,
+        AcademicTerm? term,
+        bool includeArchived,
+        bool includeExamRequirements,
         CancellationToken cancellationToken)
     {
-        var offerings = await AdminListQuery(academicYearStart, term, includeArchived)
+        var offerings = await AdminListQuery(
+                academicYearStart,
+                term,
+                includeArchived,
+                includeExamRequirements)
             .ToListAsync(cancellationToken);
         return offerings
             .Select(item => Map(
@@ -57,15 +94,43 @@ public sealed class ProgramOfferingService(
             .ToArray();
     }
 
+    public async Task<ProgramOfferingAdminDto?> GetForAdminAsync(
+        int offeringId,
+        CancellationToken cancellationToken)
+    {
+        var offering = await AdminListQuery(
+                null,
+                null,
+                includeArchived: true,
+                includeExamRequirements: true)
+            .SingleOrDefaultAsync(
+                item => item.Offering.ProgramOfferingId == offeringId,
+                cancellationToken);
+        return offering is null
+            ? null
+            : Map(
+                offering.Offering,
+                offering.DocumentRequirementCount,
+                offering.ActiveRequiredDocumentRequirementCount,
+                offering.HasActiveRequiredDocumentRequirement,
+                offering.DraftApplicationCount,
+                offering.SubmittedOrLaterApplicationCount);
+    }
+
     private IQueryable<ProgramOfferingAdminListRow> AdminListQuery(
         int? academicYearStart,
         AcademicTerm? term,
-        bool includeArchived)
+        bool includeArchived,
+        bool includeExamRequirements = false)
     {
-        var query = dbContext.ProgramOfferings.AsNoTracking()
+        IQueryable<ProgramOffering> query = dbContext.ProgramOfferings.AsNoTracking()
             .Include(item => item.Program).ThenInclude(item => item.Institute)
-            .Include(item => item.ExamRequirements).ThenInclude(item => item.Exam)
             .AsQueryable();
+        if (includeExamRequirements)
+        {
+            query = query.Include(item => item.ExamRequirements).ThenInclude(item => item.Exam);
+        }
+
         if (academicYearStart.HasValue)
         {
             query = query.Where(item => item.AcademicYearStart == academicYearStart.Value);
@@ -714,6 +779,7 @@ public sealed class ProgramOfferingService(
         offering.ProgramOfferingId,
         offering.ProgramId,
         offering.Program.ProgramName,
+        offering.Program.ProgramNameEnglish,
         offering.Program.Institute.InstituteName,
         offering.Program.DegreeType,
         offering.AcademicYearStart,

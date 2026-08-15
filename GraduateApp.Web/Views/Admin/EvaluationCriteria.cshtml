@@ -1,0 +1,193 @@
+@model EvaluationCriteriaPageViewModel
+@{
+    ViewData["Title"] = UiText.Get(Context, "Admin.OfferingNav.Criteria");
+    var totalWeight = Model.Criteria.Sum(item => item.WeightBasisPoints);
+}
+
+<div class="admin-page">
+    <partial name="_OfferingHeader" model="Model.Shell" />
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    }
+    @if (!Model.CanEdit)
+    {
+        <div class="alert alert-info" role="note">@UiText.Get(Context, "Admin.OfferingCriteria.Locked")</div>
+    }
+
+    <section class="admin-section" aria-labelledby="policy-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="policy-heading">@UiText.Get(Context, "Admin.Evaluation.PolicyHeading")</h2>
+                <p>@UiText.Get(Context, "Admin.Evaluation.PolicyDescription")</p>
+            </div>
+            <div class="weight-summary @(totalWeight == 10000 ? null : "is-incomplete")">
+                <span><strong>@totalWeight.ToString("N0") / 10.000 bp</strong></span>
+                <progress value="@Math.Min(totalWeight, 10000)" max="10000">@totalWeight / 10.000 bp</progress>
+                <small>@UiText.Get(Context, totalWeight == 10000 ? "Admin.Evaluation.WeightValid" : "Admin.Evaluation.WeightInvalid")</small>
+            </div>
+        </div>
+
+        @if (Model.Criteria.Count == 0)
+        {
+            <div class="empty-state mb-3">
+                <h3>@UiText.Get(Context, "Admin.Evaluation.NoCriteria")</h3>
+                <p>@UiText.Get(Context, "Admin.Evaluation.NoCriteriaBody")</p>
+            </div>
+        }
+        <div class="admin-card-list">
+            @foreach (var criterion in Model.Criteria)
+            {
+                var usesExam = criterion.SourceType == EvaluationCriterionSourceType.ExamScore;
+                <article class="admin-item-card">
+                    @if (Model.CanEdit)
+                    {
+                        <form asp-action="SaveEvaluationCriterion" method="post" data-evaluation-criterion-form data-disable-on-submit="true">
+                            <input type="hidden" name="ProgramOfferingId" value="@Model.Shell.Header.ProgramOfferingId" />
+                            <input type="hidden" name="PublicId" value="@criterion.PublicId" />
+                            <input type="hidden" name="RowVersion" value="@criterion.RowVersion" />
+                            <div class="row g-3">
+                                <div class="col-12 col-md-3">
+                                    <label for="code-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.Code")</label>
+                                    <input id="code-@criterion.PublicId" name="Code" value="@criterion.Code" class="form-control" required />
+                                </div>
+                                <div class="col-12 col-md-5">
+                                    <label for="name-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.DisplayName")</label>
+                                    <input id="name-@criterion.PublicId" name="DisplayName" value="@criterion.DisplayName" class="form-control" required />
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label for="source-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.SourceType")</label>
+                                    <select id="source-@criterion.PublicId" name="SourceType" class="form-select" data-source-type>
+                                        @foreach (var source in Enum.GetValues<EvaluationCriterionSourceType>())
+                                        {
+                                            <option value="@source" selected="@(criterion.SourceType == source)">@UiText.LocalizeCriterionSource(Context, source)</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-4" data-exam-field hidden="@(!usesExam)">
+                                    <label for="exam-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.RequiredExam")</label>
+                                    <select id="exam-@criterion.PublicId" name="ExamId" class="form-select" data-exam-id required="@usesExam" disabled="@(!usesExam)">
+                                        <option value="">@UiText.Get(Context, "Admin.Evaluation.SelectExam")</option>
+                                        @foreach (var requirement in Model.EligibleExamRequirements)
+                                        {
+                                            <option value="@requirement.ExamId" selected="@(criterion.ExamId == requirement.ExamId)">@requirement.ExamName · @UiText.Format(Context, "Admin.Evaluation.MinimumFormat", requirement.MinimumScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture))</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-4 col-md-2">
+                                    <label for="weight-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.WeightBp")</label>
+                                    <input id="weight-@criterion.PublicId" name="WeightBasisPoints" value="@criterion.WeightBasisPoints" class="form-control" type="number" min="1" max="10000" />
+                                </div>
+                                <div class="col-12 col-sm-4 col-md-3">
+                                    <label for="maximum-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.MaximumRawScore")</label>
+                                    <input id="maximum-@criterion.PublicId" name="MaximumRawScore" value="@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" class="form-control" type="text" inputmode="decimal" data-val="true" data-val-localizeddecimal="@UiText.Get(Context, "Admin.Evaluation.MaximumRawScoreValidation")" data-val-localizeddecimal-min="0.0001" data-val-localizeddecimal-max="99999" data-val-localizeddecimal-scale="4" />
+                                </div>
+                                <div class="col-12 col-sm-4 col-md-3">
+                                    <label for="priority-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.TieBreakPriority")</label>
+                                    <input id="priority-@criterion.PublicId" name="TieBreakPriority" value="@criterion.TieBreakPriority" class="form-control" type="number" min="1" />
+                                </div>
+                                <div class="col-12 admin-form-actions">
+                                    <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Evaluation.SaveCriterion")</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="danger-zone">
+                            <form asp-action="DeleteEvaluationCriterion" method="post" data-disable-on-submit="true">
+                                <input type="hidden" name="programOfferingId" value="@Model.Shell.Header.ProgramOfferingId" />
+                                <input type="hidden" name="publicId" value="@criterion.PublicId" />
+                                <input type="hidden" name="rowVersion" value="@criterion.RowVersion" />
+                                <button class="btn btn-sm btn-danger" type="submit">@UiText.Get(Context, "Admin.Evaluation.DeleteCriterion")</button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <dl data-readonly-evaluation-criterion>
+                            <dt>@UiText.Get(Context, "Admin.Evaluation.Name")</dt><dd>@criterion.DisplayName</dd>
+                            <dt>@UiText.Get(Context, "Admin.Evaluation.Source")</dt><dd>@UiText.LocalizeCriterionSource(Context, criterion.SourceType)</dd>
+                            <dt>@UiText.Get(Context, "Admin.Evaluation.Weight")</dt><dd>@criterion.WeightBasisPoints bp</dd>
+                            <dt>@UiText.Get(Context, "Admin.Evaluation.Priority")</dt><dd>@criterion.TieBreakPriority</dd>
+                        </dl>
+                    }
+                </article>
+            }
+        </div>
+
+        @if (Model.CanEdit)
+        {
+            var newCriterionUsesExam = Model.CriterionForm.SourceType == EvaluationCriterionSourceType.ExamScore;
+            <form asp-action="SaveEvaluationCriterion" method="post" class="admin-summary-card mt-3" data-evaluation-criterion-form data-disable-on-submit="true">
+                <h3 class="h6">@UiText.Get(Context, "Admin.Evaluation.NewCriterion")</h3>
+                <input asp-for="CriterionForm.ProgramOfferingId" name="ProgramOfferingId" type="hidden" />
+                <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-3">
+                        <label asp-for="CriterionForm.Code" class="form-label">@UiText.Get(Context, "Admin.Evaluation.Code")</label>
+                        <input asp-for="CriterionForm.Code" name="Code" class="form-control" />
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label asp-for="CriterionForm.DisplayName" class="form-label">@UiText.Get(Context, "Admin.Evaluation.DisplayName")</label>
+                        <input asp-for="CriterionForm.DisplayName" name="DisplayName" class="form-control" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="new-source" class="form-label">@UiText.Get(Context, "Admin.Evaluation.SourceType")</label>
+                        <select id="new-source" name="SourceType" class="form-select" data-source-type>
+                            @foreach (var source in Enum.GetValues<EvaluationCriterionSourceType>())
+                            {
+                                <option value="@source" selected="@(Model.CriterionForm.SourceType == source)">@UiText.LocalizeCriterionSource(Context, source)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4" data-exam-field hidden="@(!newCriterionUsesExam)">
+                        <label for="new-exam" class="form-label">@UiText.Get(Context, "Admin.Evaluation.RequiredExam")</label>
+                        <select id="new-exam" name="ExamId" class="form-select" data-exam-id required="@newCriterionUsesExam" disabled="@(!newCriterionUsesExam)">
+                            <option value="">@UiText.Get(Context, "Admin.Evaluation.SelectExam")</option>
+                            @foreach (var requirement in Model.EligibleExamRequirements)
+                            {
+                                <option value="@requirement.ExamId" selected="@(Model.CriterionForm.ExamId == requirement.ExamId)">@requirement.ExamName · @UiText.Format(Context, "Admin.Evaluation.MinimumFormat", requirement.MinimumScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture))</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-4 col-md-2">
+                        <label asp-for="CriterionForm.WeightBasisPoints" class="form-label">@UiText.Get(Context, "Admin.Evaluation.WeightBp")</label>
+                        <input asp-for="CriterionForm.WeightBasisPoints" name="WeightBasisPoints" class="form-control" />
+                    </div>
+                    <div class="col-12 col-sm-4 col-md-3">
+                        <label asp-for="CriterionForm.MaximumRawScore" class="form-label">@UiText.Get(Context, "Admin.Evaluation.MaximumRawScore")</label>
+                        <input asp-for="CriterionForm.MaximumRawScore" name="MaximumRawScore" class="form-control" type="text" inputmode="decimal" />
+                    </div>
+                    <div class="col-12 col-sm-4 col-md-3">
+                        <label asp-for="CriterionForm.TieBreakPriority" class="form-label">@UiText.Get(Context, "Admin.Evaluation.TieBreakPriority")</label>
+                        <input asp-for="CriterionForm.TieBreakPriority" name="TieBreakPriority" class="form-control" />
+                    </div>
+                    <div class="col-12"><button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Evaluation.AddCriterion")</button></div>
+                </div>
+            </form>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const examScoreSource = '@EvaluationCriterionSourceType.ExamScore';
+            document.querySelectorAll('[data-evaluation-criterion-form]').forEach(form => {
+                const sourceType = form.querySelector('[data-source-type]');
+                const examField = form.querySelector('[data-exam-field]');
+                const examId = form.querySelector('[data-exam-id]');
+                const synchronize = () => {
+                    const usesExam = sourceType?.value === examScoreSource;
+                    if (examField) examField.hidden = !usesExam;
+                    if (examId) {
+                        examId.disabled = !usesExam;
+                        examId.required = usesExam;
+                        if (!usesExam) examId.value = '';
+                    }
+                };
+                sourceType?.addEventListener('change', synchronize);
+                synchronize();
+            });
+        })();
+    </script>
+}

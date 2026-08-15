@@ -3291,4 +3291,30 @@
   <data name="Validation.EmailMaximumLength" xml:space="preserve">
     <value>E-posta en fazla 254 karakter olabilir.</value>
   </data>
+  <data name="Admin.OfferingNav.Aria" xml:space="preserve"><value>İlan yönetimi alt sayfaları</value></data>
+  <data name="Admin.OfferingNav.Back" xml:space="preserve"><value>İlan listesine dön</value></data>
+  <data name="Admin.OfferingNav.Overview" xml:space="preserve"><value>Genel Bakış</value></data>
+  <data name="Admin.OfferingNav.Edit" xml:space="preserve"><value>İlanı Düzenle</value></data>
+  <data name="Admin.OfferingNav.Exams" xml:space="preserve"><value>Sınav Koşulları</value></data>
+  <data name="Admin.OfferingNav.Documents" xml:space="preserve"><value>Belge Koşulları</value></data>
+  <data name="Admin.OfferingNav.Applications" xml:space="preserve"><value>Başvurular</value></data>
+  <data name="Admin.OfferingNav.Criteria" xml:space="preserve"><value>Değerlendirme Kriterleri</value></data>
+  <data name="Admin.OfferingNav.Evaluation" xml:space="preserve"><value>Değerlendirme</value></data>
+  <data name="Admin.OfferingNav.Results" xml:space="preserve"><value>Sonuçlar</value></data>
+  <data name="Admin.OfferingNav.Open" xml:space="preserve"><value>İlanı aç</value></data>
+  <data name="Admin.OfferingOverview.Title" xml:space="preserve"><value>İlan genel bakışı</value></data>
+  <data name="Admin.OfferingOverview.SummaryAria" xml:space="preserve"><value>İlan özeti</value></data>
+  <data name="Admin.OfferingOverview.Schedule" xml:space="preserve"><value>Takvim ve kontenjan</value></data>
+  <data name="Admin.OfferingOverview.Requirements" xml:space="preserve"><value>Koşullar</value></data>
+  <data name="Admin.OfferingOverview.TotalDocuments" xml:space="preserve"><value>Toplam belge koşulu</value></data>
+  <data name="Admin.OfferingOverview.RequiredDocuments" xml:space="preserve"><value>Aktif zorunlu belge</value></data>
+  <data name="Admin.OfferingOverview.Applications" xml:space="preserve"><value>Başvuru özeti</value></data>
+  <data name="Admin.OfferingOverview.Drafts" xml:space="preserve"><value>Taslak</value></data>
+  <data name="Admin.OfferingOverview.Submitted" xml:space="preserve"><value>Gönderilmiş veya sonraki aşamada</value></data>
+  <data name="Admin.OfferingOverview.QuickActions" xml:space="preserve"><value>Hızlı işlemler</value></data>
+  <data name="Admin.OfferingOverview.QuickActionsLead" xml:space="preserve"><value>İlanın ilgili yönetim sayfasına doğrudan geçin.</value></data>
+  <data name="Admin.OfferingEdit.Lead" xml:space="preserve"><value>İlanın program, dönem, takvim, kontenjan ve durum bilgilerini yönetin.</value></data>
+  <data name="Admin.OfferingEdit.SelectProgram" xml:space="preserve"><value>Program seçin</value></data>
+  <data name="Admin.OfferingCriteria.Locked" xml:space="preserve"><value>Başvuru veya değerlendirme süreci başladıktan sonra kriterler salt okunur gösterilir.</value></data>
+  <data name="Admin.OfferingExams.Locked" xml:space="preserve"><value>Başvuru veya sonuç süreci başladıktan sonra sınav koşulları salt okunur gösterilir.</value></data>
 </root>

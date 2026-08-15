@@ -1,0 +1,147 @@
+@model OfferingDocumentRequirementsPageViewModel
+@{
+    ViewData["Title"] = UiText.Get(Context, "Admin.OfferingNav.Documents");
+    var activeRequiredCount = Model.Requirements.Count(item => item.IsActive && item.IsRequired);
+}
+
+<div class="admin-page">
+    <partial name="_OfferingHeader" model="Model.Shell" />
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    }
+    <div class="alert alert-info" role="note">@UiText.Get(Context, "Admin.Requirements.Invariant")</div>
+
+    <section class="admin-section" aria-labelledby="document-requirements-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="document-requirements-heading">@UiText.Get(Context, "Admin.Requirements.Heading")</h2>
+                <p>@UiText.Get(Context, "Admin.Requirements.SnapshotLead")</p>
+            </div>
+            <span class="admin-state @(activeRequiredCount > 0 ? "admin-state--success" : "admin-state--danger")">@UiText.Format(Context, "Admin.Requirements.ActiveRequired", activeRequiredCount)</span>
+        </div>
+        @if (!Model.CanEdit)
+        {
+            <div class="alert alert-info" role="note" data-document-requirements-read-only>@UiText.Get(Context, "Admin.Requirements.Locked")</div>
+        }
+        @if (Model.Requirements.Count == 0)
+        {
+            <div class="empty-state">
+                <h3>@UiText.Get(Context, "Admin.Requirements.EmptyHeading")</h3>
+                <p>@UiText.Get(Context, Model.CanEdit ? "Admin.Offerings.RequiredMissing" : "Admin.Requirements.HistoricalLocked")</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle responsive-table">
+                        <caption class="visually-hidden">@UiText.Format(Context, "Admin.Requirements.Caption", Model.Shell.Header.ProgramName)</caption>
+                        <thead><tr>
+                            <th scope="col">@UiText.Get(Context, "Admin.Requirements.Requirement")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Requirements.TypeLimit")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Common.Status")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Requirements.Action")</th>
+                        </tr></thead>
+                        <tbody>
+                            @foreach (var requirement in Model.Requirements)
+                            {
+                                <tr>
+                                    <td data-label="@UiText.Get(Context, "Admin.Requirements.Requirement")">
+                                        <code>@requirement.DocumentCode</code>
+                                        <div class="fw-semibold">@requirement.DisplayName</div>
+                                        <small>@(requirement.IsRequired ? UiText.Get(Context, "Admin.Requirements.Required") : UiText.Get(Context, "Admin.Requirements.Optional"))</small>
+                                    </td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Requirements.TypeLimit")">@UiText.LocalizeDocumentCategory(Context, requirement.AllowedContentCategory) · @DocumentPresentation.FileSize(requirement.MaximumBytes)</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Common.Status")"><span class="admin-state @(requirement.IsActive ? "admin-state--success" : null)">@(requirement.IsActive ? UiText.Get(Context, "Admin.Common.Active") : UiText.Get(Context, "Admin.Common.Inactive"))</span></td>
+                                    <td data-label="">
+                                        @if (Model.CanEdit)
+                                        {
+                                            <div class="admin-action-stack">
+                                                <a asp-action="DocumentRequirements" asp-route-id="@Model.Shell.Header.ProgramOfferingId" asp-route-editRequirementId="@requirement.PublicId" class="btn btn-sm btn-outline-primary">@UiText.Get(Context, "Admin.Requirements.Edit")</a>
+                                                <form asp-action="SetDocumentRequirementActive" method="post" data-disable-on-submit="true">
+                                                    <input type="hidden" name="programOfferingId" value="@Model.Shell.Header.ProgramOfferingId" />
+                                                    <input type="hidden" name="publicId" value="@requirement.PublicId" />
+                                                    <input type="hidden" name="isActive" value="@((!requirement.IsActive).ToString().ToLowerInvariant())" />
+                                                    <input type="hidden" name="rowVersion" value="@requirement.RowVersion" />
+                                                    <button type="submit" class="btn btn-sm @(requirement.IsActive ? "btn-outline-danger" : "btn-outline-success")">@(requirement.IsActive ? UiText.Get(Context, "Admin.Requirements.Deactivate") : UiText.Get(Context, "Admin.Requirements.Activate"))</button>
+                                                </form>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">@UiText.Get(Context, "Admin.Requirements.ReadOnly")</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </section>
+
+    @if (Model.CanEdit)
+    {
+        <section class="admin-section" aria-labelledby="document-requirement-form-heading">
+            <div class="admin-section-heading">
+                <div>
+                    <h2 id="document-requirement-form-heading">@(Model.DocumentRequirementForm.PublicId == Guid.Empty ? UiText.Get(Context, "Admin.Requirements.NewHeading") : UiText.Get(Context, "Admin.Requirements.EditHeading"))</h2>
+                </div>
+            </div>
+            <form asp-action="SaveDocumentRequirement" method="post" novalidate data-disable-on-submit="true">
+                <input asp-for="DocumentRequirementForm.ProgramOfferingId" type="hidden" />
+                <input asp-for="DocumentRequirementForm.PublicId" type="hidden" />
+                <input asp-for="DocumentRequirementForm.RowVersion" type="hidden" />
+                <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label asp-for="DocumentRequirementForm.DocumentCode" class="form-label">@UiText.Get(Context, "Admin.Requirements.Code")</label>
+                        <input asp-for="DocumentRequirementForm.DocumentCode" class="form-control" />
+                        <span asp-validation-for="DocumentRequirementForm.DocumentCode" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-5">
+                        <label asp-for="DocumentRequirementForm.DisplayName" class="form-label">@UiText.Get(Context, "Admin.Requirements.DisplayNameTurkish")</label>
+                        <input asp-for="DocumentRequirementForm.DisplayName" class="form-control" />
+                        <span asp-validation-for="DocumentRequirementForm.DisplayName" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="DocumentRequirementForm.Description" class="form-label">@UiText.Get(Context, "Admin.Requirements.Description")</label>
+                        <textarea asp-for="DocumentRequirementForm.Description" class="form-control" rows="3" maxlength="500"></textarea>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-label">@UiText.Get(Context, "Admin.Requirements.AllowedType")</label>
+                        <select asp-for="DocumentRequirementForm.AllowedContentCategory" class="form-select">
+                            @foreach (var category in Enum.GetValues<DocumentContentCategory>())
+                            {
+                                <option value="@category">@UiText.LocalizeDocumentCategory(Context, category)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label asp-for="DocumentRequirementForm.MaximumBytes" class="form-label">@UiText.Get(Context, "Admin.Requirements.MaximumBytes")</label>
+                        <input asp-for="DocumentRequirementForm.MaximumBytes" type="number" min="1" max="104857600" class="form-control" />
+                    </div>
+                    <div class="col-12 col-md-4 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input asp-for="DocumentRequirementForm.IsRequired" class="form-check-input" />
+                            <label asp-for="DocumentRequirementForm.IsRequired" class="form-check-label">@UiText.Get(Context, "Admin.Requirements.RequiredDocument")</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-form-actions mt-3">
+                    <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Admin.Requirements.Save")</button>
+                    @if (Model.DocumentRequirementForm.PublicId != Guid.Empty)
+                    {
+                        <a asp-action="DocumentRequirements" asp-route-id="@Model.Shell.Header.ProgramOfferingId" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Common.Cancel")</a>
+                    }
+                </div>
+            </form>
+        </section>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

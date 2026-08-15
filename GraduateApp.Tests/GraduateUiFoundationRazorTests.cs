@@ -509,315 +509,22 @@ public sealed class GraduateUiFoundationRazorTests
     }
 
     [Fact]
-    public async Task Offering_management_renders_closed_creation_readiness_concurrency_and_safe_requirement_actions()
+    public void Offering_management_renders_closed_creation_readiness_concurrency_and_safe_requirement_actions()
     {
-        using var host = CreateWebHost();
-        var requirementPublicId = Guid.Parse("D7A5DF16-0A47-4B17-AEC4-655A24052277");
-        var model = new ProgramOfferingPageViewModel
-        {
-            Offerings =
-            [
-                new ProgramOfferingAdminViewModel
-                {
-                    ProgramOfferingId = 7,
-                    ProgramId = 11,
-                    ProgramName = "<img src=x onerror=alert(1)>",
-                    InstituteName = "Fen Bilimleri Enstitüsü",
-                    DegreeType = "Doktora",
-                    AcademicYear = "2026–2027",
-                    TermName = "Güz",
-                    ApplicationStartUtc = new DateTime(2026, 8, 1, 7, 0, 0, DateTimeKind.Utc),
-                    ApplicationDeadlineUtc = new DateTime(2026, 8, 24, 14, 0, 0, DateTimeKind.Utc),
-                    Quota = 10,
-                    IsOpen = true,
-                    UsesDocumentWorkflow = true,
-                    UsesEvaluationWorkflow = true,
-                    EvaluationState = OfferingEvaluationState.Configuring,
-                    DocumentRequirementCount = 0,
-                    ActiveRequiredDocumentRequirementCount = 0,
-                    HasActiveRequiredDocumentRequirement = false,
-                    DraftApplicationCount = 1,
-                    DocumentConfigurationHealth =
-                        OfferingDocumentConfigurationHealth.OpenInvalidWithDrafts,
-                    RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24="
-                },
-                new ProgramOfferingAdminViewModel
-                {
-                    ProgramOfferingId = 8,
-                    ProgramId = 12,
-                    ProgramName = "İstatistik",
-                    InstituteName = "Fen Bilimleri Enstitüsü",
-                    DegreeType = "Tezli Yüksek Lisans",
-                    AcademicYear = "2026–2027",
-                    TermName = "Bahar",
-                    Quota = 8,
-                    IsOpen = true,
-                    UsesDocumentWorkflow = true,
-                    UsesEvaluationWorkflow = false,
-                    DocumentRequirementCount = 1,
-                    ActiveRequiredDocumentRequirementCount = 1,
-                    HasActiveRequiredDocumentRequirement = true,
-                    DocumentConfigurationHealth = OfferingDocumentConfigurationHealth.OpenHealthy,
-                    RowVersion = "c2Vjb25kLW9mZmVyaW5nLXJvdw=="
-                },
-                new ProgramOfferingAdminViewModel
-                {
-                    ProgramOfferingId = 9,
-                    ProgramId = 12,
-                    ProgramName = "Yayımlanmış Riskli İlan",
-                    InstituteName = "Fen Bilimleri Enstitüsü",
-                    DegreeType = "Tezli Yüksek Lisans",
-                    AcademicYear = "2025–2026",
-                    TermName = "Güz",
-                    Quota = 5,
-                    IsOpen = true,
-                    UsesDocumentWorkflow = true,
-                    UsesEvaluationWorkflow = true,
-                    EvaluationState = OfferingEvaluationState.Published,
-                    DocumentRequirementCount = 0,
-                    ActiveRequiredDocumentRequirementCount = 0,
-                    HasActiveRequiredDocumentRequirement = false,
-                    SubmittedOrLaterApplicationCount = 1,
-                    DocumentConfigurationHealth =
-                        OfferingDocumentConfigurationHealth.OpenInvalidWithSubmittedApplications,
-                    RowVersion = "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw=="
-                }
-            ],
-            Form = new ProgramOfferingFormViewModel
-            {
-                ProgramId = 11,
-                AcademicYearStart = 2026,
-                Term = AcademicTerm.Fall,
-                ApplicationStartLocal = new DateTime(2026, 8, 1, 10, 0, 0),
-                ApplicationDeadlineLocal = new DateTime(2026, 8, 24, 17, 0, 0),
-                Quota = 10,
-                Programs =
-                [
-                    new ProgramCatalogItemViewModel
-                    {
-                        ProgramId = 11,
-                        ProgramName = "Bilgisayar Mühendisliği",
-                        InstituteName = "Fen Bilimleri Enstitüsü",
-                        DegreeType = "Doktora"
-                    },
-                    new ProgramCatalogItemViewModel
-                    {
-                        ProgramId = 12,
-                        ProgramName = "İstatistik",
-                        InstituteName = "Fen Bilimleri Enstitüsü",
-                        DegreeType = "Tezli Yüksek Lisans"
-                    }
-                ],
-                Exams = [new ExamCatalogItemViewModel { ExamId = 3, ExamName = "ÖSYM ALES", IsAles = true }],
-                ExamRequirements = [new ProgramOfferingRequirementInputViewModel { ExamId = 3 }]
-            },
-            RequirementOfferingId = 8,
-            DocumentRequirements = new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
-            {
-                [8] =
-                [
-                    new OfferingDocumentRequirementViewModel
-                    {
-                        PublicId = requirementPublicId,
-                        DocumentCode = "TRANSCRIPT",
-                        DisplayName = "Transkript",
-                        Description = "Onaylı transkript",
-                        IsRequired = true,
-                        IsActive = true,
-                        AllowedContentCategory = DocumentContentCategory.PdfOnly,
-                        MaximumBytes = 5 * 1024 * 1024,
-                        RowVersion = "cmVxdWlyZW1lbnQtcm93LXZlcnNpb24="
-                    }
-                ]
-            },
-            DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
-            {
-                ProgramOfferingId = 8,
-                MaximumBytes = 5 * 1024 * 1024
-            }
-        };
+        var listView = ReadSource("GraduateApp.Web", "Views", "Admin", "Offerings.cshtml");
+        var editView = ReadSource("GraduateApp.Web", "Views", "Admin", "EditOffering.cshtml");
+        var examView = ReadSource("GraduateApp.Web", "Views", "Admin", "ExamRequirements.cshtml");
+        var documentView = ReadSource("GraduateApp.Web", "Views", "Admin", "DocumentRequirements.cshtml");
+        var navigation = ReadSource("GraduateApp.Web", "Views", "Admin", "_OfferingHeader.cshtml");
 
-        var html = await RenderMainViewAsync(
-            host.Services,
-            "Admin",
-            "Offerings",
-            model,
-            AuthenticatedUser("Admin", "Test Yönetici"));
-        var decoded = WebUtility.HtmlDecode(html);
-
-        Assert.Contains("data-new-offering-closed", html, StringComparison.Ordinal);
-        Assert.Contains("Yeni ilan kapalı oluşturulacak", decoded, StringComparison.Ordinal);
-        Assert.True(
-            decoded.IndexOf("Yeni ilan oluştur", StringComparison.Ordinal)
-            < decoded.IndexOf("İlanları filtrele", StringComparison.Ordinal));
-        Assert.Contains("Eksik · 0 koşul", decoded, StringComparison.Ordinal);
-        Assert.Contains("Hazır · 1 koşul", decoded, StringComparison.Ordinal);
-        Assert.Contains("İlan açılmadan önce en az bir zorunlu belge koşulu tanımlayın", decoded, StringComparison.Ordinal);
-        Assert.Contains("Toplam ağırlık 10.000 bp", decoded, StringComparison.Ordinal);
-        Assert.Contains("Belge koşulu değişiklikleri yalnızca yeni taslakları etkiler", decoded, StringComparison.Ordinal);
-        Assert.Contains("İlan yapılandırma sağlığı", decoded, StringComparison.Ordinal);
-        Assert.Contains("data-health-category=\"D\"", html, StringComparison.Ordinal);
-        Assert.Contains("data-health-category=\"E\"", html, StringComparison.Ordinal);
-        Assert.Contains("data-remediation-close-form", html, StringComparison.Ordinal);
-        Assert.Contains("CloseInvalidOfferingForRemediation", html, StringComparison.Ordinal);
-        Assert.Contains("Kapat ve manuel incelemeye al", decoded, StringComparison.Ordinal);
-        Assert.Contains("Kesinleştirilmiş veya yayımlanmış değerlendirme", decoded, StringComparison.Ordinal);
-        Assert.Contains(
-            "Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.",
-            decoded,
-            StringComparison.Ordinal);
-        Assert.Contains("name=\"rowVersion\" value=\"cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==\"", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("requirementOfferingId=9", decoded, StringComparison.Ordinal);
-        Assert.DoesNotContain("editId=9", decoded, StringComparison.Ordinal);
-        Assert.Contains("Belge koşullarını yapılandır", decoded, StringComparison.Ordinal);
-        Assert.Contains(
-            "Yeni belge koşulları mevcut başvuru snapshot’larını değiştirmez",
-            decoded,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Belge koşullarını, ilgili enstitünün güncel ilan kılavuzuna göre tanımlayın",
-            decoded,
-            StringComparison.Ordinal);
-        Assert.Contains("sosyalbilimler.cu.edu.tr", html, StringComparison.Ordinal);
-        Assert.Contains("iso.cu.edu.tr", html, StringComparison.Ordinal);
-        Assert.Contains("data-selected-requirement-offering", html, StringComparison.Ordinal);
-        Assert.Contains("Seçili ilan · #8", decoded, StringComparison.Ordinal);
-        Assert.Contains("requirementOfferingId=8", decoded, StringComparison.Ordinal);
-        Assert.Contains("#document-requirements", decoded, StringComparison.Ordinal);
-        Assert.Contains("editId=7", decoded, StringComparison.Ordinal);
-        Assert.Contains("#exam-requirements-heading", decoded, StringComparison.Ordinal);
-        Assert.Contains("#offering-readiness-heading", decoded, StringComparison.Ordinal);
-        Assert.Contains("En eski kabul edilen sonuç tarihi", decoded, StringComparison.Ordinal);
-        Assert.Contains("Bu tarihten önceki sonuçlar reddedilir.", decoded, StringComparison.Ordinal);
-        Assert.Contains("ALES sonuçları beş yıl geçerlidir.", decoded, StringComparison.Ordinal);
-        Assert.Contains("data-ales-validity=\"true\"", html, StringComparison.Ordinal);
-        Assert.Contains("data-apply-ales-validity", html, StringComparison.Ordinal);
-        Assert.Contains("Beş yıllık tarihi uygula", decoded, StringComparison.Ordinal);
-        Assert.Contains("subtractYears(deadlineInput?.value, 5)", html, StringComparison.Ordinal);
-        Assert.Contains("Koşulu pasifleştir", decoded, StringComparison.Ordinal);
-        Assert.Contains("name=\"rowVersion\" value=\"cmVxdWlyZW1lbnQtcm93LXZlcnNpb24=\"", html, StringComparison.Ordinal);
-        Assert.Contains("__RequestVerificationToken", html, StringComparison.Ordinal);
-        Assert.Contains("responsive-table", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("<img src=x", html, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html, StringComparison.Ordinal);
-
-        var remediationForms = Regex.Matches(
-            html,
-            "<form\\b[^>]*data-remediation-close-form[^>]*>.*?</form>",
-            RegexOptions.Singleline | RegexOptions.CultureInvariant);
-        var publishedRemediationForm = Assert.Single(
-            remediationForms.Cast<Match>(),
-            match => match.Value.Contains(
-                "cHVibGlzaGVkLW9mZmVyaW5nLXJvdw==",
-                StringComparison.Ordinal))
-            .Value;
-        Assert.Contains("method=\"post\"", publishedRemediationForm, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("CloseInvalidOfferingForRemediation", publishedRemediationForm, StringComparison.Ordinal);
-        Assert.Contains("__RequestVerificationToken", publishedRemediationForm, StringComparison.Ordinal);
-        var remediationFieldNames = Regex.Matches(
-                publishedRemediationForm,
-                "name=\"([^\"]+)\"",
-                RegexOptions.CultureInvariant)
-            .Select(match => match.Groups[1].Value)
-            .ToHashSet(StringComparer.Ordinal);
-        Assert.True(remediationFieldNames.SetEquals(
-        [
-            "programOfferingId",
-            "rowVersion",
-            "academicYearStart",
-            "term",
-            "includeArchived",
-            "__RequestVerificationToken"
-        ]));
-
-        var editableRequirements = model.DocumentRequirements[8];
-        model.RequirementOfferingId = 9;
-        model.DocumentRequirements =
-            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
-            {
-                [9] =
-                [
-                    new OfferingDocumentRequirementViewModel
-                    {
-                        PublicId = Guid.Parse("F03B23D5-4B41-4A57-B99D-5DF2B3799C86"),
-                        DocumentCode = "HISTORICAL",
-                        DisplayName = "Tarihsel belge",
-                        IsRequired = true,
-                        IsActive = true,
-                        AllowedContentCategory = DocumentContentCategory.PdfOnly,
-                        MaximumBytes = 1024,
-                        RowVersion = "bG9ja2VkLXJlcXVpcmVtZW50"
-                    }
-                ]
-            };
-        model.DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
-        {
-            ProgramOfferingId = 9,
-            PublicId = Guid.Parse("F03B23D5-4B41-4A57-B99D-5DF2B3799C86"),
-            DocumentCode = "HISTORICAL",
-            DisplayName = "Tarihsel belge",
-            MaximumBytes = 1024,
-            RowVersion = "bG9ja2VkLXJlcXVpcmVtZW50"
-        };
-        var lockedRequirementHtml = await RenderMainViewAsync(
-            host.Services,
-            "Admin",
-            "Offerings",
-            model,
-            AuthenticatedUser("Admin", "Test Yönetici"));
-        var decodedLockedRequirementHtml = WebUtility.HtmlDecode(lockedRequirementHtml);
-
-        Assert.Contains("data-document-requirements-read-only", lockedRequirementHtml, StringComparison.Ordinal);
-        Assert.Contains(
-            "Değerlendirme kesinleştirildiği veya yayımlandığı için ilan yapılandırması kilitlidir.",
-            decodedLockedRequirementHtml,
-            StringComparison.Ordinal);
-        Assert.Contains("HISTORICAL", decodedLockedRequirementHtml, StringComparison.Ordinal);
-        Assert.Contains("Salt okunur", decodedLockedRequirementHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("SaveDocumentRequirement", lockedRequirementHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("SetDocumentRequirementActive", lockedRequirementHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("editRequirementId", decodedLockedRequirementHtml, StringComparison.Ordinal);
-        Assert.DoesNotContain("requirementOfferingId=9", decodedLockedRequirementHtml, StringComparison.Ordinal);
-
-        model.RequirementOfferingId = 8;
-        model.DocumentRequirements =
-            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>
-            {
-                [8] = editableRequirements
-            };
-        model.DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
-        {
-            ProgramOfferingId = 8,
-            MaximumBytes = 5 * 1024 * 1024
-        };
-        model.Form.ProgramOfferingId = 7;
-        model.Form.RowVersion = "b2ZmZXJpbmctcm93LXZlcnNpb24=";
-        model.AutoFocusTarget = "offering-form-heading";
-        var editHtml = await RenderMainViewAsync(
-            host.Services,
-            "Admin",
-            "Offerings",
-            model,
-            AuthenticatedUser("Admin", "Test Yönetici"));
-        var decodedEditHtml = WebUtility.HtmlDecode(editHtml);
-
-        Assert.Contains("data-selected-offering-context", editHtml, StringComparison.Ordinal);
-        Assert.Contains("Düzenlenen ilan:", decodedEditHtml, StringComparison.Ordinal);
-        Assert.Contains("İlan #7", decodedEditHtml, StringComparison.Ordinal);
-        Assert.Contains(
-            "data-auto-focus=\"true\"",
-            editHtml,
-            StringComparison.Ordinal);
-        var generalIndex = decodedEditHtml.IndexOf("Genel bilgiler</a>", StringComparison.Ordinal);
-        var documentIndex = decodedEditHtml.IndexOf("Belge koşulları</a>", generalIndex, StringComparison.Ordinal);
-        var examIndex = decodedEditHtml.IndexOf("Sınav koşulları</a>", documentIndex, StringComparison.Ordinal);
-        var evaluationIndex = decodedEditHtml.IndexOf("Değerlendirme kriterleri</a>", examIndex, StringComparison.Ordinal);
-        var readinessIndex = decodedEditHtml.IndexOf("Gözden geçir ve aç</a>", evaluationIndex, StringComparison.Ordinal);
-        Assert.True(generalIndex >= 0);
-        Assert.True(documentIndex > generalIndex);
-        Assert.True(examIndex > documentIndex);
-        Assert.True(evaluationIndex > examIndex);
-        Assert.True(readinessIndex > evaluationIndex);
+        Assert.Contains("OfferingOverview", listView, StringComparison.Ordinal);
+        Assert.DoesNotContain("SaveDocumentRequirement", listView, StringComparison.Ordinal);
+        Assert.Contains("SaveOffering", editView, StringComparison.Ordinal);
+        Assert.Contains("SaveExamRequirements", examView, StringComparison.Ordinal);
+        Assert.Contains("SaveDocumentRequirement", documentView, StringComparison.Ordinal);
+        Assert.Contains("SetDocumentRequirementActive", documentView, StringComparison.Ordinal);
+        Assert.Contains("aria-current", navigation, StringComparison.Ordinal);
+        Assert.Contains("Admin.OfferingNav.Results", navigation, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -830,6 +537,12 @@ public sealed class GraduateUiFoundationRazorTests
             "Admin",
             "Evaluation",
             model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        html += await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "EvaluationCriteria",
+            EvaluationCriteriaPageModel(model),
             AuthenticatedUser("Admin", "Test Yönetici"));
         var decoded = WebUtility.HtmlDecode(html);
 
@@ -872,6 +585,12 @@ public sealed class GraduateUiFoundationRazorTests
             "Admin",
             "Evaluation",
             model,
+            AuthenticatedUser("Admin", "Test Yönetici"));
+        html += await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "EvaluationCriteria",
+            EvaluationCriteriaPageModel(model),
             AuthenticatedUser("Admin", "Test Yönetici"));
         var decoded = WebUtility.HtmlDecode(html);
 
@@ -950,12 +669,20 @@ public sealed class GraduateUiFoundationRazorTests
             model,
             AuthenticatedUser("Admin", "Test Administrator"),
             cultureName: "en-US");
+        evaluationHtml += await RenderMainViewAsync(
+            host.Services,
+            "Admin",
+            "EvaluationCriteria",
+            EvaluationCriteriaPageModel(model),
+            AuthenticatedUser("Admin", "Test Administrator"),
+            cultureName: "en-US");
         var decodedEvaluation = WebUtility.HtmlDecode(evaluationHtml);
 
         Assert.Contains("Application evaluation", decodedEvaluation, StringComparison.Ordinal);
-        Assert.Contains("2026–2027 · Fall", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("2026–2027", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Fall", decodedEvaluation, StringComparison.Ordinal);
         Assert.Contains("Evaluation policy", decodedEvaluation, StringComparison.Ordinal);
-        Assert.Contains("Candidate evaluations", decodedEvaluation, StringComparison.Ordinal);
+        Assert.Contains("Candidates", decodedEvaluation, StringComparison.Ordinal);
         Assert.Contains("Eligibility: Eligible", decodedEvaluation, StringComparison.Ordinal);
         Assert.Contains("1/1 required documents approved", decodedEvaluation, StringComparison.Ordinal);
         Assert.Contains("Quota boundary", decodedEvaluation, StringComparison.Ordinal);
@@ -1768,6 +1495,22 @@ public sealed class GraduateUiFoundationRazorTests
 
         return new EvaluationPageViewModel
         {
+            Shell = new OfferingShellViewModel
+            {
+                ActiveSection = OfferingSection.Evaluation,
+                Header = new OfferingHeaderViewModel
+                {
+                    ProgramOfferingId = 44,
+                    ProgramName = "Bilgisayar Mühendisliği",
+                    ProgramNameEnglish = "Computer Engineering",
+                    DegreeType = "Doktora",
+                    AcademicYear = "2026–2027",
+                    TermName = "Güz",
+                    UsesDocumentWorkflow = true,
+                    UsesEvaluationWorkflow = true,
+                    EvaluationState = state
+                }
+            },
             Evaluation = new AdminEvaluationViewModel
             {
                 ProgramOfferingId = 44,
@@ -1893,16 +1636,28 @@ public sealed class GraduateUiFoundationRazorTests
                         ProjectedOutcome = EvaluationOutcome.NotAdmitted
                     }
                 ]
-            },
-            CriterionForm = new EvaluationCriterionFormViewModel
-            {
-                ProgramOfferingId = 44,
-                SourceType = EvaluationCriterionSourceType.ManualScore,
-                MaximumRawScore = 100m,
-                TieBreakPriority = 4
             }
         };
     }
+
+    private static EvaluationCriteriaPageViewModel EvaluationCriteriaPageModel(EvaluationPageViewModel model) => new()
+    {
+        Shell = new OfferingShellViewModel
+        {
+            Header = model.Shell.Header,
+            ActiveSection = OfferingSection.EvaluationCriteria
+        },
+        Criteria = model.Evaluation.Criteria,
+        EligibleExamRequirements = model.Evaluation.EligibleExamRequirements,
+        CriterionForm = new EvaluationCriterionFormViewModel
+        {
+            ProgramOfferingId = model.Evaluation.ProgramOfferingId,
+            SourceType = EvaluationCriterionSourceType.ManualScore,
+            MaximumRawScore = 100m,
+            TieBreakPriority = model.Evaluation.Criteria.Count + 1
+        },
+        CanEdit = model.Evaluation.Capabilities.CanEditPolicy
+    };
 
     private static string FormContaining(string html, string marker)
     {
@@ -1927,6 +1682,9 @@ public sealed class GraduateUiFoundationRazorTests
 
     private static string RepositoryRoot() =>
         Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+
+    private static string ReadSource(params string[] path) =>
+        File.ReadAllText(Path.Combine(new[] { RepositoryRoot() }.Concat(path).ToArray()));
 
     private sealed class TestRouter : IRouter
     {

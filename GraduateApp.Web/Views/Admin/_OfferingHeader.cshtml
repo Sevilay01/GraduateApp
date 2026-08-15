@@ -1,0 +1,70 @@
+@model OfferingShellViewModel
+@{
+    var offering = Model.Header;
+    var localizedProgramName = UiText.SelectLocalized(Context, offering.ProgramName, offering.ProgramNameEnglish);
+    var stateKey = offering.IsArchived
+        ? "Admin.Offerings.State.Archived"
+        : offering.IsOpen
+            ? "Admin.Offerings.State.Open"
+            : "Admin.Offerings.State.Closed";
+}
+
+<header class="offering-header">
+    <div class="offering-header__main">
+        <div>
+            <span class="eyebrow">@UiText.Format(Context, "Admin.Offerings.OfferingNumber", offering.ProgramOfferingId)</span>
+            <h1 class="page-heading__title">@localizedProgramName</h1>
+            <p class="page-heading__description">
+                @UiText.LocalizeDegreeType(Context, offering.DegreeType)
+                <span aria-hidden="true"> · </span>
+                @offering.AcademicYear
+                <span aria-hidden="true"> · </span>
+                @UiText.LocalizeAcademicTerm(Context, offering.TermName)
+            </p>
+        </div>
+        <div class="page-heading__actions">
+            <span class="admin-state @(offering.IsOpen ? "admin-state--success" : offering.IsArchived ? "admin-state--warning" : null)">
+                @UiText.Get(Context, stateKey)
+            </span>
+            <a asp-action="Offerings" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.OfferingNav.Back")</a>
+        </div>
+    </div>
+
+    <nav class="offering-subnav" aria-label="@UiText.Get(Context, "Admin.OfferingNav.Aria")">
+        <div class="offering-subnav__track">
+            <a asp-action="OfferingOverview" asp-route-id="@offering.ProgramOfferingId"
+               class="offering-subnav__link @(Model.ActiveSection == OfferingSection.Overview ? "active" : null)"
+               aria-current="@(Model.ActiveSection == OfferingSection.Overview ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Overview")</a>
+            <a asp-action="EditOffering" asp-route-id="@offering.ProgramOfferingId"
+               class="offering-subnav__link @(Model.ActiveSection == OfferingSection.Edit ? "active" : null)"
+               aria-current="@(Model.ActiveSection == OfferingSection.Edit ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Edit")</a>
+            <a asp-action="ExamRequirements" asp-route-id="@offering.ProgramOfferingId"
+               class="offering-subnav__link @(Model.ActiveSection == OfferingSection.ExamRequirements ? "active" : null)"
+               aria-current="@(Model.ActiveSection == OfferingSection.ExamRequirements ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Exams")</a>
+            @if (offering.UsesDocumentWorkflow)
+            {
+                <a asp-action="DocumentRequirements" asp-route-id="@offering.ProgramOfferingId"
+                   class="offering-subnav__link @(Model.ActiveSection == OfferingSection.DocumentRequirements ? "active" : null)"
+                   aria-current="@(Model.ActiveSection == OfferingSection.DocumentRequirements ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Documents")</a>
+            }
+            <a asp-action="OfferingApplications" asp-route-id="@offering.ProgramOfferingId"
+               class="offering-subnav__link @(Model.ActiveSection == OfferingSection.Applications ? "active" : null)"
+               aria-current="@(Model.ActiveSection == OfferingSection.Applications ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Applications")</a>
+            @if (offering.UsesEvaluationWorkflow)
+            {
+                <a asp-action="EvaluationCriteria" asp-route-id="@offering.ProgramOfferingId"
+                   class="offering-subnav__link @(Model.ActiveSection == OfferingSection.EvaluationCriteria ? "active" : null)"
+                   aria-current="@(Model.ActiveSection == OfferingSection.EvaluationCriteria ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Criteria")</a>
+                <a asp-action="Evaluation" asp-route-id="@offering.ProgramOfferingId"
+                   class="offering-subnav__link @(Model.ActiveSection == OfferingSection.Evaluation ? "active" : null)"
+                   aria-current="@(Model.ActiveSection == OfferingSection.Evaluation ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Evaluation")</a>
+                @if (offering.EvaluationState is OfferingEvaluationState.Finalized or OfferingEvaluationState.Published)
+                {
+                    <a asp-action="Results" asp-route-id="@offering.ProgramOfferingId"
+                       class="offering-subnav__link @(Model.ActiveSection == OfferingSection.Results ? "active" : null)"
+                       aria-current="@(Model.ActiveSection == OfferingSection.Results ? "page" : null)">@UiText.Get(Context, "Admin.OfferingNav.Results")</a>
+                }
+            }
+        </div>
+    </nav>
+</header>

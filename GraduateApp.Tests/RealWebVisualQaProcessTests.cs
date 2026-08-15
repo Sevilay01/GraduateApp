@@ -380,6 +380,7 @@ public sealed class RealWebVisualQaProcessTests(ITestOutputHelper output)
             startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Production";
             startInfo.Environment["DOTNET_ENVIRONMENT"] = "Production";
             startInfo.Environment["Logging__LogLevel__Default"] = "Warning";
+            startInfo.Environment["Logging__EventLog__LogLevel__Default"] = "None";
             return startInfo;
         }
 

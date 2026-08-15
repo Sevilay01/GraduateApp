@@ -32,6 +32,7 @@ public interface IApplicationService
         ApplicationStatus? status,
         int? academicYearStart,
         AcademicTerm? term,
+        int? programOfferingId,
         int page,
         int pageSize,
         CancellationToken cancellationToken);
@@ -596,6 +597,7 @@ public sealed class ApplicationService(
         ApplicationStatus? status,
         int? academicYearStart,
         AcademicTerm? term,
+        int? programOfferingId,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
@@ -639,6 +641,11 @@ public sealed class ApplicationService(
         if (term.HasValue)
         {
             query = query.Where(item => item.ProgramOffering.Term == term.Value);
+        }
+
+        if (programOfferingId.HasValue)
+        {
+            query = query.Where(item => item.ProgramOfferingId == programOfferingId.Value);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);

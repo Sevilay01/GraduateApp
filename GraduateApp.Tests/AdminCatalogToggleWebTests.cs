@@ -104,11 +104,8 @@ public sealed class AdminCatalogToggleWebTests
                 includeArchived: true,
                 cancellationToken: CancellationToken.None));
 
-        Assert.Equal(nameof(AdminController.Offerings), result.ActionName);
-        Assert.Equal("offering-configuration-health", result.Fragment);
-        Assert.Equal(2026, result.RouteValues!["academicYearStart"]);
-        Assert.Equal(AcademicTerm.Fall, result.RouteValues["term"]);
-        Assert.Equal(true, result.RouteValues["includeArchived"]);
+        Assert.Equal(nameof(AdminController.OfferingOverview), result.ActionName);
+        Assert.Equal(15, result.RouteValues!["id"]);
         Assert.Equal(HttpMethod.Post, handler.Method);
         Assert.Equal("/api/program-offerings/15/close-for-remediation", handler.RequestUri!.AbsolutePath);
         using var body = JsonDocument.Parse(handler.RequestBody);

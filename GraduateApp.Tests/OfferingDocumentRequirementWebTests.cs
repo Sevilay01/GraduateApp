@@ -67,9 +67,8 @@ public sealed class OfferingDocumentRequirementWebTests
             CancellationToken.None);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal(nameof(AdminController.Offerings), redirect.ActionName);
-        Assert.Equal("document-requirements", redirect.Fragment);
-        Assert.Equal(42, redirect.RouteValues!["requirementOfferingId"]);
+        Assert.Equal(nameof(AdminController.DocumentRequirements), redirect.ActionName);
+        Assert.Equal(42, redirect.RouteValues!["id"]);
         Assert.Equal(HttpMethod.Post, handler.Method);
         Assert.Equal(
             $"/api/program-offerings/42/document-requirements/{RequirementPublicId:D}/active",
@@ -157,7 +156,7 @@ public sealed class OfferingDocumentRequirementWebTests
     private static string ReadOfferingView()
     {
         var repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-        return File.ReadAllText(Path.Combine(repositoryRoot, "GraduateApp.Web", "Views", "Admin", "Offerings.cshtml"));
+        return File.ReadAllText(Path.Combine(repositoryRoot, "GraduateApp.Web", "Views", "Admin", "DocumentRequirements.cshtml"));
     }
 
     private sealed class RequirementToggleHandler : HttpMessageHandler

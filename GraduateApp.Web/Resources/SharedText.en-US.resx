@@ -3291,4 +3291,30 @@
   <data name="Validation.EmailMaximumLength" xml:space="preserve">
     <value>Email can contain at most 254 characters.</value>
   </data>
+  <data name="Admin.OfferingNav.Aria" xml:space="preserve"><value>Offering management pages</value></data>
+  <data name="Admin.OfferingNav.Back" xml:space="preserve"><value>Back to offerings</value></data>
+  <data name="Admin.OfferingNav.Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Admin.OfferingNav.Edit" xml:space="preserve"><value>Edit Offering</value></data>
+  <data name="Admin.OfferingNav.Exams" xml:space="preserve"><value>Exam Requirements</value></data>
+  <data name="Admin.OfferingNav.Documents" xml:space="preserve"><value>Document Requirements</value></data>
+  <data name="Admin.OfferingNav.Applications" xml:space="preserve"><value>Applications</value></data>
+  <data name="Admin.OfferingNav.Criteria" xml:space="preserve"><value>Evaluation Criteria</value></data>
+  <data name="Admin.OfferingNav.Evaluation" xml:space="preserve"><value>Evaluation</value></data>
+  <data name="Admin.OfferingNav.Results" xml:space="preserve"><value>Results</value></data>
+  <data name="Admin.OfferingNav.Open" xml:space="preserve"><value>Open offering</value></data>
+  <data name="Admin.OfferingOverview.Title" xml:space="preserve"><value>Offering overview</value></data>
+  <data name="Admin.OfferingOverview.SummaryAria" xml:space="preserve"><value>Offering summary</value></data>
+  <data name="Admin.OfferingOverview.Schedule" xml:space="preserve"><value>Schedule and quota</value></data>
+  <data name="Admin.OfferingOverview.Requirements" xml:space="preserve"><value>Requirements</value></data>
+  <data name="Admin.OfferingOverview.TotalDocuments" xml:space="preserve"><value>Total document requirements</value></data>
+  <data name="Admin.OfferingOverview.RequiredDocuments" xml:space="preserve"><value>Active required documents</value></data>
+  <data name="Admin.OfferingOverview.Applications" xml:space="preserve"><value>Application summary</value></data>
+  <data name="Admin.OfferingOverview.Drafts" xml:space="preserve"><value>Drafts</value></data>
+  <data name="Admin.OfferingOverview.Submitted" xml:space="preserve"><value>Submitted or later</value></data>
+  <data name="Admin.OfferingOverview.QuickActions" xml:space="preserve"><value>Quick actions</value></data>
+  <data name="Admin.OfferingOverview.QuickActionsLead" xml:space="preserve"><value>Go directly to the relevant offering management page.</value></data>
+  <data name="Admin.OfferingEdit.Lead" xml:space="preserve"><value>Manage the offering's program, term, schedule, quota, and status.</value></data>
+  <data name="Admin.OfferingEdit.SelectProgram" xml:space="preserve"><value>Select a program</value></data>
+  <data name="Admin.OfferingCriteria.Locked" xml:space="preserve"><value>Criteria are read-only after applications or evaluation processing begins.</value></data>
+  <data name="Admin.OfferingExams.Locked" xml:space="preserve"><value>Exam requirements are read-only after applications or results processing begins.</value></data>
 </root>

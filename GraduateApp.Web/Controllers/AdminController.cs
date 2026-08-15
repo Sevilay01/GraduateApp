@@ -223,107 +223,225 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         Guid? editRequirementId = null,
         CancellationToken cancellationToken = default)
     {
-        var offeringsTask = apiClient.GetProgramOfferingsAsync(academicYearStart, term, includeArchived, cancellationToken);
-        var catalogTask = apiClient.GetProgramOfferingCatalogAsync(cancellationToken);
-        await Task.WhenAll(offeringsTask, catalogTask);
-        var offerings = await offeringsTask;
-        var catalog = await catalogTask;
-        var offeringValues = offerings.Value ?? [];
-        var catalogValue = catalog.Value ?? new ProgramOfferingCatalogViewModel();
-        var selected = editId.HasValue
-            ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == editId.Value)
-            : null;
-        var editOfferingError = editId.HasValue && selected is null
-            ? T("Admin.Message.OfferingEditNotFound")
-            : null;
-        var selectedRequirementOffering = requirementOfferingId.HasValue
-            ? offeringValues.SingleOrDefault(item => item.ProgramOfferingId == requirementOfferingId.Value)
-            : null;
-        var canEditSelectedRequirements = selectedRequirementOffering is not null
-            && (!selectedRequirementOffering.UsesEvaluationWorkflow
-                || selectedRequirementOffering.EvaluationState == OfferingEvaluationState.Configuring);
-        var requirementResults =
-            new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>();
-        string? documentRequirementError = null;
+        if (editId.HasValue)
+        {
+            return RedirectToAction(nameof(EditOffering), new { id = editId.Value });
+        }
+
         if (requirementOfferingId.HasValue)
         {
-            if (selectedRequirementOffering is null)
-            {
-                documentRequirementError = T("Admin.Message.RequirementOfferingNotFound");
-            }
-            else
-            {
-                var requirementResult = await apiClient.GetOfferingDocumentRequirementsAsync(
-                    selectedRequirementOffering.ProgramOfferingId,
-                    cancellationToken);
-                if (requirementResult.IsSuccess)
-                {
-                    requirementResults[selectedRequirementOffering.ProgramOfferingId] =
-                        requirementResult.Value ?? [];
-                }
-                else
-                {
-                    documentRequirementError =
-                        ApiError(requirementResult.Error, "Admin.Message.RequirementsLoadFailed");
-                }
-            }
-        }
-        else if (editRequirementId.HasValue)
-        {
-            documentRequirementError = T("Admin.Message.SelectOfferingBeforeRequirement");
+            return RedirectToAction(
+                nameof(DocumentRequirements),
+                new { id = requirementOfferingId.Value, editRequirementId });
         }
 
-        OfferingDocumentRequirementViewModel? selectedRequirement = null;
-        if (canEditSelectedRequirements && selectedRequirementOffering is not null && editRequirementId.HasValue
-            && requirementResults.TryGetValue(
-                selectedRequirementOffering.ProgramOfferingId,
-                out var offeringRequirements))
+        var offerings = await apiClient.GetProgramOfferingsAsync(
+            academicYearStart,
+            term,
+            includeArchived,
+            cancellationToken);
+        return View(new ProgramOfferingListPageViewModel
         {
-            selectedRequirement = offeringRequirements.SingleOrDefault(item => item.PublicId == editRequirementId.Value);
-            if (selectedRequirement is null)
-            {
-                documentRequirementError = T("Admin.Message.RequirementNotFound");
-            }
-        }
-
-        return View(new ProgramOfferingPageViewModel
-        {
-            Offerings = offeringValues,
+            Offerings = offerings.Value ?? [],
             AcademicYearStart = academicYearStart,
             Term = term,
             IncludeArchived = includeArchived,
-            Form = CreateOfferingForm(selected, catalogValue),
-            DocumentRequirements = requirementResults,
-            RequirementOfferingId = selectedRequirementOffering?.ProgramOfferingId,
-            AutoFocusTarget = editId.HasValue
-                ? "offering-form-heading"
-                : requirementOfferingId.HasValue
-                    ? "document-requirements-heading"
-                    : null,
-            DocumentRequirementForm = new OfferingDocumentRequirementFormViewModel
+            ErrorMessage = offerings.IsSuccess
+                ? null
+                : ApiError(offerings.Error, "Admin.Message.OfferingsLoadFailed")
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> OfferingOverview(int id, CancellationToken cancellationToken)
+    {
+        var result = await apiClient.GetProgramOfferingAsync(id, cancellationToken);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.OfferingEditNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        var offering = result.Value;
+        return View(new OfferingOverviewPageViewModel
+        {
+            Shell = CreateOfferingShell(offering, OfferingSection.Overview),
+            ApplicationStartUtc = offering.ApplicationStartUtc,
+            ApplicationDeadlineUtc = offering.ApplicationDeadlineUtc,
+            Quota = offering.Quota,
+            DocumentRequirementCount = offering.DocumentRequirementCount,
+            ActiveRequiredDocumentRequirementCount = offering.ActiveRequiredDocumentRequirementCount,
+            DraftApplicationCount = offering.DraftApplicationCount,
+            SubmittedOrLaterApplicationCount = offering.SubmittedOrLaterApplicationCount,
+            RowVersion = offering.RowVersion
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditOffering(int? id, CancellationToken cancellationToken)
+    {
+        var catalogTask = apiClient.GetProgramOfferingCatalogAsync(cancellationToken);
+        var offeringTask = id.HasValue
+            ? apiClient.GetProgramOfferingAsync(id.Value, cancellationToken)
+            : null;
+        if (offeringTask is not null)
+        {
+            await Task.WhenAll(catalogTask, offeringTask);
+        }
+
+        var catalog = await catalogTask;
+        var offering = offeringTask is null ? null : await offeringTask;
+        if (id.HasValue && (offering is null || !offering.IsSuccess || offering.Value is null))
+        {
+            TempData["ErrorMessage"] = ApiError(offering?.Error, "Admin.Message.OfferingEditNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        var selected = offering?.Value;
+        return View(new OfferingEditPageViewModel
+        {
+            Shell = selected is null ? null : CreateOfferingShell(selected, OfferingSection.Edit),
+            Form = CreateOfferingEditForm(selected),
+            Programs = catalog.Value?.Programs ?? [],
+            HasActiveRequiredDocumentRequirement = selected?.HasActiveRequiredDocumentRequirement ?? false,
+            ErrorMessage = catalog.IsSuccess
+                ? null
+                : ApiError(catalog.Error, "Admin.Message.OfferingsLoadFailed")
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExamRequirements(int id, CancellationToken cancellationToken)
+    {
+        var offeringTask = apiClient.GetProgramOfferingAsync(id, cancellationToken);
+        var catalogTask = apiClient.GetProgramOfferingCatalogAsync(cancellationToken);
+        await Task.WhenAll(offeringTask, catalogTask);
+        var offering = await offeringTask;
+        var catalog = await catalogTask;
+        if (!offering.IsSuccess || offering.Value is null)
+        {
+            TempData["ErrorMessage"] = ApiError(offering.Error, "Admin.Message.OfferingEditNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        return View(CreateExamRequirementsPage(
+            offering.Value,
+            catalog.Value ?? new ProgramOfferingCatalogViewModel(),
+            null,
+            catalog.IsSuccess ? null : ApiError(catalog.Error, "Admin.Message.OfferingsLoadFailed")));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DocumentRequirements(
+        int id,
+        Guid? editRequirementId,
+        CancellationToken cancellationToken)
+    {
+        var offeringTask = apiClient.GetProgramOfferingAsync(id, cancellationToken);
+        var requirementsTask = apiClient.GetOfferingDocumentRequirementsAsync(id, cancellationToken);
+        await Task.WhenAll(offeringTask, requirementsTask);
+        var offering = await offeringTask;
+        var requirements = await requirementsTask;
+        if (!offering.IsSuccess || offering.Value is null)
+        {
+            TempData["ErrorMessage"] = ApiError(offering.Error, "Admin.Message.RequirementOfferingNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        return View(CreateDocumentRequirementsPage(
+            offering.Value,
+            requirements.Value ?? [],
+            editRequirementId,
+            null,
+            !requirements.IsSuccess
+                ? ApiError(requirements.Error, "Admin.Message.RequirementsLoadFailed")
+                : editRequirementId.HasValue
+                    ? T("Admin.Message.RequirementNotFound")
+                    : null));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> OfferingApplications(
+        int id,
+        string? search,
+        ApplicationStatus? status,
+        int page = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var offeringTask = apiClient.GetProgramOfferingAsync(id, cancellationToken);
+        var applicationsTask = apiClient.GetOfferingApplicationsAsync(
+            id,
+            search,
+            status,
+            page,
+            pageSize,
+            cancellationToken);
+        await Task.WhenAll(offeringTask, applicationsTask);
+        var offering = await offeringTask;
+        var applications = await applicationsTask;
+        if (!offering.IsSuccess || offering.Value is null)
+        {
+            TempData["ErrorMessage"] = ApiError(offering.Error, "Admin.Message.OfferingEditNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        return View(new OfferingApplicationsPageViewModel
+        {
+            Shell = CreateOfferingShell(offering.Value, OfferingSection.Applications),
+            Result = applications.Value ?? new PagedResultViewModel<AdminApplicationListItemViewModel>
             {
-                ProgramOfferingId = canEditSelectedRequirements
-                    ? selectedRequirementOffering?.ProgramOfferingId ?? 0
-                    : 0,
-                PublicId = selectedRequirement?.PublicId ?? Guid.Empty,
-                DocumentCode = selectedRequirement?.DocumentCode ?? string.Empty,
-                DisplayName = selectedRequirement?.DisplayName ?? string.Empty,
-                Description = selectedRequirement?.Description,
-                IsRequired = selectedRequirement?.IsRequired ?? true,
-                AllowedContentCategory = selectedRequirement?.AllowedContentCategory ?? DocumentContentCategory.PdfOrImage,
-                MaximumBytes = selectedRequirement?.MaximumBytes ?? 10485760,
-                RowVersion = selectedRequirement?.RowVersion
+                Page = Math.Max(page, 1),
+                PageSize = Math.Clamp(pageSize, 10, 100)
             },
-            ErrorMessage = !offerings.IsSuccess || !catalog.IsSuccess
-                ? ApiError(offerings.Error ?? catalog.Error, "Admin.Message.OfferingsLoadFailed")
-                : editOfferingError ?? documentRequirementError
+            Search = search,
+            Status = status,
+            ErrorMessage = applications.IsSuccess
+                ? null
+                : ApiError(applications.Error, "Admin.Message.ApplicationNotFound")
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EvaluationCriteria(int id, CancellationToken cancellationToken)
+    {
+        var offeringTask = apiClient.GetProgramOfferingAsync(id, cancellationToken);
+        var criteriaTask = apiClient.GetEvaluationCriteriaAsync(id, cancellationToken);
+        await Task.WhenAll(offeringTask, criteriaTask);
+        var offering = await offeringTask;
+        var criteria = await criteriaTask;
+        if (!offering.IsSuccess || offering.Value is null || !offering.Value.UsesEvaluationWorkflow)
+        {
+            TempData["ErrorMessage"] = ApiError(offering.Error, "Admin.Message.EvaluationNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        var items = criteria.Value ?? [];
+        return View(new EvaluationCriteriaPageViewModel
+        {
+            Shell = CreateOfferingShell(offering.Value, OfferingSection.EvaluationCriteria),
+            Criteria = items,
+            EligibleExamRequirements = offering.Value.ExamRequirements.Where(item => item.IsRequired).ToArray(),
+            CriterionForm = new EvaluationCriterionFormViewModel
+            {
+                ProgramOfferingId = id,
+                SourceType = EvaluationCriterionSourceType.ManualScore,
+                MaximumRawScore = 100m,
+                TieBreakPriority = items.Count + 1
+            },
+            CanEdit = offering.Value.EvaluationState == OfferingEvaluationState.Configuring
+                && !offering.Value.IsOpen
+                && offering.Value.DraftApplicationCount + offering.Value.SubmittedOrLaterApplicationCount == 0,
+            ErrorMessage = criteria.IsSuccess
+                ? null
+                : ApiError(criteria.Error, "Admin.Message.EvaluationNotFound")
         });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveOffering(
-        [Bind(Prefix = "Form")] ProgramOfferingFormViewModel model,
+        [Bind(Prefix = "Form")] OfferingEditFormViewModel model,
         CancellationToken cancellationToken)
     {
         if (model.Term == AcademicTerm.LegacyUnspecified)
@@ -345,34 +463,85 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
         if (!ModelState.IsValid)
         {
-            return await RenderOfferingFormAsync(
+            return await RenderOfferingEditFormAsync(
                 model,
                 T("Admin.Message.OfferingValidationFailed"),
                 cancellationToken);
         }
 
+        ProgramOfferingAdminViewModel? existing = null;
+        if (model.ProgramOfferingId > 0)
+        {
+            var existingResult = await apiClient.GetProgramOfferingAsync(model.ProgramOfferingId, cancellationToken);
+            if (!existingResult.IsSuccess || existingResult.Value is null)
+            {
+                ModelState.AddModelError(string.Empty, ApiError(existingResult.Error, "Admin.Message.OfferingEditNotFound"));
+                return await RenderOfferingEditFormAsync(model, null, cancellationToken);
+            }
+
+            existing = existingResult.Value;
+        }
+
+        var apiModel = CreateOfferingApiForm(model, existing?.ExamRequirements ?? []);
         var result = model.ProgramOfferingId > 0
-            ? await apiClient.UpdateProgramOfferingAsync(model, cancellationToken)
-            : await apiClient.CreateProgramOfferingAsync(model, cancellationToken);
+            ? await apiClient.UpdateProgramOfferingAsync(apiModel, cancellationToken)
+            : await apiClient.CreateProgramOfferingAsync(apiModel, cancellationToken);
         if (!result.IsSuccess)
         {
             ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.OfferingSaveFailed"));
-            return await RenderOfferingFormAsync(model, null, cancellationToken);
+            return await RenderOfferingEditFormAsync(model, null, cancellationToken);
         }
 
         TempData["SuccessMessage"] = T("Admin.Message.OfferingSaved");
         var savedOfferingId = result.Value?.ProgramOfferingId ?? model.ProgramOfferingId;
-        return RedirectToAction(
-            nameof(Offerings),
-            controllerName: null,
-            routeValues: new
-            {
-                academicYearStart = model.AcademicYearStart,
-                term = model.Term,
-                includeArchived = model.IsArchived,
-                editId = savedOfferingId
-            },
-            fragment: "offering-form");
+        return RedirectToAction(nameof(OfferingOverview), new { id = savedOfferingId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveExamRequirements(
+        [Bind(Prefix = "Form")] OfferingExamRequirementsFormViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (model.ProgramOfferingId <= 0)
+        {
+            ModelState.AddModelError("Form.ProgramOfferingId", T("Admin.Message.ValidOfferingRequired"));
+        }
+
+        if (string.IsNullOrWhiteSpace(model.RowVersion))
+        {
+            ModelState.AddModelError("Form.RowVersion", T("Admin.Message.OfferingConcurrencyMissing"));
+        }
+
+        var offeringResult = model.ProgramOfferingId > 0
+            ? await apiClient.GetProgramOfferingAsync(model.ProgramOfferingId, cancellationToken)
+            : null;
+        if (offeringResult is null || !offeringResult.IsSuccess || offeringResult.Value is null)
+        {
+            ModelState.AddModelError(string.Empty, ApiError(offeringResult?.Error, "Admin.Message.OfferingEditNotFound"));
+        }
+
+        if (!ModelState.IsValid || offeringResult?.Value is null)
+        {
+            return await RenderExamRequirementsFormAsync(
+                model,
+                offeringResult?.Value,
+                T("Admin.Message.OfferingValidationFailed"),
+                cancellationToken);
+        }
+
+        var editForm = CreateOfferingEditForm(offeringResult.Value);
+        editForm.RowVersion = model.RowVersion;
+        var apiModel = CreateOfferingApiForm(editForm, model.Requirements);
+        var result = await apiClient.UpdateProgramOfferingAsync(apiModel, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.OfferingSaveFailed"));
+            return await RenderExamRequirementsFormAsync(model, offeringResult.Value, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = T("Admin.Message.OfferingSaved");
+        return RedirectToAction(nameof(ExamRequirements), new { id = model.ProgramOfferingId });
     }
 
     [HttpPost]
@@ -388,11 +557,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         if (programOfferingId <= 0 || string.IsNullOrWhiteSpace(rowVersion))
         {
             TempData["ErrorMessage"] = T("Admin.Message.RemediationInvalid");
-            return RedirectToAction(
-                nameof(Offerings),
-                controllerName: null,
-                routeValues: new { academicYearStart, term, includeArchived },
-                fragment: "offering-configuration-health");
+            return RedirectToAction(nameof(OfferingOverview), new { id = programOfferingId });
         }
 
         var result = await apiClient.CloseInvalidProgramOfferingForRemediationAsync(
@@ -402,11 +567,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? T("Admin.Message.RemediationClosed")
             : ApiError(result.Error, "Admin.Message.RemediationFailed");
-        return RedirectToAction(
-            nameof(Offerings),
-            controllerName: null,
-            routeValues: new { academicYearStart, term, includeArchived },
-            fragment: "offering-configuration-health");
+        return RedirectToAction(nameof(OfferingOverview), new { id = programOfferingId });
     }
 
     [HttpPost]
@@ -427,25 +588,23 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = T("Admin.Message.RequirementValidationFailed");
-            return RedirectToAction(
-                nameof(Offerings),
-                controllerName: null,
-                routeValues: new { requirementOfferingId = model.ProgramOfferingId },
-                fragment: "document-requirements");
+            return await RenderDocumentRequirementsFormAsync(
+                model,
+                T("Admin.Message.RequirementValidationFailed"),
+                cancellationToken);
         }
 
         var result = model.PublicId == Guid.Empty
             ? await apiClient.CreateOfferingDocumentRequirementAsync(model, cancellationToken)
             : await apiClient.UpdateOfferingDocumentRequirementAsync(model, cancellationToken);
-        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? T("Admin.Message.RequirementSaved")
-            : ApiError(result.Error, "Admin.Message.RequirementSaveFailed");
-        return RedirectToAction(
-            nameof(Offerings),
-            controllerName: null,
-            routeValues: new { requirementOfferingId = model.ProgramOfferingId },
-            fragment: "document-requirements");
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.RequirementSaveFailed"));
+            return await RenderDocumentRequirementsFormAsync(model, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = T("Admin.Message.RequirementSaved");
+        return RedirectToAction(nameof(DocumentRequirements), new { id = model.ProgramOfferingId });
     }
 
     [HttpPost]
@@ -460,11 +619,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         if (!ModelState.IsValid)
         {
             TempData["ErrorMessage"] = T("Admin.Message.RequirementStateInvalid");
-            return RedirectToAction(
-                nameof(Offerings),
-                controllerName: null,
-                routeValues: new { requirementOfferingId = programOfferingId },
-                fragment: "document-requirements");
+            return RedirectToAction(nameof(DocumentRequirements), new { id = programOfferingId });
         }
 
         var result = await apiClient.SetOfferingDocumentRequirementActiveAsync(
@@ -484,11 +639,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             TempData["ErrorMessage"] = ApiError(result.Error, "Admin.Message.RequirementUpdateFailed");
         }
 
-        return RedirectToAction(
-            nameof(Offerings),
-            controllerName: null,
-            routeValues: new { requirementOfferingId = programOfferingId },
-            fragment: "document-requirements");
+        return RedirectToAction(nameof(DocumentRequirements), new { id = programOfferingId });
     }
 
     [HttpGet]
@@ -972,15 +1123,9 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
 
         return View(new EvaluationPageViewModel
         {
+            Shell = CreateOfferingShell(evaluation.Value, OfferingSection.Evaluation),
             Evaluation = evaluation.Value,
             Preview = preview.Value ?? new EvaluationRankingPreviewViewModel(),
-            CriterionForm = new EvaluationCriterionFormViewModel
-            {
-                ProgramOfferingId = id,
-                SourceType = EvaluationCriterionSourceType.ManualScore,
-                MaximumRawScore = 100m,
-                TieBreakPriority = evaluation.Value.Criteria.Count + 1
-            },
             ErrorMessage = preview.IsSuccess ? null : ApiError(preview.Error, "Admin.Message.EvaluationFinalizeFailed")
         });
     }
@@ -995,17 +1140,23 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             || (model.PublicId != Guid.Empty && string.IsNullOrWhiteSpace(model.RowVersion))
             || !ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = T("Admin.Message.CriterionInvalid");
-            return RedirectToAction(nameof(Evaluation), new { id = model.ProgramOfferingId });
+            return await RenderEvaluationCriteriaFormAsync(
+                model,
+                T("Admin.Message.CriterionInvalid"),
+                cancellationToken);
         }
 
         var result = model.PublicId == Guid.Empty
             ? await apiClient.CreateEvaluationCriterionAsync(model, cancellationToken)
             : await apiClient.UpdateEvaluationCriterionAsync(model, cancellationToken);
-        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
-            ? T("Admin.Message.CriterionSaved")
-            : ApiError(result.Error, "Admin.Message.CriterionSaveFailed");
-        return RedirectToAction(nameof(Evaluation), new { id = model.ProgramOfferingId });
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(string.Empty, ApiError(result.Error, "Admin.Message.CriterionSaveFailed"));
+            return await RenderEvaluationCriteriaFormAsync(model, null, cancellationToken);
+        }
+
+        TempData["SuccessMessage"] = T("Admin.Message.CriterionSaved");
+        return RedirectToAction(nameof(EvaluationCriteria), new { id = model.ProgramOfferingId });
     }
 
     [HttpPost]
@@ -1019,7 +1170,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         if (programOfferingId <= 0 || publicId == Guid.Empty || string.IsNullOrWhiteSpace(rowVersion))
         {
             TempData["ErrorMessage"] = T("Admin.Message.CriterionDeleteInvalid");
-            return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+            return RedirectToAction(nameof(EvaluationCriteria), new { id = programOfferingId });
         }
 
         var result = await apiClient.DeleteEvaluationCriterionAsync(
@@ -1030,7 +1181,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? T("Admin.Message.CriterionDeleted")
             : ApiError(result.Error, "Admin.Message.CriterionDeleteFailed");
-        return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+        return RedirectToAction(nameof(EvaluationCriteria), new { id = programOfferingId });
     }
 
     [HttpPost]
@@ -1098,7 +1249,13 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> PublishEvaluation(int id, CancellationToken cancellationToken)
+    public IActionResult PublishEvaluation(int id)
+    {
+        return RedirectToAction(nameof(Results), new { id });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Results(int id, CancellationToken cancellationToken)
     {
         var evaluationTask = apiClient.GetEvaluationAsync(id, cancellationToken);
         var summaryTask = apiClient.GetEvaluationPublicationSummaryAsync(id, cancellationToken);
@@ -1111,10 +1268,14 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             return RedirectToAction(nameof(Evaluation), new { id });
         }
 
-        return View(new EvaluationPublishPageViewModel
+        return View(nameof(PublishEvaluation), new EvaluationPublishPageViewModel
         {
+            Shell = CreateOfferingShell(evaluation.Value, OfferingSection.Results),
             ProgramOfferingId = id,
-            ProgramName = $"{evaluation.Value.ProgramName} · {evaluation.Value.AcademicYear} · {UiText.LocalizeAcademicTerm(HttpContext, evaluation.Value.TermName)}",
+            ProgramName = UiText.SelectLocalized(
+                HttpContext,
+                evaluation.Value.ProgramName,
+                evaluation.Value.ProgramNameEnglish),
             Evaluation = evaluation.Value,
             Summary = summary.Value
         });
@@ -1132,7 +1293,7 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] = result.IsSuccess
             ? T("Admin.Message.EvaluationPublished")
             : ApiError(result.Error, "Admin.Message.PublishFailed");
-        return RedirectToAction(nameof(Evaluation), new { id = programOfferingId });
+        return RedirectToAction(nameof(Results), new { id = programOfferingId });
     }
 
     [HttpGet]
@@ -1202,27 +1363,56 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
         return File(result.Content, result.ContentType!, result.FileName!, enableRangeProcessing: false);
     }
 
-    private static ProgramOfferingFormViewModel CreateOfferingForm(
-        ProgramOfferingAdminViewModel? offering,
-        ProgramOfferingCatalogViewModel catalog)
-    {
-        var requirements = catalog.Exams.Select(exam =>
+    private static OfferingShellViewModel CreateOfferingShell(
+        ProgramOfferingAdminViewModel offering,
+        OfferingSection activeSection) => new()
         {
-            var existing = offering?.ExamRequirements.SingleOrDefault(item => item.ExamId == exam.ExamId);
-            return new ProgramOfferingRequirementInputViewModel
+            ActiveSection = activeSection,
+            Header = new OfferingHeaderViewModel
             {
-                IsConfigured = existing is not null,
-                ExamId = exam.ExamId,
-                MinimumScore = existing?.MinimumScore ?? 0,
-                MinimumValidityDate = existing?.MinimumValidityDate,
-                IsRequired = existing?.IsRequired ?? false
-            };
-        }).ToList();
+                ProgramOfferingId = offering.ProgramOfferingId,
+                ProgramName = offering.ProgramName,
+                ProgramNameEnglish = offering.ProgramNameEnglish,
+                DegreeType = offering.DegreeType,
+                AcademicYear = offering.AcademicYear,
+                Term = offering.Term,
+                TermName = offering.TermName,
+                IsOpen = offering.IsOpen,
+                IsArchived = offering.IsArchived,
+                UsesDocumentWorkflow = offering.UsesDocumentWorkflow,
+                UsesEvaluationWorkflow = offering.UsesEvaluationWorkflow,
+                EvaluationState = offering.EvaluationState
+            }
+        };
+
+    private static OfferingShellViewModel CreateOfferingShell(
+        AdminEvaluationViewModel offering,
+        OfferingSection activeSection) => new()
+        {
+            ActiveSection = activeSection,
+            Header = new OfferingHeaderViewModel
+            {
+                ProgramOfferingId = offering.ProgramOfferingId,
+                ProgramName = offering.ProgramName,
+                ProgramNameEnglish = offering.ProgramNameEnglish,
+                DegreeType = offering.DegreeType,
+                AcademicYear = offering.AcademicYear,
+                Term = offering.Term,
+                TermName = offering.TermName,
+                IsOpen = offering.IsOpen,
+                UsesDocumentWorkflow = offering.Term != AcademicTerm.LegacyUnspecified,
+                UsesEvaluationWorkflow = offering.UsesEvaluationWorkflow,
+                EvaluationState = offering.EvaluationState
+            }
+        };
+
+    private static OfferingEditFormViewModel CreateOfferingEditForm(ProgramOfferingAdminViewModel? offering)
+    {
         var nowLocal = IstanbulTime.FromUtc(DateTime.UtcNow);
-        return new ProgramOfferingFormViewModel
+        return new OfferingEditFormViewModel
         {
             ProgramOfferingId = offering?.ProgramOfferingId ?? 0,
-            ProgramId = offering?.ProgramId ?? catalog.Programs.FirstOrDefault()?.ProgramId ?? 0,
+            ProgramId = offering?.ProgramId ?? 0,
             AcademicYearStart = offering?.AcademicYearStart > 0 ? offering.AcademicYearStart : nowLocal.Year,
             Term = offering?.Term is AcademicTerm.Fall or AcademicTerm.Spring or AcademicTerm.Summer
                 ? offering.Term
@@ -1237,46 +1427,226 @@ public sealed class AdminController(GraduateApiClient apiClient) : Controller
             IsOpen = offering?.IsOpen ?? false,
             IsArchived = offering?.IsArchived ?? false,
             UsesEvaluationWorkflow = offering?.UsesEvaluationWorkflow ?? true,
-            RowVersion = offering?.RowVersion,
-            ExamRequirements = requirements,
-            Programs = catalog.Programs,
-            Exams = catalog.Exams
+            RowVersion = offering?.RowVersion
         };
     }
 
-    private async Task<IActionResult> RenderOfferingFormAsync(
-        ProgramOfferingFormViewModel form,
+    private static ProgramOfferingFormViewModel CreateOfferingApiForm(
+        OfferingEditFormViewModel form,
+        IEnumerable<ExamRequirementViewModel> requirements) =>
+        CreateOfferingApiForm(
+            form,
+            requirements.Select(item => new ProgramOfferingRequirementInputViewModel
+            {
+                IsConfigured = true,
+                ExamId = item.ExamId,
+                MinimumScore = item.MinimumScore,
+                MinimumValidityDate = item.MinimumValidityDate,
+                IsRequired = item.IsRequired
+            }));
+
+    private static ProgramOfferingFormViewModel CreateOfferingApiForm(
+        OfferingEditFormViewModel form,
+        IEnumerable<ProgramOfferingRequirementInputViewModel> requirements) => new()
+        {
+            ProgramOfferingId = form.ProgramOfferingId,
+            ProgramId = form.ProgramId,
+            AcademicYearStart = form.AcademicYearStart,
+            Term = form.Term,
+            ApplicationStartLocal = form.ApplicationStartLocal,
+            ApplicationDeadlineLocal = form.ApplicationDeadlineLocal,
+            Quota = form.Quota,
+            IsOpen = form.IsOpen,
+            IsArchived = form.IsArchived,
+            UsesEvaluationWorkflow = form.UsesEvaluationWorkflow,
+            RowVersion = form.RowVersion,
+            ExamRequirements = requirements.ToList()
+        };
+
+    private static OfferingExamRequirementsPageViewModel CreateExamRequirementsPage(
+        ProgramOfferingAdminViewModel offering,
+        ProgramOfferingCatalogViewModel catalog,
+        OfferingExamRequirementsFormViewModel? postedForm,
+        string? errorMessage)
+    {
+        var posted = postedForm?.Requirements
+            .GroupBy(item => item.ExamId)
+            .ToDictionary(group => group.Key, group => group.First());
+        var existing = offering.ExamRequirements.ToDictionary(item => item.ExamId);
+        var requirements = catalog.Exams.Select(exam =>
+        {
+            if (posted is not null && posted.TryGetValue(exam.ExamId, out var postedRequirement))
+            {
+                return postedRequirement;
+            }
+
+            existing.TryGetValue(exam.ExamId, out var current);
+            return new ProgramOfferingRequirementInputViewModel
+            {
+                IsConfigured = current is not null,
+                ExamId = exam.ExamId,
+                MinimumScore = current?.MinimumScore ?? 0,
+                MinimumValidityDate = current?.MinimumValidityDate,
+                IsRequired = current?.IsRequired ?? false
+            };
+        }).ToList();
+        return new OfferingExamRequirementsPageViewModel
+        {
+            Shell = CreateOfferingShell(offering, OfferingSection.ExamRequirements),
+            Form = new OfferingExamRequirementsFormViewModel
+            {
+                ProgramOfferingId = offering.ProgramOfferingId,
+                RowVersion = postedForm?.RowVersion ?? offering.RowVersion,
+                Requirements = requirements
+            },
+            Exams = catalog.Exams,
+            CanEdit = offering.DraftApplicationCount + offering.SubmittedOrLaterApplicationCount == 0
+                && (!offering.UsesEvaluationWorkflow
+                    || offering.EvaluationState == OfferingEvaluationState.Configuring),
+            ErrorMessage = errorMessage
+        };
+    }
+
+    private static OfferingDocumentRequirementsPageViewModel CreateDocumentRequirementsPage(
+        ProgramOfferingAdminViewModel offering,
+        IReadOnlyList<OfferingDocumentRequirementViewModel> requirements,
+        Guid? editRequirementId,
+        OfferingDocumentRequirementFormViewModel? postedForm,
+        string? errorMessage)
+    {
+        var canEdit = !offering.UsesEvaluationWorkflow
+            || offering.EvaluationState == OfferingEvaluationState.Configuring;
+        var selected = canEdit && editRequirementId.HasValue
+            ? requirements.SingleOrDefault(item => item.PublicId == editRequirementId.Value)
+            : null;
+        return new OfferingDocumentRequirementsPageViewModel
+        {
+            Shell = CreateOfferingShell(offering, OfferingSection.DocumentRequirements),
+            Requirements = requirements,
+            CanEdit = canEdit,
+            DocumentRequirementForm = postedForm ?? new OfferingDocumentRequirementFormViewModel
+            {
+                ProgramOfferingId = canEdit ? offering.ProgramOfferingId : 0,
+                PublicId = selected?.PublicId ?? Guid.Empty,
+                DocumentCode = selected?.DocumentCode ?? string.Empty,
+                DisplayName = selected?.DisplayName ?? string.Empty,
+                Description = selected?.Description,
+                IsRequired = selected?.IsRequired ?? true,
+                AllowedContentCategory = selected?.AllowedContentCategory ?? DocumentContentCategory.PdfOrImage,
+                MaximumBytes = selected?.MaximumBytes ?? 10485760,
+                RowVersion = selected?.RowVersion
+            },
+            ErrorMessage = errorMessage
+        };
+    }
+
+    private async Task<IActionResult> RenderOfferingEditFormAsync(
+        OfferingEditFormViewModel form,
         string? errorMessage,
         CancellationToken cancellationToken)
     {
-        var offeringsTask = apiClient.GetProgramOfferingsAsync(null, null, true, cancellationToken);
         var catalogTask = apiClient.GetProgramOfferingCatalogAsync(cancellationToken);
-        await Task.WhenAll(offeringsTask, catalogTask);
-        var offerings = await offeringsTask;
-        var catalog = await catalogTask;
-        var catalogValue = catalog.Value ?? new ProgramOfferingCatalogViewModel();
-        form.Programs = catalogValue.Programs;
-        form.Exams = catalogValue.Exams;
-        var postedRequirements = form.ExamRequirements
-            .GroupBy(item => item.ExamId)
-            .ToDictionary(group => group.Key, group => group.First());
-        form.ExamRequirements = catalogValue.Exams.Select(exam =>
-            postedRequirements.TryGetValue(exam.ExamId, out var requirement)
-                ? requirement
-                : new ProgramOfferingRequirementInputViewModel { ExamId = exam.ExamId })
-            .ToList();
-
-        return View(nameof(Offerings), new ProgramOfferingPageViewModel
+        var offeringTask = form.ProgramOfferingId > 0
+            ? apiClient.GetProgramOfferingAsync(form.ProgramOfferingId, cancellationToken)
+            : null;
+        if (offeringTask is not null)
         {
-            Offerings = offerings.Value ?? [],
-            AcademicYearStart = form.AcademicYearStart,
-            Term = form.Term,
-            IncludeArchived = true,
+            await Task.WhenAll(catalogTask, offeringTask);
+        }
+
+        var catalog = await catalogTask;
+        var offering = offeringTask is null ? null : await offeringTask;
+        return View(nameof(EditOffering), new OfferingEditPageViewModel
+        {
+            Shell = offering?.Value is null
+                ? null
+                : CreateOfferingShell(offering.Value, OfferingSection.Edit),
             Form = form,
-            AutoFocusTarget = "offering-form-heading",
+            Programs = catalog.Value?.Programs ?? [],
+            HasActiveRequiredDocumentRequirement = offering?.Value?.HasActiveRequiredDocumentRequirement ?? false,
             ErrorMessage = errorMessage
-                ?? ApiError(offerings.Error, "Admin.Message.OfferingsLoadFailed")
-                ?? catalog.Error
+                ?? ApiError(offering?.Error ?? catalog.Error, "Admin.Message.OfferingsLoadFailed")
+        });
+    }
+
+    private async Task<IActionResult> RenderExamRequirementsFormAsync(
+        OfferingExamRequirementsFormViewModel form,
+        ProgramOfferingAdminViewModel? offering,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var offeringResult = offering is null
+            ? await apiClient.GetProgramOfferingAsync(form.ProgramOfferingId, cancellationToken)
+            : null;
+        offering ??= offeringResult?.Value;
+        if (offering is null)
+        {
+            TempData["ErrorMessage"] = ApiError(offeringResult?.Error, "Admin.Message.OfferingEditNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        var catalog = await apiClient.GetProgramOfferingCatalogAsync(cancellationToken);
+        return View(
+            nameof(ExamRequirements),
+            CreateExamRequirementsPage(
+                offering,
+                catalog.Value ?? new ProgramOfferingCatalogViewModel(),
+                form,
+                errorMessage ?? ApiError(catalog.Error, "Admin.Message.OfferingsLoadFailed")));
+    }
+
+    private async Task<IActionResult> RenderDocumentRequirementsFormAsync(
+        OfferingDocumentRequirementFormViewModel form,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var offeringTask = apiClient.GetProgramOfferingAsync(form.ProgramOfferingId, cancellationToken);
+        var requirementsTask = apiClient.GetOfferingDocumentRequirementsAsync(form.ProgramOfferingId, cancellationToken);
+        await Task.WhenAll(offeringTask, requirementsTask);
+        var offering = await offeringTask;
+        var requirements = await requirementsTask;
+        if (offering.Value is null)
+        {
+            TempData["ErrorMessage"] = ApiError(offering.Error, "Admin.Message.RequirementOfferingNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        return View(
+            nameof(DocumentRequirements),
+            CreateDocumentRequirementsPage(
+                offering.Value,
+                requirements.Value ?? [],
+                null,
+                form,
+                errorMessage ?? ApiError(requirements.Error, "Admin.Message.RequirementsLoadFailed")));
+    }
+
+    private async Task<IActionResult> RenderEvaluationCriteriaFormAsync(
+        EvaluationCriterionFormViewModel form,
+        string? errorMessage,
+        CancellationToken cancellationToken)
+    {
+        var offeringTask = apiClient.GetProgramOfferingAsync(form.ProgramOfferingId, cancellationToken);
+        var criteriaTask = apiClient.GetEvaluationCriteriaAsync(form.ProgramOfferingId, cancellationToken);
+        await Task.WhenAll(offeringTask, criteriaTask);
+        var offering = await offeringTask;
+        var criteria = await criteriaTask;
+        if (offering.Value is null)
+        {
+            TempData["ErrorMessage"] = ApiError(offering.Error, "Admin.Message.EvaluationNotFound");
+            return RedirectToAction(nameof(Offerings));
+        }
+
+        return View(nameof(EvaluationCriteria), new EvaluationCriteriaPageViewModel
+        {
+            Shell = CreateOfferingShell(offering.Value, OfferingSection.EvaluationCriteria),
+            Criteria = criteria.Value ?? [],
+            EligibleExamRequirements = offering.Value.ExamRequirements.Where(item => item.IsRequired).ToArray(),
+            CriterionForm = form,
+            CanEdit = offering.Value.EvaluationState == OfferingEvaluationState.Configuring
+                && !offering.Value.IsOpen
+                && offering.Value.DraftApplicationCount + offering.Value.SubmittedOrLaterApplicationCount == 0,
+            ErrorMessage = errorMessage ?? ApiError(criteria.Error, "Admin.Message.EvaluationNotFound")
         });
     }
 

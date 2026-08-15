@@ -27,7 +27,7 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
 
         Assert.NotNull(method);
         var query = Assert.IsAssignableFrom<IQueryable>(
-            method!.Invoke(service, [2026, null, false]));
+            method!.Invoke(service, [2026, null, false, false]));
         var commandText = query.ToQueryString();
 
         Assert.Contains("COUNT(*)", commandText, StringComparison.OrdinalIgnoreCase);
@@ -41,6 +41,7 @@ public sealed class ProgramOfferingAdminProjectionIntegrationTests
         Assert.DoesNotContain("[DocumentCode]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[DisplayName]", commandText, StringComparison.Ordinal);
         Assert.DoesNotContain("[MaximumBytes]", commandText, StringComparison.Ordinal);
+        Assert.DoesNotContain("[ProgramOfferingExamRequirements]", commandText, StringComparison.Ordinal);
     }
 
     [LocalDbFact]

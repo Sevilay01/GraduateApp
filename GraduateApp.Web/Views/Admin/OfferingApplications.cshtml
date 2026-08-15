@@ -1,0 +1,97 @@
+@model OfferingApplicationsPageViewModel
+@{
+    ViewData["Title"] = UiText.Get(Context, "Admin.OfferingNav.Applications");
+    var offeringId = Model.Shell.Header.ProgramOfferingId;
+}
+
+<div class="admin-page">
+    <partial name="_OfferingHeader" model="Model.Shell" />
+
+    <form method="get" class="admin-filter-panel" role="search" aria-labelledby="offering-application-filters-heading">
+        <input type="hidden" name="id" value="@offeringId" />
+        <h2 id="offering-application-filters-heading" class="admin-filter-panel__heading">@UiText.Get(Context, "Admin.Applications.FilterHeading")</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-7">
+                <label asp-for="Search" class="form-label">@UiText.Get(Context, "Admin.Applications.SearchLabel")</label>
+                <input asp-for="Search" class="form-control" maxlength="100" autocomplete="off" />
+            </div>
+            <div class="col-12 col-lg-5">
+                <label asp-for="Status" class="form-label">@UiText.Get(Context, "Admin.Applications.Status")</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="">@UiText.Get(Context, "Admin.Common.All")</option>
+                    @foreach (var status in Enum.GetValues<ApplicationStatus>().Where(item => item != ApplicationStatus.Draft))
+                    {
+                        <option value="@status">@UiText.LocalizeApplicationStatus(Context, status)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 admin-form-actions">
+                <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Admin.Applications.ApplyFilters")</button>
+                <a asp-action="OfferingApplications" asp-route-id="@offeringId" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Applications.ClearFilters")</a>
+            </div>
+        </div>
+    </form>
+
+    <section aria-labelledby="offering-application-results-heading">
+        <div class="admin-results-heading mb-3">
+            <div>
+                <h2 id="offering-application-results-heading">@UiText.Get(Context, "Admin.Applications.ResultsHeading")</h2>
+                <p class="admin-results-count" role="status">@UiText.Format(Context, "Admin.Applications.ResultCount", Model.Result.TotalCount)</p>
+            </div>
+        </div>
+        @if (Model.ErrorMessage is not null)
+        {
+            <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+        }
+        else if (Model.Result.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <h3>@UiText.Get(Context, "Admin.Applications.EmptyHeading")</h3>
+                <p>@UiText.Get(Context, "Admin.Applications.EmptyLead")</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle responsive-table">
+                        <caption class="visually-hidden">@UiText.Get(Context, "Admin.Applications.Caption")</caption>
+                        <thead><tr>
+                            <th scope="col">@UiText.Get(Context, "Admin.Students.Student")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Students.MaskedIdentity")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Applications.ApplicationDate")</th>
+                            <th scope="col">@UiText.Get(Context, "Admin.Common.Status")</th>
+                            <th scope="col"><span class="visually-hidden">@UiText.Get(Context, "Admin.Common.Actions")</span></th>
+                        </tr></thead>
+                        <tbody>
+                            @foreach (var application in Model.Result.Items)
+                            {
+                                <tr>
+                                    <td data-label="@UiText.Get(Context, "Admin.Students.Student")">@application.StudentFullName</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Students.MaskedIdentity")">@application.MaskedTc</td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Applications.ApplicationDate")"><time datetime="@application.ApplicationDateUtc.ToString("O")">@IstanbulTime.FromUtc(application.ApplicationDateUtc).ToString("g")</time></td>
+                                    <td data-label="@UiText.Get(Context, "Admin.Common.Status")"><partial name="_ApplicationStatusBadge" model="application.CurrentStatus" /></td>
+                                    <td data-label=""><a asp-action="Detail" asp-route-id="@application.PublicId" class="btn btn-sm btn-primary">@UiText.Get(Context, "Admin.Applications.Detail")</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @if (Model.Result.TotalPages > 1)
+            {
+                <nav class="mt-3" aria-label="@UiText.Get(Context, "Admin.Applications.Pagination")">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(Model.Result.Page <= 1 ? "disabled" : null)">
+                            <a class="page-link" asp-action="OfferingApplications" asp-route-id="@offeringId" asp-route-page="@(Model.Result.Page - 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status">@UiText.Get(Context, "Admin.Common.Previous")</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link" aria-current="page">@Model.Result.Page / @Model.Result.TotalPages</span></li>
+                        <li class="page-item @(Model.Result.Page >= Model.Result.TotalPages ? "disabled" : null)">
+                            <a class="page-link" asp-action="OfferingApplications" asp-route-id="@offeringId" asp-route-page="@(Model.Result.Page + 1)" asp-route-pageSize="@Model.Result.PageSize" asp-route-search="@Model.Search" asp-route-status="@Model.Status">@UiText.Get(Context, "Admin.Common.Next")</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </section>
+</div>

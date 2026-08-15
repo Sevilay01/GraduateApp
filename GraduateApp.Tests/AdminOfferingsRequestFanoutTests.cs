@@ -10,217 +10,94 @@ namespace GraduateApp.Tests;
 
 public sealed class AdminOfferingsRequestFanoutTests
 {
-    public static TheoryData<int> OfferingCounts => new()
-    {
-        0,
-        1,
-        25
-    };
-
-    [Theory]
-    [MemberData(nameof(OfferingCounts))]
-    public async Task Offering_list_outbound_call_count_is_constant_and_has_no_requirement_fan_out(
-        int offeringCount)
-    {
-        var handler = new OfferingPageHandler(CreateOfferings(offeringCount));
-        using var client = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api.example.test/")
-        };
-        var controller = new AdminController(new GraduateApiClient(client));
-
-        var result = await controller.Offerings(
-            academicYearStart: null,
-            term: null,
-            includeArchived: false,
-            cancellationToken: CancellationToken.None);
-
-        Assert.IsType<ViewResult>(result);
-        Assert.Equal(2, handler.Requests.Count);
-        Assert.DoesNotContain(
-            handler.Requests,
-            request => request.Path.Contains("/document-requirements", StringComparison.Ordinal));
-    }
-
     [Fact]
-    public async Task Selected_offering_loads_its_full_requirements_once_without_loading_other_offerings()
+    public async Task Offering_list_uses_one_list_request_without_loading_catalog_or_subpage_collections()
     {
-        var offerings = CreateOfferings(3);
-        var selectedOfferingId = offerings[1].ProgramOfferingId;
-        var handler = new OfferingPageHandler(offerings);
-        using var client = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api.example.test/")
-        };
-        var controller = new AdminController(new GraduateApiClient(client));
+        var handler = new OfferingHandler();
+        var controller = CreateController(handler);
 
         var result = Assert.IsType<ViewResult>(await controller.Offerings(
             academicYearStart: null,
             term: null,
             includeArchived: false,
-            requirementOfferingId: selectedOfferingId,
-            editRequirementId: Guid.Parse("DC044726-758E-4C52-B028-A9AB744E3275"),
             cancellationToken: CancellationToken.None));
-        var model = Assert.IsType<ProgramOfferingPageViewModel>(result.Model);
 
-        Assert.Equal(3, handler.Requests.Count);
-        var requirementRequest = Assert.Single(
-            handler.Requests,
-            request => request.Path.Contains("/document-requirements", StringComparison.Ordinal));
-        Assert.Equal(
-            $"/api/program-offerings/{selectedOfferingId}/document-requirements",
-            requirementRequest.Path);
-        var selectedRequirements = Assert.Single(model.DocumentRequirements);
-        Assert.Equal(selectedOfferingId, selectedRequirements.Key);
-        Assert.Single(selectedRequirements.Value);
-        Assert.Equal(selectedOfferingId, model.RequirementOfferingId);
-        Assert.Equal(selectedOfferingId, model.DocumentRequirementForm.ProgramOfferingId);
-        Assert.Equal("DOC-102", model.DocumentRequirementForm.DocumentCode);
-        Assert.Equal(
-            Guid.Parse("DC044726-758E-4C52-B028-A9AB744E3275"),
-            model.DocumentRequirementForm.PublicId);
-        Assert.DoesNotContain(
-            handler.Requests,
-            request => request.Path.Contains(
-                $"/api/program-offerings/{offerings[0].ProgramOfferingId}/document-requirements",
-                StringComparison.Ordinal));
-        Assert.DoesNotContain(
-            handler.Requests,
-            request => request.Path.Contains(
-                $"/api/program-offerings/{offerings[2].ProgramOfferingId}/document-requirements",
-                StringComparison.Ordinal));
+        Assert.IsType<ProgramOfferingListPageViewModel>(result.Model);
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal("/api/program-offerings", request.Path);
+        Assert.Contains("summaryOnly=true", request.Query, StringComparison.Ordinal);
+        Assert.DoesNotContain(handler.Requests, item => item.Path.Contains("/catalog", StringComparison.Ordinal));
+        Assert.DoesNotContain(handler.Requests, item => item.Path.Contains("document-requirements", StringComparison.Ordinal));
+        Assert.DoesNotContain(handler.Requests, item => item.Path.Contains("evaluations", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task Locked_evaluation_offering_loads_requirements_read_only_without_populating_an_edit_form()
+    public async Task Document_requirements_load_only_the_offering_header_and_its_requirements()
     {
-        var offerings = CreateOfferings(3);
-        var selected = offerings[1];
-        selected.UsesEvaluationWorkflow = true;
-        selected.EvaluationState = OfferingEvaluationState.Published;
-        var requirementPublicId = Guid.Parse("DC044726-758E-4C52-B028-A9AB744E3275");
-        var handler = new OfferingPageHandler(offerings);
-        using var client = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api.example.test/")
-        };
-        var controller = new AdminController(new GraduateApiClient(client));
+        var handler = new OfferingHandler();
+        var controller = CreateController(handler);
 
-        var result = Assert.IsType<ViewResult>(await controller.Offerings(
-            academicYearStart: null,
-            term: null,
-            includeArchived: false,
-            requirementOfferingId: selected.ProgramOfferingId,
-            editRequirementId: requirementPublicId,
-            cancellationToken: CancellationToken.None));
-        var model = Assert.IsType<ProgramOfferingPageViewModel>(result.Model);
-
-        Assert.Equal(3, handler.Requests.Count);
-        Assert.All(handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
-        Assert.Single(model.DocumentRequirements[selected.ProgramOfferingId]);
-        Assert.Equal(selected.ProgramOfferingId, model.RequirementOfferingId);
-        Assert.Equal(0, model.DocumentRequirementForm.ProgramOfferingId);
-        Assert.Equal(Guid.Empty, model.DocumentRequirementForm.PublicId);
-        Assert.Null(model.DocumentRequirementForm.RowVersion);
-    }
-
-    [Fact]
-    public async Task Invalid_requirement_offering_is_rejected_without_a_document_api_call()
-    {
-        var handler = new OfferingPageHandler(CreateOfferings(3));
-        using var client = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api.example.test/")
-        };
-        var controller = new AdminController(new GraduateApiClient(client));
-
-        var result = Assert.IsType<ViewResult>(await controller.Offerings(
-            academicYearStart: null,
-            term: null,
-            includeArchived: false,
-            requirementOfferingId: 999,
-            cancellationToken: CancellationToken.None));
-        var model = Assert.IsType<ProgramOfferingPageViewModel>(result.Model);
+        var result = Assert.IsType<ViewResult>(await controller.DocumentRequirements(
+            OfferingHandler.OfferingId,
+            editRequirementId: null,
+            CancellationToken.None));
+        var model = Assert.IsType<OfferingDocumentRequirementsPageViewModel>(result.Model);
 
         Assert.Equal(2, handler.Requests.Count);
-        Assert.DoesNotContain(
-            handler.Requests,
-            request => request.Path.Contains("/document-requirements", StringComparison.Ordinal));
-        Assert.Null(model.RequirementOfferingId);
-        Assert.Equal(0, model.DocumentRequirementForm.ProgramOfferingId);
-        Assert.Equal("Belge koşulları için seçilen ilan bulunamadı.", model.ErrorMessage);
+        Assert.Contains(handler.Requests, item => item.Path == $"/api/program-offerings/{OfferingHandler.OfferingId}");
+        Assert.Contains(handler.Requests, item => item.Path == $"/api/program-offerings/{OfferingHandler.OfferingId}/document-requirements");
+        Assert.Single(model.Requirements);
+        Assert.DoesNotContain(handler.Requests, item => item.Path.Contains("evaluation", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task Edit_selection_populates_the_requested_offering_and_focus_without_loading_documents()
+    public async Task Legacy_edit_query_redirects_to_the_real_edit_route_without_api_fanout()
     {
-        var offerings = CreateOfferings(3);
-        var selected = offerings[2];
-        var handler = new OfferingPageHandler(offerings);
-        using var client = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api.example.test/")
-        };
-        var controller = new AdminController(new GraduateApiClient(client));
+        var handler = new OfferingHandler();
+        var controller = CreateController(handler);
 
-        var result = Assert.IsType<ViewResult>(await controller.Offerings(
+        var result = Assert.IsType<RedirectToActionResult>(await controller.Offerings(
             academicYearStart: null,
             term: null,
             includeArchived: false,
-            editId: selected.ProgramOfferingId,
+            editId: OfferingHandler.OfferingId,
             cancellationToken: CancellationToken.None));
-        var model = Assert.IsType<ProgramOfferingPageViewModel>(result.Model);
 
-        Assert.Equal(2, handler.Requests.Count);
-        Assert.Equal(selected.ProgramOfferingId, model.Form.ProgramOfferingId);
-        Assert.Equal(selected.ProgramId, model.Form.ProgramId);
-        Assert.Equal("offering-form-heading", model.AutoFocusTarget);
-        Assert.Empty(model.DocumentRequirements);
+        Assert.Equal(nameof(AdminController.EditOffering), result.ActionName);
+        Assert.Equal(OfferingHandler.OfferingId, result.RouteValues!["id"]);
+        Assert.Empty(handler.Requests);
     }
 
     [Fact]
-    public async Task Unknown_edit_id_does_not_fall_through_to_another_offering()
+    public async Task Legacy_document_query_preserves_the_selected_requirement_on_redirect()
     {
-        var handler = new OfferingPageHandler(CreateOfferings(3));
-        using var client = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api.example.test/")
-        };
-        var controller = new AdminController(new GraduateApiClient(client));
+        var handler = new OfferingHandler();
+        var controller = CreateController(handler);
+        var requirementId = Guid.Parse("DC044726-758E-4C52-B028-A9AB744E3275");
 
-        var result = Assert.IsType<ViewResult>(await controller.Offerings(
+        var result = Assert.IsType<RedirectToActionResult>(await controller.Offerings(
             academicYearStart: null,
             term: null,
             includeArchived: false,
-            editId: 999,
+            requirementOfferingId: OfferingHandler.OfferingId,
+            editRequirementId: requirementId,
             cancellationToken: CancellationToken.None));
-        var model = Assert.IsType<ProgramOfferingPageViewModel>(result.Model);
 
-        Assert.Equal(2, handler.Requests.Count);
-        Assert.Equal(0, model.Form.ProgramOfferingId);
-        Assert.Equal("Düzenlenecek ilan bulunamadı.", model.ErrorMessage);
-        Assert.Equal("offering-form-heading", model.AutoFocusTarget);
+        Assert.Equal(nameof(AdminController.DocumentRequirements), result.ActionName);
+        Assert.Equal(OfferingHandler.OfferingId, result.RouteValues!["id"]);
+        Assert.Equal(requirementId, result.RouteValues["editRequirementId"]);
+        Assert.Empty(handler.Requests);
     }
 
-    private static IReadOnlyList<ProgramOfferingAdminViewModel> CreateOfferings(int count) =>
-        Enumerable.Range(1, count)
-            .Select(index => new ProgramOfferingAdminViewModel
-            {
-                ProgramOfferingId = 100 + index,
-                ProgramId = 200 + index,
-                ProgramName = $"Program {index}",
-                AcademicYearStart = 2026,
-                AcademicYear = "2026–2027",
-                Term = AcademicTerm.Fall,
-                TermName = "Güz",
-                Quota = 10,
-                RowVersion = Convert.ToBase64String(BitConverter.GetBytes(index))
-            })
-            .ToArray();
-
-    private sealed class OfferingPageHandler(
-        IReadOnlyList<ProgramOfferingAdminViewModel> offerings) : HttpMessageHandler
+    private static AdminController CreateController(OfferingHandler handler)
     {
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://api.example.test/") };
+        return new AdminController(new GraduateApiClient(client));
+    }
+
+    private sealed class OfferingHandler : HttpMessageHandler
+    {
+        public const int OfferingId = 102;
         public ConcurrentQueue<CapturedRequest> Requests { get; } = new();
 
         protected override Task<HttpResponseMessage> SendAsync(
@@ -228,44 +105,44 @@ public sealed class AdminOfferingsRequestFanoutTests
             CancellationToken cancellationToken)
         {
             var path = request.RequestUri!.AbsolutePath;
-            Requests.Enqueue(new CapturedRequest(request.Method, path));
-
-            if (path.EndsWith("/catalog", StringComparison.Ordinal))
-            {
-                return Json(HttpStatusCode.OK, new ProgramOfferingCatalogViewModel());
-            }
-
+            Requests.Enqueue(new CapturedRequest(request.Method, path, request.RequestUri.Query));
             if (path.EndsWith("/document-requirements", StringComparison.Ordinal))
             {
-                var offeringId = int.Parse(
-                    path.Split('/', StringSplitOptions.RemoveEmptyEntries)[2],
-                    System.Globalization.CultureInfo.InvariantCulture);
-                return Json(
-                    HttpStatusCode.OK,
-                    (IReadOnlyList<OfferingDocumentRequirementViewModel>)
-                    [
-                        new()
-                        {
-                            PublicId = Guid.Parse("DC044726-758E-4C52-B028-A9AB744E3275"),
-                            DocumentCode = $"DOC-{offeringId}",
-                            DisplayName = $"Belge {offeringId}",
-                            IsRequired = true,
-                            IsActive = true,
-                            MaximumBytes = 1024,
-                            RowVersion = "cm93LXZlcnNpb24="
-                        }
-                    ]);
+                return Json<IReadOnlyList<OfferingDocumentRequirementViewModel>>(
+                    [new()
+                    {
+                        PublicId = Guid.Parse("DC044726-758E-4C52-B028-A9AB744E3275"),
+                        DocumentCode = "TRANSCRIPT",
+                        DisplayName = "Transkript",
+                        IsRequired = true,
+                        IsActive = true,
+                        MaximumBytes = 1024,
+                        RowVersion = "cm93LXZlcnNpb24="
+                    }]);
             }
 
-            return Json(HttpStatusCode.OK, offerings);
+            var offering = new ProgramOfferingAdminViewModel
+            {
+                ProgramOfferingId = OfferingId,
+                ProgramId = 7,
+                ProgramName = "Bilgisayar Mühendisliği",
+                ProgramNameEnglish = "Computer Engineering",
+                DegreeType = "Doktora",
+                AcademicYearStart = 2026,
+                AcademicYear = "2026–2027",
+                Term = AcademicTerm.Fall,
+                TermName = "Güz",
+                UsesDocumentWorkflow = true,
+                RowVersion = "AQIDBAUGBwg="
+            };
+            return path == "/api/program-offerings"
+                ? Json<IReadOnlyList<ProgramOfferingAdminViewModel>>([offering])
+                : Json(offering);
         }
 
-        private static Task<HttpResponseMessage> Json<T>(HttpStatusCode statusCode, T value) =>
-            Task.FromResult(new HttpResponseMessage(statusCode)
-            {
-                Content = JsonContent.Create(value)
-            });
+        private static Task<HttpResponseMessage> Json<T>(T value) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(value) });
     }
 
-    private sealed record CapturedRequest(HttpMethod Method, string Path);
+    private sealed record CapturedRequest(HttpMethod Method, string Path, string Query);
 }

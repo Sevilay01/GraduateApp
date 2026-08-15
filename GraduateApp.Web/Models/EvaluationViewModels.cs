@@ -153,6 +153,8 @@ public sealed class AdminEvaluationViewModel
 {
     public int ProgramOfferingId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
+    public string DegreeType { get; set; } = string.Empty;
     public int AcademicYearStart { get; set; }
     public string AcademicYear { get; set; } = string.Empty;
     public AcademicTerm Term { get; set; }
@@ -192,9 +194,19 @@ public sealed class EvaluationRankingPreviewViewModel
 
 public sealed class EvaluationPageViewModel
 {
+    public OfferingShellViewModel Shell { get; set; } = new();
     public AdminEvaluationViewModel Evaluation { get; set; } = new();
     public EvaluationRankingPreviewViewModel Preview { get; set; } = new();
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class EvaluationCriteriaPageViewModel
+{
+    public OfferingShellViewModel Shell { get; set; } = new();
+    public IReadOnlyList<EvaluationCriterionViewModel> Criteria { get; set; } = [];
+    public IReadOnlyList<ExamRequirementViewModel> EligibleExamRequirements { get; set; } = [];
     public EvaluationCriterionFormViewModel CriterionForm { get; set; } = new();
+    public bool CanEdit { get; set; }
     public string? ErrorMessage { get; set; }
 }
 
@@ -209,6 +221,7 @@ public sealed class EvaluationPublicationSummaryViewModel
 
 public sealed class EvaluationPublishPageViewModel
 {
+    public OfferingShellViewModel Shell { get; set; } = new();
     public int ProgramOfferingId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
     public AdminEvaluationViewModel Evaluation { get; set; } = new();

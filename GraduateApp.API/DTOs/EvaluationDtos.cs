@@ -122,6 +122,8 @@ public sealed record EvaluationCapabilitiesDto(
 public sealed record AdminEvaluationPageDto(
     int ProgramOfferingId,
     string ProgramName,
+    string? ProgramNameEnglish,
+    string DegreeType,
     int AcademicYearStart,
     string AcademicYear,
     AcademicTerm Term,

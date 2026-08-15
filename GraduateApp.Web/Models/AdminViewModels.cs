@@ -80,6 +80,7 @@ public sealed class ProgramOfferingAdminViewModel
     public int ProgramOfferingId { get; set; }
     public int ProgramId { get; set; }
     public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
     public string InstituteName { get; set; } = string.Empty;
     public string DegreeType { get; set; } = string.Empty;
     public int AcademicYearStart { get; set; }
@@ -203,19 +204,138 @@ public sealed class ProgramOfferingFormViewModel
     public IReadOnlyList<ExamCatalogItemViewModel> Exams { get; set; } = [];
 }
 
-public sealed class ProgramOfferingPageViewModel
+public enum OfferingSection
+{
+    Overview,
+    Edit,
+    ExamRequirements,
+    DocumentRequirements,
+    Applications,
+    EvaluationCriteria,
+    Evaluation,
+    Results
+}
+
+public sealed class OfferingHeaderViewModel
+{
+    public int ProgramOfferingId { get; set; }
+    public string ProgramName { get; set; } = string.Empty;
+    public string? ProgramNameEnglish { get; set; }
+    public string DegreeType { get; set; } = string.Empty;
+    public string AcademicYear { get; set; } = string.Empty;
+    public AcademicTerm Term { get; set; }
+    public string TermName { get; set; } = string.Empty;
+    public bool IsOpen { get; set; }
+    public bool IsArchived { get; set; }
+    public bool UsesDocumentWorkflow { get; set; }
+    public bool UsesEvaluationWorkflow { get; set; }
+    public OfferingEvaluationState EvaluationState { get; set; }
+}
+
+public sealed class OfferingShellViewModel
+{
+    public OfferingHeaderViewModel Header { get; set; } = new();
+    public OfferingSection ActiveSection { get; set; }
+}
+
+public class ProgramOfferingListPageViewModel
 {
     public IReadOnlyList<ProgramOfferingAdminViewModel> Offerings { get; set; } = [];
-    public ProgramOfferingFormViewModel Form { get; set; } = new();
     public int? AcademicYearStart { get; set; }
     public AcademicTerm? Term { get; set; }
     public bool IncludeArchived { get; set; }
     public string? ErrorMessage { get; set; }
-    public int? RequirementOfferingId { get; set; }
-    public string? AutoFocusTarget { get; set; }
-    public IReadOnlyDictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>> DocumentRequirements { get; set; }
-        = new Dictionary<int, IReadOnlyList<OfferingDocumentRequirementViewModel>>();
+}
+
+public sealed class OfferingOverviewPageViewModel
+{
+    public OfferingShellViewModel Shell { get; set; } = new();
+    public DateTime? ApplicationStartUtc { get; set; }
+    public DateTime? ApplicationDeadlineUtc { get; set; }
+    public int Quota { get; set; }
+    public int DocumentRequirementCount { get; set; }
+    public int ActiveRequiredDocumentRequirementCount { get; set; }
+    public int DraftApplicationCount { get; set; }
+    public int SubmittedOrLaterApplicationCount { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class OfferingEditFormViewModel
+{
+    public int ProgramOfferingId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Validation.ValidProgram")]
+    public int ProgramId { get; set; }
+
+    [Range(2000, 2200, ErrorMessage = "Validation.AcademicYearRange")]
+    public int AcademicYearStart { get; set; }
+
+    [EnumDataType(typeof(AcademicTerm), ErrorMessage = "Validation.ValidTerm")]
+    public AcademicTerm Term { get; set; }
+
+    [Required(ErrorMessage = "Validation.StartRequired")]
+    [DataType(DataType.DateTime)]
+    public DateTime ApplicationStartLocal { get; set; }
+
+    [Required(ErrorMessage = "Validation.DeadlineRequired")]
+    [DataType(DataType.DateTime)]
+    public DateTime ApplicationDeadlineLocal { get; set; }
+
+    [Range(1, 100000, ErrorMessage = "Validation.QuotaRange")]
+    public int Quota { get; set; }
+    public bool IsOpen { get; set; }
+    public bool IsArchived { get; set; }
+    public bool UsesEvaluationWorkflow { get; set; } = true;
+
+    [StringLength(64, ErrorMessage = "Validation.OfferingConcurrency")]
+    public string? RowVersion { get; set; }
+}
+
+public sealed class OfferingEditPageViewModel
+{
+    public OfferingShellViewModel? Shell { get; set; }
+    public OfferingEditFormViewModel Form { get; set; } = new();
+    public IReadOnlyList<ProgramCatalogItemViewModel> Programs { get; set; } = [];
+    public bool HasActiveRequiredDocumentRequirement { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class OfferingExamRequirementsFormViewModel
+{
+    public int ProgramOfferingId { get; set; }
+
+    [Required(ErrorMessage = "Validation.OfferingConcurrency")]
+    [StringLength(64, ErrorMessage = "Validation.OfferingConcurrency")]
+    public string RowVersion { get; set; } = string.Empty;
+    public List<ProgramOfferingRequirementInputViewModel> Requirements { get; set; } = [];
+}
+
+public sealed class OfferingExamRequirementsPageViewModel
+{
+    public OfferingShellViewModel Shell { get; set; } = new();
+    public OfferingExamRequirementsFormViewModel Form { get; set; } = new();
+    public IReadOnlyList<ExamCatalogItemViewModel> Exams { get; set; } = [];
+    public bool CanEdit { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class OfferingDocumentRequirementsPageViewModel
+{
+    public OfferingShellViewModel Shell { get; set; } = new();
+    public IReadOnlyList<OfferingDocumentRequirementViewModel> Requirements { get; set; } = [];
     public OfferingDocumentRequirementFormViewModel DocumentRequirementForm { get; set; } = new();
+    public bool CanEdit { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public sealed class OfferingApplicationsPageViewModel
+{
+    public OfferingShellViewModel Shell { get; set; } = new();
+    public PagedResultViewModel<AdminApplicationListItemViewModel> Result { get; set; } = new();
+    public string? Search { get; set; }
+    public ApplicationStatus? Status { get; set; }
+    public string? ErrorMessage { get; set; }
 }
 
 public sealed class UpdateApplicationStatusViewModel

@@ -1,0 +1,72 @@
+@model OfferingOverviewPageViewModel
+@{
+    ViewData["Title"] = UiText.Get(Context, "Admin.OfferingOverview.Title");
+    var offering = Model.Shell.Header;
+}
+
+<div class="admin-page">
+    <partial name="_OfferingHeader" model="Model.Shell" />
+
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    }
+
+    <section class="admin-summary-grid" aria-label="@UiText.Get(Context, "Admin.OfferingOverview.SummaryAria")">
+        <article class="admin-summary-card">
+            <h2>@UiText.Get(Context, "Admin.OfferingOverview.Schedule")</h2>
+            <dl>
+                <dt>@UiText.Get(Context, "Admin.Offerings.Start")</dt>
+                <dd>@(Model.ApplicationStartUtc.HasValue ? IstanbulTime.FromUtc(Model.ApplicationStartUtc.Value).ToString("g") : UiText.Get(Context, "Admin.Offerings.Unspecified"))</dd>
+                <dt>@UiText.Get(Context, "Admin.Offerings.Deadline")</dt>
+                <dd>@(Model.ApplicationDeadlineUtc.HasValue ? IstanbulTime.FromUtc(Model.ApplicationDeadlineUtc.Value).ToString("g") : UiText.Get(Context, "Admin.Offerings.Unspecified"))</dd>
+                <dt>@UiText.Get(Context, "Admin.Offerings.Quota")</dt><dd>@Model.Quota</dd>
+            </dl>
+        </article>
+        <article class="admin-summary-card">
+            <h2>@UiText.Get(Context, "Admin.OfferingOverview.Requirements")</h2>
+            <dl>
+                <dt>@UiText.Get(Context, "Admin.OfferingOverview.TotalDocuments")</dt><dd>@Model.DocumentRequirementCount</dd>
+                <dt>@UiText.Get(Context, "Admin.OfferingOverview.RequiredDocuments")</dt><dd>@Model.ActiveRequiredDocumentRequirementCount</dd>
+            </dl>
+        </article>
+        <article class="admin-summary-card">
+            <h2>@UiText.Get(Context, "Admin.OfferingOverview.Applications")</h2>
+            <dl>
+                <dt>@UiText.Get(Context, "Admin.OfferingOverview.Drafts")</dt><dd>@Model.DraftApplicationCount</dd>
+                <dt>@UiText.Get(Context, "Admin.OfferingOverview.Submitted")</dt><dd>@Model.SubmittedOrLaterApplicationCount</dd>
+            </dl>
+        </article>
+    </section>
+
+    <section class="admin-section" aria-labelledby="quick-actions-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="quick-actions-heading">@UiText.Get(Context, "Admin.OfferingOverview.QuickActions")</h2>
+                <p>@UiText.Get(Context, "Admin.OfferingOverview.QuickActionsLead")</p>
+            </div>
+        </div>
+        <div class="admin-form-actions">
+            <a asp-action="EditOffering" asp-route-id="@offering.ProgramOfferingId" class="btn btn-primary">@UiText.Get(Context, "Admin.OfferingNav.Edit")</a>
+            <a asp-action="ExamRequirements" asp-route-id="@offering.ProgramOfferingId" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.OfferingNav.Exams")</a>
+            @if (offering.UsesDocumentWorkflow)
+            {
+                <a asp-action="DocumentRequirements" asp-route-id="@offering.ProgramOfferingId" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.OfferingNav.Documents")</a>
+            }
+            <a asp-action="OfferingApplications" asp-route-id="@offering.ProgramOfferingId" class="btn btn-outline-primary">@UiText.Get(Context, "Admin.OfferingNav.Applications")</a>
+        </div>
+    </section>
+
+    @if (offering.UsesDocumentWorkflow && offering.IsOpen && Model.ActiveRequiredDocumentRequirementCount == 0)
+    {
+        <section class="danger-zone" aria-labelledby="remediation-heading">
+            <h2 id="remediation-heading" class="h5">@UiText.Get(Context, "Admin.Offerings.Health.CloseReview")</h2>
+            <p>@UiText.Get(Context, "Admin.Offerings.Health.SnapshotWarning")</p>
+            <form asp-action="CloseInvalidOfferingForRemediation" method="post" data-disable-on-submit="true">
+                <input type="hidden" name="programOfferingId" value="@offering.ProgramOfferingId" />
+                <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                <button type="submit" class="btn btn-danger">@UiText.Get(Context, "Admin.Offerings.Health.Close")</button>
+            </form>
+        </section>
+    }
+</div>
