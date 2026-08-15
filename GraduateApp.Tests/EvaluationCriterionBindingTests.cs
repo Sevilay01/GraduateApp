@@ -102,7 +102,7 @@ public sealed class EvaluationCriterionBindingTests
             var criterionForm = FormContaining(
                 html,
                 $"name=\"PublicId\" value=\"{CriterionPublicId:D}\"");
-            var examSelect = OpeningTagContaining(criterionForm, "<select name=\"ExamId\"");
+            var examSelect = OpeningTagContaining(criterionForm, "name=\"ExamId\"");
 
             Assert.DoesNotContain("<input name=\"ExamId\"", criterionForm, StringComparison.Ordinal);
             Assert.Contains("required=\"required\"", examSelect, StringComparison.Ordinal);
@@ -125,16 +125,22 @@ public sealed class EvaluationCriterionBindingTests
             foreach (var form in new[] { gpaForm, newManualForm })
             {
                 var examField = OpeningTagContaining(form, "data-exam-field");
-                var examSelect = OpeningTagContaining(form, "<select name=\"ExamId\"");
+                var examSelect = OpeningTagContaining(form, "name=\"ExamId\"");
                 Assert.Contains("hidden=\"hidden\"", examField, StringComparison.Ordinal);
                 Assert.Contains("disabled=\"disabled\"", examSelect, StringComparison.Ordinal);
                 Assert.DoesNotContain("required", examSelect, StringComparison.Ordinal);
                 Assert.DoesNotContain("<input name=\"ExamId\"", form, StringComparison.Ordinal);
             }
 
-            Assert.Contains("examId.disabled = !usesExam;", html, StringComparison.Ordinal);
-            Assert.Contains("examId.value = '';", html, StringComparison.Ordinal);
-            Assert.Contains("sourceType.addEventListener('change'", html, StringComparison.Ordinal);
+            var viewSource = File.ReadAllText(Path.Combine(
+                RepositoryRoot(),
+                "GraduateApp.Web",
+                "Views",
+                "Admin",
+                "EvaluationCriteria.cshtml"));
+            Assert.Contains("examId.disabled = !usesExam;", viewSource, StringComparison.Ordinal);
+            Assert.Contains("examId.value = '';", viewSource, StringComparison.Ordinal);
+            Assert.Contains("addEventListener('change'", viewSource, StringComparison.Ordinal);
         });
 
     [Fact]
@@ -217,11 +223,11 @@ public sealed class EvaluationCriterionBindingTests
 
             if (state == OfferingEvaluationState.Finalized)
             {
-                Assert.Contains("PublishEvaluation", html, StringComparison.Ordinal);
+                Assert.Contains("Results", html, StringComparison.Ordinal);
             }
             else
             {
-                Assert.DoesNotContain("PublishEvaluation", html, StringComparison.Ordinal);
+                Assert.DoesNotContain("data-publish-confirmation", html, StringComparison.Ordinal);
             }
         });
 
@@ -238,15 +244,14 @@ public sealed class EvaluationCriterionBindingTests
             using var httpClient = Client(handler);
             var controller = CreateController(httpClient, actionContext);
 
-            var result = Assert.IsType<RedirectToActionResult>(
+            var result = Assert.IsType<ViewResult>(
                 await controller.SaveEvaluationCriterion(model, CancellationToken.None));
 
             Assert.Equal(OfferingId, model.ProgramOfferingId);
             Assert.False(controller.ModelState.IsValid);
-            Assert.Equal(nameof(AdminController.Evaluation), result.ActionName);
-            Assert.Equal(OfferingId, result.RouteValues!["id"]);
-            Assert.Equal("Değerlendirme kriteri bilgileri geçersiz.", controller.TempData["ErrorMessage"]);
-            Assert.Equal(0, handler.RequestCount);
+            Assert.Equal(nameof(AdminController.EvaluationCriteria), result.ViewName);
+            Assert.Equal(2, handler.RequestCount);
+            Assert.Equal(HttpMethod.Get, handler.Method);
         });
 
     [Theory]
@@ -282,7 +287,8 @@ public sealed class EvaluationCriterionBindingTests
             await controller.SaveEvaluationCriterion(model, CancellationToken.None);
 
             Assert.False(controller.ModelState.IsValid);
-            Assert.Equal(0, handler.RequestCount);
+            Assert.Equal(2, handler.RequestCount);
+            Assert.Equal(HttpMethod.Get, handler.Method);
             var state =
                 controller.ModelState[nameof(EvaluationCriterionFormViewModel.MaximumRawScore)];
             Assert.NotNull(state);
@@ -314,7 +320,7 @@ public sealed class EvaluationCriterionBindingTests
             Assert.Null(model.ExamId);
             Assert.Equal(JsonValueKind.Null, body.RootElement.GetProperty("examId").ValueKind);
             Assert.Equal(4m, body.RootElement.GetProperty("maximumRawScore").GetDecimal());
-            Assert.Equal(nameof(AdminController.Evaluation), result.ActionName);
+            Assert.Equal(nameof(AdminController.EvaluationCriteria), result.ActionName);
             Assert.Equal(OfferingId, result.RouteValues!["id"]);
         });
 
@@ -440,7 +446,7 @@ public sealed class EvaluationCriterionBindingTests
             Assert.Equal(100m, body.RootElement.GetProperty("maximumRawScore").GetDecimal());
             Assert.Equal(5000, body.RootElement.GetProperty("weightBasisPoints").GetInt32());
             Assert.Equal("Değerlendirme kriteri kaydedildi.", controller.TempData["SuccessMessage"]);
-            Assert.Equal(nameof(AdminController.Evaluation), result.ActionName);
+            Assert.Equal(nameof(AdminController.EvaluationCriteria), result.ActionName);
             Assert.Equal(OfferingId, result.RouteValues!["id"]);
         });
 
@@ -500,6 +506,40 @@ public sealed class EvaluationCriterionBindingTests
         IServiceProvider services,
         EvaluationPageViewModel? model = null)
     {
+        var evaluationPage = model ?? DefaultPageModel();
+        var criteriaPage = new EvaluationCriteriaPageViewModel
+        {
+            Shell = evaluationPage.Shell,
+            Criteria = evaluationPage.Evaluation.Criteria,
+            EligibleExamRequirements = evaluationPage.Evaluation.EligibleExamRequirements,
+            CriterionForm = new EvaluationCriterionFormViewModel
+            {
+                ProgramOfferingId = evaluationPage.Evaluation.ProgramOfferingId,
+                SourceType = EvaluationCriterionSourceType.ManualScore,
+                MaximumRawScore = 100m,
+                TieBreakPriority = evaluationPage.Evaluation.Criteria.Count + 1
+            },
+            CanEdit = evaluationPage.Evaluation.Capabilities.CanEditPolicy
+        };
+        var criteriaHtml = await RenderViewAsync(
+            services,
+            nameof(AdminController.EvaluationCriteria),
+            "EvaluationCriteria",
+            criteriaPage);
+        var evaluationHtml = await RenderViewAsync(
+            services,
+            nameof(AdminController.Evaluation),
+            "Evaluation",
+            evaluationPage);
+        return criteriaHtml + evaluationHtml;
+    }
+
+    private static async Task<string> RenderViewAsync<TModel>(
+        IServiceProvider services,
+        string actionName,
+        string viewName,
+        TModel model)
+    {
         using var scope = services.CreateScope();
         var scopedServices = scope.ServiceProvider;
         var httpContext = new DefaultHttpContext { RequestServices = scopedServices };
@@ -507,7 +547,7 @@ public sealed class EvaluationCriterionBindingTests
         httpContext.Request.Host = new HostString("localhost");
         var routeData = new RouteData();
         routeData.Values["controller"] = "Admin";
-        routeData.Values["action"] = nameof(AdminController.Evaluation);
+        routeData.Values["action"] = actionName;
         routeData.Routers.Add(new TestRouter());
         var actionContext = new ActionContext(
             httpContext,
@@ -515,16 +555,15 @@ public sealed class EvaluationCriterionBindingTests
             new ActionDescriptor(),
             new ModelStateDictionary());
         var viewEngine = scopedServices.GetRequiredService<ICompositeViewEngine>();
-        var viewResult = viewEngine.FindView(actionContext, "Evaluation", isMainPage: false);
+        var viewResult = viewEngine.FindView(actionContext, viewName, isMainPage: false);
         Assert.True(
             viewResult.Success,
-            $"Evaluation view bulunamadı: {string.Join(", ", viewResult.SearchedLocations ?? [])}");
-
-        var viewData = new ViewDataDictionary<EvaluationPageViewModel>(
+            $"{viewName} view bulunamadı: {string.Join(", ", viewResult.SearchedLocations ?? [])}");
+        var viewData = new ViewDataDictionary<TModel>(
             scopedServices.GetRequiredService<IModelMetadataProvider>(),
             actionContext.ModelState)
         {
-            Model = model ?? DefaultPageModel()
+            Model = model
         };
         var tempData = new TempDataDictionary(
             httpContext,
@@ -537,7 +576,6 @@ public sealed class EvaluationCriterionBindingTests
             tempData,
             writer,
             new HtmlHelperOptions());
-
         await viewResult.View.RenderAsync(viewContext);
         return writer.ToString();
     }
@@ -545,6 +583,19 @@ public sealed class EvaluationCriterionBindingTests
     private static EvaluationPageViewModel DefaultPageModel() =>
         new()
         {
+            Shell = new OfferingShellViewModel
+            {
+                ActiveSection = OfferingSection.Evaluation,
+                Header = new OfferingHeaderViewModel
+                {
+                    ProgramOfferingId = OfferingId,
+                    ProgramName = "Test Programı",
+                    DegreeType = "Doktora",
+                    AcademicYear = "2026-2027",
+                    TermName = "Güz",
+                    UsesEvaluationWorkflow = true
+                }
+            },
             Evaluation = new AdminEvaluationViewModel
             {
                 ProgramOfferingId = OfferingId,
@@ -569,13 +620,6 @@ public sealed class EvaluationCriterionBindingTests
                         IsRequired = true
                     }
                 ]
-            },
-            CriterionForm = new EvaluationCriterionFormViewModel
-            {
-                ProgramOfferingId = OfferingId,
-                SourceType = EvaluationCriterionSourceType.ManualScore,
-                MaximumRawScore = 100m,
-                TieBreakPriority = 1
             }
         };
 

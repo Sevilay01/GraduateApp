@@ -95,6 +95,7 @@ public sealed record ProgramOfferingAdminDto(
     int ProgramOfferingId,
     int ProgramId,
     string ProgramName,
+    string? ProgramNameEnglish,
     string InstituteName,
     string DegreeType,
     int AcademicYearStart,

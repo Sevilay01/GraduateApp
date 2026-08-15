@@ -3,52 +3,28 @@
     ViewData["Title"] = UiText.Get(Context, "Admin.Evaluation.PageTitle");
     var evaluation = Model.Evaluation;
     var capabilities = evaluation.Capabilities;
-    var eligibleExamRequirements = evaluation.EligibleExamRequirements;
     var totalWeight = evaluation.Criteria.Sum(item => item.WeightBasisPoints);
     var firstQuotaOutsideRank = Model.Preview.Rows
         .Where(item => item.ProjectedOutcome == EvaluationOutcome.NotAdmitted)
         .Select(item => (int?)item.Rank)
         .Min();
-    var lifecycleClass = evaluation.EvaluationState switch
-    {
-        OfferingEvaluationState.Configuring => "admin-state--warning",
-        OfferingEvaluationState.Finalized => "admin-state--info",
-        OfferingEvaluationState.Published => "admin-state--success",
-        _ => string.Empty
-    };
 }
 
 <div class="admin-page">
-    <header class="page-heading">
-        <div>
-            <span class="eyebrow">@UiText.Get(Context, "Admin.Evaluation.Area")</span>
-            <h1 class="page-heading__title">@UiText.Get(Context, "Admin.Evaluation.PageTitle")</h1>
-            <p class="page-heading__description">@evaluation.ProgramName · @evaluation.AcademicYear · @UiText.LocalizeAcademicTerm(Context, evaluation.TermName)</p>
-        </div>
-        <div class="page-heading__actions">
-            <span class="admin-state @lifecycleClass">@UiText.LocalizeEvaluationState(Context, evaluation.EvaluationState)</span>
-            <a asp-action="Offerings" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.Evaluation.BackToOfferings")</a>
-        </div>
-    </header>
+    <partial name="_OfferingHeader" model="Model.Shell" />
+    <h2 class="visually-hidden">@UiText.Get(Context, "Admin.Evaluation.PageTitle")</h2>
 
     @if (Model.ErrorMessage is not null)
     {
         <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
     }
-
     @if (evaluation.EvaluationState == OfferingEvaluationState.Finalized)
     {
-        <div class="alert alert-info" role="status">
-            <strong>@UiText.Get(Context, "Admin.Evaluation.FinalizedTitle")</strong>
-            @UiText.Get(Context, "Admin.Evaluation.FinalizedBody")
-        </div>
+        <div class="alert alert-info" role="status"><strong>@UiText.Get(Context, "Admin.Evaluation.FinalizedTitle")</strong> @UiText.Get(Context, "Admin.Evaluation.FinalizedBody")</div>
     }
     else if (evaluation.EvaluationState == OfferingEvaluationState.Published)
     {
-        <div class="alert alert-success" role="status">
-            <strong>@UiText.Get(Context, "Admin.Evaluation.PublishedTitle")</strong>
-            @UiText.Get(Context, "Admin.Evaluation.PublishedBody")
-        </div>
+        <div class="alert alert-success" role="status"><strong>@UiText.Get(Context, "Admin.Evaluation.PublishedTitle")</strong> @UiText.Get(Context, "Admin.Evaluation.PublishedBody")</div>
     }
 
     <section class="admin-summary-grid" aria-label="@UiText.Get(Context, "Admin.Evaluation.LifecycleAria")">
@@ -57,269 +33,55 @@
             <dl>
                 <dt>@UiText.Get(Context, "Admin.Evaluation.Status")</dt><dd>@UiText.LocalizeEvaluationState(Context, evaluation.EvaluationState)</dd>
                 <dt>@UiText.Get(Context, "Admin.Evaluation.Quota")</dt><dd>@evaluation.Quota</dd>
-                <dt>@UiText.Get(Context, "Admin.Evaluation.Deadline")</dt>
-                <dd>@(evaluation.ApplicationDeadlineUtc.HasValue ? IstanbulTime.FromUtc(evaluation.ApplicationDeadlineUtc.Value).ToString("g") : UiText.Get(Context, "Admin.Evaluation.Unspecified"))</dd>
+                <dt>@UiText.Get(Context, "Admin.Evaluation.Deadline")</dt><dd>@(evaluation.ApplicationDeadlineUtc.HasValue ? IstanbulTime.FromUtc(evaluation.ApplicationDeadlineUtc.Value).ToString("g") : UiText.Get(Context, "Admin.Evaluation.Unspecified"))</dd>
             </dl>
         </article>
         <article class="admin-summary-card">
             <h2>@UiText.Get(Context, "Admin.Evaluation.Permissions")</h2>
             <dl>
-                <dt>@UiText.Get(Context, "Admin.Evaluation.Policy")</dt><dd>@UiText.Get(Context, capabilities.CanEditPolicy ? "Admin.Evaluation.Editable" : "Admin.Evaluation.ReadOnly")</dd>
                 <dt>@UiText.Get(Context, "Admin.Evaluation.Eligibility")</dt><dd>@UiText.Get(Context, capabilities.CanDecideEligibility ? "Admin.Evaluation.DecisionAllowed" : "Admin.Evaluation.ReadOnly")</dd>
                 <dt>@UiText.Get(Context, "Admin.Evaluation.ManualScore")</dt><dd>@UiText.Get(Context, capabilities.CanEditManualScore ? "Admin.Evaluation.ScoreAllowed" : "Admin.Evaluation.ReadOnly")</dd>
                 <dt>@UiText.Get(Context, "Admin.Evaluation.Finalization")</dt><dd>@UiText.Get(Context, capabilities.CanFinalize ? "Admin.Evaluation.PrerequisiteDependent" : "Admin.Evaluation.Closed")</dd>
-                <dt>@UiText.Get(Context, "Admin.Evaluation.Publication")</dt><dd>@UiText.Get(Context, capabilities.CanPublish ? "Admin.Evaluation.Open" : "Admin.Evaluation.Closed")</dd>
             </dl>
         </article>
-        <article class="admin-summary-card">
-            <h2>@UiText.Get(Context, "Admin.Evaluation.PermissionMatrix")</h2>
-            <p class="small mb-1"><strong>@UiText.LocalizeEvaluationState(Context, OfferingEvaluationState.Configuring):</strong> @UiText.Get(Context, "Admin.Evaluation.ConfiguringMatrix")</p>
-            <p class="small mb-1"><strong>@UiText.LocalizeEvaluationState(Context, OfferingEvaluationState.Finalized):</strong> @UiText.Get(Context, "Admin.Evaluation.FinalizedMatrix")</p>
-            <p class="small mb-0"><strong>@UiText.LocalizeEvaluationState(Context, OfferingEvaluationState.Published):</strong> @UiText.Get(Context, "Admin.Evaluation.PublishedMatrix")</p>
-        </article>
-    </section>
-
-    <section class="admin-section" aria-labelledby="policy-heading">
-        <div class="admin-section-heading">
-            <div>
-                <span class="eyebrow">@UiText.Get(Context, "Admin.Evaluation.Step1")</span>
-                <h2 id="policy-heading">@UiText.Get(Context, "Admin.Evaluation.PolicyHeading")</h2>
-                <p>@UiText.Get(Context, "Admin.Evaluation.PolicyDescription")</p>
-            </div>
-            <div class="weight-summary @(totalWeight == 10000 ? null : "is-incomplete")">
-                <span><strong>@totalWeight.ToString("N0") / 10.000 bp</strong></span>
-                <progress value="@Math.Min(totalWeight, 10000)" max="10000">@totalWeight / 10.000 bp</progress>
-                <small>@UiText.Get(Context, totalWeight == 10000 ? "Admin.Evaluation.WeightValid" : "Admin.Evaluation.WeightInvalid")</small>
-            </div>
-        </div>
-
-        @if (evaluation.Criteria.Count == 0)
-        {
-            <div class="empty-state mb-3">
-                <h3>@UiText.Get(Context, "Admin.Evaluation.NoCriteria")</h3>
-                <p>@UiText.Get(Context, "Admin.Evaluation.NoCriteriaBody")</p>
-            </div>
-        }
-
-        <div class="admin-card-list">
-            @foreach (var criterion in evaluation.Criteria)
-            {
-                var usesExam = criterion.SourceType == EvaluationCriterionSourceType.ExamScore;
-                @if (capabilities.CanEditPolicy)
-                {
-                    <article class="admin-item-card">
-                        <form asp-action="SaveEvaluationCriterion" method="post" data-evaluation-criterion-form data-disable-on-submit="true">
-                            <input type="hidden" name="ProgramOfferingId" value="@evaluation.ProgramOfferingId" />
-                            <input type="hidden" name="PublicId" value="@criterion.PublicId" />
-                            <input type="hidden" name="RowVersion" value="@criterion.RowVersion" />
-                            <div class="row g-3">
-                                <div class="col-12 col-md-3">
-                                    <label for="code-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.Code")</label>
-                                    <input id="code-@criterion.PublicId" name="Code" value="@criterion.Code" class="form-control" required />
-                                </div>
-                                <div class="col-12 col-md-5">
-                                    <label for="name-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.DisplayName")</label>
-                                    <input id="name-@criterion.PublicId" name="DisplayName" value="@criterion.DisplayName" class="form-control" required />
-                                </div>
-                                <div class="col-12 col-md-4">
-                                    <label for="source-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.SourceType")</label>
-                                    <select id="source-@criterion.PublicId" name="SourceType" class="form-select" data-source-type>
-                                        @foreach (var source in Enum.GetValues<EvaluationCriterionSourceType>())
-                                        {
-                                            <option value="@source" selected="@(criterion.SourceType == source)">@UiText.LocalizeCriterionSource(Context, source)</option>
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-12 col-md-4" data-exam-field hidden="@(!usesExam)">
-                                    <label for="exam-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.RequiredExam")</label>
-                                    <select name="ExamId" id="exam-@criterion.PublicId" class="form-select" data-exam-id required="@usesExam" disabled="@(!usesExam)">
-                                        <option value="">@UiText.Get(Context, "Admin.Evaluation.SelectExam")</option>
-                                        @foreach (var requirement in eligibleExamRequirements)
-                                        {
-                                            <option value="@requirement.ExamId" selected="@(criterion.ExamId == requirement.ExamId)">
-                                                @requirement.ExamName · @UiText.Format(Context, "Admin.Evaluation.MinimumFormat", requirement.MinimumScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture))
-                                            </option>
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-4 col-md-2">
-                                    <label for="weight-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.WeightBp")</label>
-                                    <input id="weight-@criterion.PublicId" name="WeightBasisPoints" value="@criterion.WeightBasisPoints" class="form-control" type="number" min="1" max="10000" />
-                                </div>
-                                <div class="col-12 col-sm-4 col-md-3">
-                                    <label for="maximum-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.MaximumRawScore")</label>
-                                    <input id="maximum-@criterion.PublicId"
-                                           name="MaximumRawScore"
-                                           value="@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)"
-                                           class="form-control"
-                                           type="text"
-                                           inputmode="decimal"
-                                           data-val="true"
-                                           data-val-localizeddecimal="@UiText.Get(Context, "Admin.Evaluation.MaximumRawScoreValidation")"
-                                           data-val-localizeddecimal-min="0.0001"
-                                           data-val-localizeddecimal-max="99999"
-                                           data-val-localizeddecimal-scale="4" />
-                                </div>
-                                <div class="col-12 col-sm-4 col-md-3">
-                                    <label for="priority-@criterion.PublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.TieBreakPriority")</label>
-                                    <input id="priority-@criterion.PublicId" name="TieBreakPriority" value="@criterion.TieBreakPriority" class="form-control" type="number" min="1" />
-                                </div>
-                                <div class="col-12 admin-form-actions">
-                                    <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Evaluation.SaveCriterion")</button>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="danger-zone">
-                            <h3 class="h6">@UiText.Get(Context, "Admin.Evaluation.CriterionDangerZone")</h3>
-                            <form asp-action="DeleteEvaluationCriterion" method="post" data-disable-on-submit="true">
-                                <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
-                                <input type="hidden" name="publicId" value="@criterion.PublicId" />
-                                <input type="hidden" name="rowVersion" value="@criterion.RowVersion" />
-                                <button class="btn btn-sm btn-danger" type="submit">@UiText.Get(Context, "Admin.Evaluation.DeleteCriterion")</button>
-                            </form>
-                        </div>
-                    </article>
-                }
-                else
-                {
-                    <dl class="admin-summary-card" data-readonly-evaluation-criterion>
-                        <dt>@UiText.Get(Context, "Admin.Evaluation.Code")</dt><dd><output>@criterion.Code</output></dd>
-                        <dt>@UiText.Get(Context, "Admin.Evaluation.Name")</dt><dd><output>@criterion.DisplayName</output></dd>
-                        <dt>@UiText.Get(Context, "Admin.Evaluation.Source")</dt><dd><output>@UiText.LocalizeCriterionSource(Context, criterion.SourceType)</output></dd>
-                        <dt>@UiText.Get(Context, "Admin.Evaluation.Exam")</dt><dd><output>@(criterion.ExamName ?? "-")</output></dd>
-                        <dt>@UiText.Get(Context, "Admin.Evaluation.Weight")</dt><dd><output>@criterion.WeightBasisPoints bp</output></dd>
-                        <dt>@UiText.Get(Context, "Admin.Evaluation.Maximum")</dt><dd><output>@criterion.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture)</output></dd>
-                        <dt>@UiText.Get(Context, "Admin.Evaluation.Priority")</dt><dd><output>@criterion.TieBreakPriority</output></dd>
-                    </dl>
-                }
-            }
-        </div>
-
-        @if (capabilities.CanEditPolicy)
-        {
-            var newCriterionUsesExam = Model.CriterionForm.SourceType == EvaluationCriterionSourceType.ExamScore;
-            <form asp-action="SaveEvaluationCriterion" method="post" class="admin-summary-card mt-3" data-evaluation-criterion-form data-disable-on-submit="true">
-                <h3 class="h6">@UiText.Get(Context, "Admin.Evaluation.NewCriterion")</h3>
-                <input asp-for="CriterionForm.ProgramOfferingId" name="ProgramOfferingId" type="hidden" />
-                <div class="row g-3">
-                    <div class="col-12 col-md-3">
-                        <label asp-for="CriterionForm.Code" class="form-label">@UiText.Get(Context, "Admin.Evaluation.Code")</label>
-                        <input asp-for="CriterionForm.Code" name="Code" class="form-control" />
-                        <span asp-validation-for="CriterionForm.Code" class="text-danger"></span>
-                    </div>
-                    <div class="col-12 col-md-5">
-                        <label asp-for="CriterionForm.DisplayName" class="form-label">@UiText.Get(Context, "Admin.Evaluation.DisplayName")</label>
-                        <input asp-for="CriterionForm.DisplayName" name="DisplayName" class="form-control" />
-                        <span asp-validation-for="CriterionForm.DisplayName" class="text-danger"></span>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label for="new-source" class="form-label">@UiText.Get(Context, "Admin.Evaluation.SourceType")</label>
-                        <select id="new-source" name="SourceType" class="form-select" data-source-type>
-                            @foreach (var source in Enum.GetValues<EvaluationCriterionSourceType>())
-                            {
-                                <option value="@source" selected="@(Model.CriterionForm.SourceType == source)">@UiText.LocalizeCriterionSource(Context, source)</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-4" data-exam-field hidden="@(!newCriterionUsesExam)">
-                        <label for="new-exam" class="form-label">@UiText.Get(Context, "Admin.Evaluation.RequiredExam")</label>
-                        <select name="ExamId" id="new-exam" class="form-select" data-exam-id required="@newCriterionUsesExam" disabled="@(!newCriterionUsesExam)">
-                            <option value="">@UiText.Get(Context, "Admin.Evaluation.SelectExam")</option>
-                            @foreach (var requirement in eligibleExamRequirements)
-                            {
-                                <option value="@requirement.ExamId" selected="@(Model.CriterionForm.ExamId == requirement.ExamId)">
-                                    @requirement.ExamName · @UiText.Format(Context, "Admin.Evaluation.MinimumFormat", requirement.MinimumScore.ToString("G29", System.Globalization.CultureInfo.CurrentCulture))
-                                </option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-12 col-sm-4 col-md-2">
-                        <label asp-for="CriterionForm.WeightBasisPoints" class="form-label">@UiText.Get(Context, "Admin.Evaluation.WeightBp")</label>
-                        <input asp-for="CriterionForm.WeightBasisPoints" name="WeightBasisPoints" class="form-control" />
-                    </div>
-                    <div class="col-12 col-sm-4 col-md-3">
-                        <label asp-for="CriterionForm.MaximumRawScore" class="form-label">@UiText.Get(Context, "Admin.Evaluation.MaximumRawScore")</label>
-                        <input asp-for="CriterionForm.MaximumRawScore"
-                               name="MaximumRawScore"
-                               class="form-control"
-                               type="text"
-                               inputmode="decimal" />
-                    </div>
-                    <div class="col-12 col-sm-4 col-md-3">
-                        <label asp-for="CriterionForm.TieBreakPriority" class="form-label">@UiText.Get(Context, "Admin.Evaluation.TieBreakPriority")</label>
-                        <input asp-for="CriterionForm.TieBreakPriority" name="TieBreakPriority" class="form-control" />
-                    </div>
-                    <div class="col-12">
-                        <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Evaluation.AddCriterion")</button>
-                    </div>
-                </div>
-            </form>
-        }
     </section>
 
     <section class="admin-section" aria-labelledby="candidates-heading">
         <div class="admin-section-heading">
             <div>
-                <span class="eyebrow">@UiText.Get(Context, "Admin.Evaluation.Step2")</span>
                 <h2 id="candidates-heading">@UiText.Get(Context, "Admin.Evaluation.Candidates")</h2>
                 <p>@UiText.Get(Context, "Admin.Evaluation.CandidatesDescription")</p>
             </div>
         </div>
-
         @if (evaluation.Applications.Count == 0)
         {
-            <div class="empty-state">
-                <h3>@UiText.Get(Context, "Admin.Evaluation.NoCandidates")</h3>
-                <p>@UiText.Get(Context, "Admin.Evaluation.NoCandidatesBody")</p>
-            </div>
+            <div class="empty-state"><h3>@UiText.Get(Context, "Admin.Evaluation.NoCandidates")</h3><p>@UiText.Get(Context, "Admin.Evaluation.NoCandidatesBody")</p></div>
         }
         @foreach (var application in evaluation.Applications)
         {
             <article class="candidate-card">
                 <header class="candidate-card__header">
-                    <div>
-                        <h3 class="h5 mb-1">@application.StudentFullName</h3>
-                        <span>@application.MaskedTc</span>
-                    </div>
+                    <div><h3 class="h5 mb-1">@application.StudentFullName</h3><span>@application.MaskedTc</span></div>
                     <div class="admin-form-actions">
                         <partial name="_ApplicationStatusBadge" model="application.CurrentStatus" />
                         <a asp-action="Detail" asp-route-id="@application.ApplicationPublicId" class="btn btn-sm btn-outline-primary">@UiText.Get(Context, "Admin.Evaluation.OpenApplication")</a>
                     </div>
                 </header>
-
                 <div class="candidate-card__summary">
                     <span class="admin-state">@UiText.LocalizeDocumentReviewSummary(Context, application.DocumentReviewSummary)</span>
-                    <span class="admin-state @(application.EligibilityStatus == EvaluationEligibilityStatus.Eligible ? "admin-state--success" : application.EligibilityStatus == EvaluationEligibilityStatus.Ineligible ? "admin-state--danger" : "admin-state--warning")">
-                        @UiText.Format(Context, "Admin.Evaluation.EligibilityFormat", UiText.LocalizeEligibility(Context, application.EligibilityStatus))
-                    </span>
+                    <span class="admin-state @(application.EligibilityStatus == EvaluationEligibilityStatus.Eligible ? "admin-state--success" : application.EligibilityStatus == EvaluationEligibilityStatus.Ineligible ? "admin-state--danger" : "admin-state--warning")">@UiText.Format(Context, "Admin.Evaluation.EligibilityFormat", UiText.LocalizeEligibility(Context, application.EligibilityStatus))</span>
                     <span class="admin-state">@UiText.Format(Context, "Admin.Evaluation.TotalFormat", application.TotalScore?.ToString("0.0000") ?? "-")</span>
                 </div>
-
-                @if (application.EligibilityStatus == EvaluationEligibilityStatus.Pending
-                    || application.Components.Any(item => item.RawScore is null))
-                {
-                    <div class="admin-readonly-note">
-                        <strong>@UiText.Get(Context, "Admin.Evaluation.MissingPrerequisites")</strong>
-                        @(application.EligibilityStatus == EvaluationEligibilityStatus.Pending ? UiText.Get(Context, "Admin.Evaluation.EligibilityPending") + " " : null)
-                        @(application.Components.Any(item => item.RawScore is null) ? UiText.Get(Context, "Admin.Evaluation.ScoreMissing") : null)
-                    </div>
-                }
-
-                <div class="table-shell mt-3"
-                     data-readonly-evaluation-components="@(!capabilities.CanEditManualScore ? "true" : null)">
+                <div class="table-shell mt-3" data-readonly-evaluation-components="@(!capabilities.CanEditManualScore ? "true" : null)">
                     <div class="table-responsive">
                         <table class="table table-sm responsive-table">
                             <caption class="visually-hidden">@UiText.Format(Context, "Admin.Evaluation.ComponentsCaption", application.StudentFullName)</caption>
-                            <thead>
-                                <tr>
-                                    <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Component")</th>
-                                    <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Source")</th>
-                                    <th scope="col">@UiText.Get(Context, "Admin.Evaluation.RawScore")</th>
-                                    <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Normalized")</th>
-                                    <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Weight")</th>
-                                    <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Contribution")</th>
-                                </tr>
-                            </thead>
+                            <thead><tr>
+                                <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Component")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Source")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Evaluation.RawScore")</th>
+                                <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Contribution")</th>
+                            </tr></thead>
                             <tbody>
                                 @foreach (var component in application.Components)
                                 {
@@ -327,8 +89,6 @@
                                         <td data-label="@UiText.Get(Context, "Admin.Evaluation.Component")">@component.DisplayName</td>
                                         <td data-label="@UiText.Get(Context, "Admin.Evaluation.Source")">@UiText.LocalizeCriterionSource(Context, component.SourceType)</td>
                                         <td data-label="@UiText.Get(Context, "Admin.Evaluation.RawScore")"><output>@(component.RawScore?.ToString("G29", System.Globalization.CultureInfo.CurrentCulture) ?? "-")</output></td>
-                                        <td data-label="@UiText.Get(Context, "Admin.Evaluation.Normalized")"><output>@(component.NormalizedScore?.ToString("0.0000") ?? "-")</output></td>
-                                        <td data-label="@UiText.Get(Context, "Admin.Evaluation.Weight")">@component.WeightBasisPoints bp</td>
                                         <td data-label="@UiText.Get(Context, "Admin.Evaluation.Contribution")"><output>@(component.WeightedScore?.ToString("0.0000") ?? "-")</output></td>
                                     </tr>
                                 }
@@ -336,7 +96,6 @@
                         </table>
                     </div>
                 </div>
-
                 @if (application.CurrentStatus == ApplicationStatus.UnderReview && capabilities.CanDecideEligibility)
                 {
                     <form asp-action="DecideEligibility" method="post" class="admin-summary-card mt-3" data-disable-on-submit="true">
@@ -345,33 +104,16 @@
                         <input type="hidden" name="applicationPublicId" value="@application.ApplicationPublicId" />
                         <input type="hidden" name="rowVersion" value="@application.EvaluationRowVersion" />
                         <div class="row g-3">
-                            <div class="col-12 col-md-4">
-                                <label for="eligibility-@application.ApplicationPublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.Decision")</label>
-                                <select id="eligibility-@application.ApplicationPublicId" name="eligibilityStatus" class="form-select">
-                                    <option value="Eligible">@UiText.LocalizeEligibility(Context, EvaluationEligibilityStatus.Eligible)</option>
-                                    <option value="Ineligible">@UiText.LocalizeEligibility(Context, EvaluationEligibilityStatus.Ineligible)</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-8">
-                                <label for="reason-@application.ApplicationPublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.IneligibleReason")</label>
-                                <input id="reason-@application.ApplicationPublicId" name="ineligibilityReason" class="form-control" maxlength="500" />
-                            </div>
+                            <div class="col-12 col-md-4"><label for="eligibility-@application.ApplicationPublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.Decision")</label><select id="eligibility-@application.ApplicationPublicId" name="eligibilityStatus" class="form-select"><option value="Eligible">@UiText.LocalizeEligibility(Context, EvaluationEligibilityStatus.Eligible)</option><option value="Ineligible">@UiText.LocalizeEligibility(Context, EvaluationEligibilityStatus.Ineligible)</option></select></div>
+                            <div class="col-12 col-md-8"><label for="reason-@application.ApplicationPublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.IneligibleReason")</label><input id="reason-@application.ApplicationPublicId" name="ineligibilityReason" class="form-control" maxlength="500" /></div>
                             <div class="col-12"><button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Evaluation.SaveEligibility")</button></div>
                         </div>
                     </form>
                 }
                 else
                 {
-                    <div class="admin-readonly-note" data-readonly-eligibility>
-                        <strong>@UiText.Get(Context, "Admin.Evaluation.EligibilityDecision"):</strong>
-                        <output>@UiText.LocalizeEligibility(Context, application.EligibilityStatus)</output>
-                        @if (!string.IsNullOrWhiteSpace(application.IneligibilityReason))
-                        {
-                            <span> · @application.IneligibilityReason</span>
-                        }
-                    </div>
+                    <div class="admin-readonly-note" data-readonly-eligibility><strong>@UiText.Get(Context, "Admin.Evaluation.EligibilityDecision"):</strong> <output>@UiText.LocalizeEligibility(Context, application.EligibilityStatus)</output></div>
                 }
-
                 @if (application.CurrentStatus == ApplicationStatus.UnderReview && capabilities.CanEditManualScore)
                 {
                     @foreach (var component in application.Components.Where(item => item.SourceType == EvaluationCriterionSourceType.ManualScore))
@@ -382,15 +124,7 @@
                             <input type="hidden" name="applicationPublicId" value="@application.ApplicationPublicId" />
                             <input type="hidden" name="criterionPublicId" value="@component.CriterionPublicId" />
                             <input type="hidden" name="rowVersion" value="@component.RowVersion" />
-                            <div class="row g-3 align-items-end">
-                                <div class="col-12 col-sm-6">
-                                    <label for="score-@application.ApplicationPublicId-@component.CriterionPublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.RawScore")</label>
-                                    <input id="score-@application.ApplicationPublicId-@component.CriterionPublicId" name="rawScore" value="@component.RawScore?.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" type="number" min="0" max="@component.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" step="0.0001" class="form-control" required />
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Evaluation.SaveManualScore")</button>
-                                </div>
-                            </div>
+                            <div class="row g-3 align-items-end"><div class="col-12 col-sm-6"><label for="score-@application.ApplicationPublicId-@component.CriterionPublicId" class="form-label">@UiText.Get(Context, "Admin.Evaluation.RawScore")</label><input id="score-@application.ApplicationPublicId-@component.CriterionPublicId" name="rawScore" value="@component.RawScore?.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" type="number" min="0" max="@component.MaximumRawScore.ToString("G29", System.Globalization.CultureInfo.InvariantCulture)" step="0.0001" class="form-control" required /></div><div class="col-12 col-sm-6"><button class="btn btn-primary" type="submit">@UiText.Get(Context, "Admin.Evaluation.SaveManualScore")</button></div></div>
                         </form>
                     }
                 }
@@ -399,122 +133,27 @@
     </section>
 
     <section class="admin-section" aria-labelledby="ranking-heading">
-        <div class="admin-section-heading">
-            <div>
-                <span class="eyebrow">@UiText.Get(Context, "Admin.Evaluation.Step3")</span>
-                <h2 id="ranking-heading">@UiText.Get(Context, "Admin.Evaluation.RankingHeading")</h2>
-                <p>@UiText.Get(Context, "Admin.Evaluation.RankingDescription")</p>
-            </div>
-        </div>
-
+        <div class="admin-section-heading"><div><h2 id="ranking-heading">@UiText.Get(Context, "Admin.Evaluation.RankingHeading")</h2><p>@UiText.Get(Context, "Admin.Evaluation.RankingDescription")</p></div></div>
         @if (Model.Preview.BlockingReasons.Count > 0)
         {
-            <div class="alert alert-warning" role="alert">
-                <strong>@UiText.Get(Context, "Admin.Evaluation.FinalizeBlocked")</strong>
-                <ul class="mb-0">
-                    @foreach (var reason in Model.Preview.BlockingReasons)
-                    {
-                        <li>@UiText.LocalizeEvaluationBlockingReason(Context, reason)</li>
-                    }
-                </ul>
-            </div>
+            <div class="alert alert-warning" role="alert"><strong>@UiText.Get(Context, "Admin.Evaluation.FinalizeBlocked")</strong><ul class="mb-0">@foreach (var reason in Model.Preview.BlockingReasons) { <li>@UiText.LocalizeEvaluationBlockingReason(Context, reason)</li> }</ul></div>
         }
-
-        <div class="table-shell">
-            <div class="table-responsive">
-                <table class="table table-sm responsive-table">
-                    <caption class="visually-hidden">@UiText.Get(Context, "Admin.Evaluation.RankingCaption")</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">@UiText.Get(Context, "Admin.Evaluation.Rank")</th>
-                            <th scope="col">@UiText.Get(Context, "Admin.Evaluation.MaskedCandidate")</th>
-                            <th scope="col">@UiText.Get(Context, "Admin.Evaluation.TotalScore")</th>
-                            <th scope="col">@UiText.Get(Context, "Admin.Evaluation.ProjectedOutcome")</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in Model.Preview.Rows)
-                        {
-                            <tr class="@(row.Rank == firstQuotaOutsideRank ? "quota-boundary" : null)">
-                                <td data-label="@UiText.Get(Context, "Admin.Evaluation.Rank")">
-                                    @row.Rank
-                                    @if (row.Rank == firstQuotaOutsideRank)
-                                    {
-                                        <span class="quota-boundary__label">@UiText.Get(Context, "Admin.Evaluation.QuotaBoundary")</span>
-                                    }
-                                </td>
-                                <td data-label="@UiText.Get(Context, "Admin.Evaluation.MaskedCandidate")">@row.StudentFullName · @row.MaskedTc</td>
-                                <td data-label="@UiText.Get(Context, "Admin.Evaluation.TotalScore")">@row.TotalScore.ToString("0.0000")</td>
-                                <td data-label="@UiText.Get(Context, "Admin.Evaluation.ProjectedOutcome")"><strong>@UiText.LocalizeEvaluationOutcome(Context, row.ProjectedOutcome)</strong></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+        <div class="table-shell"><div class="table-responsive"><table class="table table-sm responsive-table">
+            <caption class="visually-hidden">@UiText.Get(Context, "Admin.Evaluation.RankingCaption")</caption>
+            <thead><tr><th scope="col">@UiText.Get(Context, "Admin.Evaluation.Rank")</th><th scope="col">@UiText.Get(Context, "Admin.Evaluation.MaskedCandidate")</th><th scope="col">@UiText.Get(Context, "Admin.Evaluation.TotalScore")</th><th scope="col">@UiText.Get(Context, "Admin.Evaluation.ProjectedOutcome")</th></tr></thead>
+            <tbody>@foreach (var row in Model.Preview.Rows) { <tr class="@(row.Rank == firstQuotaOutsideRank ? "quota-boundary" : null)"><td data-label="@UiText.Get(Context, "Admin.Evaluation.Rank")">@row.Rank @if (row.Rank == firstQuotaOutsideRank) { <span class="quota-boundary__label">@UiText.Get(Context, "Admin.Evaluation.QuotaBoundary")</span> }</td><td data-label="@UiText.Get(Context, "Admin.Evaluation.MaskedCandidate")">@row.StudentFullName · @row.MaskedTc</td><td data-label="@UiText.Get(Context, "Admin.Evaluation.TotalScore")">@row.TotalScore.ToString("0.0000")</td><td data-label="@UiText.Get(Context, "Admin.Evaluation.ProjectedOutcome")"><strong>@UiText.LocalizeEvaluationOutcome(Context, row.ProjectedOutcome)</strong></td></tr> }</tbody>
+        </table></div></div>
         @if (capabilities.CanFinalize && Model.Preview.CanFinalize)
         {
-            <div class="danger-zone">
-                <h3 class="h5">@UiText.Get(Context, "Admin.Evaluation.FinalizeHeading")</h3>
-                <ul>
-                    <li>@UiText.Format(Context, "Admin.Evaluation.DeadlineFormat", evaluation.ApplicationDeadlineUtc.HasValue ? IstanbulTime.FromUtc(evaluation.ApplicationDeadlineUtc.Value).ToString("g") : UiText.Get(Context, "Admin.Evaluation.Unspecified"))</li>
-                    <li>@UiText.Format(Context, "Admin.Evaluation.PolicyTotalFormat", totalWeight.ToString("N0"))</li>
-                    <li>@UiText.Format(Context, "Admin.Evaluation.QuotaFormat", evaluation.Quota)</li>
-                    <li>@UiText.Get(Context, "Admin.Evaluation.FinalizeEffect")</li>
-                </ul>
-                <form asp-action="FinalizeEvaluation" method="post" data-disable-on-submit="true">
-                    <input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" />
-                    <input type="hidden" name="rowVersion" value="@evaluation.OfferingRowVersion" />
-                    <button class="btn btn-danger" type="submit">@UiText.Get(Context, "Admin.Evaluation.FinalizeAction")</button>
-                </form>
-            </div>
-        }
-        else if (capabilities.CanFinalize)
-        {
-            <p class="admin-readonly-note">@UiText.Get(Context, "Admin.Evaluation.FinalizeHidden")</p>
+            <div class="danger-zone"><h3 class="h5">@UiText.Get(Context, "Admin.Evaluation.FinalizeHeading")</h3><ul><li>@UiText.Format(Context, "Admin.Evaluation.PolicyTotalFormat", totalWeight.ToString("N0"))</li><li>@UiText.Format(Context, "Admin.Evaluation.QuotaFormat", evaluation.Quota)</li><li>@UiText.Get(Context, "Admin.Evaluation.FinalizeEffect")</li></ul><form asp-action="FinalizeEvaluation" method="post" data-disable-on-submit="true"><input type="hidden" name="programOfferingId" value="@evaluation.ProgramOfferingId" /><input type="hidden" name="rowVersion" value="@evaluation.OfferingRowVersion" /><button class="btn btn-danger" type="submit">@UiText.Get(Context, "Admin.Evaluation.FinalizeAction")</button></form></div>
         }
         else if (capabilities.CanPublish)
         {
-            <div class="danger-zone">
-                <h3 class="h5">@UiText.Get(Context, "Admin.Evaluation.PublishHeading")</h3>
-                <p>@UiText.Get(Context, "Admin.Evaluation.PublishDescription")</p>
-                <a asp-action="PublishEvaluation" asp-route-id="@evaluation.ProgramOfferingId" class="btn btn-danger">@UiText.Get(Context, "Admin.Evaluation.PublishConfirmation")</a>
-            </div>
+            <div class="danger-zone"><h3 class="h5">@UiText.Get(Context, "Admin.Evaluation.PublishHeading")</h3><p>@UiText.Get(Context, "Admin.Evaluation.PublishDescription")</p><a asp-action="Results" asp-route-id="@evaluation.ProgramOfferingId" class="btn btn-danger">@UiText.Get(Context, "Admin.Evaluation.PublishConfirmation")</a></div>
         }
         else if (evaluation.EvaluationState == OfferingEvaluationState.Published)
         {
             <div class="alert alert-success mb-0">@UiText.Get(Context, "Admin.Evaluation.AlreadyPublished")</div>
         }
     </section>
-    <script>
-        (() => {
-            const examScoreSource = '@EvaluationCriterionSourceType.ExamScore';
-            document.querySelectorAll('[data-evaluation-criterion-form]').forEach(form => {
-                const sourceType = form.querySelector('[data-source-type]');
-                const examField = form.querySelector('[data-exam-field]');
-                const examId = form.querySelector('[data-exam-id]');
-                if (!sourceType || !examField || !examId) {
-                    return;
-                }
-
-                const synchronizeExamField = () => {
-                    const usesExam = sourceType.value === examScoreSource;
-                    examField.hidden = !usesExam;
-                    examId.disabled = !usesExam;
-                    examId.required = usesExam;
-                    if (!usesExam) {
-                        examId.value = '';
-                    }
-                };
-
-                sourceType.addEventListener('change', synchronizeExamField);
-                synchronizeExamField();
-            });
-        })();
-    </script>
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}

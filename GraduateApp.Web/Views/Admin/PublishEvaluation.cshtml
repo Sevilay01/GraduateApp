@@ -8,17 +8,8 @@
 }
 
 <div class="admin-page">
-    <header class="page-heading">
-        <div>
-            <span class="eyebrow">@UiText.Get(Context, "Admin.Evaluation.Area")</span>
-            <h1 class="page-heading__title">@UiText.Get(Context, "Admin.PublishEvaluation.PageTitle")</h1>
-            <p class="page-heading__description">@Model.ProgramName</p>
-        </div>
-        <div class="page-heading__actions">
-            <span class="admin-state admin-state--info">@UiText.LocalizeEvaluationState(Context, OfferingEvaluationState.Finalized)</span>
-            <a asp-action="Evaluation" asp-route-id="@Model.ProgramOfferingId" class="btn btn-outline-secondary">@UiText.Get(Context, "Admin.PublishEvaluation.Back")</a>
-        </div>
-    </header>
+    <partial name="_OfferingHeader" model="Model.Shell" />
+    <h2 class="visually-hidden">@UiText.Get(Context, "Admin.PublishEvaluation.PageTitle")</h2>
 
     <section class="admin-summary-grid" aria-label="@UiText.Get(Context, "Admin.PublishEvaluation.SummaryAria")">
         <article class="admin-summary-card">
@@ -84,6 +75,8 @@
         }
     </section>
 
+    @if (Model.Evaluation.EvaluationState == OfferingEvaluationState.Finalized)
+    {
     <section class="danger-zone" aria-labelledby="publish-confirmation-heading" data-publish-confirmation>
         <h2 id="publish-confirmation-heading" class="h4">@UiText.Get(Context, "Admin.PublishEvaluation.ConfirmationHeading")</h2>
         <div class="alert alert-danger" role="alert">
@@ -104,4 +97,9 @@
             </div>
         </form>
     </section>
+    }
+    else
+    {
+        <div class="alert alert-success" role="status">@UiText.Get(Context, "Admin.Evaluation.AlreadyPublished")</div>
+    }
 </div>

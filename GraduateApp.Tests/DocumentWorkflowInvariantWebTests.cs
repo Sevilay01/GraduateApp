@@ -51,16 +51,17 @@ public sealed class DocumentWorkflowInvariantWebTests
     [Fact]
     public void Admin_view_blocks_opening_without_an_active_required_requirement_and_preserves_snapshot_notice()
     {
-        var view = ReadView("Admin", "Offerings.cshtml");
+        var editView = ReadView("Admin", "EditOffering.cshtml");
+        var requirementView = ReadView("Admin", "DocumentRequirements.cshtml");
 
-        Assert.Contains("item.IsActive && item.IsRequired", view, StringComparison.Ordinal);
-        Assert.Contains("disabled=\"@(!formOfferingHasActiveRequiredRequirement)\"", view, StringComparison.Ordinal);
-        Assert.Contains("Admin.Offerings.NewClosedHeading", view, StringComparison.Ordinal);
+        Assert.Contains("disabled=\"@(!Model.HasActiveRequiredDocumentRequirement)\"", editView, StringComparison.Ordinal);
+        Assert.Contains("Admin.Offerings.CreateClosed", editView, StringComparison.Ordinal);
         Assert.Contains(
             "Admin.Offerings.RequiredMissing",
-            view,
+            requirementView,
             StringComparison.Ordinal);
-        Assert.Contains("Admin.Requirements.SnapshotLead", view, StringComparison.Ordinal);
+        Assert.Contains("item.IsActive && item.IsRequired", requirementView, StringComparison.Ordinal);
+        Assert.Contains("Admin.Requirements.SnapshotLead", requirementView, StringComparison.Ordinal);
     }
 
     private static StudentApplicationDetailViewModel Draft(

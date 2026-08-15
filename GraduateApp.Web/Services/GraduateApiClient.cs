@@ -241,7 +241,11 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         bool includeArchived,
         CancellationToken cancellationToken)
     {
-        var query = new List<string> { $"includeArchived={includeArchived.ToString().ToLowerInvariant()}" };
+        var query = new List<string>
+        {
+            $"includeArchived={includeArchived.ToString().ToLowerInvariant()}",
+            "summaryOnly=true"
+        };
         if (academicYearStart.HasValue)
         {
             query.Add($"academicYearStart={academicYearStart.Value}");
@@ -257,8 +261,42 @@ public sealed class GraduateApiClient(HttpClient httpClient)
             cancellationToken);
     }
 
+    public Task<ApiResult<ProgramOfferingAdminViewModel>> GetProgramOfferingAsync(
+        int offeringId,
+        CancellationToken cancellationToken) =>
+        GetAsync<ProgramOfferingAdminViewModel>($"api/program-offerings/{offeringId}", cancellationToken);
+
     public Task<ApiResult<ProgramOfferingCatalogViewModel>> GetProgramOfferingCatalogAsync(CancellationToken cancellationToken) =>
         GetAsync<ProgramOfferingCatalogViewModel>("api/program-offerings/catalog", cancellationToken);
+
+    public Task<ApiResult<PagedResultViewModel<AdminApplicationListItemViewModel>>> GetOfferingApplicationsAsync(
+        int offeringId,
+        string? search,
+        ApplicationStatus? status,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = new List<string>
+        {
+            $"programOfferingId={offeringId}",
+            $"page={Math.Max(page, 1)}",
+            $"pageSize={Math.Clamp(pageSize, 10, 100)}"
+        };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        }
+
+        if (status.HasValue)
+        {
+            query.Add($"status={status.Value}");
+        }
+
+        return GetAsync<PagedResultViewModel<AdminApplicationListItemViewModel>>(
+            $"api/applications/admin?{string.Join('&', query)}",
+            cancellationToken);
+    }
 
     public Task<ApiResult<ProgramOfferingAdminViewModel>> CreateProgramOfferingAsync(
         ProgramOfferingFormViewModel model,
@@ -320,6 +358,13 @@ public sealed class GraduateApiClient(HttpClient httpClient)
         int offeringId,
         CancellationToken cancellationToken) =>
         GetAsync<AdminEvaluationViewModel>($"api/evaluations/offerings/{offeringId}", cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<EvaluationCriterionViewModel>>> GetEvaluationCriteriaAsync(
+        int offeringId,
+        CancellationToken cancellationToken) =>
+        GetAsync<IReadOnlyList<EvaluationCriterionViewModel>>(
+            $"api/program-offerings/{offeringId}/evaluation-criteria",
+            cancellationToken);
 
     public Task<ApiResult<EvaluationRankingPreviewViewModel>> GetEvaluationPreviewAsync(
         int offeringId,

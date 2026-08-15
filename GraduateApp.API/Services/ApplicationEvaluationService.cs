@@ -321,7 +321,8 @@ public sealed class ApplicationEvaluationService(
         var offering = await dbContext.ProgramOfferings.AsNoTracking()
             .Include(item => item.Applications).ThenInclude(item => item.Evaluation)
             .SingleOrDefaultAsync(item => item.ProgramOfferingId == offeringId, cancellationToken);
-        if (offering is null || offering.EvaluationState != OfferingEvaluationState.Finalized)
+        if (offering is null
+            || offering.EvaluationState is not (OfferingEvaluationState.Finalized or OfferingEvaluationState.Published))
         {
             return ServiceResult<EvaluationPublicationSummaryDto>.Failure(
                 "Yayımlanabilir kesinleştirilmiş sonuç bulunamadı.",
@@ -659,6 +660,8 @@ public sealed class ApplicationEvaluationService(
     private static AdminEvaluationPageDto MapAdminPage(ProgramOffering offering) => new(
         offering.ProgramOfferingId,
         offering.Program.ProgramName,
+        offering.Program.ProgramNameEnglish,
+        offering.Program.DegreeType,
         offering.AcademicYearStart,
         AcademicPeriodFormatter.FormatAcademicYear(offering.AcademicYearStart),
         offering.Term,

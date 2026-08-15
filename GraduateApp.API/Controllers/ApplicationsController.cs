@@ -183,6 +183,7 @@ public sealed class ApplicationsController(
         [FromQuery] ApplicationStatus? status,
         [FromQuery] int? academicYearStart,
         [FromQuery] AcademicTerm? term,
+        [FromQuery] int? programOfferingId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) =>
@@ -191,6 +192,7 @@ public sealed class ApplicationsController(
             status,
             academicYearStart,
             term,
+            programOfferingId,
             page,
             pageSize,
             cancellationToken));

@@ -21,8 +21,27 @@ public sealed class ProgramOfferingsController(
         [FromQuery] int? academicYearStart,
         [FromQuery] AcademicTerm? term,
         [FromQuery] bool includeArchived = false,
-        CancellationToken cancellationToken = default) =>
-        Ok(await offeringService.GetForAdminAsync(academicYearStart, term, includeArchived, cancellationToken));
+        [FromQuery] bool summaryOnly = false,
+        CancellationToken cancellationToken = default) => Ok(summaryOnly
+            ? await offeringService.GetSummariesForAdminAsync(
+                academicYearStart,
+                term,
+                includeArchived,
+                cancellationToken)
+            : await offeringService.GetForAdminAsync(
+                academicYearStart,
+                term,
+                includeArchived,
+                cancellationToken));
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    {
+        var offering = await offeringService.GetForAdminAsync(id, cancellationToken);
+        return offering is null
+            ? Problem(statusCode: StatusCodes.Status404NotFound, detail: "İlan bulunamadı.")
+            : Ok(offering);
+    }
 
     [HttpGet("catalog")]
     public async Task<IActionResult> GetCatalog(CancellationToken cancellationToken) =>

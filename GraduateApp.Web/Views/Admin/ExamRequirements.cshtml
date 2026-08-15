@@ -1,0 +1,77 @@
+@model OfferingExamRequirementsPageViewModel
+@{
+    ViewData["Title"] = UiText.Get(Context, "Admin.OfferingNav.Exams");
+}
+
+<div class="admin-page">
+    <partial name="_OfferingHeader" model="Model.Shell" />
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    }
+    @if (!Model.CanEdit)
+    {
+        <div class="alert alert-info" role="note">@UiText.Get(Context, "Admin.OfferingExams.Locked")</div>
+    }
+
+    <section class="admin-section" aria-labelledby="exam-requirements-heading">
+        <div class="admin-section-heading">
+            <div>
+                <h2 id="exam-requirements-heading">@UiText.Get(Context, "Admin.OfferingNav.Exams")</h2>
+                <p>@UiText.Get(Context, "Admin.Offerings.ExamLead")</p>
+            </div>
+        </div>
+        <form asp-action="SaveExamRequirements" method="post" novalidate data-disable-on-submit="true">
+            <input asp-for="Form.ProgramOfferingId" type="hidden" />
+            <input asp-for="Form.RowVersion" type="hidden" />
+            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+            <fieldset disabled="@(!Model.CanEdit)">
+                <legend class="visually-hidden">@UiText.Get(Context, "Admin.OfferingNav.Exams")</legend>
+                <div class="admin-card-list">
+                    @for (var index = 0; index < Model.Form.Requirements.Count; index++)
+                    {
+                        var requirement = Model.Form.Requirements[index];
+                        var exam = Model.Exams.Single(item => item.ExamId == requirement.ExamId);
+                        <article class="admin-item-card" data-ales-validity="@(exam.IsAles ? "true" : "false")">
+                            <input asp-for="Form.Requirements[index].ExamId" type="hidden" />
+                            <header>
+                                <h3>@exam.ExamName</h3>
+                                <div class="form-check">
+                                    <input asp-for="Form.Requirements[index].IsConfigured" class="form-check-input" />
+                                    <label asp-for="Form.Requirements[index].IsConfigured" class="form-check-label">@UiText.Get(Context, "Admin.Offerings.UseCondition")</label>
+                                </div>
+                            </header>
+                            <div class="row g-3">
+                                <div class="col-12 col-md-4">
+                                    <label asp-for="Form.Requirements[index].MinimumScore" class="form-label">@UiText.Get(Context, "Admin.Offerings.MinimumScore")</label>
+                                    <input asp-for="Form.Requirements[index].MinimumScore" class="form-control" type="text" inputmode="decimal" />
+                                    <span asp-validation-for="Form.Requirements[index].MinimumScore" class="text-danger"></span>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label asp-for="Form.Requirements[index].MinimumValidityDate" class="form-label">@UiText.Get(Context, "Admin.Offerings.MinimumDate")</label>
+                                    <input asp-for="Form.Requirements[index].MinimumValidityDate" class="form-control" type="date" data-validity-date />
+                                </div>
+                                <div class="col-12 col-md-4 d-flex align-items-end">
+                                    <div class="form-check mb-2">
+                                        <input asp-for="Form.Requirements[index].IsRequired" class="form-check-input" />
+                                        <label asp-for="Form.Requirements[index].IsRequired" class="form-check-label">@UiText.Get(Context, "Admin.Offerings.RequiredExam")</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </fieldset>
+            @if (Model.CanEdit)
+            {
+                <div class="admin-form-actions mt-4">
+                    <button type="submit" class="btn btn-primary">@UiText.Get(Context, "Admin.Common.SaveChanges")</button>
+                </div>
+            }
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

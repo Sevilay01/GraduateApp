@@ -9,7 +9,16 @@
     var isAdminApplications = currentController == "Admin"
         && currentAction is "Index" or "Detail";
     var isAdminOfferings = currentController == "Admin"
-        && currentAction is "Offerings" or "Evaluation" or "PublishEvaluation";
+        && currentAction is "Offerings"
+            or "OfferingOverview"
+            or "EditOffering"
+            or "ExamRequirements"
+            or "DocumentRequirements"
+            or "OfferingApplications"
+            or "EvaluationCriteria"
+            or "Evaluation"
+            or "Results"
+            or "PublishEvaluation";
     var isAdminCatalog = currentController == "Admin"
         && currentAction is "Institutes" or "Programs" or "ProgramTranslations" or "Universities" or "DeleteInstitute" or "DeleteProgram";
     var isAdminStudents = currentController == "Admin"

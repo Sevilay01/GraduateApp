@@ -56,12 +56,11 @@ public sealed class ProgramOfferingLocalizationTests
         var result = await controller.SaveOffering(CreateValidWebModel(rowVersion: null), CancellationToken.None);
 
         var view = Assert.IsType<ViewResult>(result);
-        var page = Assert.IsType<ProgramOfferingPageViewModel>(view.Model);
+        var page = Assert.IsType<OfferingEditPageViewModel>(view.Model);
         Assert.Equal(1, handler.PostCount);
         Assert.DoesNotContain("Form.RowVersion", controller.ModelState.Keys);
-        Assert.Equal("offering-form-heading", page.AutoFocusTarget);
-        Assert.Equal(2026, page.AcademicYearStart);
-        Assert.Equal(AcademicTerm.Fall, page.Term);
+        Assert.Equal(2026, page.Form.AcademicYearStart);
+        Assert.Equal(AcademicTerm.Fall, page.Form.Term);
         Assert.Equal(1, page.Form.ProgramId);
     }
 
@@ -79,12 +78,11 @@ public sealed class ProgramOfferingLocalizationTests
         var result = await controller.SaveOffering(model, CancellationToken.None);
 
         var view = Assert.IsType<ViewResult>(result);
-        var page = Assert.IsType<ProgramOfferingPageViewModel>(view.Model);
+        var page = Assert.IsType<OfferingEditPageViewModel>(view.Model);
         Assert.True(controller.ModelState.TryGetValue("Form.RowVersion", out var rowVersionState));
         var error = Assert.Single(rowVersionState.Errors);
         Assert.Equal("İlan eşzamanlılık bilgisi eksik. Sayfayı yenileyiniz.", error.ErrorMessage);
         Assert.Equal(42, page.Form.ProgramOfferingId);
-        Assert.Equal("offering-form-heading", page.AutoFocusTarget);
     }
 
     [Fact]
@@ -104,12 +102,8 @@ public sealed class ProgramOfferingLocalizationTests
         var result = Assert.IsType<RedirectToActionResult>(
             await controller.SaveOffering(model, CancellationToken.None));
 
-        Assert.Equal(nameof(AdminController.Offerings), result.ActionName);
-        Assert.Equal("offering-form", result.Fragment);
-        Assert.Equal(73, result.RouteValues!["editId"]);
-        Assert.Equal(2026, result.RouteValues["academicYearStart"]);
-        Assert.Equal(AcademicTerm.Fall, result.RouteValues["term"]);
-        Assert.Equal(false, result.RouteValues["includeArchived"]);
+        Assert.Equal(nameof(AdminController.OfferingOverview), result.ActionName);
+        Assert.Equal(73, result.RouteValues!["id"]);
         Assert.Equal(1, handler.PostCount);
     }
 
@@ -156,15 +150,15 @@ public sealed class ProgramOfferingLocalizationTests
         Assert.Equal(
             "Başvuru başlangıç tarihi zorunludur.",
             Turkish(
-                typeof(ProgramOfferingFormViewModel)
-                    .GetProperty(nameof(ProgramOfferingFormViewModel.ApplicationStartLocal))!
+                typeof(OfferingEditFormViewModel)
+                    .GetProperty(nameof(OfferingEditFormViewModel.ApplicationStartLocal))!
                     .GetCustomAttribute<RequiredAttribute>()!
                     .ErrorMessage));
         Assert.Equal(
             "Son başvuru tarihi zorunludur.",
             Turkish(
-                typeof(ProgramOfferingFormViewModel)
-                    .GetProperty(nameof(ProgramOfferingFormViewModel.ApplicationDeadlineLocal))!
+                typeof(OfferingEditFormViewModel)
+                    .GetProperty(nameof(OfferingEditFormViewModel.ApplicationDeadlineLocal))!
                     .GetCustomAttribute<RequiredAttribute>()!
                     .ErrorMessage));
 
@@ -214,7 +208,7 @@ public sealed class ProgramOfferingLocalizationTests
         Assert.Contains("Puan 0 ile 999,99 arasında olmalıdır.", Validate(apiRequirement));
     }
 
-    private static ProgramOfferingFormViewModel CreateValidWebModel(string? rowVersion) => new()
+    private static OfferingEditFormViewModel CreateValidWebModel(string? rowVersion) => new()
     {
         ProgramId = 1,
         AcademicYearStart = 2026,
